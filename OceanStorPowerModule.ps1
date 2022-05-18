@@ -12,6 +12,19 @@ add-type @"
 "@
 [System.Net.ServicePointManager]::CertificatePolicy = New-Object TrustAllCertsPolicy
 
+#Check depencies
+if (!(Get-Module -ListAvailable -Name ImportExcel )) {
+	Write-Host "ImportExcel Module is not available or is not installed!`r`n"
+	Write-Host "`r`n"
+	Write-Host "`r`n"
+	Write-Host "To install the ImportExcel Module, run the following command from the powershell command line (Powershell v5, is required):`r`n"
+	Write-Host "`r`n"
+	Write-Host "Install-Module -Name ImportExcel"
+	Write-Host "`r`n"
+	Write-Host "`r`n"
+	write-Host "For more information, consult the ImportExcel page: https://github.com/dfinke/ImportExcel"
+	exit
+}
 
 #Class Module
 class OceanStorSystem{
@@ -202,7 +215,7 @@ class OceanStorLunGroup{
 	[string]$Description
 	[string]${Application Type}
 	[string]${LunGroup Type}
-	[string]${LunGroup Capacity}
+	[int64]${LunGroup Capacity}
 	[string]${Application Configuration Data}
 	[int]${vStore ID}
 	[string]${vStore Name}
@@ -214,8 +227,23 @@ class OceanStorLunGroup{
 		$this.{LunGroup Name} = $LunGroupReceived.NAME
 		$this.Description = $LunGroupReceived.DESCRIPTION
 		$this.{Application Type} = $LunGroupReceived.APPTYPE
-		$this.{LunGroup Type} = $LunGroupReceived.GROUPTYPE
-		$this.{LunGroup Capacity} = $LunGroupReceived.CAPCITY
+
+		switch($LunGroupReceived.APPTYPE)
+		{
+			0 {$this.{Application Type} = "Other"}
+			1 {$this.{Application Type} = "Oracle"}
+			2 {$this.{Application Type} = "Exchange"}
+			3 {$this.{Application Type} = "SQL Server"}
+			4 {$this.{Application Type} = "VMWare"}
+			5 {$this.{Application Type} = "Hyper-V"}
+		}
+
+		switch($LunGroupReceived.GROUPTYPE)
+		{
+			0 {$this.{LunGroup Type} = "LUN group"}
+		}
+
+		$this.{LunGroup Capacity} = $LunGroupReceived.CAPCITY / 1GB
 		$this.{Application Configuration Data} = $LunGroupReceived.CONFIGDATA
 		$this.{vStore ID} = $LunGroupReceived.vstoreid
 		$this.{vStore Name} = $LunGroupReceived.vstoreName
@@ -255,10 +283,24 @@ class OceanStorvStore{
 
 		$this.Description = $vStoresReceived.DESCRIPTION
 		$this.{SAN Capacity Quota} = $vStoresReceived.sanCapacityQuata * 512 / 1GB
-		$this.{SAN Free Capacity Quota} = $vStoresReceived.sanFreeCapacityQuata * 512 / 1GB
+
+		if($vStoresReceived.sanFreeCapacityQuata -eq "-1" )
+		{
+			$this.{SAN Free Capacity Quota} = -1
+		} else {
+			$this.{SAN Free Capacity Quota} = $vStoresReceived.sanFreeCapacityQuata * 512 / 1GB
+		}
+
 		$this.{SAN Total Capacity} = $vStoresReceived.sanTotalCapacity * 512 / 1GB
 		$this.{NAS Capacity Quota} = $vStoresReceived.nasCapacityQuata * 512 / 1GB
-		$this.{NAS Free Capacity Quota} = $vStoresReceived.nasFreeCapacityQuata * 512 / 1GB
+
+		if($vStoresReceived.nasFreeCapacityQuata -eq "-1" )
+		{
+			$this.{NAS Free Capacity Quota} = -1
+		} else {
+			$this.{NAS Free Capacity Quota} = $vStoresReceived.nasFreeCapacityQuata * 512 / 1GB
+		}
+
 		$this.{NAS Total Capacity} = $vStoresReceived.nasTotalCapacity * 512 / 1GB
 	}
 }
@@ -285,6 +327,12 @@ class OceanStorHostGroup{
 		$this.{HostGroup Name} = $HostGroupReceived.NAME
 		$this.Description = $HostGroupReceived.DESCRIPTION
 		$this.{HostGroup Type} = $HostGroupReceived.TYPE
+
+		switch($HostGroupReceived.TYPE)
+		{
+			0 {$this.{HostGroup Type} = "Host Group"}
+		}
+
 		$this.{vStore ID} = $HostGroupReceived.vstoreid
 		$this.{vStore Name} = $HostGroupReceived.vstoreName
 
@@ -300,167 +348,311 @@ class OceanStorHostGroup{
 class OceanStorStoragePool{
 	#TODO DEFINE Properties with friendly Name & complete information
 	#Define Properties
-	[string]$autodeactivesnapshotswitch
-	[string]$dataspace
+	[string]$id
+	[string]$name
+	[string]$type
+	[string]$healthstatus
+	[string]$runningstatus
+	[string]$parentid
+	[string]$parentname
 	[string]$description
+	[string]$autodeactivesnapshotswitch
+	[int64]$dataspace
 	[string]$dstrunningstatus
 	[string]$dststatus
 	[string]$enablesmartcache
 	[string]$enablessdbuffer
 	[string]$extentsize
-	[string]$healthstatus
-	[string]$id
 	[string]$immediatemigration
 	[string]$immediatemigrationdurationtime
 	[string]$issmarttierenable
-	[string]$lunconfigedcapacity
+	[int64]$lunconfigedcapacity
 	[string]$migrationestimatedtime
 	[string]$migrationmode
 	[string]$migrationscheduleid
 	[string]$monitorscheduleid
-	[string]$moveddowndata
-	[string]$movedowndata
-	[string]$movedupdata
-	[string]$moveupdata
-	[string]$name
-	[string]$parentid
-	[string]$parentname
+	[int64]$moveddowndata
+	[int64]$movedowndata
+	[int64]$movedupdata
+	[int64]$moveupdata
 	[string]$pausemigrationswitch
 	[string]$repcapacitythreshold
-	[string]$replicationcapacity
-	[string]$reservedcapacity
-	[string]$runningstatus
-	[string]$tier0capacity
+	[int64]$replicationcapacity
+	[int64]$reservedcapacity
+	[int64]$tier0capacity
 	[string]$tier0disktype
 	[string]$tier0raiddisknum
 	[string]$tier0raidlv
-	[string]$tier0stripedepth
-	[string]$tier1capacity
+	[int64]$tier0stripedepth
+	[int64]$tier1capacity
 	[string]$tier1disktype
 	[string]$tier1raiddisknum
 	[string]$tier1raidlv
-	[string]$tier1stripedepth
-	[string]$tier2capacity
+	[int64]$tier1stripedepth
+	[int64]$tier2capacity
 	[string]$tier2disktype
 	[string]$tier2raiddisknum
 	[string]$tier2raidlv
-	[string]$tier2stripedepth
-	[string]$totalfscapacity
-	[string]$type
+	[int64]$tier2stripedepth
+	[int64]$totalfscapacity
 	[string]$usagetype
-	[string]$userconsumedcapacity
+	[int64]$userconsumedcapacity
 	[string]$userconsumedcapacitypercentage
 	[string]$userconsumedcapacitythreshold
-	[string]$userfreecapacity
-	[string]$usertotalcapacity
+	[int64]$userfreecapacity
+	[int64]$usertotalcapacity
 	[string]$compressratio
-	[string]$compressedcapacity
+	[int64]$compressedcapacity
 	[string]$dedupcompressratio
 	[string]$dedupratio
-	[string]$dedupedcapacity
+	[int64]$dedupedcapacity
 	[string]$reductioninvolvedcapacity
 
 	OceanStorStoragePool ([array]$spoolReceived)
 	{
-		$this.autodeactivesnapshotswitch = $spoolReceived.AUTODEACTIVESNAPSHOTSWITCH
-		$this.dataspace = $spoolReceived.DATASPACE
-		$this.description = $spoolReceived.DESCRIPTION
-		$this.dstrunningstatus = $spoolReceived.DSTRUNNINGSTATUS
-		$this.dststatus = $spoolReceived.DSTSTATUS
-		$this.enablesmartcache = $spoolReceived.ENABLESMARTCACHE
-		$this.enablessdbuffer = $spoolReceived.ENABLESSDBUFFER
-		$this.extentsize = $spoolReceived.EXTENTSIZE
-		$this.healthstatus = $spoolReceived.HEALTHSTATUS
+		#Define Constants for Space Operations
+		$sectorSize = 512
+		$unitUsed = 1GB
+
 		$this.id = $spoolReceived.ID
-		$this.immediatemigration = $spoolReceived.IMMEDIATEMIGRATION
-		$this.immediatemigrationdurationtime = $spoolReceived.IMMEDIATEMIGRATIONDURATIONTIME
-		$this.issmarttierenable = $spoolReceived.ISSMARTTIERENABLE
-		$this.lunconfigedcapacity = $spoolReceived.LUNCONFIGEDCAPACITY
-		$this.migrationestimatedtime = $spoolReceived.MIGRATIONESTIMATEDTIME
-		$this.migrationmode = $spoolReceived.MIGRATIONMODE
+		$this.autodeactivesnapshotswitch = $spoolReceived.AUTODEACTIVESNAPSHOTSWITCH
+
+		switch($spoolReceived.AUTODEACTIVESNAPSHOTSWITCH)
+		{
+			0 {$this.autodeactivesnapshotswitch = "on"}
+			1 {$this.autodeactivesnapshotswitch = "off"}
+		}
+
+		$this.dataspace = $spoolReceived.DATASPACE / $sectorSize  / $unitUsed
+		$this.description = $spoolReceived.DESCRIPTION
+
+		switch($spoolReceived.DSTRUNNINGSTATUS)
+		{
+			1 {$this.dstrunningstatus = "ready"}
+			2 {$this.dstrunningstatus = "migrated"}
+			3 {$this.dstrunningstatus = "suspended"}
+		}
+
+		switch($spoolReceived.HEALTHSTATUS)
+		{
+			1 {$this.dststatus = "active"}
+			2 {$this.dststatus = "inactive"}
+		}
+
+		switch($spoolReceived.ENABLESMARTCACHE)
+		{
+			false {$this.enablesmartcache = "disabled"}
+			true {$this.enablesmartcache = "enabled"}
+		}
+
+		switch($spoolReceived.ENABLESSDBUFFER)
+		{
+			false {$this.enablessdbuffer = "disabled"}
+			true {$this.enablessdbuffer = "enabled"}
+		}
+
+		switch($spoolReceived.ENABLESSDBUFFER)
+		{
+			false {$this.enablessdbuffer = "disabled"}
+			true {$this.enablessdbuffer = "enabled"}
+		}
+
+		$this.extentsize = $spoolReceived.EXTENTSIZE / $sectorSize  / $unitUsed
+
+		switch($spoolReceived.HEALTHSTATUS)
+		{
+			1 {$this.healthstatus = "Normal"}
+			2 {$this.healthstatus = "Fault"}
+			3 {$this.healthstatus = "Degraded"}
+		}
+
+		switch($spoolReceived.IMMEDIATEMIGRATION)
+		{
+			false {$this.immediatemigration = "off"}
+			true {$this.immediatemigration = "on"}
+		}
+
+		$this.immediatemigrationdurationtime = $(New-TimeSpan -Seconds $spoolReceived.IMMEDIATEMIGRATIONDURATIONTIME).ToString()
+
+		switch($spoolReceived.ISSMARTTIERENABLE)
+		{
+			false {$this.issmarttierenable = "invalid"}
+			true {$this.issmarttierenable = "valid"}
+		}
+
+		$this.lunconfigedcapacity = $spoolReceived.LUNCONFIGEDCAPACITY / $sectorSize / $unitUsed
+		$this.migrationestimatedtime = $(New-TimeSpan -Seconds $spoolReceived.MIGRATIONESTIMATEDTIME).ToString()
+
+		switch($spoolReceived.MIGRATIONMODE)
+		{
+			1 {$this.migrationmode = "dynamic"}
+			2 {$this.migrationmode = "manual"}
+		}
+
 		$this.migrationscheduleid = $spoolReceived.MIGRATIONSCHEDULEID
 		$this.monitorscheduleid = $spoolReceived.MONITORSCHEDULEID
-		$this.moveddowndata = $spoolReceived.MOVEDDOWNDATA
-		$this.movedowndata = $spoolReceived.MOVEDOWNDATA
-		$this.movedupdata = $spoolReceived.MOVEDUPDATA
-		$this.moveupdata = $spoolReceived.MOVEUPDATA
+		$this.moveddowndata = $spoolReceived.MOVEDDOWNDATA / $sectorSize / $unitUsed
+		$this.movedowndata = $spoolReceived.MOVEDOWNDATA  / $sectorSize / $unitUsed
+		$this.movedupdata = $spoolReceived.MOVEDUPDATA / $sectorSize / $unitUsed
+		$this.moveupdata = $spoolReceived.MOVEUPDATA / $sectorSize / $unitUsed
 		$this.name = $spoolReceived.NAME
 		$this.parentid = $spoolReceived.PARENTID
 		$this.parentname = $spoolReceived.PARENTNAME
-		$this.pausemigrationswitch = $spoolReceived.PAUSEMIGRATIONSWITCH
+
+		switch($spoolReceived.PAUSEMIGRATIONSWITCH)
+		{
+			false {$this.pausemigrationswitch = "off"}
+			true {$this.pausemigrationswitch = "on"}
+		}
+
 		$this.repcapacitythreshold = $spoolReceived.REPCAPACITYTHRESHOLD
-		$this.replicationcapacity = $spoolReceived.REPLICATIONCAPACITY
-		$this.reservedcapacity = $spoolReceived.RESERVEDCAPACITY
-		$this.runningstatus = $spoolReceived.RUNNINGSTATUS
-		$this.tier0capacity = $spoolReceived.TIER0CAPACITY
-		$this.tier0disktype = $spoolReceived.TIER0DISKTYPE
+		$this.replicationcapacity = $spoolReceived.REPLICATIONCAPACITY / $sectorSize / $unitUsed
+		$this.reservedcapacity = $spoolReceived.RESERVEDCAPACITY / $sectorSize / $unitUsed
+
+		switch($spoolReceived.RUNNINGSTATUS)
+		{
+			14 {$this.runningstatus = "pre-copy"}
+			26 {$this.runningstatus = "reconstruction"}
+			27 {$this.runningstatus = "online"}
+			28 {$this.runningstatus = "offline"}
+			32 {$this.runningstatus = "balancing"}
+			53 {$this.runningstatus = "initializing"}
+		}
+
+		$this.tier0capacity = $spoolReceived.TIER0CAPACITY / $sectorSize / $unitUsed
+
+		switch($spoolReceived.TIER0DISKTYPE)
+		{
+			0 {$this.tier0disktype = "Not Available/Not Used"}
+			3 {$this.tier0disktype = "SSD"}
+			10 {$this.tier0disktype = "SSD SED"}
+		}
+
 		$this.tier0raiddisknum = $spoolReceived.TIER0RAIDDISKNUM
-		$this.tier0raidlv = $spoolReceived.TIER0RAIDLV
-		$this.tier0stripedepth = $spoolReceived.TIER0STRIPEDEPTH
-		$this.tier1capacity = $spoolReceived.TIER1CAPACITY
-		$this.tier1disktype = $spoolReceived.TIER1DISKTYPE
+
+		switch($spoolReceived.TIER0RAIDLV)
+		{
+			0 {$this.tier0raidlv = "Not Available/Not Used"}
+			1 {$this.tier0raidlv = "RAID 10"}
+			2 {$this.tier0raidlv = "RAID 5"}
+			3 {$this.tier0raidlv = "RAID 0"}
+			4 {$this.tier0raidlv = "RAID 1"}
+			5 {$this.tier0raidlv = "RAID 6"}
+			6 {$this.tier0raidlv = "RAID 50"}
+			7 {$this.tier0raidlv = "RAID 3"}
+		}
+
+		$this.tier0stripedepth = $spoolReceived.TIER0STRIPEDEPTH / $sectorSize / $unitUsed
+		$this.tier1capacity = $spoolReceived.TIER1CAPACITY / $sectorSize / $unitUsed
+
+		switch($spoolReceived.TIER1DISKTYPE)
+		{
+			0 {$this.tier1disktype = "Not Available/Not Used"}
+			3 {$this.tier1disktype = "SAS"}
+			10 {$this.tier1disktype = "SAS SED"}
+		}
+
 		$this.tier1raiddisknum = $spoolReceived.TIER1RAIDDISKNUM
-		$this.tier1raidlv = $spoolReceived.TIER1RAIDLV
-		$this.tier1stripedepth = $spoolReceived.TIER1STRIPEDEPTH
-		$this.tier2capacity = $spoolReceived.TIER2CAPACITY
-		$this.tier2disktype = $spoolReceived.TIER2DISKTYPE
+
+		switch($spoolReceived.TIER1RAIDLV)
+		{
+			0 {$this.tier1raidlv = "Not Available/Not Used"}
+			1 {$this.tier1raidlv = "RAID 10"}
+			2 {$this.tier1raidlv = "RAID 5"}
+			3 {$this.tier1raidlv = "RAID 0"}
+			4 {$this.tier1raidlv = "RAID 1"}
+			5 {$this.tier1raidlv = "RAID 6"}
+			6 {$this.tier1raidlv = "RAID 50"}
+			7 {$this.tier1raidlv = "RAID 3"}
+		}
+
+		$this.tier1stripedepth = $spoolReceived.TIER1STRIPEDEPTH / $sectorSize / $unitUsed
+		$this.tier2capacity = $spoolReceived.TIER2CAPACITY / $sectorSize / $unitUsed
+
+		switch($spoolReceived.TIER2DISKTYPE)
+		{
+			0 {$this.tier2disktype = "Not Available/Not Used"}
+			2 {$this.tier2disktype = "SATA"}
+			4 {$this.tier2disktype = "NL-SAS"}
+			11 {$this.tier2disktype = "NL-SAS SED"}
+		}
+
 		$this.tier2raiddisknum = $spoolReceived.TIER2RAIDDISKNUM
-		$this.tier2raidlv = $spoolReceived.TIER2RAIDLV
-		$this.tier2stripedepth = $spoolReceived.TIER2STRIPEDEPTH
-		$this.totalfscapacity = $spoolReceived.TOTALFSCAPACITY
+
+		switch($spoolReceived.TIER2RAIDLV)
+		{
+			0 {$this.tier2raidlv = "Not Available/Not Used"}
+			1 {$this.tier2raidlv = "RAID 10"}
+			2 {$this.tier2raidlv = "RAID 5"}
+			3 {$this.tier2raidlv = "RAID 0"}
+			4 {$this.tier2raidlv = "RAID 1"}
+			5 {$this.tier2raidlv = "RAID 6"}
+			6 {$this.tier2raidlv = "RAID 50"}
+			7 {$this.tier2raidlv = "RAID 3"}
+		}
+
+
+		$this.tier2stripedepth = $spoolReceived.TIER2STRIPEDEPTH / $sectorSize / $unitUsed
+		$this.totalfscapacity = $spoolReceived.TOTALFSCAPACITY / $sectorSize / $unitUsed
 		$this.type = $spoolReceived.TYPE
-		$this.usagetype = $spoolReceived.USAGETYPE
-		$this.userconsumedcapacity = $spoolReceived.USERCONSUMEDCAPACITY
+
+		switch($spoolReceived.USAGETYPE)
+		{
+			1 {$this.usagetype = "LUN"}
+			2 {$this.usagetype = "File System"}
+		}
+
+		$this.userconsumedcapacity = $spoolReceived.USERCONSUMEDCAPACITY / $sectorSize / $unitUsed
 		$this.userconsumedcapacitypercentage = $spoolReceived.USERCONSUMEDCAPACITYPERCENTAGE
 		$this.userconsumedcapacitythreshold = $spoolReceived.USERCONSUMEDCAPACITYTHRESHOLD
-		$this.userfreecapacity = $spoolReceived.USERFREECAPACITY
-		$this.usertotalcapacity = $spoolReceived.USERTOTALCAPACITY
+		$this.userfreecapacity = $spoolReceived.USERFREECAPACITY / $sectorSize / $unitUsed
+		$this.usertotalcapacity = $spoolReceived.USERTOTALCAPACITY / $sectorSize / $unitUsed
 		$this.compressratio = $spoolReceived.compressRatio
-		$this.compressedcapacity = $spoolReceived.compressedCapacity
+		$this.compressedcapacity = $spoolReceived.compressedCapacity / $sectorSize / $unitUsed
 		$this.dedupcompressratio = $spoolReceived.dedupCompressRatio
 		$this.dedupratio = $spoolReceived.dedupRatio
-		$this.dedupedcapacity = $spoolReceived.dedupedCapacity
-		$this.reductioninvolvedcapacity = $spoolReceived.reductionInvolvedCapacity
+		$this.dedupedcapacity = $spoolReceived.dedupedCapacity / $sectorSize / $unitUsed
+		$this.reductioninvolvedcapacity = $spoolReceived.reductionInvolvedCapacity / $sectorSize / $unitUsed
 	}
 }
 
 class OceanStorDisks{
 	#Define Variables
+	[string]$id
+	[string]$location
+	[string]$partNumber
+	[string]$runningStatus
+	[string]${Enclosure ID}
+	[string]${parent Type}
+	[string]$storeEngineId
+	[string]$logicType
+	[string]$manufacter
+	[string]$model
+	[int64]$manufacterCapacity
 	[string]$encryptDiskType
 	[string]$firmwareVersion
 	[string]$healthMark
 	[string]$healthStatus
-	[string]$id
 	[boolean]$cofferDisk
-	[string]$partNumber
 	[string]$keyExpirationTime
 	[string]$lightStatus
-	[string]$location
-	[string]$logicType
-	[string]$manufacter
-	[string]$model
 	[string]$multipath
-	[string]$parentId
-	[string]${parent Type}
 	[string]$poolId
 	[string]$poolName
 	[string]$poolTierId
 	[string]$progress
 	[string]$remainLife
-	[string]$runningStatus
 	[string]$runtime
 	[string]$sectors
 	[string]$sectorSize
 	[string]$serialNumber
 	[string]$smartCachePoolId
 	[string]$speedRPM
-	[string]$storeEngineId
 	[string]$temperature
 	[string]$type
 	[string]$barCode
 	[string]$formartProgress
 	[string]$formatRemainTime
-	[string]$manufacterCapacity
 
 	OceanStorDisks ([array]$disks)
 	{
@@ -510,8 +702,13 @@ class OceanStorDisks{
 		$this.manufacter = $disks.MANUFACTURER
 		$this.model = $disks.MODEL
 		$this.multipath = $disks.MULTIPATH
-		$this.parentId = $disks.PARENTID
-		$this.{Parent Type} = $disks.PARENTTYPE
+		$this.{Enclosure ID} = $disks.PARENTID
+
+		switch($disks.PARENTTYPE)
+		{
+			1 {$this.{Parent Type} = "Enclosure"}
+		}
+
 		$this.poolId = $disks.POOLID
 		$this.poolName = $disks.POOLNAME
 		$this.poolTierId = $disks.POOLTIERID
@@ -558,33 +755,38 @@ class OceanStorDisks{
 		$this.barCode = $disks.barcode
 		$this.formartProgress = $disks.formatProgress
 		$this.formatRemainTime = $disks.formatRemainTime
-		$this.manufacterCapacity = $disks.manuCapacity
+		$this.manufacterCapacity = $disks.manuCapacity / 1GB
 	}
 }
 
 class OceanStorHost{
 	#Define Properties
-	[string]$description
-	[string]$healthstatus
 	[string]$id
+	[string]$name
+	[string]${Healh Status}
+	[string]${Running Status}
+	[string]$type
+	[string]$description
+	[string]$parentid
+	[string]$parentname
+	[string]$parenttype
 	[string]$initiatornum
 	[string]$ip
 	[string]$isadd2hostgroup
 	[string]$location
 	[string]$model
-	[string]$name
 	[string]$networkname
-	[string]$operationsystem
-	[string]$parentid
-	[string]$parentname
-	[string]$parenttype
-	[string]$runningstatus
-	[string]$type
+	[string]${Operation System}
 
 	OceanStorHost ([array] $hostReceived)
 	{
 		$this.description = $hostReceived.DESCRIPTION
-		$this.healthstatus = $hostReceived.HEALTHSTATUS
+
+		switch($hostReceived.HEALTHSTATUS)
+		{
+			1 {$this.{Healh Status} = "normal"}
+		}
+
 		$this.id = $hostReceived.ID
 		$this.initiatornum = $hostReceived.INITIATORNUM
 		$this.ip = $hostReceived.IP
@@ -593,12 +795,36 @@ class OceanStorHost{
 		$this.model = $hostReceived.MODEL
 		$this.name = $hostReceived.NAME
 		$this.networkname = $hostReceived.NETWORKNAME
-		$this.operationsystem = $hostReceived.OPERATIONSYSTEM
+
+		switch($hostReceived.OPERATIONSYSTEM)
+		{
+			0 {$this.{Operation System} = "Linux"}
+			1 {$this.{Operation System} = "Windows"}
+			2 {$this.{Operation System} = "Solaris"}
+			3 {$this.{Operation System} = "HP-UX"}
+			4 {$this.{Operation System} = "AIX"}
+			5 {$this.{Operation System} = "XenServer"}
+			6 {$this.{Operation System} = "Mac OS"}
+			7 {$this.{Operation System} = "VMware ESX"}
+			8 {$this.{Operation System} = "LINUX_VIS"}
+			9 {$this.{Operation System} = "Windows Server 2012"}
+			10 {$this.{Operation System} = "Oracle VM"}
+			11 {$this.{Operation System} = "OpenVMS"}
+		}
+
 		$this.parentid = $hostReceived.PARENTID
 		$this.parentname = $hostReceived.PARENTNAME
 		$this.parenttype = $hostReceived.PARENTTYPE
-		$this.runningstatus = $hostReceived.RUNNINGSTATUS
-		$this.type = $hostReceived.TYPE
+
+		switch($hostReceived.RUNNINGSTATUS)
+		{
+			1 {$this.{Running Status}  = "normal"}
+		}
+
+		switch($hostReceived.TYPE)
+		{
+			21 {$this.type  = "Host"}
+		}
 	}
 
 }
@@ -641,8 +867,7 @@ class OceanstorSession{
     }
 }
 
-class OceanstorStorage
-{
+class OceanstorStorage{
 	#Define Hostname Property
 	[string]$Hostname
 
@@ -676,6 +901,9 @@ class OceanstorStorage
 	#Define Storage Pools
 	[array]$StoragePools
 
+	#Define vStores
+	[array]$vStores
+
     # Constructor
     OceanstorStorage ([String] $Hostname)
     {
@@ -690,6 +918,7 @@ class OceanstorStorage
 		$this.HostGroups = get-DMhostGroups -WebSession $storageConnection
 		$this.StoragePools = get-DMstoragePools -WebSession $storageConnection
 		$this.DeviceId = $this.System.sn
+		$this.vStores = get-DMvStore -WebSession $storageConnection
     }
 }
 
@@ -1206,13 +1435,14 @@ function export-DMStorage{
 
 	#TODO Use SaveFileDialog Form to select file
 
-	Export-Excel $ReportFile -AutoSize -TableName System -InputObject $storage.system -WorksheetName "system"
-	Export-Excel $ReportFile -AutoSize -TableName Disks -InputObject $storage.disks -WorksheetName "disks"
+	Export-Excel $ReportFile -AutoSize -TableName System -InputObject $storage.system -WorksheetName "Basic System"
+	Export-Excel $ReportFile -AutoSize -TableName Disks -InputObject $storage.disks -WorksheetName "System Disks"
 	Export-Excel $ReportFile -AutoSize -TableName StoragePools -InputObject $storage.StoragePools -WorksheetName "Storage Pools"
 	Export-Excel $ReportFile -AutoSize -TableName Luns -InputObject $storage.Luns -WorksheetName "Luns"
 	Export-Excel $ReportFile -AutoSize -TableName LunGroups -InputObject $storage.LunGroups -WorksheetName "Lun Groups"
 	Export-Excel $ReportFile -AutoSize -TableName Hosts -InputObject $storage.hosts -WorksheetName "Hosts"
 	Export-Excel $ReportFile -AutoSize -TableName HostGroups -InputObject $storage.HostGroups -WorksheetName "Hosts Groups"
+	Export-Excel $ReportFile -AutoSize -TableName vStores -InputObject $storage.vStores -WorksheetName "System vStores"
 
 }
 
