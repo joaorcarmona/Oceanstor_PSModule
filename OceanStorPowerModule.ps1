@@ -222,6 +222,47 @@ class OceanStorLunGroup
 	}
 }
 
+class OceanStorvStore
+{
+	#Define Properties
+	[int]${vStore ID}
+	[string]${vStore Name}
+	[string]${Running Status}
+	[string]$Description
+	[int64]${SAN Capacity Quota}
+	[int64]${SAN Free Capacity Quota}
+	[int64]${SAN Total Capacity}
+	[int64]${NAS Capacity Quota}
+	[int64]${NAS Free Capacity Quota}
+	[int64]${NAS Total Capacity}
+
+	OceanStorvStore ([array]$vStoresReceived)
+	{
+		$this.{vStore ID} = $vStoresReceived.ID
+		$this.{vStore Name} = $vStoresReceived.NAME
+
+		switch($vStoresReceived.RUNNINGSTATUS)
+		{
+			1 {$this.{Running Status} = "Online"}
+			53 {$this.{Running Status}= "Initializing"}
+		}
+
+		$this.Description = $vStoresReceived.DESCRIPTION
+		$this.{SAN Capacity Quota} = $vStoresReceived.sanCapacityQuata * 512 / 1GB
+		$this.{SAN Free Capacity Quota} = $vStoresReceived.sanFreeCapacityQuata * 512 / 1GB
+		$this.{SAN Total Capacity} = $vStoresReceived.sanTotalCapacity * 512 / 1GB
+		$this.{NAS Capacity Quota} = $vStoresReceived.nasCapacityQuata * 512 / 1GB
+		$this.{NAS Free Capacity Quota} = $vStoresReceived.nasFreeCapacityQuata * 512 / 1GB
+		$this.{NAS Total Capacity} = $vStoresReceived.nasTotalCapacity * 512 / 1GB
+	}
+}
+
+class OceanStorMappingView
+{
+
+}
+
+
 class OceanStorHostGroup
 {
 	#Define Properties
@@ -628,8 +669,6 @@ function connect-deviceManager {
 
     $connection = [OceanstorDeviceManager]::new($logonSession,$SessionHeader,$webSession,$Hostname,$credentials)
 
-	$connection.Hostname
-
     if ($return -eq $true)
     {
        return $connection
@@ -719,3 +758,350 @@ function get-DMluns
 
 	return $result
 }
+
+function get-DMlunsByWWN
+{
+	[Cmdletbinding()]
+    Param(
+    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+        [pscustomobject]$WebSession,
+	[Parameter(ValueFromPipeline=$false,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$true)]
+        [pscustomobject]$wwn
+	)
+
+	if ($WebSession){
+        $session = $WebSession
+    } else {
+        $session = $deviceManager
+    }
+
+    $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "lun" | Select-Object -ExpandProperty data
+    $StorageLuns = New-Object System.Collections.ArrayList
+
+	foreach ($tlun in $response)
+	{
+		$lun = [OceanstorDeviceLun]::new($tlun)
+		$StorageLuns += $lun
+	}
+
+	$result = $StorageLuns | Where-Object wwn -Match $wwn
+
+	return $result
+}
+
+function get-DMdisks
+{
+	[Cmdletbinding()]
+    Param(
+    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+        [pscustomobject]$WebSession
+	)
+
+	if ($WebSession){
+        $session = $WebSession
+    } else {
+        $session = $deviceManager
+    }
+
+    $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "disk" | Select-Object -ExpandProperty data
+    $Storagedisks = New-Object System.Collections.ArrayList
+
+	foreach ($tdisk in $response)
+	{
+		$disk = [OceanStorDisks]::new($tdisk)
+		$Storagedisks += $disk
+	}
+
+	$result = $Storagedisks
+
+	return $result
+}
+
+function get-DMdisksbyPoolId
+{
+	[Cmdletbinding()]
+    Param(
+    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+        [pscustomobject]$WebSession,
+		[Parameter(ValueFromPipeline=$false,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$true)]
+			[pscustomobject]$poolId
+	)
+
+	if ($WebSession){
+        $session = $WebSession
+    } else {
+        $session = $deviceManager
+    }
+
+    $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "disk" | Select-Object -ExpandProperty data
+    $Storagedisks = New-Object System.Collections.ArrayList
+
+	foreach ($tdisk in $response)
+	{
+		$disk = [OceanStorDisks]::new($tdisk)
+		$Storagedisks += $disk
+	}
+
+	$result = $Storagedisks | Where-Object poolId -Match $poolID
+
+	return $result
+}
+
+function get-DMdisksbyPoolName
+{
+	[Cmdletbinding()]
+    Param(
+    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+        [pscustomobject]$WebSession,
+		[Parameter(ValueFromPipeline=$false,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$true)]
+			[pscustomobject]$poolName
+	)
+
+	if ($WebSession){
+        $session = $WebSession
+    } else {
+        $session = $deviceManager
+    }
+
+    $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "disk" | Select-Object -ExpandProperty data
+    $Storagedisks = New-Object System.Collections.ArrayList
+
+	foreach ($tdisk in $response)
+	{
+		$disk = [OceanStorDisks]::new($tdisk)
+		$Storagedisks += $disk
+	}
+
+	$result = $Storagedisks | Where-Object poolName -Match $poolName
+
+	return $result
+}
+
+function get-DMfreeDisks
+{
+	[Cmdletbinding()]
+    Param(
+    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+        [pscustomobject]$WebSession
+	)
+
+	if ($WebSession){
+        $session = $WebSession
+    } else {
+        $session = $deviceManager
+    }
+
+    $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "disk" | Select-Object -ExpandProperty data
+    $Storagedisks = New-Object System.Collections.ArrayList
+
+	foreach ($tdisk in $response)
+	{
+		$disk = [OceanStorDisks]::new($tdisk)
+		$Storagedisks += $disk
+	}
+
+	$result = $Storagedisks | Where-Object logicType -eq "free"
+
+	return $result
+}
+
+function get-DMcofferDisks
+{
+	[Cmdletbinding()]
+    Param(
+    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+        [pscustomobject]$WebSession
+	)
+
+	if ($WebSession){
+        $session = $WebSession
+    } else {
+        $session = $deviceManager
+    }
+
+    $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "disk" | Select-Object -ExpandProperty data
+    $Storagedisks = New-Object System.Collections.ArrayList
+
+	foreach ($tdisk in $response)
+	{
+		$disk = [OceanStorDisks]::new($tdisk)
+		$Storagedisks += $disk
+	}
+
+	$result = $Storagedisks | Where-Object cofferDisk -eq $true
+
+	return $result
+}
+
+function get-DMlunGroups
+{
+	[Cmdletbinding()]
+    Param(
+    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+        [pscustomobject]$WebSession
+	)
+
+	if ($WebSession){
+        $session = $WebSession
+    } else {
+        $session = $deviceManager
+    }
+
+    $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "lungroup" | Select-Object -ExpandProperty data
+    $lunGroups = New-Object System.Collections.ArrayList
+
+	foreach ($lgroup in $response)
+	{
+		$lunGroup = [OceanStorLunGroup]::new($lgroup)
+		$lunGroups += $lunGroup
+	}
+
+	$result = $lunGroups
+
+	return $result
+}
+
+function get-DMhosts
+{
+	[Cmdletbinding()]
+    Param(
+    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+        [pscustomobject]$WebSession
+	)
+
+	if ($WebSession){
+        $session = $WebSession
+    } else {
+        $session = $deviceManager
+    }
+
+    $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "host" | Select-Object -ExpandProperty data
+    $hosts = New-Object System.Collections.ArrayList
+
+	foreach ($thost in $response)
+	{
+		$hostobj = [OceanStorHost]::new($thost)
+		$hosts += $hostobj
+	}
+
+	$result = $hosts
+
+	return $result
+}
+
+function get-DMhostGroups
+{
+	[Cmdletbinding()]
+    Param(
+    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+        [pscustomobject]$WebSession
+	)
+
+	if ($WebSession){
+        $session = $WebSession
+    } else {
+        $session = $deviceManager
+    }
+
+    $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "hostgroup" | Select-Object -ExpandProperty data
+    $hostgroups = New-Object System.Collections.ArrayList
+
+	foreach ($hgroup in $response)
+	{
+		$hostgroup = [OceanStorHostGroup]::new($hgroup)
+		$hostgroups += $hostgroup
+	}
+
+	$result = $hostgroups
+
+	return $result
+}
+
+function get-DMhostGroups
+{
+	[Cmdletbinding()]
+    Param(
+    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+        [pscustomobject]$WebSession
+	)
+
+	if ($WebSession){
+        $session = $WebSession
+    } else {
+        $session = $deviceManager
+    }
+
+    $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "storagepool" | Select-Object -ExpandProperty data
+    $storagePools = New-Object System.Collections.ArrayList
+
+	foreach ($spool in $response)
+	{
+		$storagePool = [OceanStorStoragePool]::new($spool)
+		$storagePools += $storagePool
+	}
+
+	$result = $storagePools
+
+	return $result
+}
+
+function get-DMvStore
+{
+	[Cmdletbinding()]
+    Param(
+    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+        [pscustomobject]$WebSession
+	)
+
+	if ($WebSession){
+        $session = $WebSession
+    } else {
+        $session = $deviceManager
+    }
+
+    $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "vstore" | Select-Object -ExpandProperty data
+    $vStores = New-Object System.Collections.ArrayList
+
+	foreach ($tvstore in $response)
+	{
+		$vStore = [OceanStorvStore]::new($tvstore)
+		$vStores += $vStore
+	}
+
+	$result = $vStores
+
+	return $result
+}
+
+function get-DMmappingViews
+{
+	[Cmdletbinding()]
+    Param(
+    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+        [pscustomobject]$WebSession
+	)
+
+	if ($WebSession){
+        $session = $WebSession
+    } else {
+        $session = $deviceManager
+    }
+
+    $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "mappingview" | Select-Object -ExpandProperty data
+    $mappingViews = New-Object System.Collections.ArrayList
+
+	foreach ($mview in $response)
+	{
+		$mappingView = [OceanStorvStore]::new($mview)
+		$mappingViews += $mappingView
+	}
+
+	$result = $mappingViews
+
+	return $result
+}
+
+
+
+
+
