@@ -1199,7 +1199,7 @@ function export-DMStorage{
 
 	if ($hostname -ne $null)
 	{
-		$storage = new-OceanstorStorage -Hostname "10.10.10.21"
+		$storage = new-OceanstorStorage -Hostname $Hostname
 	} else {
 		$storage = $OceanStor
 	}
