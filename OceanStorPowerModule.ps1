@@ -772,7 +772,7 @@ class OceanStorHost{
 	[string]$parenttype
 	[string]$initiatornum
 	[string]$ip
-	[string]$isadd2hostgroup
+	[boolean]$isadd2hostgroup
 	[string]$location
 	[string]$model
 	[string]$networkname
@@ -784,13 +784,21 @@ class OceanStorHost{
 
 		switch($hostReceived.HEALTHSTATUS)
 		{
-			1 {$this.{Healh Status} = "normal"}
+			1 {$this.{Healh Status} = "Normal"}
+			17 {$this.{Healh Status} = "No Redundant link"}
+			18 {$this.{Healh Status} = "Offline"}
 		}
 
 		$this.id = $hostReceived.ID
 		$this.initiatornum = $hostReceived.INITIATORNUM
 		$this.ip = $hostReceived.IP
-		$this.isadd2hostgroup = $hostReceived.ISADD2HOSTGROUP
+
+		switch($hostReceived.ISADD2HOSTGROUP)
+		{
+			true {$this.isadd2hostgroup = $true}
+			false {$this.isadd2hostgroup = $false}
+		}
+
 		$this.location = $hostReceived.LOCATION
 		$this.model = $hostReceived.MODEL
 		$this.name = $hostReceived.NAME
@@ -810,11 +818,18 @@ class OceanStorHost{
 			9 {$this.{Operation System} = "Windows Server 2012"}
 			10 {$this.{Operation System} = "Oracle VM"}
 			11 {$this.{Operation System} = "OpenVMS"}
+			12 {$this.{Operation System} = "Oracle_VM_Server_for_x86"}
+			13 {$this.{Operation System} = "Oracle_VM_Server_for_SPARC"}
 		}
 
 		$this.parentid = $hostReceived.PARENTID
 		$this.parentname = $hostReceived.PARENTNAME
-		$this.parenttype = $hostReceived.PARENTTYPE
+
+		switch($hostReceived.PARENTTYPE)
+		{
+			14 {$this.parenttype  = "Host Group"}
+			245 {$this.parenttype  = "Mapping View"}
+		}
 
 		switch($hostReceived.RUNNINGSTATUS)
 		{
