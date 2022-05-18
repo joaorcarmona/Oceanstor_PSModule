@@ -12,6 +12,8 @@ add-type @"
 "@
 [System.Net.ServicePointManager]::CertificatePolicy = New-Object TrustAllCertsPolicy
 
+
+#Define Object Class
 class OceanStorSystem
 {
 	#Position 2
@@ -557,4 +559,163 @@ class OceanStorHost
 	}
 
 }
+
+class OceanstorDeviceManager
+{
+    #Define Hostname Property
+	hidden [string]$Hostname
+
+	#Define Host Credentials Property
+	hidden [System.Management.Automation.PSCredential]$Credentials
+
+	#Define DeviceID Property
+	hidden [string]$DeviceId
+
+	#Define WebSession Property
+	hidden [Microsoft.PowerShell.Commands.WebRequestSession]$WebSession
+
+	#Define Headers Array Property
+	hidden [System.Collections.IDictionary]$Headers
+
+	#Define iBaseToken Property
+	hidden [string]$iBaseToken
+
+    # Constructor
+    OceanstorDeviceManager ([PSCustomObject] $logonSession, [System.Collections.IDictionary]$SessionHeader, [Microsoft.PowerShell.Commands.WebRequestSession]$webSession, [string] $hostname, [System.Management.Automation.PSCredential]$credentials)
+    {
+        $this.DeviceId = $logonsession.data.deviceid
+        $this.WebSession = $WebSession
+        $this.Headers = $SessionHeader
+        $this.iBaseToken = $logonsession.data.iBaseToken
+        $this.Credentials = $credentials
+        $this.Hostname = $hostname
+    }
+}
+
 #functions module
+function connect-deviceManager {
+	[Cmdletbinding()]
+  Param(
+  [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$true)]
+  [String]$Hostname,
+  [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=1,Mandatory=$false)]
+  [boolean]$Return = $false
+  )
+
+    $credentials = Get-Credential
+    $username = $credentials.GetNetworkCredential().UserName
+    $password = $credentials.GetNetworkCredential().Password
+
+    $body = @{username = $username;
+            password = $password;
+            scope = 0}
+
+    $webSession = New-Object Microsoft.PowerShell.Commands.WebRequestSession
+
+    $logonsession=Invoke-RestMethod -Method Post -Uri "https://$($Hostname):8088/deviceManager/rest/xxxxx/sessions" -Body (ConvertTo-Json $body) -SessionVariable WebSession
+
+    if ($logonsession.error.code -ne 0)
+    {
+        Write-Host $logonsession.error
+        exit
+    }
+    $CredentialsBytes = [System.Text.Encoding]::UTF8.GetBytes(-join("{0}:{1}" -f $username,$password))
+    $EncodedCredentials = [Convert]::ToBase64String($CredentialsBytes)
+
+    $SessionHeader = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
+    $SessionHeader.Add("Authorization", "Basic $EncodedCredentials")
+    $SessionHeader.Add("iBaseToken", $logonsession.data.iBaseToken)
+
+    $connection = [OceanstorDeviceManager]::new($logonSession,$SessionHeader,$webSession,$Hostname,$credentials)
+
+	$connection.Hostname
+
+    if ($return -eq $true)
+    {
+       return $connection
+    } else {
+       $global:deviceManager = $connection
+    }
+}
+
+function invoke-DeviceManager{
+    [Cmdletbinding()]
+    Param(
+    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+        [pscustomobject]$WebSession,
+    [Parameter(Position=1,Mandatory=$true)]
+        [ValidateSet('GET','POST','PUT','DELETE')]
+        [string]$Method,
+    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=2,Mandatory=$true)]
+        [String]$Resource
+	)
+
+    if ($WebSession){
+        $session = $WebSession
+    } else {
+        $session = $deviceManager
+    }
+
+    $RestURI = "https://$($session.hostname):8088/deviceManager/rest/$($session.DeviceId)/$resource"
+
+	$result = Invoke-RestMethod -Method $Method -uri $RestURI -Headers $session.Headers -WebSession $session.WebSession -ContentType "application/json" -Credential $session.Credentials
+
+    if ($result.error.code -ne 0)
+    {
+        Write-Host $result.error
+        exit
+    }
+
+	return $result
+}
+
+function get-DMSystem
+{
+	[Cmdletbinding()]
+    Param(
+    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+        [pscustomobject]$WebSession
+	)
+
+	if ($WebSession){
+        $session = $WebSession
+    } else {
+        $session = $deviceManager
+    }
+
+    $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "system/" | Select-Object -ExpandProperty data
+    $response = $response -replace "[@{}]"
+    [array]$systemArray = $response.Split(";")
+
+    $result = [OceanStorSystem]::new($systemArray)
+
+	return $result
+}
+
+function get-DMluns
+{
+	[Cmdletbinding()]
+    Param(
+    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+        [pscustomobject]$WebSession
+	)
+
+	if ($WebSession){
+        $session = $WebSession
+    } else {
+        $session = $deviceManager
+    }
+
+    $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "lun" | Select-Object -ExpandProperty data
+    $StorageLuns = New-Object System.Collections.ArrayList
+
+	foreach ($tlun in $response)
+	{
+		$lun = [OceanstorDeviceLun]::new($tlun)
+		$StorageLuns += $lun
+	}
+
+	$result = $storageLuns
+
+	return $result
+}
