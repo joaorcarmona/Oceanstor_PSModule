@@ -13,23 +13,17 @@ add-type @"
 [System.Net.ServicePointManager]::CertificatePolicy = New-Object TrustAllCertsPolicy
 
 
-#Define Object Class
-class OceanStorSystem
-{
-	#Position 2
-	[string]$description
-	#Position 5 TODO
-	#[int64] $Health
-	#Position 6
-	[int]$HotSpareNumbers
-	#Position 8
-	[string]$location
-	#Position 12
-	[string]$version
-	#Position 40
-	[string]$WWN
+#Class Module
+class OceanStorSystem{
 	#Define SN
 	[string]$sn
+	[string]$version
+	[string]$WWN
+	[string]$location
+	[string]$description
+	[string]${Health Status}
+	[string]${Running Status}
+	[int]$HotSpareNumbers
 
 	OceanStorSystem ([array]$systemArray)
 	{
@@ -43,20 +37,34 @@ class OceanStorSystem
 			$value = $sysprop[1]
 			$SystemProperties.add($key.trim(), $value)
 		}
-
-		$sysDescription = $SystemProperties.DESCRIPTION
-		$this.description = $sysDescription
-		$this.HotSpareNumbers = $SystemProperties["HOTSPAREDISKSCAPACITY"]
 		$this.sn = $SystemProperties["ID"]
-		$this.location = $SystemProperties["LOCATION"]
 		$sysProductVersion = $SystemProperties.PRODUCTVERSION
 		$this.version = $sysProductVersion
 		$this.WWN = $SystemProperties["wwn"]
+		$this.location = $SystemProperties["LOCATION"]
+		$sysDescription = $SystemProperties.DESCRIPTION
+		$this.description = $sysDescription
+
+		switch($SystemProperties.HEALTHSTATUS)
+		{
+			1 {$this.{Health Status} = "Normal"}
+			2 {$this.{Health Status} = "Faulty"}
+		}
+
+		switch($SystemProperties.RUNNINGSTATUS)
+		{
+			1 {$this.{Running Status} = "Normal"}
+			3 {$this.{Running Status} = "Not Running"}
+			12 {$this.{Running Status} = "Powering on"}
+			47 {$this.{Running Status} = "Powering off"}
+			51 {$this.{Running Status} = "Upgrading"}
+		}
+
+		$this.HotSpareNumbers = $SystemProperties["HOTSPAREDISKSCAPACITY"]
 	}
 }
 
-class OceanstorDeviceLun
-{
+class OceanstorDeviceLun{
 	#Define Lun ID (id)
 	[Int]$id
 
@@ -187,8 +195,7 @@ class OceanstorDeviceLun
 	}
 }
 
-class OceanStorLunGroup
-{
+class OceanStorLunGroup{
 	#Define Properties
 	[int]${LunGroup ID}
 	[string]${LunGroup Name}
@@ -222,8 +229,7 @@ class OceanStorLunGroup
 	}
 }
 
-class OceanStorvStore
-{
+class OceanStorvStore{
 	#Define Properties
 	[int]${vStore ID}
 	[string]${vStore Name}
@@ -257,14 +263,13 @@ class OceanStorvStore
 	}
 }
 
-class OceanStorMappingView
-{
+#TODO Create MappingView Class
+<# class OceanStorMappingView{
 
-}
+} #>
 
 
-class OceanStorHostGroup
-{
+class OceanStorHostGroup{
 	#Define Properties
 	[int]${HostGroup ID}
 	[string]${HostGroup Name}
@@ -292,8 +297,7 @@ class OceanStorHostGroup
 	}
 }
 
-class OceanStorStoragePool
-{
+class OceanStorStoragePool{
 	#TODO DEFINE Properties with friendly Name & complete information
 	#Define Properties
 	[string]$autodeactivesnapshotswitch
@@ -420,8 +424,7 @@ class OceanStorStoragePool
 	}
 }
 
-class OceanStorDisks
-{
+class OceanStorDisks{
 	#Define Variables
 	[string]$encryptDiskType
 	[string]$firmwareVersion
@@ -559,8 +562,7 @@ class OceanStorDisks
 	}
 }
 
-class OceanStorHost
-{
+class OceanStorHost{
 	#Define Properties
 	[string]$description
 	[string]$healthstatus
@@ -601,9 +603,8 @@ class OceanStorHost
 
 }
 
-class OceanstorDeviceManager
-{
-    #Define Hostname Property
+class OceanstorSession{
+    #Define Hostname Property OceanstorDeviceManager
 	hidden [string]$Hostname
 
 	#Define Host Credentials Property
@@ -621,8 +622,11 @@ class OceanstorDeviceManager
 	#Define iBaseToken Property
 	hidden [string]$iBaseToken
 
+	#Define Software Version
+	hidden [string]$Version
+
     # Constructor
-    OceanstorDeviceManager ([PSCustomObject] $logonSession, [System.Collections.IDictionary]$SessionHeader, [Microsoft.PowerShell.Commands.WebRequestSession]$webSession, [string] $hostname, [System.Management.Automation.PSCredential]$credentials)
+    OceanstorSession ([PSCustomObject] $logonSession, [System.Collections.IDictionary]$SessionHeader, [Microsoft.PowerShell.Commands.WebRequestSession]$webSession, [string] $hostname, [System.Management.Automation.PSCredential]$credentials)
     {
         $this.DeviceId = $logonsession.data.deviceid
         $this.WebSession = $WebSession
@@ -630,18 +634,74 @@ class OceanstorDeviceManager
         $this.iBaseToken = $logonsession.data.iBaseToken
         $this.Credentials = $credentials
         $this.Hostname = $hostname
+
+		$getDeviceManager = get-DMSystem -WebSession $this
+
+		$this.Version = $getDeviceManager.version
+    }
+}
+
+class OceanstorStorage
+{
+	#Define Hostname Property
+	[string]$Hostname
+
+	#Define DeviceID Property
+	[string]$DeviceId
+
+	#define System Array
+	[OceanStorSystem]$System
+
+	#Define Alarm Count
+	[int64]${Active Alarms}
+
+	#Define vStore Count
+	[int64]${Number of vStores}
+
+	#define Luns
+	[array]$Luns
+
+	#Define Disk
+	[array]$disks
+
+	#Define LunGroups
+	[array]$LunGroups
+
+	#Define Hosts
+	[array]$Hosts
+
+	#Define Host Groups
+	[array]$HostGroups
+
+	#Define Storage Pools
+	[array]$StoragePools
+
+    # Constructor
+    OceanstorStorage ([String] $Hostname)
+    {
+		$storageConnection = connect-deviceManager -Hostname $Hostname -Return $true
+
+		$this.Hostname = $Hostname
+		$this.System = get-DMSystem -WebSession $storageConnection
+		$this.Luns = get-DMluns -WebSession $storageConnection
+		$this.LunGroups = get-DMlunGroups -WebSession $storageConnection
+		$this.disks = get-DMdisks -WebSession $storageConnection
+		$this.Hosts = get-DMhosts -WebSession $storageConnection
+		$this.HostGroups = get-DMhostGroups -WebSession $storageConnection
+		$this.StoragePools = get-DMstoragePools -WebSession $storageConnection
+		$this.DeviceId = $this.System.sn
     }
 }
 
 #functions module
 function connect-deviceManager {
 	[Cmdletbinding()]
-  Param(
-  [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$true)]
-  [String]$Hostname,
-  [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=1,Mandatory=$false)]
-  [boolean]$Return = $false
-  )
+	Param(
+		[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$true)]
+			[String]$Hostname,
+		[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=1,Mandatory=$false)]
+			[boolean]$Return = $false
+	)
 
     $credentials = Get-Credential
     $username = $credentials.GetNetworkCredential().UserName
@@ -667,7 +727,7 @@ function connect-deviceManager {
     $SessionHeader.Add("Authorization", "Basic $EncodedCredentials")
     $SessionHeader.Add("iBaseToken", $logonsession.data.iBaseToken)
 
-    $connection = [OceanstorDeviceManager]::new($logonSession,$SessionHeader,$webSession,$Hostname,$credentials)
+    $connection = [OceanstorSession]::new($logonSession,$SessionHeader,$webSession,$Hostname,$credentials)
 
     if ($return -eq $true)
     {
@@ -708,8 +768,7 @@ function invoke-DeviceManager{
 	return $result
 }
 
-function get-DMSystem
-{
+function get-DMSystem{
 	[Cmdletbinding()]
     Param(
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
@@ -731,8 +790,7 @@ function get-DMSystem
 	return $result
 }
 
-function get-DMluns
-{
+function get-DMluns{
 	[Cmdletbinding()]
     Param(
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
@@ -759,8 +817,7 @@ function get-DMluns
 	return $result
 }
 
-function get-DMlunsByWWN
-{
+function get-DMlunsByWWN{
 	[Cmdletbinding()]
     Param(
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
@@ -789,8 +846,7 @@ function get-DMlunsByWWN
 	return $result
 }
 
-function get-DMdisks
-{
+function get-DMdisks{
 	[Cmdletbinding()]
     Param(
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
@@ -817,8 +873,7 @@ function get-DMdisks
 	return $result
 }
 
-function get-DMdisksbyPoolId
-{
+function get-DMdisksbyPoolId{
 	[Cmdletbinding()]
     Param(
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
@@ -847,8 +902,7 @@ function get-DMdisksbyPoolId
 	return $result
 }
 
-function get-DMdisksbyPoolName
-{
+function get-DMdisksbyPoolName{
 	[Cmdletbinding()]
     Param(
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
@@ -877,8 +931,7 @@ function get-DMdisksbyPoolName
 	return $result
 }
 
-function get-DMfreeDisks
-{
+function get-DMfreeDisks{
 	[Cmdletbinding()]
     Param(
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
@@ -905,8 +958,7 @@ function get-DMfreeDisks
 	return $result
 }
 
-function get-DMcofferDisks
-{
+function get-DMcofferDisks{
 	[Cmdletbinding()]
     Param(
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
@@ -933,8 +985,7 @@ function get-DMcofferDisks
 	return $result
 }
 
-function get-DMlunGroups
-{
+function get-DMlunGroups{
 	[Cmdletbinding()]
     Param(
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
@@ -961,8 +1012,7 @@ function get-DMlunGroups
 	return $result
 }
 
-function get-DMhosts
-{
+function get-DMhosts{
 	[Cmdletbinding()]
     Param(
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
@@ -989,8 +1039,7 @@ function get-DMhosts
 	return $result
 }
 
-function get-DMhostGroups
-{
+function get-DMhostGroups{
 	[Cmdletbinding()]
     Param(
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
@@ -1017,8 +1066,7 @@ function get-DMhostGroups
 	return $result
 }
 
-function get-DMhostGroups
-{
+function get-DMhostGroups{
 	[Cmdletbinding()]
     Param(
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
@@ -1045,8 +1093,7 @@ function get-DMhostGroups
 	return $result
 }
 
-function get-DMvStore
-{
+function get-DMvStore{
 	[Cmdletbinding()]
     Param(
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
@@ -1073,8 +1120,8 @@ function get-DMvStore
 	return $result
 }
 
-function get-DMmappingViews
-{
+#TODO Create Function for MappingViews
+<# function get-DMmappingViews{
 	[Cmdletbinding()]
     Param(
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
@@ -1092,15 +1139,82 @@ function get-DMmappingViews
 
 	foreach ($mview in $response)
 	{
-		$mappingView = [OceanStorvStore]::new($mview)
+		$mappingView = [OceanStorMappingView]::new($mview)
 		$mappingViews += $mappingView
 	}
 
 	$result = $mappingViews
 
 	return $result
+} #>
+
+function get-DMstoragePools{
+	[Cmdletbinding()]
+    Param(
+    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+        [pscustomobject]$WebSession
+	)
+
+	if ($WebSession){
+        $session = $WebSession
+    } else {
+        $session = $deviceManager
+    }
+
+    $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "storagepool" | Select-Object -ExpandProperty data
+    $storagePools = New-Object System.Collections.ArrayList
+
+	foreach ($spool in $response)
+	{
+		$storagepool = [OceanStorStoragePool]::new($spool)
+		$storagePools += $storagepool
+	}
+
+	$result = $storagePools
+
+	return $result
+}
+function new-OceanstorStorage{
+	[Cmdletbinding()]
+	Param(
+		[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$true)]
+			[String]$Hostname
+	)
+
+	$result = [OceanstorStorage]::new($Hostname)
+
+	return $result
 }
 
+function export-DMStorage{
+	[Cmdletbinding()]
+	Param(
+		[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$true,ParameterSetName="NewConnection")]
+			[String]$Hostname,
+		[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$true,ParameterSetName="CurrentConnection")]
+			[PSCustomObject]$OceanStor,
+		[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$true)]
+			[string]$ReportFile
+	)
+
+	if ($hostname -ne $null)
+	{
+		$storage = new-OceanstorStorage -Hostname "10.10.10.21"
+	} else {
+		$storage = $OceanStor
+	}
+
+	#TODO Use SaveFileDialog Form to select file
+
+	Export-Excel $ReportFile -AutoSize -TableName System -InputObject $storage.system -WorksheetName "system"
+	Export-Excel $ReportFile -AutoSize -TableName Disks -InputObject $storage.disks -WorksheetName "disks"
+	Export-Excel $ReportFile -AutoSize -TableName StoragePools -InputObject $storage.StoragePools -WorksheetName "Storage Pools"
+	Export-Excel $ReportFile -AutoSize -TableName Luns -InputObject $storage.Luns -WorksheetName "Luns"
+	Export-Excel $ReportFile -AutoSize -TableName LunGroups -InputObject $storage.LunGroups -WorksheetName "Lun Groups"
+	Export-Excel $ReportFile -AutoSize -TableName Hosts -InputObject $storage.hosts -WorksheetName "Hosts"
+	Export-Excel $ReportFile -AutoSize -TableName HostGroups -InputObject $storage.HostGroups -WorksheetName "Hosts Groups"
+
+}
 
 
 
