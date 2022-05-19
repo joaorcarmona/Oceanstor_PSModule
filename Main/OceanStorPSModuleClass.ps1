@@ -1,6 +1,6 @@
 #Class Module
 class OceanStorSystem{
-	#Define SN
+	#Define Properties
 	[string]$sn
 	[string]$version
 	[string]$WWN
