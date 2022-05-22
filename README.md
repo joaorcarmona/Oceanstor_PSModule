@@ -7,7 +7,7 @@ Currently only get functions are developed, but in the future more operations co
 
 ```powershell
 # INstall
-    # Download the POSH-Module from github
+    # Download the POSH-Oceanstor from github
     # unzip the file
     # Extract the POSH-Oceanstor folder to your user Modules Location in $HOME\Documents\PowerShell\Modules
     # Or to System Wide Location C:\Program Files\WindowsPowerShell\Modules
@@ -30,7 +30,7 @@ Currently only get functions are developed, but in the future more operations co
 $storage = connect-deviceManager -hostname "10.10.10.10"
 
 #export all storage data to excel
- export-DMStorageToExcel -OceanStor $storage -ReportFile "c:\temp\MyStorage.xlsx"
+export-DMStorageToExcel -OceanStor $storage -ReportFile "c:\temp\MyStorage.xlsx"
 ```
 
 # Search one lun by WWN
