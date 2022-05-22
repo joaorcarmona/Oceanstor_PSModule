@@ -1,16 +1,38 @@
-function new-OceanstorStorage{
-	[Cmdletbinding()]
-	Param(
-		[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$true)]
-			[String]$Hostname
-	)
+function export-DMStorageToExcel{
+	<#
+	.SYNOPSIS
+		Function that exports to Excel a Huawei Storage Device Configuration
 
-	$result = [OceanstorStorage]::new($Hostname)
+	.DESCRIPTION
+		Function that exports to Excel a Huawei Storage Device Configuration.
+		The Configuration to be exported can be by given an OceanstorStorage Object, or by inputing a hostname, and the function will retrive all information.
 
-	return $result
-}
+	.PARAMETER Hostname
+		is mandatory/optional [string] parameter, that can be a hostname or an IP Address of the Huawei Oceanstor Device
+	.PARAMETER OceanStor
+		is mandatory/optional [pscustomObject] parameter. Is Huawei Oceanstor Device Object
+	.PARAMETER ReportFile
+		is a mandatory parameter, that sets the filepath to save the Excel File Report.
 
-function export-DMStorage{
+	.INPUTS
+
+	.OUTPUTS
+		returns the Huawei Oceanstor Device object with all the configuration. Return a Custom object
+
+	.EXAMPLE
+
+		PS C:\> export-DMStorageToExcel -hostname storage.domain.tld -ReportFile "c:\temp\StorageReport.xlsx"
+
+		PS C:\> export-DMStorageToExcel -OceanStor $StorageDevice -ReportFile "c:\temp\StorageReport.xlsx"
+
+	.NOTES
+		Filename: export-DMStorageToExcel.ps1
+		Author: Joao Carmona
+		Modified date: 2022-05-22
+		Version 0.2
+
+	.LINK
+	#>
 	[Cmdletbinding()]
 	Param(
 		[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$true,ParameterSetName="NewConnection")]
@@ -21,9 +43,9 @@ function export-DMStorage{
 			[string]$ReportFile
 	)
 
-	if ($hostname -ne $null)
+	if ($hostname -eq $null)
 	{
-		$storage = new-OceanstorStorage -Hostname $Hostname
+		$storage = export-DeviceManager -Hostname $Hostname
 	} else {
 		$storage = $OceanStor
 	}
