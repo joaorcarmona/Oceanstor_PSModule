@@ -9,6 +9,9 @@ function get-DMdnsServer{
     .PARAMETER WebSession
         Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
 
+    .OUTPUTS
+		returns the Huawei Oceanstor Storage array disks (array format)
+
     .EXAMPLE
         PS C:\> get-DMdnsServer -webSession $session
 
