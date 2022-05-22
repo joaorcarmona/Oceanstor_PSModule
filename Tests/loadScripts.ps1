@@ -1,17 +1,21 @@
-
+#Get Script RootPath
 $workDir = $(get-item $PSScriptRoot).Parent.FullName
-[array] $ModulesToLoad = @(
-    [pscustomobject]@{ModuleName="OceanStorPSModuleClass";Location="$workDir\Main\OceanStorPSModuleClass.ps1"}
-    [pscustomobject]@{ModuleName="OceanStorPSModuleBase";Location="$workDir\Main\OceanStorPSModuleBase.ps1"}
-    [pscustomobject]@{ModuleName="OceanStorPSModuleSys";Location="$workDir\Main\OceanStorPSModuleSys.ps1"}
-    [pscustomobject]@{ModuleName="OceanStorPSModuleSAN";Location="$workDir\Main\OceanStorPSModuleSAN.ps1"}
-    [pscustomobject]@{ModuleName="OceanStorPSModuleNAS";Location="$workDir\Main\OceanStorPSModuleNAS.ps1"}
-    [pscustomobject]@{ModuleName="OceanStorPSModuleReport";Location="$workDir\Main\OceanStorPSModuleReport.ps1"}
-)
 
-foreach ($module in $ModulesToLoad){
-    . $module.Location
+#Get public and private function definition files.
+$Public  = @( Get-ChildItem -Path $workDir\POSH-Oceanstor\Public\*.ps1 -ErrorAction SilentlyContinue )
+$Private  = @( Get-ChildItem -Path $workDir\POSH-Oceanstor\Private\*.ps1 -ErrorAction SilentlyContinue )
+
+
+#Dot source the files
+Foreach($import in @($Public + $Private))
+{
+    Try
+    {
+        . $import.fullname
+    }
+    Catch
+    {
+        Write-Error -Message "Failed to import function $($import.fullname): $_"
+    }
 }
-
-#export-DMStorage -Hostname "" -ReportFile ""
 
