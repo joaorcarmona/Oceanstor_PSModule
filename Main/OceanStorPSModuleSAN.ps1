@@ -1,4 +1,35 @@
 function get-DMluns{
+	<#
+	.SYNOPSIS
+		To Get Huawei Oceanstor Storage Luns
+
+	.DESCRIPTION
+		Function to request Huawei Oceanstor Storage Luns
+
+	.PARAMETER webSession
+		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
+
+	.INPUTS
+
+	.OUTPUTS
+		returns the Huawei Oceanstor Storage luns in the system. Return an Array object.
+
+	.EXAMPLE
+
+		PS C:\> get-DMluns -webSession $session
+
+		OR
+
+		PS C:\> $luns = get-DMluns
+
+	.NOTES
+		Filename: OceanstorPSModuleSAN.ps1
+		Author: Joao Carmona
+		Modified date: 2022-05-22
+		Version 0.2
+
+	.LINK
+	#>
 	[Cmdletbinding()]
     Param(
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
@@ -26,6 +57,39 @@ function get-DMluns{
 }
 
 function get-DMlunsByWWN{
+	<#
+	.SYNOPSIS
+		To Search for lun by lun WWN
+
+	.DESCRIPTION
+		Function to search for a lun based on lun WWN
+
+	.PARAMETER webSession
+		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
+	.PARAMETER wwn
+		Mandatory parameter [string], to set the WWN to look for.
+
+	.INPUTS
+
+	.OUTPUTS
+		returns the Huawei Oceanstor Storage lun, my searching lun WWN. Return lun Object
+
+	.EXAMPLE
+
+		PS C:\> get-DMlunsByWWN -webSession $session -wwn "6a08cf810075766e1efc050700000005"
+
+		OR
+
+		PS C:\> $luns = get-DMlunsByWWN -wwn "6a08cf810075766e1efc050700000005"
+
+	.NOTES
+		Filename: OceanstorPSModuleSAN.ps1
+		Author: Joao Carmona
+		Modified date: 2022-05-22
+		Version 0.2
+
+	.LINK
+	#>
 	[Cmdletbinding()]
     Param(
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
@@ -56,6 +120,37 @@ function get-DMlunsByWWN{
 
 
 function get-DMlunGroups{
+	<#
+	.SYNOPSIS
+		To Get Huawei Oceanstor Storage Lun Groups
+
+	.DESCRIPTION
+		Function to request Huawei Oceanstor Storage Lun Groups
+
+	.PARAMETER webSession
+		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
+
+	.INPUTS
+
+	.OUTPUTS
+		returns the Huawei Oceanstor Storage Lun Groups in the system. Return an Array object.
+
+	.EXAMPLE
+
+		PS C:\> get-DMlunGroups -webSession $session
+
+		OR
+
+		PS C:\> $lunGroups = get-DMlunGroups
+
+	.NOTES
+		Filename: OceanstorPSModuleSAN.ps1
+		Author: Joao Carmona
+		Modified date: 2022-05-22
+		Version 0.2
+
+	.LINK
+	#>
 	[Cmdletbinding()]
     Param(
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
@@ -83,6 +178,37 @@ function get-DMlunGroups{
 }
 
 function get-DMhosts{
+		<#
+	.SYNOPSIS
+		To Get Huawei Oceanstor Storage configured Hosts
+
+	.DESCRIPTION
+		Function to request Huawei Oceanstor Storage configured Hosts
+
+	.PARAMETER webSession
+		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
+
+	.INPUTS
+
+	.OUTPUTS
+		returns the Huawei Oceanstor Storage configured Hosts in the system. Return an Array object.
+
+	.EXAMPLE
+
+		PS C:\> get-DMhosts -webSession $session
+
+		OR
+
+		PS C:\> $hosts = get-DMhosts
+
+	.NOTES
+		Filename: OceanstorPSModuleSAN.ps1
+		Author: Joao Carmona
+		Modified date: 2022-05-22
+		Version 0.2
+
+	.LINK
+	#>
 	[Cmdletbinding()]
     Param(
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
@@ -110,6 +236,37 @@ function get-DMhosts{
 }
 
 function get-DMhostGroups{
+	<#
+	.SYNOPSIS
+		To Get Huawei Oceanstor Storage Host Groups
+
+	.DESCRIPTION
+		Function to request Huawei Oceanstor Storage Host Groups
+
+	.PARAMETER webSession
+		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
+
+	.INPUTS
+
+	.OUTPUTS
+		returns the Huawei Oceanstor Storage Host Groups in the system. Return an Array object.
+
+	.EXAMPLE
+
+		PS C:\> get-DMhostGroups -webSession $session
+
+		OR
+
+		PS C:\> $hostGroups = get-DMhostGroups
+
+	.NOTES
+		Filename: OceanstorPSModuleSAN.ps1
+		Author: Joao Carmona
+		Modified date: 2022-05-22
+		Version 0.2
+
+	.LINK
+	#>
 	[Cmdletbinding()]
     Param(
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
@@ -136,29 +293,3 @@ function get-DMhostGroups{
 	return $result
 }
 
-function get-DMhostGroups{
-	[Cmdletbinding()]
-    Param(
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
-        [pscustomobject]$WebSession
-	)
-
-	if ($WebSession){
-        $session = $WebSession
-    } else {
-        $session = $deviceManager
-    }
-
-    $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "storagepool" | Select-Object -ExpandProperty data
-    $storagePools = New-Object System.Collections.ArrayList
-
-	foreach ($spool in $response)
-	{
-		$storagePool = [OceanStorStoragePool]::new($spool)
-		$storagePools += $storagePool
-	}
-
-	$result = $storagePools
-
-	return $result
-}

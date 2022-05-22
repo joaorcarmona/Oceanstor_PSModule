@@ -13,5 +13,5 @@ foreach ($module in $ModulesToLoad){
     . $module.Location
 }
 
-export-DMStorage -Hostname "" -ReportFile ""
+#export-DMStorage -Hostname "" -ReportFile ""
 
