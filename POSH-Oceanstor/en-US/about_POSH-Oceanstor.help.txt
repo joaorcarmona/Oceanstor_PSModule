@@ -1,0 +1,14 @@
+PSTOPIC
+    about_POSH-Oceanstor
+
+SHORT DESCRIPTION
+    Oceanstor PowerShell Module, is a module to operate with Huawei Oceanstor devices (v3)
+
+LONG DESCRIPTION
+    Oceanstor PowerShell Module, is a module to operate with Huawei Oceanstor devices (v3), via the Huawei Oceanstor REST API
+
+
+DETAILED DESCRIPTION
+    Oceanstor PowerShell Module, is a module to operate with Huawei Oceanstor devices (v3) - v5/v6 should work (not fully tested)
+
+    Currently only get functions are developed, but in the future more operations could be added.
