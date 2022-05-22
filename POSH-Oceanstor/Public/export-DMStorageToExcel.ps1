@@ -43,7 +43,7 @@ function export-DMStorageToExcel{
 			[string]$ReportFile
 	)
 
-	if ($hostname -eq $null)
+	if ($hostname -ne "")
 	{
 		$storage = export-DeviceManager -Hostname $Hostname
 	} else {
