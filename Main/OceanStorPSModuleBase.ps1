@@ -82,6 +82,40 @@ class OceanstorStorage{
 }
 
 function connect-deviceManager {
+	<#
+	.SYNOPSIS
+		Connects to a Huawei Storage by rest.
+
+	.DESCRIPTION
+		Function to start a connection to a Huawei Storage Device
+
+	.PARAMETER Hostname
+		is mandatory [string] parameter, that can be a hostname or an IP Address of the Huawei Oceanstor Device
+	.PARAMETER Return
+		is optional [bollean] parameter, for the function to return the the connection object or create a Global Variable $deviceManager.
+		by default is false.
+		If true, the connection object will be returned. If false $deviceManager Global Variable will be set. by default
+
+	.INPUTS
+
+	.OUTPUTS
+		Creates a object connection to a Huawei Storage Device
+
+	.EXAMPLE
+		Example syntax for running that sets $deviceManager global Variable Session
+		PS C:\> connect-deviceManager -$hostname storage.domain.tld
+
+		Example syntax for runnign that returns a session object connection
+		PS C:\> $storage = connect-deviceManager -$hostname storage.domain.tld -return $true
+
+	.NOTES
+		Filename: OceanstorPSModulePSBase.ps1
+		Author: Joao Carmona
+		Modified date: 2022-05-22
+		Version 0.2
+
+	.LINK
+	#>
 	[Cmdletbinding()]
 	Param(
 		[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$true)]
@@ -125,6 +159,41 @@ function connect-deviceManager {
 }
 
 function invoke-DeviceManager{
+	<#
+	.SYNOPSIS
+		Invokes a the Huawei Oceanstor Rest API
+
+	.DESCRIPTION
+		Function to to invoke the Huawei Oceanstor REST API, by method "GET","PUT","POST","DELETE" for any of the resources.
+
+	.PARAMETER webSession
+		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
+	.PARAMETER method
+		Mandatory parameter to define the REST call method to be used. Acceptable Values "GET","PUT","POST","DELETE"
+	.PARAMETER resource
+		Mandatory parameter to define the resource to be invoke. Any resource defines by Huawei Oceanstor REST API is acceptable
+
+	.INPUTS
+
+	.OUTPUTS
+		returns the results of Huawei Oceanstor REST API call
+
+	.EXAMPLE
+
+		PS C:\> invoke-DeviceManager -webSession $session -method "GET" -resource "lun"
+
+		OR
+
+		PS C:\> $hosts = invoke-DeviceManager -method "GET" -resource "host"
+
+	.NOTES
+		Filename: OceanstorPSModulePSBase.ps1
+		Author: Joao Carmona
+		Modified date: 2022-05-22
+		Version 0.2
+
+	.LINK
+	#>
     [Cmdletbinding()]
     Param(
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
@@ -156,6 +225,37 @@ function invoke-DeviceManager{
 }
 
 function get-DMSystem{
+	<#
+	.SYNOPSIS
+		To Get Huawei Oceanstor DeviceManager basic properties
+
+	.DESCRIPTION
+		Function to request Huawei Oceanstor Storage DeviceManager basic proterties
+
+	.PARAMETER webSession
+		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
+
+	.INPUTS
+
+	.OUTPUTS
+		returns the Huawei Oceanstor DeviceManager basic properties
+
+	.EXAMPLE
+
+		PS C:\> get-DMSystem -webSession $session
+
+		OR
+
+		PS C:\> $StorageDM = get-DMSystem
+
+	.NOTES
+		Filename: OceanstorPSModulePSBase.ps1
+		Author: Joao Carmona
+		Modified date: 2022-05-22
+		Version 0.2
+
+	.LINK
+	#>
 	[Cmdletbinding()]
     Param(
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
