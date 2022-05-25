@@ -13,10 +13,10 @@ Currently only get functions are developed, but in the future more operations co
     # Or to System Wide Location C:\Program Files\WindowsPowerShell\Modules
 
 # Import the POSH-Module
-    Import-Module -name POSH-Module
+    Import-Module -name posh-oceanstor
 
 # Get POSH-Oceanstor commands
-    Get-Command -Module POSH-Module
+    Get-Command -Module posh-oceanstor
 
 # Get help
     Get-Help about_POSH-Oceanstor
