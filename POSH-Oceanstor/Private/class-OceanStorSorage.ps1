@@ -8,11 +8,12 @@ class OceanstorStorage{
 	#define System Array
 	[PSCustomObject]$System
 
+	#TODO
 	#Define Alarm Count
-	[int64]${Active Alarms}
+	#[int64]${Number of Alarms}
 
 	#Define vStore Count
-	[int64]${Number of vStores}
+	#[int64]${Number of vStores}
 
 	#define Luns
 	[array]$Luns
@@ -35,6 +36,18 @@ class OceanstorStorage{
 	#Define vStores
 	[array]$vStores
 
+	#Define File Systems
+	[array]$FileSystems
+
+	#Define CIFS Shares
+	[array]${CIFS Shares}
+
+	#Define NFS Shares
+	[array]${NFS Shares}
+
+	#Define Active Alarms
+	[array]${Active Alarms}
+
     # Constructor
     OceanstorStorage ([String] $Hostname)
     {
@@ -50,5 +63,9 @@ class OceanstorStorage{
 		$this.StoragePools = get-DMstoragePools -WebSession $storageConnection
 		$this.DeviceId = $this.System.sn
 		$this.vStores = get-DMvStore -WebSession $storageConnection
+		$this.{FileSystems} = get-DMFileSystem -WebSession $storageConnection
+		$this.{CIFS Shares} = get-DMCifsShare -WebSession $storageConnection
+		$this.{NFS Shares} = get-DMNfsShare -WebSession $storageConnection
+		$this.{Active Alarms} = get-DMAlarms -webSession $storageConnection -AlarmStatus "Unrecovered"
     }
 }
