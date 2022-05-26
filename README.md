@@ -43,7 +43,7 @@ For multiple storage is advised to work with the parameter websession:
 $storage1 = connect-deviceManager -hostname "10.0.0.1"
 $storage2 = connect-deviceManager -hostname "10.0.0.2"
 ```
-Next the user can Query any command without requiring the input the username again.
+Next the user can Query any command without requiring the input the username again, but you will need to input the webSession parameter
 ```powershell
 #Query all storage luns
 $storage1luns = get-DMLuns -webSession $storage1
