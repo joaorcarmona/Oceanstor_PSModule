@@ -6,7 +6,7 @@ Currently only get functions are developed, but in the future more operations co
 ### How to Install
 
 ```powershell
-# INstall
+# Install
     # Download the POSH-Oceanstor from github
     # unzip the file
     # Extract the POSH-Oceanstor folder to your user Modules Location in $HOME\Documents\PowerShell\Modules
