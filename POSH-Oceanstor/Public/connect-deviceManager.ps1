@@ -12,7 +12,14 @@ function connect-deviceManager {
 		is optional [bollean] parameter, for the function to return the the connection object or create a Global Variable $deviceManager.
 		by default is false.
 		If true, the connection object will be returned. If false $deviceManager Global Variable will be set. by default
-
+	.PARAMETER Secure
+		is optional switch, to connect using secure credentials. If set, the function will request credentials in a secureway
+	.PARAMETER Unsecure
+		is optional switch, to connect using unsecure credentials. IF set, the LoginUser and LoginPWD are mandatory
+	.PARAMETER LoginUser
+		is a mandatory string if unsecure switch is set. Is the login username to be used in the connection
+	.PARAMETER LoginPWD
+		is a mandatory string if unsecure switch is set. Is the login password to be used in the connection (clear text)
 	.INPUTS
 
 	.OUTPUTS
@@ -38,12 +45,27 @@ function connect-deviceManager {
 		[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$true)]
 			[String]$Hostname,
 		[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=1,Mandatory=$false)]
-			[boolean]$Return = $false
+			[boolean]$Return = $false,
+		[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=2,Mandatory=$true,ParameterSetName="secure")]
+			[switch]$Secure = $false,
+		[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=3,Mandatory=$false,ParameterSetName="unsecure")]
+			[String]$LoginUser,
+		[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=4,Mandatory=$true,ParameterSetName="unsecure")]
+			[String]$LoginPwd,
+		[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=5,Mandatory=$true,ParameterSetName="unsecure")]
+			[switch]$Unsecure = $false
 	)
 
-    $credentials = Get-Credential #TODO create optional parameter for unsecure username/password to be passed as parameter
-    $username = $credentials.GetNetworkCredential().UserName
-    $password = $credentials.GetNetworkCredential().Password
+	if ($Secure -eq $true)
+	{
+		[pscredential]$credentials = Get-Credential #TODO create optional parameter for unsecure username/password to be passed as parameter
+	} else {
+		[securestring]$SecPassword = ConvertTo-SecureString -String	$LoginPwd -AsPlainText -Force
+		[pscredential]$credentials = New-Object System.Management.Automation.PSCredential ($LoginUser, $SecPassword)
+	}
+
+	$username = $credentials.GetNetworkCredential().UserName
+	$password = $credentials.GetNetworkCredential().Password
 
     $body = @{username = $username;
             password = $password;
@@ -55,8 +77,9 @@ function connect-deviceManager {
 
     if ($logonsession.error.code -ne 0)
     {
-        Write-Host $logonsession.error
-        exit
+        #Write-Host $logonsession.error
+		$SessionError = $logonsession.error
+		write-DMError -SessionError $SessionError
     }
     $CredentialsBytes = [System.Text.Encoding]::UTF8.GetBytes(-join("{0}:{1}" -f $username,$password))
     $EncodedCredentials = [Convert]::ToBase64String($CredentialsBytes)
