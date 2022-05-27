@@ -13,9 +13,9 @@ function connect-deviceManager {
 		by default is false.
 		If true, the connection object will be returned. If false $deviceManager Global Variable will be set. by default
 	.PARAMETER Secure
-		is optional switch, to connect using secure credentials. If set, the function will request credentials in a secureway
+		is optional switch, to connect using secure credentials. If set, the function will request credentials in a more secure way
 	.PARAMETER Unsecure
-		is optional switch, to connect using unsecure credentials. IF set, the LoginUser and LoginPWD are mandatory
+		is optional switch, to connect using unsecure credentials. If set, the LoginUser and LoginPWD are mandatory. Both will be pass in plain text
 	.PARAMETER LoginUser
 		is a mandatory string if unsecure switch is set. Is the login username to be used in the connection
 	.PARAMETER LoginPWD
@@ -26,11 +26,11 @@ function connect-deviceManager {
 		Creates a object connection to a Huawei Storage Device
 
 	.EXAMPLE
-		Example syntax for running that sets $deviceManager global Variable Session
-		PS C:\> connect-deviceManager -$hostname storage.domain.tld
+		Example syntax for running that sets $deviceManager global Variable Session 
+		PS C:\> connect-deviceManager -$hostname storage.domain.tld -Secure
 
 		Example syntax for runnign that returns a session object connection
-		PS C:\> $storage = connect-deviceManager -$hostname storage.domain.tld -return $true
+		PS C:\> $storage = connect-deviceManager -$hostname storage.domain.tld -return $true -Secure
 
 	.NOTES
 		Filename: connect-deviceManager.ps1
