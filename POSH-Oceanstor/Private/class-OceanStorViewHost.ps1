@@ -9,8 +9,10 @@ class OceanStorViewHost
     [PSCustomObject]${FC Initiators}
     [PSCustomObject]${ISCSI Initiators}
 
-    OceanStorViewHost ([string]$HostId)
+    OceanStorViewHost ([array]$thost,[psCustomObject]$webSession)
     {
+        $this.Properties = $thost
+        $this.Paths = get-DMHostLinks -WebSession $webSession
 
     }
 }
