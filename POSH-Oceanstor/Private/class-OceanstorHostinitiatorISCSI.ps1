@@ -9,11 +9,18 @@ class OceanstorHostinitiatorISCSI {
     [string]${Health Status}
     [string]${Running Status}
     [string]${Failover Mode}
+    [boolean]${Use CHAP}
+    [string]${CHAP Name}
+    [string]${CHAP Name Auth. Target}
+    [string]${Auth. Discovery}
+    [string]${Normal Discovery}
     [boolean]${Is Free}
     [string]${Multipath}
     [string]${Special Mode}
     [string]${Path}
     [string]${Operating System}
+    [int]${vStore ID}
+	[string]${vStore Name}
 
     oceanstorhostinitiator ([array]$initiator)
     {
@@ -51,6 +58,15 @@ class OceanstorHostinitiatorISCSI {
             255 {$this.{Failover Mode} = "unknown"}
         }
 
+        switch ($initiator.USECHAP)
+        {
+            true {$this.{Use CHAP} = $true}
+            false {$this.{Use CHAP} = $false}
+        }
+
+        $this.{CHAP Name} = $initiator.CHAPNAME
+        $this.{CHAP Name Auth. Target} = $initiator.CHAPNAMEINITATORVERTARGET
+
         switch ($initiator.ISFREE)
         {
             true {$this.{Is Free} = $true}
@@ -61,6 +77,20 @@ class OceanstorHostinitiatorISCSI {
         {
             0 {$this.{Multipath} = "Default"}
             1 {$this.{Multipath} = "Third-party"}
+        }
+
+        switch ($initiator.DISCOVERYVERMODE)
+        {
+            0 {$this.{Auth. Discovery} = "none"}
+            1 {$this.{Auth. Discovery} = "oneway"}
+            2 {$this.{Auth. Discovery} = "both"}
+        }
+
+        switch ($initiator.NORMALVERMODE)
+        {
+            0 {$this.{Normal Discovery} = "none"}
+            1 {$this.{Normal Discovery} = "oneway"}
+            2 {$this.{Normal Discovery} = "both"}
         }
 
         switch ($initiator.SPECIALMODETYPE)
@@ -97,6 +127,9 @@ class OceanstorHostinitiatorISCSI {
             13 {$this.{Operating System} = "Oracle_VM_Server_for_SPARC"}
             255 {$this.{Operating System} = "Unknown"}
         }
+
+        $this.{vStore ID} = $initiator.vstoreid
+		$this.{vStore Name} = $initiator.vstoreName
     }
 
 }
