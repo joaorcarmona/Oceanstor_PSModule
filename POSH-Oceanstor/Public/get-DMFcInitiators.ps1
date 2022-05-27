@@ -82,7 +82,7 @@ function get-DMFcInitiators{
 
 	foreach ($initator in $response)
 	{
-		$fcInitiator = [oceanstorhostinitiator]::new($initator)
+		$fcInitiator = [OceanstorHostinitiatorFC]::new($initator)
 		$fcInitiators += $fcInitiator
 	}
 
