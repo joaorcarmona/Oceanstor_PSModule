@@ -8,6 +8,12 @@ function get-DMFcInitiators{
 
 	.PARAMETER webSession
 		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
+	.PARAMETER HostId
+		Optional parameter to Query the Initiators for a specific Host Id
+	.PARAMETER FreeInitiators
+		Optional switch parameter to Query the Initiators that are free
+	.PARAMETER All
+		(Default) Optional switch parameter to Query the All Initiators. If no other parameter is passed, function assume all
 
 	.INPUTS
 
@@ -20,7 +26,23 @@ function get-DMFcInitiators{
 
 		OR
 
-		PS C:\> $fcInitiators = get-DMFcInitiators
+		PS C:\> $fcInitiators = get-DMFcInitiators -All
+
+	.EXAMPLE
+
+		PS C:\> get-DMFcInitiators -webSession $session -FreeInitiators
+
+		OR
+
+		PS C:\> $fcInitiators = get-DMFcInitiators -FreeInitiators
+
+	.EXAMPLE
+
+		PS C:\> get-DMFcInitiators -webSession $session -hostId 1
+
+		OR
+
+		PS C:\> $fcInitiators = get-DMFcInitiators -hostId 1
 
 	.NOTES
 		Filename: get-DMFcInitiators.ps1
@@ -30,10 +52,16 @@ function get-DMFcInitiators{
 
 	.LINK
 	#>
-	[Cmdletbinding()]
+	[Cmdletbinding(DefaultParameterSetName = "AllInitiators")]
     Param(
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
-        [pscustomobject]$WebSession
+        [pscustomobject]$WebSession,
+	[Parameter(ValueFromPipeline=$false,ValueFromPipelineByPropertyName=$false,Position=1,Mandatory=$false,ParameterSetName="HostInitiators")]
+        [string]$hostId,
+	[Parameter(ValueFromPipeline=$false,ValueFromPipelineByPropertyName=$false,Position=2,Mandatory=$false,ParameterSetName="FreeInitiators")]
+        [switch]$FreeInitiators = $false,
+	[Parameter(ValueFromPipeline=$false,ValueFromPipelineByPropertyName=$false,Position=2,Mandatory=$false,ParameterSetName="AllInitiators")]
+        [switch]$All = $false
 	)
 
 	if ($WebSession){
@@ -42,7 +70,14 @@ function get-DMFcInitiators{
         $session = $deviceManager
     }
 
-    $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "fc_initiator" | Select-Object -ExpandProperty data
+	switch ($PSCmdlet.ParameterSetName)
+	{
+		HostInitiators {$resource = "fc_initiator?PARENTID=" + $hostId}
+		FreeInitiators {$resource = "fc_initiator?ISFREE=true"}
+		default {$resource = "fc_initiator"}
+	}
+
+    $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource $resource | Select-Object -ExpandProperty data
     $fcInitiators = New-Object System.Collections.ArrayList
 
 	foreach ($initator in $response)
