@@ -1,4 +1,4 @@
-class oceanstorhostinitiator {
+class OceanstorHostinitiatorFC {
     #Define properties
     [string]${Id}
     [string]${Host Id}
