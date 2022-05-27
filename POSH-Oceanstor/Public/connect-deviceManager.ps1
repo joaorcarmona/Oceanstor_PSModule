@@ -80,7 +80,9 @@ function connect-deviceManager {
         #Write-Host $logonsession.error
 		$SessionError = $logonsession.error
 		write-DMError -SessionError $SessionError
+		exit
     }
+
     $CredentialsBytes = [System.Text.Encoding]::UTF8.GetBytes(-join("{0}:{1}" -f $username,$password))
     $EncodedCredentials = [Convert]::ToBase64String($CredentialsBytes)
 
