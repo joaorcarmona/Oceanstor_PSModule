@@ -1,4 +1,4 @@
-class OceanstorStorage{
+class OceanstorViewStorage{
 	#Define Hostname Property
 	[string]$Hostname
 
@@ -49,7 +49,7 @@ class OceanstorStorage{
 	[array]${Active Alarms}
 
     # Constructor
-    OceanstorStorage ([String] $Hostname)
+    OceanstorViewStorage ([String] $Hostname)
     {
 		$storageConnection = connect-deviceManager -Hostname $Hostname -Return $true -Secure
 

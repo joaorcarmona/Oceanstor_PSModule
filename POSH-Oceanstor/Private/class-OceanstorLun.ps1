@@ -58,7 +58,7 @@ class OceanstorLun{
 	[int]${vStore ID}
 	[string]${vStore Name}
 
-	OceanstorDeviceLun ([array]$LunReceived)
+	OceanstorLun ([array]$LunReceived)
 	{
 		$lunID = $LunReceived.ID
 		$this.id = $lunID

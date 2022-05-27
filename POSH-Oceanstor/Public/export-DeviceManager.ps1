@@ -34,7 +34,7 @@ function export-DeviceManager{
 			[String]$Hostname
 	)
 
-	$result = [OceanstorStorage]::new($Hostname)
+	$result = [OceanstorViewStorage]::new($Hostname)
 
 	return $result
 }
