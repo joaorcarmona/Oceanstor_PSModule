@@ -7,8 +7,6 @@ class OceanStorHostGroup{
 	[int]${vStore ID}
 	[string]${vStore Name}
 	[boolean]${Is Mapped}
-	[int]${vStore ID}
-	[string]${vStore Name}
 
 	OceanStorHostGroup ([array]$HostGroupReceived)
 	{
@@ -31,8 +29,5 @@ class OceanStorHostGroup{
 		} elseif ($HostGroupReceived.ISADD2MAPPINGVIEW -eq "true") {
 			$this.{Is Mapped} = $true
 		}
-
-        $this.{vStore ID} = $HostGroupReceived.vstoreid
-		$this.{vStore Name} = $HostGroupReceived.vstoreName
 	}
 }
