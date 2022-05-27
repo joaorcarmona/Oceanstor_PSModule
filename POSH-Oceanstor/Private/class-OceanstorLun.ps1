@@ -1,4 +1,4 @@
-class OceanstorDeviceLun{
+class OceanstorLun{
 	#Define Lun ID (id)
 	[Int]$id
 
