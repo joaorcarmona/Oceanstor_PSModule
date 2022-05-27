@@ -16,6 +16,8 @@ class OceanStorHost{
 	[string]$model
 	[string]$networkname
 	[string]${Operation System}
+	[int]${vStore ID}
+	[string]${vStore Name}
 
 	OceanStorHost ([array] $hostReceived)
 	{
@@ -79,6 +81,8 @@ class OceanStorHost{
 		{
 			21 {$this.type  = "Host"}
 		}
-	}
 
+        $this.{vStore ID} = $hostReceived.vstoreid
+		$this.{vStore Name} = $hostReceived.vstoreName
+	}
 }
