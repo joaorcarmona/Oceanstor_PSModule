@@ -13,6 +13,8 @@ class OceanstorHostinitiatorFC {
     [string]${Special Mode}
     [string]${Path}
     [string]${Operating System}
+    [int]${vStore ID}
+	[string]${vStore Name}
 
     oceanstorhostinitiator ([array]$initiator)
     {
@@ -96,6 +98,9 @@ class OceanstorHostinitiatorFC {
             13 {$this.{Operating System} = "Oracle_VM_Server_for_SPARC"}
             255 {$this.{Operating System} = "Unknown"}
         }
+
+        $this.{vStore ID} = $initiator.vstoreid
+		$this.{vStore Name} = $initiator.vstoreName
     }
 
 }
