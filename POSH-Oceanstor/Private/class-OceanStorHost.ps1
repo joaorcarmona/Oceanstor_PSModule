@@ -6,10 +6,12 @@ class OceanStorHost{
 	[string]${Running Status}
 	[string]$type
 	[string]$description
-	[string]$parentid
-	[string]$parentname
-	[string]$parenttype
-	[string]$initiatornum
+	[string]${HostGroup Name}
+	[string]${HostGroup Id}
+	[string]${MappingView Name}
+	[string]${MappingView Id}
+	[string]${Parent Type}
+	[string]${Initiators Number}
 	[string]$ip
 	[boolean]$isadd2hostgroup
 	[string]$location
@@ -31,7 +33,7 @@ class OceanStorHost{
 		}
 
 		$this.id = $hostReceived.ID
-		$this.initiatornum = $hostReceived.INITIATORNUM
+		$this.{Initiators Number} = $hostReceived.INITIATORNUM
 		$this.ip = $hostReceived.IP
 
 		switch($hostReceived.ISADD2HOSTGROUP)
@@ -63,13 +65,20 @@ class OceanStorHost{
 			13 {$this.{Operation System} = "Oracle_VM_Server_for_SPARC"}
 		}
 
-		$this.parentid = $hostReceived.PARENTID
-		$this.parentname = $hostReceived.PARENTNAME
-
 		switch($hostReceived.PARENTTYPE)
 		{
-			14 {$this.parenttype  = "Host Group"}
-			245 {$this.parenttype  = "Mapping View"}
+			14
+			{
+				$this.{Parent Type}  = "Host Group"
+				$this.{HostGroup Name} = $hostReceived.PARENTNAME
+				$this.{HostGroup Id} = $hostReceived.PARENTID
+			}
+			245
+			{
+				$this.{Parent Type}  = "Mapping View"
+				$this.{MappingView Name} = $hostReceived.PARENTNAME
+				$this.{MappingView Id} = $hostReceived.PARENTID
+			}
 		}
 
 		switch($hostReceived.RUNNINGSTATUS)

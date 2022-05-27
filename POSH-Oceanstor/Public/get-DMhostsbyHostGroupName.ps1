@@ -1,16 +1,16 @@
-function get-DMhostsbyId{
+function get-DMhostsbyHostGroupName{
     <#
 .SYNOPSIS
-    To Get Huawei Oceanstor Storage configured Hosts querying by Hostid
+    To Get Huawei Oceanstor Storage configured Hosts querying by HostGroupName
 
 .DESCRIPTION
-    Function to request Huawei Oceanstor Storage configured Hosts
+    Function to request Huawei Oceanstor Storage configured Hosts querying by HostGroupName
 
 .PARAMETER webSession
     Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
 
-.PARAMETER HostId
-		Mandatory parameter [string], to set the Host ID to look for.
+.PARAMETER HostGroupName
+		Mandatory parameter [string], to set the HostGroupName to look for.
 
 .INPUTS
 
@@ -19,14 +19,14 @@ function get-DMhostsbyId{
 
 .EXAMPLE
 
-    PS C:\> get-DMhostsbyId -webSession $session -hostId 1
+    PS C:\> get-DMhostsbyHostGroupName -webSession $session -HostGroupName 10
 
     OR
 
-    PS C:\> $hosts = get-DMhostsbyId -hostId 1
+    PS C:\> $hosts = get-DMhostsbyHostGroupName -HostGroupName 10
 
 .NOTES
-    Filename: get-DMhostsbyId.ps1
+    Filename: get-DMhostsbyHostGroupName.ps1
     Author: Joao Carmona
     Modified date: 2022-05-27
     Version 0.1
@@ -37,8 +37,8 @@ function get-DMhostsbyId{
 Param(
 [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
     [pscustomobject]$WebSession,
-[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
-    [string]$hostId
+[Parameter(ValueFromPipeline=$false,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+    [string]$HostGroupName
 )
 
 if ($WebSession){
@@ -47,7 +47,7 @@ if ($WebSession){
     $session = $deviceManager
 }
 
-$response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "host?filter=ID:$hostId" | Select-Object -ExpandProperty data
+$response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "host" | Select-Object -ExpandProperty data
 $hosts = New-Object System.Collections.ArrayList
 
 foreach ($thost in $response)
@@ -56,7 +56,7 @@ foreach ($thost in $response)
     $hosts += $hostobj
 }
 
-$result = $hosts
+$result = $hosts | Where-Object "HostGroup Name" -Match $HostGroupName
 
 return $result
 }
