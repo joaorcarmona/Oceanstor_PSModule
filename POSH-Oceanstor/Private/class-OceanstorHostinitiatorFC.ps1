@@ -16,7 +16,7 @@ class OceanstorHostinitiatorFC {
     [int]${vStore ID}
 	[string]${vStore Name}
 
-    oceanstorhostinitiator ([array]$initiator)
+    OceanstorHostinitiatorFC ([array]$initiator)
     {
         $this.{Id} = $initiator.ID
         $this.{Host Id} = $initiator.PARENTID
