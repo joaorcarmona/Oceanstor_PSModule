@@ -1,6 +1,5 @@
 class OceanstorHostinitiatorISCSI {
     #Define properties
-    #TODO MISSING Properties
     [string]${Id}
     [string]${Host Id}
     [string]${Host Name}
@@ -22,7 +21,7 @@ class OceanstorHostinitiatorISCSI {
     [int]${vStore ID}
 	[string]${vStore Name}
 
-    oceanstorhostinitiator ([array]$initiator)
+    OceanstorHostinitiatorISCSI ([array]$initiator)
     {
         $this.{Id} = $initiator.ID
         $this.{Host Id} = $initiator.PARENTID
