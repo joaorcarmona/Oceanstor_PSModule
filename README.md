@@ -24,12 +24,15 @@ Currently only get functions are developed, but in the future more operations co
 
 ### Examples
 
-The Module was developed to allow a user to use all commands without having to pass arguments. The websession is optional parameters in all commands, if you are querying multiple storage at same time, if not, you just need to connect and start using the get commands.
+The Module is a powershell module to interact with Huawei Oceanstor Devices, via the REST API. All module was developed to allow a user to use all commands without having to pass arguments (unless for query filtering). The websession is optional parameters in all commands, if you are querying multiple storage at same time, if not, you just need to connect and start using the get commands.
 
 To start, is necessary to connect to a Storage (single).
 ```powershell
 #Connect to a storage (System will request to input your username and password)
-$storage = connect-deviceManager -hostname "10.0.0.1"
+$storage = connect-deviceManager -hostname "10.0.0.1" -Secure
+
+#For unattended connection, pass the credentials in plain text (not recommended)
+$storage = connect-deviceManager -hostname "10.0.0.1" -Unsecure -LoginUser "username" -LoginPwd "password"
 ```
 Next the user can Query any command without requiring the input the username again.
 ```powershell
@@ -39,9 +42,9 @@ $luns = get-DMLuns
 
 For multiple storage is advised to work with the parameter websession:
 ```powershell
-#Connect to a storage (System will request to input your username and password)
-$storage1 = connect-deviceManager -hostname "10.0.0.1"
-$storage2 = connect-deviceManager -hostname "10.0.0.2"
+#Connect to 2 storages and save your session in different variables
+$storage1 = connect-deviceManager -hostname "10.0.0.1" -Secure
+$storage2 = connect-deviceManager -hostname "10.0.0.2" -Secure
 ```
 Next the user can Query any command without requiring the input the username again, but you will need to input the webSession parameter
 ```powershell
@@ -53,7 +56,7 @@ $storage2luns = get-DMLuns -webSession $storage2
 # Export Storage Configuration to Excel
 ```powershell
 #Connect to a storage (System will request to input your username and password)
-$storage = connect-deviceManager -hostname "10.0.0.1"
+$storage = connect-deviceManager -hostname "10.0.0.1" -Secure
 
 #export all storage data to excel
 export-DMStorageToExcel -OceanStor $storage -ReportFile "c:\temp\MyStorage.xlsx"
@@ -62,7 +65,7 @@ export-DMStorageToExcel -OceanStor $storage -ReportFile "c:\temp\MyStorage.xlsx"
 # Search one lun by WWN
 ```powershell
 #Connect to a storage (System will request to input your username and password)
-$storage = connect-deviceManager -hostname "10.0.0.1"
+$storage = connect-deviceManager -hostname "10.0.0.1" -Secure
 
 #Search for a lun by Lun WWN
  $luns = get-DMlunsByWWN -webSession $storage -wwn "6a08cf810075766e1efc050700000005"

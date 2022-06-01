@@ -51,7 +51,7 @@ function get-DMlunsByWWN{
 
 	foreach ($tlun in $response)
 	{
-		$lun = [OceanstorDeviceLun]::new($tlun)
+		$lun = [OceanstorLun]::new($tlun)
 		$StorageLuns += $lun
 	}
 
