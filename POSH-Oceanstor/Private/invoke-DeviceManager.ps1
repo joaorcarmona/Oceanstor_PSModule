@@ -39,7 +39,7 @@ function invoke-DeviceManager{
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
         [pscustomobject]$WebSession,
     [Parameter(Position=1,Mandatory=$true)]
-        [ValidateSet('GET','POST','PUT','DELETE')]
+        [ValidateSet("GET","POST","PUT","DELETE")]
         [string]$Method,
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=2,Mandatory=$true)]
         [String]$Resource

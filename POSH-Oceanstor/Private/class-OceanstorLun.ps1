@@ -1,4 +1,4 @@
-class OceanstorDeviceLun{
+class OceanstorLun{
 	#Define Lun ID (id)
 	[Int]$id
 
@@ -54,7 +54,11 @@ class OceanstorDeviceLun{
 
 	[int64]$SpaceBeforeSaving
 
-	OceanstorDeviceLun ([array]$LunReceived)
+	#Define vStore
+	[int]${vStore ID}
+	[string]${vStore Name}
+
+	OceanstorLun ([array]$LunReceived)
 	{
 		$lunID = $LunReceived.ID
 		$this.id = $lunID
@@ -125,6 +129,9 @@ class OceanstorDeviceLun{
 		$this.totalsavedcapacity = $LunReceived.TOTALSAVEDCAPACITY * $LunSectorSize / 1GB
 		$this.totalsavedratio = $LunReceived.TOTALSAVEDRATIO
 		$this.SpaceBeforeSaving = $LunReceived.SAVEDAGOTOTALCAPACITY * $LunSectorSize / 1GB
+
+        $this.{vStore ID} = $LunReceived.vstoreid
+		$this.{vStore Name} = $LunReceived.vstoreName
 
 	}
 }
