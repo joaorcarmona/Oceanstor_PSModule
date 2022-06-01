@@ -24,7 +24,7 @@ Currently only get functions are developed, but in the future more operations co
 
 ### Examples
 
-The Module was developed to allow a user to use all commands without having to pass arguments. The websession is optional parameters in all commands, if you are querying multiple storage at same time, if not, you just need to connect and start using the get commands.
+The Module is a powershell module to interact with Huawei Oceanstor Devices, via the REST API. All module was developed to allow a user to use all commands without having to pass arguments (unless for query filtering). The websession is optional parameters in all commands, if you are querying multiple storage at same time, if not, you just need to connect and start using the get commands.
 
 To start, is necessary to connect to a Storage (single).
 ```powershell
