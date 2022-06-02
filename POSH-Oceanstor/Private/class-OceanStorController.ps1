@@ -124,7 +124,7 @@ class OceanStorController
         $this.{Part Number} = $labels.Item
         $this.{Description} = $labels.Description
         $this.Manufactured = $labels.Manufactured
-        $this.{Vendor Name} = $labels.VenderName
+        $this.{Vendor Name} = $labels.VendorName
     }
 
 }

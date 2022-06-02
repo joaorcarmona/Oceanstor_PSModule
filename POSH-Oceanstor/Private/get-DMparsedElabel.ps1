@@ -13,7 +13,7 @@ function get-DMparsedElabel
 
     foreach ($label in $eLabels)
     {
-        if ($label -match "\a|BoardType|BarCode|Item|Description|Manufactured|VenderName|IssueNumber|CLEICode|BOM")
+        if ($label -match "\a|BoardType|BarCode|Item|Description|Manufactured|VendorName|IssueNumber|CLEICode|BOM")
         {
             $t = $label.Split("=")
             $labels.add($t[0],$t[1])
