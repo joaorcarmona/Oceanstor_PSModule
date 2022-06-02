@@ -119,7 +119,11 @@ class OceanStorEnclosure
         }
 
         $this.{Temperature} = $encReceived.TEMPERATURE
-        $this.{Type} = $encReceived.TYPE
+
+        switch($ctrlReceived.TYPE)
+		{
+			206 {$this.{Type} = "enclosure"}
+		}
 
         #$this.{elabel} = $encReceived.ELABEL
 
