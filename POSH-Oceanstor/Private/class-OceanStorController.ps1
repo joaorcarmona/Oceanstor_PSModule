@@ -3,13 +3,19 @@ class OceanStorController
     #Define Properties
     [string]${Id}
     [string]${Name}
+    [string]${Board Type}
+    [string]${Bar Code}
+    [string]${Part Number}
+    [string]${Description}
+    [string]$Manufactured
+    [string]${Vendor Name}
     [string]${BIOS Version}
     [string]${BMC Version}
     [string]${CPU Info}
     [string]${CPU Usage}
-    [string]${Description}
+    #[string]${Description} => replaced by elabel description
     [string]${Dirty Page Usage}
-    [string]${elabel}
+    #[string]${elabel}
     [string]${Health Status}
     [string]${Is Master}
     [string]${Light Status}
@@ -36,9 +42,9 @@ class OceanStorController
         $this.{BMC Version} = $ctrlReceived.BMCVER
         $this.{CPU Info} = $ctrlReceived.CPUINFO
         $this.{CPU Usage} = $ctrlReceived.CPUUSAGE
-        $this.{Description} = $ctrlReceived.DESCRIPTION
+        #$this.{Description} = $ctrlReceived.DESCRIPTION => replaced by elabel description
         $this.{Dirty Page Usage} = $ctrlReceived.DIRTYDATARATE
-        $this.{elabel} = $ctrlReceived.ELABEL
+        #$this.{elabel} = $ctrlReceived.ELABEL
 
         switch($ctrlReceived.HEALTHSTATUS)
 		{
@@ -110,6 +116,14 @@ class OceanStorController
 			207 {$this.{Type} = "controller"}
 		}
         $this.{Voltage} = $ctrlReceived.VOLTAGE
+
+        $labels =  get-DMparsedElabel -eLabelString $ctrlReceived.ELABEL
+        $this.{Board Type} = $labels.BoardType
+        $this.{Bar Code} = $labels.BarCode
+        $this.{Part Number} = $labels.Item
+        $this.{Description} = $labels.Description
+        $this.Manufactured = $labels.Manufactured
+        $this.{Vendor Name} = $labels.VenderName
     }
 
 }
