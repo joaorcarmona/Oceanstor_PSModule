@@ -171,8 +171,7 @@ class OceanstorInterfaceModule
 		}
 
         $this.{Temperature} = $moduleReceived.TEMPERATURE
-        $this.{Type} = $moduleReceived.TYPE
-        switch($moduleReceived.HEALTHSTATUS)
+        switch($moduleReceived.TYPE)
 		{
 			209 {$this.{Type} = "Interface Module"}
 		}
