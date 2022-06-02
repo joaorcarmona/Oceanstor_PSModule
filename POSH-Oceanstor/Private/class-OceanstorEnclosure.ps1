@@ -5,6 +5,12 @@ class OceanStorEnclosure
     [string]${Name}
     [string]${Model}
     [string]${Type}
+    [string]${Board Type}
+    [string]${Bar Code}
+    [string]${Part Number}
+    [string]${Description}
+    [string]$Manufactured
+    [string]${Vendor Name}
     [string]${Parentid}
     [string]${Parent Type}
     [string]${Health Status}
@@ -18,11 +24,11 @@ class OceanStorEnclosure
     [string]${Logic Type}
     [string]${Location UID}
     [string]${Temperature}
-    [string]${elabel}
+    #[string]${elabel}
 
     OceanStorEnclosure ([array]$encReceived)
     {
-        $this.{elabel} = $encReceived.ELABEL
+
         $this.{Expander Depth} = $encReceived.EXPANDERDEPTH
         $this.{Expander Port} = $encReceived.EXPANDERPORT
 
@@ -102,5 +108,16 @@ class OceanStorEnclosure
 
         $this.{Temperature} = $encReceived.TEMPERATURE
         $this.{Type} = $encReceived.TYPE
+
+        #$this.{elabel} = $encReceived.ELABEL
+
+        $labels =  get-DMparsedElabel -eLabelString $encReceived.ELABEL
+        $this.{Board Type} = $labels.BoardType
+        $this.{Bar Code} = $labels.BarCode
+        $this.{Part Number} = $labels.Item
+        $this.{Description} = $labels.Description
+        $this.Manufactured = $labels.Manufactured
+        $this.{Vendor Name} = $labels.VenderName
+
     }
 }
