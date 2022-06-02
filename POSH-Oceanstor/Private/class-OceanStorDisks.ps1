@@ -31,7 +31,7 @@ class OceanStorDisks{
 	[string]$runtime
 	[string]$sectors
 	[string]$sectorSize
-	[string]$serialNumber
+	[string]${Serial Number}
 	[string]$smartCachePoolId
 	[string]$speedRPM
 	[string]$temperature
@@ -40,9 +40,16 @@ class OceanStorDisks{
 	[string]${Bar Code}
 	[string]$formartProgress
 	[string]$formatRemainTime
+	[string]$type
+	[string]$name
 
 	OceanStorDisks ([array]$disks)
 	{
+		switch ($disks.TYPE)
+		{
+			10 {$this.Type = "disk"}
+		}
+
 		$this.encryptDiskType = $disks.ENCRYPTDISKTYPE
 		$this.{Firmware Version} = $disks.FIRMWAREVER
 		$this.healthMark = $disks.HEALTHMARK
@@ -78,6 +85,7 @@ class OceanStorDisks{
 		}
 
 		$this.location = $disks.LOCATION
+		$this.name = $disks.LOCATION
 
 		switch($disks.LOGICTYPE)
 		{
@@ -118,13 +126,13 @@ class OceanStorDisks{
 		$this.runtime = $disks.RUNTIME
 		$this.sectors = $disks.SECTORS
 		$this.sectorSize = $disks.SECTORSIZE
-		$this.serialNumber = $disks.SERIALNUMBER
+		$this.{Serial Number} = $disks.SERIALNUMBER
 		$this.smartCachePoolId = $disks.SMARTCACHEPOOLID
 		$this.speedRPM = $disks.SPEEDRPM
 		$this.{Storage Engine Id} = $disks.STORAGEENGINEID
 		$this.temperature = $disks.TEMPERATURE
 
-		switch($disks.TYPE)
+		switch($disks.DISKTYPE)
 		{
 			0 {$this.{Disk Type} = "FC"}
 			1 {$this.{Disk Type} = "SAS"}

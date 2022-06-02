@@ -1,4 +1,4 @@
-function get-DMEnclosure{
+function get-DMEnclosures{
     <#
 .SYNOPSIS
     To Get Huawei Oceanstor Storage Enclosures
@@ -16,14 +16,14 @@ function get-DMEnclosure{
 
 .EXAMPLE
 
-    PS C:\> get-DMEnclosure -webSession $session
+    PS C:\> get-DMEnclosures -webSession $session
 
     OR
 
-    PS C:\> $enclosures = get-DMEnclosure
+    PS C:\> $enclosures = get-DMEnclosures
 
 .NOTES
-    Filename: get-DMEnclosure.ps1
+    Filename: get-DMEnclosures.ps1
     Author: Joao Carmona
     Modified date: 2022-06-02
     Version 0.1
