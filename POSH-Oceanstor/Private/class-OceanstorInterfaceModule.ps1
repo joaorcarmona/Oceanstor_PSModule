@@ -172,6 +172,10 @@ class OceanstorInterfaceModule
 
         $this.{Temperature} = $moduleReceived.TEMPERATURE
         $this.{Type} = $moduleReceived.TYPE
+        switch($moduleReceived.HEALTHSTATUS)
+		{
+			209 {$this.{Type} = "Interface Module"}
+		}
 
         $labels =  get-DMparsedElabel -eLabelString $moduleReceived.ELABEL
         $this.{Board Type} = $labels.BoardType
@@ -179,6 +183,6 @@ class OceanstorInterfaceModule
         $this.{Part Number} = $labels.Item
         $this.{Description} = $labels.Description
         $this.Manufactured = $labels.Manufactured
-        $this.{Vendor Name} = $labels.VenderName
+        $this.{Vendor Name} = $labels.VendorName
     }
 }
