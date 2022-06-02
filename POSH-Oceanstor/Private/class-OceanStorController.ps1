@@ -93,7 +93,7 @@ class OceanStorController
         switch($ctrlReceived.RUNMODE)
 		{
 			1 {$this.{Operating Mode} = "Fibre Channel"}
-			2 {$this.{Operating Mode} = "FCoE/iSCSI"}
+			2 {$this.{Operating Mode} = "Ethernet (FCoE/iSCSI)"}
             3 {$this.{Operating Mode} = "cluster"}
         }
         $this.{runmodelist} = $ctrlReceived.RUNMODELIST

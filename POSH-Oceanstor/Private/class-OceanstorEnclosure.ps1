@@ -65,18 +65,29 @@ class OceanStorEnclosure
             20 {$this.{Model} = "1 U PCIe data switch"}
             21 {$this.{Model} = "4 U 75-slot 3.5-inch 6 Gbit/s SAS disk enclosure"}
             22 {$this.{Model} = "service processor (SVP)"}
-            97 {$this.{Model} = "6 U 4-controller enclosure"}
-            96 {$this.{Model} = "3 U 2-controller enclosure"}
+            23 {$this.{Model} = "2 U 2-controller 12-slot 3.5-inch 6 Gbit/s SAS controller"}
             24 {$this.{Model} = "2 U 25-slot 2.5-inch 6 Gbit/s SAS disk enclosure"}
             25 {$this.{Model} = "4 U 24-slot 3.5-inch 6 Gbit/s SAS disk enclosure"}
             26 {$this.{Model} = "2 U 2-controller 25-slot 2.5-inch 6 Gbit/s SAS controller enclosure"}
-            23 {$this.{Model} = "2 U 2-controller 12-slot 3.5-inch 6 Gbit/s SAS controller"}
-            39 {$this.{Model} = "4 U 75-slot 3.5-inch 12 Gbit/s SAS disk enclosure"}
-            65 {$this.{Model} = "2 U 25-slot 2.5-inch 12 Gbit/s SAS disk enclosure"}
-            66 {$this.{Model} = "4 U 24-slot 3.5-inch 12 Gbit/s SAS disk enclosure"}
-            40 {$this.{Model} = "2 U 2-controller 25-slot 2.5-inch 12 Gbit/s SAS controller enclosure"}
             37 {$this.{Model} = "2 U 2-controller 12-slot 3.5-inch 6 Gbit/s SAS controller enclosure"}
             38 {$this.{Model} = "2 U 2-controller 25-slot 2.5-inch 6 Gbit/s SAS controller enclosure"}
+            39 {$this.{Model} = "4 U 75-slot 3.5-inch 12 Gbit/s SAS disk enclosure"}
+            40 {$this.{Model} = "2 U 2-controller 25-slot 2.5-inch 12 Gbit/s SAS controller enclosure"}
+            65 {$this.{Model} = "2 U 25-slot 2.5-inch 12 Gbit/s SAS disk enclosure"}
+            66 {$this.{Model} = "4 U 24-slot 3.5-inch 12 Gbit/s SAS disk enclosure"}
+            69 {$this.{Model} = "4 U 24-slot 3.5-inch SAS disk enclosure"}
+            96 {$this.{Model} = "3 U 2-controller enclosure"}
+            97 {$this.{Model} = "6 U 4-controller enclosure"}
+            112 {$this.{Model} = "4 U 4-controller controller enclosure"}
+            113 {$this.{Model} = "2 U 2-controller 25-slot 2.5-inch SAS controller enclosure"}
+            114 {$this.{Model} = "2 U 2-controller 12-slot 3.5-inch SAS controller enclosure"}
+            115 {$this.{Model} = "2 U 2-controller 36-slot NVMe controller enclosure"}
+            116 {$this.{Model} = "2 U 2-controller 25-slot 2.5-inch SAS controller enclosure"}
+            117 {$this.{Model} = "2 U 2-controller 12-slot 3.5-inch SAS controller enclosure"}
+            118 {$this.{Model} = "2 U 25-slot 2.5-inch smart SAS disk enclosure"}
+            119 {$this.{Model} = "2 U 12-slot 3.5-inch smart SAS disk enclosure"}
+            120 {$this.{Model} = "2 U 36-slot smart NVMe disk enclosure"}
+            122 {$this.{Model} = "2 U 2-controller 25-slot 2.5-inch NVMe controller enclosure"}
             default {$this.{Model} ="unknown"}
 		}
 
@@ -96,6 +107,7 @@ class OceanStorEnclosure
             5 {$this.{Running Status} = "sleep in High Temperature"}
             27 {$this.{Running Status} = "online"}
             28 {$this.{Running Status} = "offline"}
+            105 {$this.{Running Status} = "abnormal"}
 		}
 
         $this.{Serial Number} = $encReceived.SERIALNUM
