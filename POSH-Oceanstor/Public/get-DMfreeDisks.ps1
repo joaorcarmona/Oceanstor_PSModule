@@ -51,7 +51,7 @@ function get-DMfreeDisks{
 		$Storagedisks += $disk
 	}
 
-	$result = $Storagedisks | Where-Object logicType -eq "free"
+	$result = $Storagedisks | Where-Object {Disk Usage} -eq "free"
 
 	return $result
 }

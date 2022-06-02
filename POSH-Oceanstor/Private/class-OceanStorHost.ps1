@@ -2,7 +2,7 @@ class OceanStorHost{
 	#Define Properties
 	[string]$id
 	[string]$name
-	[string]${Healh Status}
+	[string]${Health Status}
 	[string]${Running Status}
 	[string]$type
 	[string]$description
@@ -27,9 +27,9 @@ class OceanStorHost{
 
 		switch($hostReceived.HEALTHSTATUS)
 		{
-			1 {$this.{Healh Status} = "Normal"}
-			17 {$this.{Healh Status} = "No Redundant link"}
-			18 {$this.{Healh Status} = "Offline"}
+			1 {$this.{Health Status} = "Normal"}
+			17 {$this.{Health Status} = "No Redundant link"}
+			18 {$this.{Health Status} = "Offline"}
 		}
 
 		$this.id = $hostReceived.ID
