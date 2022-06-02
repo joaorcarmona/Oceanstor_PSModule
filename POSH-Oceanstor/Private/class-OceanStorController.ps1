@@ -12,17 +12,17 @@ class OceanStorController
     [string]${BIOS Version}
     [string]${BMC Version}
     [string]${CPU Info}
-    [string]${CPU Usage}
+    [string]${CPU Usage %}
     #[string]${Description} => replaced by elabel description
-    [string]${Dirty Page Usage}
+    [string]${Dirty Page Usage %}
     #[string]${elabel}
     [string]${Health Status}
     [string]${Is Master}
     [string]${Light Status}
     [string]${Location}
     [string]${Logic Version}
-    [string]${Memory Size}
-    [string]${Memory Usage}
+    [int64]${Memory Size}
+    [string]${Memory Usage %}
     [string]${Multi-Working Mode}
     [string]${Enclosure Id}
     [string]${PCB Version}
@@ -41,9 +41,9 @@ class OceanStorController
         $this.{BIOS Version} = $ctrlReceived.BIOSVER
         $this.{BMC Version} = $ctrlReceived.BMCVER
         $this.{CPU Info} = $ctrlReceived.CPUINFO
-        $this.{CPU Usage} = $ctrlReceived.CPUUSAGE
+        $this.{CPU Usage %} = $ctrlReceived.CPUUSAGE
         #$this.{Description} = $ctrlReceived.DESCRIPTION => replaced by elabel description
-        $this.{Dirty Page Usage} = $ctrlReceived.DIRTYDATARATE
+        $this.{Dirty Page Usage %} = $ctrlReceived.DIRTYDATARATE
         #$this.{elabel} = $ctrlReceived.ELABEL
 
         switch($ctrlReceived.HEALTHSTATUS)
@@ -70,8 +70,8 @@ class OceanStorController
 
         $this.{Location} = $ctrlReceived.LOCATION
         $this.{Logic Version} = $ctrlReceived.LOGICVER
-        $this.{Memory Size} = $ctrlReceived.MEMORYSIZE
-        $this.{Memory Usage} = $ctrlReceived.MEMORYUSAGE
+        $this.{Memory Size} = $ctrlReceived.MEMORYSIZE / 1GB
+        $this.{Memory Usage %} = $ctrlReceived.MEMORYUSAGE
 
         switch($ctrlReceived.MULTMODE)
 		{
@@ -96,6 +96,7 @@ class OceanStorController
 			2 {$this.{Operating Mode} = "Ethernet (FCoE/iSCSI)"}
             3 {$this.{Operating Mode} = "cluster"}
         }
+
         $this.{runmodelist} = $ctrlReceived.RUNMODELIST
 
         switch($ctrlReceived.RUNNINGSTATUS)
