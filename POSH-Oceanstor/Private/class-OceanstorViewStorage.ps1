@@ -48,6 +48,12 @@ class OceanstorViewStorage{
 	#Define Active Alarms
 	[array]${Active Alarms}
 
+	#Define Enclosures
+	[array]$Enclosures
+	
+	#Define Controllers
+	[array]$Controllers
+
     # Constructor
     OceanstorViewStorage ([String] $Hostname)
     {
@@ -64,8 +70,10 @@ class OceanstorViewStorage{
 		$this.DeviceId = $this.System.sn
 		$this.vStores = get-DMvStore -WebSession $storageConnection
 		$this.{FileSystems} = get-DMFileSystem -WebSession $storageConnection
-		$this.{CIFS Shares} = get-DMCifsShare -WebSession $storageConnection
-		$this.{NFS Shares} = get-DMNfsShare -WebSession $storageConnection
+		$this.{CIFS Shares} = get-DMShares -WebSession $storageConnection -shareType CIFS
+		$this.{NFS Shares} = get-DMShares -WebSession $storageConnection -shareType NFS
 		$this.{Active Alarms} = get-DMAlarms -webSession $storageConnection -AlarmStatus "Unrecovered"
+		$this.Enclosures = get-DMEnclosures -WebSession $storageConnection
+		$this.Controllers = get-DMControllers -WebSession $storageConnection
     }
 }

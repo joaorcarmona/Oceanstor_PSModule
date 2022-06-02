@@ -4,7 +4,7 @@ class OceanStorController
     [string]${Id}
     [string]${Name}
     [string]${Board Type}
-    [string]${Bar Code}
+    [string]${Serial Number}
     [string]${Part Number}
     [string]${Description}
     [string]$Manufactured
@@ -120,7 +120,7 @@ class OceanStorController
 
         $labels =  get-DMparsedElabel -eLabelString $ctrlReceived.ELABEL
         $this.{Board Type} = $labels.BoardType
-        $this.{Bar Code} = $labels.BarCode
+        $this.{Serial Number} = $labels.BarCode
         $this.{Part Number} = $labels.Item
         $this.{Description} = $labels.Description
         $this.Manufactured = $labels.Manufactured
