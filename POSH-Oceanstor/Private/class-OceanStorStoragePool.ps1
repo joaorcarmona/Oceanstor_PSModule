@@ -125,7 +125,10 @@ class OceanStorStoragePool{
 			true {$this.immediatemigration = "on"}
 		}
 
-		$this.immediatemigrationdurationtime = $(New-TimeSpan -Seconds $spoolReceived.IMMEDIATEMIGRATIONDURATIONTIME).ToString()
+		if ($spoolReceived.IMMEDIATEMIGRATIONDURATIONTIME)
+		{
+			$this.immediatemigrationdurationtime = $(New-TimeSpan -Seconds $spoolReceived.IMMEDIATEMIGRATIONDURATIONTIME).ToString()
+		}
 
 		switch($spoolReceived.ISSMARTTIERENABLE)
 		{
@@ -134,7 +137,11 @@ class OceanStorStoragePool{
 		}
 
 		$this.lunconfigedcapacity = $spoolReceived.LUNCONFIGEDCAPACITY / $sectorSize / $unitUsed
-		$this.migrationestimatedtime = $(New-TimeSpan -Seconds $spoolReceived.MIGRATIONESTIMATEDTIME).ToString()
+
+		if($spoolReceived.MIGRATIONESTIMATEDTIME)
+		{
+			$this.migrationestimatedtime = $(New-TimeSpan -Seconds $spoolReceived.MIGRATIONESTIMATEDTIME).ToString()
+		}
 
 		switch($spoolReceived.MIGRATIONMODE)
 		{

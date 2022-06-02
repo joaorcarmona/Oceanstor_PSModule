@@ -1,20 +1,24 @@
 class OceanStorDisks{
+    [string]${Vendor Name}
 	#Define Variables
 	[string]$id
 	[string]$location
-	[string]$partNumber
-	[string]$runningStatus
+	[string]${Part Number}
+	[string]${Board Type}
+    [string]${Description}
+	[string]${Running Status}
 	[string]${Enclosure ID}
 	[string]${parent Type}
-	[string]$storeEngineId
-	[string]$logicType
+	[string]${Storage Engine Id}
+	[string]${Disk Usage}
 	[string]$manufacter
+	[string]$Manufactured
 	[string]$model
-	[int64]$manufacterCapacity
+	[int64]${Manufacter Capacity (GB)}
 	[string]$encryptDiskType
-	[string]$firmwareVersion
+	[string]${Firmware Version}
 	[string]$healthMark
-	[string]$healthStatus
+	[string]${Health Status}
 	[boolean]$cofferDisk
 	[string]$keyExpirationTime
 	[string]$lightStatus
@@ -27,27 +31,36 @@ class OceanStorDisks{
 	[string]$runtime
 	[string]$sectors
 	[string]$sectorSize
-	[string]$serialNumber
+	[string]${Serial Number}
 	[string]$smartCachePoolId
 	[string]$speedRPM
 	[string]$temperature
-	[string]$type
-	[string]$barCode
+	[string]${Disk Type}
+	[string]${Disk Format}
+	[string]${Bar Code}
 	[string]$formartProgress
 	[string]$formatRemainTime
+	[string]$type
+	[string]$name
 
 	OceanStorDisks ([array]$disks)
 	{
+		switch ($disks.TYPE)
+		{
+			10 {$this.Type = "disk"}
+		}
+
 		$this.encryptDiskType = $disks.ENCRYPTDISKTYPE
-		$this.firmwareVersion = $disks.FIRMWAREVER
+		$this.{Firmware Version} = $disks.FIRMWAREVER
 		$this.healthMark = $disks.HEALTHMARK
 
 		switch($disks.HEALTHSTATUS)
 		{
-			0 {$this.healthStatus = "Unknown"}
-			1 {$this.healthStatus = "Normal"}
-			2 {$this.healthStatus = "Faulty"}
-			3 {$this.healthStatus = "about to fail"}
+			0 {$this.{Health Status} = "Unknown"}
+			1 {$this.{Health Status} = "Normal"}
+			2 {$this.{Health Status} = "Faulty"}
+			3 {$this.{Health Status} = "about to fail"}
+			17 {$this.{Health Status} = "single link"}
 		}
 
 		$this.id = $disks.ID
@@ -61,7 +74,7 @@ class OceanStorDisks{
 		}
 
 		#$this.item = $disks.ITEM TO be solve for now using alternative way to get partNumber
-		$this.partNumber = $($disks.barcode.Substring(0,10)).Substring(2)
+		$this.{Part Number} = $($disks.barcode.Substring(0,10)).Substring(2)
 		$this.keyExpirationTime = $disks.KEYEXPIRATIONTIME
 
 		switch($disks.LIGHTSTATUS)
@@ -72,13 +85,14 @@ class OceanStorDisks{
 		}
 
 		$this.location = $disks.LOCATION
+		$this.name = $disks.LOCATION
 
 		switch($disks.LOGICTYPE)
 		{
-			1 {$this.logicType = "free"}
-			2 {$this.logicType = "member"}
-			3 {$this.logicType = "hot_spare"}
-			4 {$this.logicType = "cache"}
+			1 {$this.{Disk Usage} = "free"}
+			2 {$this.{Disk Usage} = "member"}
+			3 {$this.{Disk Usage} = "hot_spare"}
+			4 {$this.{Disk Usage} = "cache"}
 		}
 
 		$this.manufacter = $disks.MANUFACTURER
@@ -88,7 +102,7 @@ class OceanStorDisks{
 
 		switch($disks.PARENTTYPE)
 		{
-			1 {$this.{Parent Type} = "Enclosure"}
+			206 {$this.{Parent Type} = "Enclosure"}
 		}
 
 		$this.poolId = $disks.POOLID
@@ -99,44 +113,67 @@ class OceanStorDisks{
 
 		switch($disks.RUNNINGSTATUS)
 		{
-			0 {$this.runningStatus = "unknown"}
-			1 {$this.runningStatus = "Normal"}
-			14 {$this.runningStatus = "pre-copy"}
-			16 {$this.runningStatus = "reconstruction"}
-			27 {$this.runningStatus = "online"}
-			16 {$this.runningStatus = "offline"}
+			0 {$this.{Running Status} = "unknown"}
+			1 {$this.{Running Status} = "Normal"}
+			14 {$this.{Running Status} = "pre-copy"}
+			16 {$this.{Running Status} = "reconstruction"}
+			27 {$this.{Running Status} = "online"}
+			16 {$this.{Running Status} = "offline"}
+			114 {$this.{Running Status} = "erasing"}
+			115 {$this.{Running Status} = "verifying"}
 		}
 
 		$this.runtime = $disks.RUNTIME
 		$this.sectors = $disks.SECTORS
 		$this.sectorSize = $disks.SECTORSIZE
-		$this.serialNumber = $disks.SERIALNUMBER
+		$this.{Serial Number} = $disks.SERIALNUMBER
 		$this.smartCachePoolId = $disks.SMARTCACHEPOOLID
 		$this.speedRPM = $disks.SPEEDRPM
-		$this.storeEngineId = $disks.STORAGEENGINEID
+		$this.{Storage Engine Id} = $disks.STORAGEENGINEID
 		$this.temperature = $disks.TEMPERATURE
 
-		switch($disks.TYPE)
+		switch($disks.DISKTYPE)
 		{
-			0 {$this.type = "FC"}
-			1 {$this.type = "SAS"}
-			2 {$this.type = "SATA"}
-			3 {$this.type = "SSD"}
-			4 {$this.type = "NL-SAS"}
-			5 {$this.type = "SLC SSD"}
-			6 {$this.type = "MLC SSD"}
-			7 {$this.type = "FC SED"}
-			8 {$this.type = "SAS SED"}
-			9 {$this.type = "SATA SED"}
-			10 {$this.type = "SSD SED"}
-			11 {$this.type = "NL-SAS SED"}
-			12 {$this.type = "SLC SSD SED"}
-			13 {$this.type = "MLC SSD SED"}
+			0 {$this.{Disk Type} = "FC"}
+			1 {$this.{Disk Type} = "SAS"}
+			2 {$this.{Disk Type} = "SATA"}
+			3 {$this.{Disk Type} = "SSD"}
+			4 {$this.{Disk Type} = "NL-SAS"}
+			5 {$this.{Disk Type} = "SLC SSD"}
+			6 {$this.{Disk Type} = "MLC SSD"}
+			7 {$this.{Disk Type} = "FC SED"}
+			8 {$this.{Disk Type} = "SAS SED"}
+			9 {$this.{Disk Type} = "SATA SED"}
+			10 {$this.{Disk Type} = "SSD SED"}
+			11 {$this.{Disk Type} = "NL-SAS SED"}
+			12 {$this.{Disk Type} = "SLC SSD SED"}
+			13 {$this.{Disk Type} = "MLC SSD SED"}
+			14 {$this.{Disk Type} = "NVMe SSD"}
+			16 {$this.{Disk Type} = "NVMe SSD SED"}
+			17 {$this.{Disk Type} = "SCM"}
+			18 {$this.{Disk Type} = "SCM SED"}
 		}
 
-		$this.barCode = $disks.barcode
+		$this.{Bar Code} = $disks.barcode
 		$this.formartProgress = $disks.formatProgress
 		$this.formatRemainTime = $disks.formatRemainTime
-		$this.manufacterCapacity = $disks.manuCapacity / 1GB
+		$this.{Manufacter Capacity (GB)} = $disks.manuCapacity / 1GB
+
+		switch ($disks.DISKFORM)
+		{
+			0 {$this.{Disk Format} = "unknown"}
+			1 {$this.{Disk Format} = "5.25-inch"}
+			2 {$this.{Disk Format} = "3.5-inch"}
+			3 {$this.{Disk Format} = "2.5-inch"}
+			8 {$this.{Disk Format} = "1.8-inch"}
+		}
+
+		$labels =  get-DMparsedElabel -eLabelString $disks.ELABEL
+        $this.{Board Type} = $labels.BoardType
+        $this.{Bar Code} = $labels.BarCode
+        $this.{Part Number} = $labels.Item
+        $this.{Description} = $labels.Description
+        $this.Manufactured = $labels.Manufactured
+        $this.{Vendor Name} = $labels.VendorName
 	}
 }
