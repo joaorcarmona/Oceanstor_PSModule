@@ -5,16 +5,16 @@ function set-DMdnsServer
         To Configure the Oceanstor DNS Server
 
     .DESCRIPTION
-        To Cofnigure the Oceanstor DNS Server. It will overwrite the current config
+        To Configure the Oceanstor DNS Server. It will overwrite the current config
 
     .PARAMETER WebSession
         Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
 
     .PARAMETER DnsServer
-        Mandatory paramater (array) to define the DNS Server configuration. Should be One or more IPv4 Address, coma separated.
+        Mandatory paramater (array) to define the DNS Server configuration. Should be One or more IPv4 Address, coma separated. The order of the array, will be kept regarding DNS Server Priority
 
     .OUTPUTS
-		returns $true if sucess, returns error if fails
+		returns the configured DNS if success, returns error if fails
 
     .EXAMPLE
         PS C:\> set-DMdnsServer -webSession $session -DNSserver 8.8.8.8,1.1.1.1
