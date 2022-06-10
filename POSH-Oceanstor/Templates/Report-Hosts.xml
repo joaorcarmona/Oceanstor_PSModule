@@ -14,13 +14,13 @@
       <enabled>1</enabled>
     </property>
     <property>
-      <name>{Health Status}</name>
+      <name>Health Status</name>
       <order>3</order>
       <description></description>
       <enabled>1</enabled>
     </property>
     <property>
-      <name>{Running Status}</name>
+      <name>Running Status</name>
       <order>4</order>
       <description></description>
       <enabled>1</enabled>
@@ -38,37 +38,37 @@
       <enabled>1</enabled>
     </property>
     <property>
-      <name>{HostGroup Name}</name>
+      <name>HostGroup Name</name>
       <order>7</order>
       <description></description>
       <enabled>1</enabled>
     </property>
     <property>
-      <name>{HostGroup Id}</name>
+      <name>HostGroup Id</name>
       <order>8</order>
       <description></description>
       <enabled>1</enabled>
     </property>
     <property>
-      <name>{MappingView Name}</name>
+      <name>MappingView Name</name>
       <order>9</order>
       <description></description>
       <enabled>1</enabled>
     </property>
     <property>
-      <name>{MappingView Id}</name>
+      <name>MappingView Id</name>
       <order>10</order>
       <description></description>
       <enabled>1</enabled>
     </property>
     <property>
-      <name>{Parent Type}</name>
+      <name>Parent Type</name>
       <order>11</order>
       <description></description>
       <enabled>1</enabled>
     </property>
     <property>
-      <name>{Initiators Number}</name>
+      <name>Initiators Number</name>
       <order>12</order>
       <description></description>
       <enabled>1</enabled>
@@ -104,19 +104,19 @@
       <enabled>1</enabled>
     </property>
     <property>
-      <name>{Operation System}</name>
+      <name>Operation System</name>
       <order>18</order>
       <description></description>
       <enabled>1</enabled>
     </property>
     <property>
-      <name>{vStore ID}</name>
+      <name>vStore ID</name>
       <order>19</order>
       <description></description>
       <enabled>1</enabled>
     </property>
     <property>
-      <name>{vStore Name}</name>
+      <name>vStore Name</name>
       <order>20</order>
       <description></description>
       <enabled>1</enabled>
