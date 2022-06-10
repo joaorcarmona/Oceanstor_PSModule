@@ -30,10 +30,10 @@ function new-DMObjectReport{
 
     foreach ($obj in $Object)
     {
-        $objectToAdd = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
+        $objectToAdd = New-Object -TypeName PsObject
         foreach ($property in $propertiesCollected.name)
         {
-            $objectToAdd.Add($property,$obj.$property)
+            $objectToAdd | Add-Member -MemberType NoteProperty -Name $property -Value $obj.$property
         }
         $returnObject += $objectToAdd
     }
