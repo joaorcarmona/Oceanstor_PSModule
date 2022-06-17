@@ -10,6 +10,7 @@ class OceanStorLunGroup{
 	[int]${vStore ID}
 	[string]${vStore Name}
 	[boolean]${Is Mapped}
+	[string]${SmartQOS Policy Id} # for v6
 	[string]${Luns Members number} # for v6
 	[string]${Allocated Capacity} # for v6
 	[string]${Protection Capacity} # for v6
@@ -54,9 +55,10 @@ class OceanStorLunGroup{
 			$this.{Is Mapped} = $true
 		}
 
+		$this.{SmartQOS Policy Id} = $LunGroupReceived.SMARTQOSPOLICYID # only for v6
 		$this.{Luns Members number} = $LunGroupReceived.lunNumber # Only for v6
-		$this.{Allocated Capacity} = $LunGroupReceived.allocatedCapacity # Only for v6
-		$this.{Protection Capacity} = $LunGroupReceived.protectionCapacity # Only for v6
+		$this.{Allocated Capacity} = $LunGroupReceived.allocatedCapacity / 1GB # Only for v6
+		$this.{Protection Capacity} = $LunGroupReceived.protectionCapacity / 1GB # Only for v6
 		$this.{HyperCDP Consistency Group Number} = $LunGroupReceived.cdpGroupNum # Only for v6
 		$this.{Replication Group Number} = $LunGroupReceived.replicationGroupNum # Only for v6
 		$this.{Snapshot Group Number} = $LunGroupReceived.snapshotGroupNum # Only for v6
