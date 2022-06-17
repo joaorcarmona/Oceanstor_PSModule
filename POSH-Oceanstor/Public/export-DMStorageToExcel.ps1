@@ -119,7 +119,8 @@ function export-DMStorageToExcel{
 
 	If ($IncludeLunGroups -eq $True)
 	{
-		Export-Excel $ReportFile -AutoSize -TableName LunGroups -InputObject $storage.LunGroups -WorksheetName "Lun Groups"
+		$LunGroupsReport = new-DMObjectReport -Object $storage.LunGroups -ReportType hostgroups
+		Export-Excel $ReportFile -AutoSize -TableName LunGroups -InputObject $LunGroupsReport -WorksheetName "Lun Groups"
 	}
 
 	If ($IncludeStoragePools -eq $True)

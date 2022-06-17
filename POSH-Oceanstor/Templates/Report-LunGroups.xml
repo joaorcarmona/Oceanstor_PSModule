@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<lunGroups>
+  <properties>
+    <property>
+      <name>LunGroup ID</name>
+      <order>1</order>
+      <description>Lun Group Id</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>LunGroup Name</name>
+      <order>2</order>
+      <description>Lun Group Name</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Description</name>
+      <order>3</order>
+      <description>Description</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Application Type</name>
+      <order>4</order>
+      <description>Application Type (only for v3)</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>LunGroup Type</name>
+      <order>5</order>
+      <description>Lun Group Type</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>LunGroup Capacity</name>
+      <order>6</order>
+      <description>Lun Group Total Capacity</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Application Configuration Data</name>
+      <order>7</order>
+      <description>Application Configuration Data (only for v3)</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>vStore ID</name>
+      <order>8</order>
+      <description>vStore Id</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>vStore Name</name>
+      <order>9</order>
+      <description>vStore Name</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Is Mapped</name>
+      <order>10</order>
+      <description>Indicates whether the LUN group has been added to a mapping view.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Luns Members number</name>
+      <order>11</order>
+      <description>Number of member LUNs (only for v6)</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Allocated Capacity</name>
+      <order>12</order>
+      <description>Used capacity. (only for v6)</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Protection Capacity</name>
+      <order>13</order>
+      <description>Data Protection Capacity (only for v6)</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>HyperCDP Consistency Group Number</name>
+      <order>14</order>
+      <description>Number of HyperCDP of consistency Groups (only for v6)</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Replication Group Number</name>
+      <order>15</order>
+      <description>Number of remote replication consistency groups (only for v6)</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Snapshot Group Number</name>
+      <order>16</order>
+      <description>Number of snapshot consistency groups (only for v6)</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>HyperMetro Group Number</name>
+      <order>17</order>
+      <description>Number of HyperMetro consistency groups (only for v6)</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Clone Group Number</name>
+      <order>18</order>
+      <description>Number of clone consistency groups. (only for v6)</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>DR Start Trio Number</name>
+      <order>19</order>
+      <description>DR Star trio quantity (only for v6)</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>SmartQOS Policy Id</name>
+      <order>20</order>
+      <description>ID of the SmartQoS policy configured for a LUN group. (only for v6)</description>
+      <enabled>1</enabled>
+    </property>
+  </properties>
+</lunGroups>
