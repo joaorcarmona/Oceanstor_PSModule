@@ -114,7 +114,8 @@ function export-DMStorageToExcel{
 
 	if ($IncludeDisks -eq $True)
 	{
-		Export-Excel $ReportFile -AutoSize -TableName Disks -InputObject $storage.disks -WorksheetName "System Disks"
+		$DiskReport = new-DMObjectReport -Object $storage.disk -ReportType disks
+		Export-Excel $ReportFile -AutoSize -TableName Disks -InputObject $DiskReport -WorksheetName "System Disks"
 	}
 
 	If ($IncludeLunGroups -eq $True)

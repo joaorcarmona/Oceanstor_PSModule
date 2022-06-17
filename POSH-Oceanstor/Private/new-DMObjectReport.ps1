@@ -4,7 +4,7 @@ function new-DMObjectReport{
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$true)]
         [pscustomobject]$Object,
         [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=1,Mandatory=$false)]
-    [ValidateSet("luns","hosts","hostgroups","lungroups")]
+    [ValidateSet("luns","hosts","hostgroups","lungroups","disks")]
         [string]$ReportType,
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=2,Mandatory=$false)]
         [xml]$ReportTemplate
@@ -20,6 +20,7 @@ function new-DMObjectReport{
             hosts {$defaultTemplate = $HostsReportTemplate}
             hostgroups {$defaultTemplate = $HostGroupsReportTemplate}
             lungroups {$defaultTemplate = $LunGroupsReportTemplate}
+            disks {$defaultTemplate = $DisksReportTemplate}
         }
         $xmlTemplate = $defaultTemplate
     }
