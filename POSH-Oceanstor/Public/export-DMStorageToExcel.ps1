@@ -103,7 +103,8 @@ function export-DMStorageToExcel{
 
 	if ($IncludeHostGroups -eq $True)
 	{
-		Export-Excel $ReportFile -AutoSize -TableName HostGroups -InputObject $storage.HostGroups -WorksheetName "Hosts Groups"
+		$hostGroupsReport = new-DMObjectReport -Object $storage.HostGroups -ReportType hostgroups
+		Export-Excel $ReportFile -AutoSize -TableName HostGroups -InputObject $hostGroupsReport -WorksheetName "Hosts Groups"
 	}
 
 	if ($IncludeSystem -eq $True)
