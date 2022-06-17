@@ -10,6 +10,15 @@ class OceanStorLunGroup{
 	[int]${vStore ID}
 	[string]${vStore Name}
 	[boolean]${Is Mapped}
+	[string]${Luns Members number} # for v6
+	[string]${Allocated Capacity} # for v6
+	[string]${Protection Capacity} # for v6
+	[string]${HyperCDP Consistency Group Number} # for v6
+	[string]${Replication Group Number} # for v6
+	[string]${Snapshot Group Number} # for v6
+	[string]${HyperMetro Group Number} # for v6
+	[string]${Clone Group Number} # for v6
+	[string]${DR Start Trio Number} # for v6
 
 	OceanStorLunGroup ([array]$LunGroupReceived)
 	{
@@ -44,5 +53,15 @@ class OceanStorLunGroup{
 		} elseif ($LunGroupReceived.ISADD2MAPPINGVIEW -eq "true") {
 			$this.{Is Mapped} = $true
 		}
+
+		$this.{Luns Members number} = $LunGroupReceived.lunNumber
+		$this.{Allocated Capacity} = $LunGroupReceived.allocatedCapacity
+		$this.{Protection Capacity} = $LunGroupReceived.protectionCapacity
+		$this.{HyperCDP Consistency Group Number} = $LunGroupReceived.cdpGroupNum
+		$this.{Replication Group Number} = $LunGroupReceived.replicationGroupNum
+		$this.{Snapshot Group Number} = $LunGroupReceived.snapshotGroupNum
+		$this.{HyperMetro Group Number} = $LunGroupReceived.hyperMetroGroupNum
+		$this.{Clone Group Number} = $LunGroupReceived.cloneGroupNum
+		$this.{DR Start Trio Number} = $LunGroupReceived.drStarNum
 	}
 }
