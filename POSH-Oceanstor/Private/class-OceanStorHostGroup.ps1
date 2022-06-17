@@ -7,6 +7,11 @@ class OceanStorHostGroup{
 	[int]${vStore ID}
 	[string]${vStore Name}
 	[boolean]${Is Mapped}
+	#[string]${Host Member Number} # for v6
+	#[string]${Mapped Luns Number} # for v6
+	#[string]${Total Capacity} # for v6
+	#[string]${Allocated Capacity} # For v6
+	#[string]${Protection Capacity} # For V6
 
 	OceanStorHostGroup ([array]$HostGroupReceived)
 	{
@@ -29,5 +34,13 @@ class OceanStorHostGroup{
 		} elseif ($HostGroupReceived.ISADD2MAPPINGVIEW -eq "true") {
 			$this.{Is Mapped} = $true
 		}
+
+		$this.{Hosts Member Number} = $HostGroupReceived.hostNumbe
+		$this.{Mapped Luns Number} = $HostGroupReceived.mappingLunNumber
+		$this.{Total Capacity} = $HostGroupReceived.capacity
+		$this.{Allocated Capacity} = $HostGroupReceived.allocatedCapacity
+		$this.{Protection Capacity} = $HostGroupReceived.protectionCapacity
+
+
 	}
 }
