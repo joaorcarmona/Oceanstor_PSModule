@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<hostGroups>
+  <properties>
+    <property>
+      <name>HostGroup ID</name>
+      <order>1</order>
+      <description>Host Group Identification</description>
+    </property>
+    <property>
+      <name>HostGroup Name</name>
+      <order>2</order>
+      <description>Host Group Name</description>
+    </property>
+    <property>
+      <name>Description</name>
+      <order>3</order>
+      <description>Host Group Description</description>
+    </property>
+    <property>
+      <name>HostGroup Type</name>
+      <order>4</order>
+      <description>Object Type</description>
+    </property>
+    <property>
+      <name>vStore ID</name>
+      <order>5</order>
+      <description>vStore Id</description>
+    </property>
+    <property>
+      <name>vStore Name</name>
+      <order>6</order>
+      <description>vStore Name</description>
+    </property>
+    <property>
+      <name>Is Mapped</name>
+      <order>7</order>
+      <description>Is the Host Group in a Mpping View</description>
+    </property>
+    <property>
+      <name>Host Member Number</name>
+      <order>8</order>
+      <description>Number of Member Hosts</description>
+    </property>
+    <property>
+      <name>Mapped Luns Number</name>
+      <order>9</order>
+      <description>Number of Mapped LUNs</description>
+    </property>
+    <property>
+      <name>Total Capacity</name>
+      <order>10</order>
+      <description>Total Capacity</description>
+    </property>
+    <property>
+      <name>Allocated Capacity</name>
+      <order>11</order>
+      <description>Allocated Capacity</description>
+    </property>
+    <property>
+      <name>Protection Capacity</name>
+      <order>12</order>
+      <description>Data Protection Capacity</description>
+    </property>
+  </properties>
+</hostGroups>
