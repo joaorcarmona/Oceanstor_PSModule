@@ -3,7 +3,7 @@ class OceanStorLunGroup{
 	[int]${LunGroup ID}
 	[string]${LunGroup Name}
 	[string]$Description
-	[string]${Application Type}
+	[string]${Application Type} # for v3 only
 	[string]${LunGroup Type}
 	[int64]${LunGroup Capacity}
 	[string]${Application Configuration Data}
@@ -54,14 +54,14 @@ class OceanStorLunGroup{
 			$this.{Is Mapped} = $true
 		}
 
-		$this.{Luns Members number} = $LunGroupReceived.lunNumber
-		$this.{Allocated Capacity} = $LunGroupReceived.allocatedCapacity
-		$this.{Protection Capacity} = $LunGroupReceived.protectionCapacity
-		$this.{HyperCDP Consistency Group Number} = $LunGroupReceived.cdpGroupNum
-		$this.{Replication Group Number} = $LunGroupReceived.replicationGroupNum
-		$this.{Snapshot Group Number} = $LunGroupReceived.snapshotGroupNum
-		$this.{HyperMetro Group Number} = $LunGroupReceived.hyperMetroGroupNum
-		$this.{Clone Group Number} = $LunGroupReceived.cloneGroupNum
-		$this.{DR Start Trio Number} = $LunGroupReceived.drStarNum
+		$this.{Luns Members number} = $LunGroupReceived.lunNumber # Only for v6
+		$this.{Allocated Capacity} = $LunGroupReceived.allocatedCapacity # Only for v6
+		$this.{Protection Capacity} = $LunGroupReceived.protectionCapacity # Only for v6
+		$this.{HyperCDP Consistency Group Number} = $LunGroupReceived.cdpGroupNum # Only for v6
+		$this.{Replication Group Number} = $LunGroupReceived.replicationGroupNum # Only for v6
+		$this.{Snapshot Group Number} = $LunGroupReceived.snapshotGroupNum # Only for v6
+		$this.{HyperMetro Group Number} = $LunGroupReceived.hyperMetroGroupNum # Only for v6
+		$this.{Clone Group Number} = $LunGroupReceived.cloneGroupNum # Only for v6
+		$this.{DR Start Trio Number} = $LunGroupReceived.drStarNum # Only for v6
 	}
 }
