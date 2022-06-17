@@ -35,12 +35,11 @@ class OceanStorHostGroup{
 			$this.{Is Mapped} = $true
 		}
 
-		$this.{Hosts Member Number} = $HostGroupReceived.hostNumbe
-		$this.{Mapped Luns Number} = $HostGroupReceived.mappingLunNumber
-		$this.{Total Capacity} = $HostGroupReceived.capacity
-		$this.{Allocated Capacity} = $HostGroupReceived.allocatedCapacity
-		$this.{Protection Capacity} = $HostGroupReceived.protectionCapacity
-
+		$this.{Hosts Member Number} = $HostGroupReceived.hostNumbe #for v6
+		$this.{Mapped Luns Number} = $HostGroupReceived.mappingLunNumber #for v6
+		$this.{Total Capacity} = $HostGroupReceived.capacity / 1GB #for v6
+		$this.{Allocated Capacity} = $HostGroupReceived.allocatedCapacity / 1GB #for v6
+		$this.{Protection Capacity} = $HostGroupReceived.protectionCapacity / 1GB #for v6
 
 	}
 }
