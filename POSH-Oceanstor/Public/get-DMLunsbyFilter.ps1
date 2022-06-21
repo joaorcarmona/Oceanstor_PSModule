@@ -1,4 +1,4 @@
-function get-DMlunsByWWN{
+function get-DMLunsbyFilter{
 	<#
 	.SYNOPSIS
 		To Search for lun by lun WWN
@@ -8,27 +8,29 @@ function get-DMlunsByWWN{
 
 	.PARAMETER webSession
 		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
-	.PARAMETER wwn
-		Mandatory parameter [string], to set the WWN to look for.
+	.PARAMETER filter
+		Mandatory parameter [string], to be used as filter in the query
+    .PARAMETER filter
+        Mandatory parameter [string], to be used as keyword to search for luns. No need explicit wildcard (*), because is always implicit
 
 	.INPUTS
 
 	.OUTPUTS
-		returns the Huawei Oceanstor Storage lun, my searching lun WWN. Return lun Object
+		returns the Huawei Oceanstor Storage lun, by applying a inputer filter and a keyword
 
 	.EXAMPLE
 
-		PS C:\> get-DMlunsByWWN -webSession $session -wwn "6a08cf810075766e1efc050700000005"
+		PS C:\> get-DMLunsbyFilter -webSession $session -Filter wwn -keyword "6a08cf810075766e1efc050700000005"
 
 		OR
 
-		PS C:\> $luns = get-DMlunsByWWN -wwn "6a08cf810075766e1efc050700000005"
+		PS C:\> $luns = get-DMLunsbyFilter -Filter wwn -keyword "6a08cf810075766e1efc050700000005"
 
 	.NOTES
-		Filename: get-DMlunsByWWN.ps1
+		Filename: get-DMLunsbyFilter.ps1
 		Author: Joao Carmona
-		Modified date: 2022-05-22
-		Version 0.2
+		Modified date: 2022-06-21
+		Version 0.1
 
 	.LINK
 	#>
@@ -37,7 +39,9 @@ function get-DMlunsByWWN{
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
         [pscustomobject]$WebSession,
 	[Parameter(ValueFromPipeline=$false,ValueFromPipelineByPropertyName=$True,Position=1,Mandatory=$true)]
-        [pscustomobject]$wwn
+        [pscustomobject]$filter,
+    [Parameter(ValueFromPipeline=$false,ValueFromPipelineByPropertyName=$True,Position=2,Mandatory=$true)]
+        [pscustomobject]$keyword
 	)
 
 	if ($WebSession){
@@ -60,12 +64,12 @@ function get-DMlunsByWWN{
 
 	foreach ($tlun in $response)
 	{
-		$lun = New-Object -TypeName $LunObjectClass -ArgumentList @($tlun,$session)
+		$lun = New-Object -TypeName $LunObjectClass -ArgumentList $tlun,$session
 		#$lun = [OceanstorLun]::new($tlun,$session)
 		$StorageLuns += $lun
 	}
 
-	$result = $StorageLuns | Where-Object wwn -Match $wwn
+	$result = $StorageLuns | Where-Object $filter -Match $keyword
 
 	return $result
 }
