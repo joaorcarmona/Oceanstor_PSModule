@@ -1,4 +1,4 @@
-class OceanstorLun{
+class OceanstorLunv3{
 	#Define Lun ID (id)
 	[Int]$id
 
@@ -58,7 +58,7 @@ class OceanstorLun{
 	[int]${vStore ID}
 	[string]${vStore Name}
 
-	OceanstorLun ([array]$LunReceived)
+	OceanstorLunv3 ([array]$LunReceived,[pscustomobject]$ObjStorage)
 	{
 		$lunID = $LunReceived.ID
 		$this.id = $lunID
