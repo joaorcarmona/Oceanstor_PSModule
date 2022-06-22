@@ -87,11 +87,21 @@ function export-DMStorageToExcel{
 		$IncludeLunGroups = $True
 		$IncludeHostGroups = $True
 		$IncludevStore = $True
+		$storageVersion = $storage.version.substr(0,2)
 	}
 
 	if ($IncludeLuns -eq $True)
 	{
-		$lunsReport = new-DMObjectReport -Object $storage.luns -ReportType luns
+		if ($storageVersion -eq "V3")
+		{
+			$reportLunsVersion = "lunsv3"
+		}
+		elseif ($storageVersion -eq "V6")
+		{
+			$reportLunsVersion = "lunsv6"
+		}
+
+		$lunsReport = new-DMObjectReport -Object $storage.luns -ReportType $reportLunsVersion
 		Export-Excel $ReportFile -AutoSize -TableName Luns -InputObject $lunsReport -WorksheetName "Luns"
 	}
 
