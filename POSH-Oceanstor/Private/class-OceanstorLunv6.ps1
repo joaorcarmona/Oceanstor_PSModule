@@ -49,7 +49,7 @@ class OceanstorLunv6{
 	[string]${Compression Saved Ratio*}
 	[string]${Total Saved Ratio*}
 	[int64]${Dedupe Saved Capacity*}
-	[int64]${Compression Saved Capacity}
+	[int64]${Compression Saved Capacity*}
 	[int64]${Total Saved Capacity*}
 	[string]${Is Clone}
 	[string]${Consistency Group Id}
@@ -69,8 +69,9 @@ class OceanstorLunv6{
 	{
 		switch ($lunReceived.TYPE)
 		{
-			0 {$this.{Object Type} = "LUN"}
+			11 {$this.{Object Type} = "LUN"}
 		}
+
 		$this.{Lun Id} = $LunReceived.ID
 		$this.{Lun Name} = $LunReceived.NAME
 		$this.{Storage Pool Id} = $lunReceived.PARENTID
@@ -259,7 +260,7 @@ class OceanstorLunv6{
 		$this.{Dedupe Saved Capacity*} = $ldedupSavCap * $lSectorSize / 1GB
 
 		[int64]$lcompSavCap = $lunReceived.COMPRESSIONSAVEDCAPACITY
-		$this.{Compression Saved Capacity} = $lcompSavCap * $lSectorSize / 1GB
+		$this.{Compression Saved Capacity*} = $lcompSavCap * $lSectorSize / 1GB
 
 		[int64]$ltotalSavCap = $lunReceived.TOTALSAVEDCAPACITY
 		$this.{Total Saved Capacity*} = $ltotalSavCap * $lSectorSize / 1GB
