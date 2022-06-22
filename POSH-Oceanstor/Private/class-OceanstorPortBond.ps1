@@ -10,7 +10,12 @@ class OceanStorPortBond{
     [string]${Device Name}
 
     OceanStorPortBond ([array]$portReceived){
-        $this.{Port Type} = $portReceived.TYPE
+
+        switch ($portReceived.TYPE)
+        {
+            235 {$this.{Port Type} = "SAS Port"}
+        }
+
         $this.{Port Id} = $portReceived.ID
         $this.{Port Name} = $portReceived.NAME
 
