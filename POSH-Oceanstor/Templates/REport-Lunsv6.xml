@@ -1,0 +1,395 @@
+<?xml version="1.0" encoding="utf-8"?>
+<lunsv6>
+  <properties>
+    <property>
+      <name>Object Type</name>
+      <order>1</order>
+      <description>Manage Object Type</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Lun Id</name>
+      <order>2</order>
+      <description>Lun identifier</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Lun Name</name>
+      <order>3</order>
+      <description>Lun Name</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Storage Pool Id</name>
+      <order>4</order>
+      <description>Parent Id / Storage Pool Id</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Storage Pool Name</name>
+      <order>5</order>
+      <description>Parent Id / Storage Pool Name</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Lun SubType</name>
+      <order>6</order>
+      <description>Lun SubType</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Health Status</name>
+      <order>7</order>
+      <description>Health Status</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Running Status</name>
+      <order>8</order>
+      <description>Running Status</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Description</name>
+      <order>9</order>
+      <description>Description</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Allocation Type</name>
+      <order>10</order>
+      <description>Allocation Type</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Lun Size</name>
+      <order>11</order>
+      <description>Configured Capacity</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Lun Used Capacity</name>
+      <order>12</order>
+      <description>Used Capacity</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Sector Size</name>
+      <order>13</order>
+      <description>Sector Size</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>is Mapped</name>
+      <order>14</order>
+      <description>Is Mapped</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>WWN</name>
+      <order>15</order>
+      <description>WWN Address</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Default Write Policy</name>
+      <order>16</order>
+      <description>Default Write Policy</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Running Write Policy</name>
+      <order>17</order>
+      <description>Running Write Policy</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Prefetch Policy</name>
+      <order>18</order>
+      <description>Prefetch Policy</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Prefetch Value</name>
+      <order>19</order>
+      <description>Prefetch Value</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Owning Controller</name>
+      <order>20</order>
+      <description>Owning Controller</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Working Controller</name>
+      <order>21</order>
+      <description>Working Controller</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Thin Capacity Usage*</name>
+      <order>22</order>
+      <description>Ratio of thin LUN capacity occupied by data to the capacity available to the thin LUN.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Replication Capacity</name>
+      <order>23</order>
+      <description>Data replication capacity, expressed in sectors. Capacity consumed by data replication refers to the capacity used for snapshot copy-onwrite (COW).</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Belong Lun Group</name>
+      <order>24</order>
+      <description>Indicates whether a LUN has been added to a LUN group.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Remote Lun Id</name>
+      <order>25</order>
+      <description>ID of the external LUN that maps to the eDevLUN.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Usage Type</name>
+      <order>26</order>
+      <description>LUN Usage</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Remote Lun WWN</name>
+      <order>27</order>
+      <description>WWN of the external LUN.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Compression Enabled*</name>
+      <order>28</order>
+      <description>Indicates whether compression is enabled (this field is no longer used).</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Deduplication Enabled*</name>
+      <order>29</order>
+      <description>Deduplication enabled or not (this field is no longer used).</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Mirror Type</name>
+      <order>29</order>
+      <description>Mirror Type</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>iSCSI Thin Lun Threshold</name>
+      <order>30</order>
+      <description>Capacity alarm threshold when thin LUNs are mounted to Windows 2012.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>iSCSI Thin Lun Threshold Enabled</name>
+      <order>31</order>
+      <description>iSCSI thin LUN alarm switch in Windows 2012.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Lun Masq Status</name>
+      <order>32</order>
+      <description>Lun Masquerading Status</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Remote Array Masq ID</name>
+      <order>33</order>
+      <description>Masqueraded as the specified remote array ID. Used in the expansion scenario when the heterogeneous storage</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>External DIF Support</name>
+      <order>34</order>
+      <description>Wheter the external DIF feature is supported</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Value Added Service Status</name>
+      <order>35</order>
+      <description>Status list of associated valueadded service objects</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>VASA DRS Enabled</name>
+      <order>36</order>
+      <description>VMware vStorage APIs for Storage Awareness (VASA): DRS supported or not.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>VASA Capabilities</name>
+      <order>37</order>
+      <description>Vmware VASA: storage capability level.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>VASA Thin Lun Severity</name>
+      <order>38</order>
+      <description>Vmware VASA: thin LUN capacity alarm severity.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Workload Type Id</name>
+      <order>39</order>
+      <description>Application Type Id</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Workload Type Name</name>
+      <order>40</order>
+      <description>Application Type Name</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Takeover Lun WWN</name>
+      <order>41</order>
+      <description>WWN of the takeover LUN.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Snapshot Schedule Id</name>
+      <order>42</order>
+      <description>Timing snapshot schedule ID.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>IO Class Id</name>
+      <order>43</order>
+      <description>I/O class</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>IO Priority</name>
+      <order>44</order>
+      <description>I/O Priority</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Compression Algorithm*</name>
+      <order>45</order>
+      <description>Compression Algorithm (this field is no longer used).</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Deduplication Saved Ratio*</name>
+      <order>46</order>
+      <description>Space saving ratio of deduplication. (this field is no longer used).</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Compression Saved Ratio*</name>
+      <order>47</order>
+      <description>Space saving ratio of compression. (this field is no longer used).</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Total Saved Ratio *</name>
+      <order>48</order>
+      <description>Total space saving ratio. (this field is no longer used).</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Dedupe Saved Capacity*</name>
+      <order>49</order>
+      <description>Space saved by deduplication. (this field is no longer used).</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Compression Saved Capacity</name>
+      <order>50</order>
+      <description>Space Saved by Compression. (this field is no longer used).</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Total Saved Capacity*</name>
+      <order>51</order>
+      <description>Total space saved. (this field is no longer used).</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Is Clone</name>
+      <order>52</order>
+      <description>Wheter it is a clone Lun</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Consistency Group Id</name>
+      <order>53</order>
+      <description>LUN consistency group Id</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>HyperCDP Schedule Id</name>
+      <order>54</order>
+      <description>HyperCDP schedule ID.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Mapped</name>
+      <order>54</order>
+      <description>Wheter the LUN is Mapped</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>HyperCDP Schedule Status</name>
+      <order>55</order>
+      <description>Whether to disable the HyperCDP schedule.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Mirror Policy</name>
+      <order>56</order>
+      <description>Mirror Policy</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Show DedupCompression Switch</name>
+      <order>57</order>
+      <description>Whether to display the deduplication and compression switch.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Grain Size</name>
+      <order>58</order>
+      <description>Grain size of a thin Lun</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Check Zero Page Enabled</name>
+      <order>59</order>
+      <description>Tag of the all-zero page check</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Lun FunctionType</name>
+      <order>60</order>
+      <description>Lun Function Type</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Namespace GUID</name>
+      <order>61</order>
+      <description>Globally unique identifier (GUID) of the namespace.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>SmartCache Partition Id</name>
+      <order>62</order>
+      <description>ID of the SmartCache partition.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>SmartCache Hit Rate</name>
+      <order>63</order>
+      <description>SmartCache Hit Rate</description>
+      <enabled>1</enabled>
+    </property>
+  </properties>
+</lunsv6>
