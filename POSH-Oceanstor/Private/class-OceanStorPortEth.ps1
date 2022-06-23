@@ -5,11 +5,11 @@ class OceanStorPortETH {
     [string]${Parent Type}
     [string]${Parent Id}
     [string]${Location}
-    [string]${health Status}
+    [string]${Health Status}
     [string]${Running Status}
     [string]${Logic Type}
     [string]${Mac Address}
-    [string]${Working Mote}
+    [string]${Working Mode}
     [string]${Duplex Mode}
     [string]${Negotiation Mode}
     [string]${MTU}
@@ -67,11 +67,11 @@ class OceanStorPortETH {
 
         switch ($portReceived.HEALTHSTATUS)
         {
-            0 {$this.{health Status} = "unknown"}
-            1 {$this.{health Status} = "normal"}
-            2 {$this.{health Status} = "faulty"}
-            3 {$this.{health Status} = "about to fail"}
-            9 {$this.{health Status} = "inconsistency"}
+            0 {$this.{Health Status} = "unknown"}
+            1 {$this.{Health Status} = "normal"}
+            2 {$this.{Health Status} = "faulty"}
+            3 {$this.{Health Status} = "about to fail"}
+            9 {$this.{Health Status} = "inconsistency"}
         }
 
         switch ($portReceived.RUNNINGSTATUS)
