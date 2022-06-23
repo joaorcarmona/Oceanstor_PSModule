@@ -8,41 +8,11 @@ class OceanStorPortETH {
     [string]${health Status}
     [string]${Running Status}
     [string]${Logic Type}
-    [string]${Operating Rate}
-    [string]${Configured Speed}
-    [string]${WWN}
-    [string]${Working Mode}
-    [string]${SFP Status}
-    [string]${FC Configured Mode}
-    [string]${FC Running Mode}
-    [string]${Loss Signal Error}
-    [string]${RX CHAR Error}
-    [string]${Loss Sync Error}
-    [string]${Link Fail Error}
-    [string]${Collection Start}
-    [string]${FLOGIN Latency}
-    [string]${Max Port Speed}
-    [string]${Port Switch}
-    [string]${Light Status}
-    [string]${Maximum Speed}
-    [string]${CRC Error}
-    [string]${End Sign Error}
-    [string]${Host Initiators}
-    [string]${Ethernet Ports}
-    [string]${MTU}
-    [string]${Port Usage}
-    [string]${Device Name}
-    [string]${Invalid DWORD}
-    [string]${Inconsistency Error}
-    [string]${Lost DWORD}
-    [string]${PHY Failed RST}
-    [string]${Current Id Peer Port}
-    [string]${Suggested Id Peer Port}
-    [string]${Mini SAS}
-    [string]${Disk Enclosure WWN}
     [string]${Mac Address}
+    [string]${Working Mote}
     [string]${Duplex Mode}
     [string]${Negotiation Mode}
+    [string]${MTU}
     [string]${Bond Name}
     [string]${IPv4 Address}
     [string]${IPv4 Mask}
@@ -55,14 +25,18 @@ class OceanStorPortETH {
     [string]${Packet Error}
     [string]${Packet Lost}
     [string]${Packet Overflowed}
+    [string]${Collection Start}
     [string]${Port Speed}
     [string]${Port Vlan Id}
     [string]${Port Profile}
     [string]${Switching Plane Id}
     [string]${Switching Virtual Id}
     [string]${Connection Status}
+    [string]${Port Switch}
     [string]${Port Bond Id}
     [string]${Device Name}
+    [string]${Light Status}
+    [string]${Port Usage}
     [string]${Port Profile Usage}
     [string]${Owning Controller}
     [string]${Error CRC}
@@ -78,6 +52,7 @@ class OceanStorPortETH {
     [string]${Avg. Transmitted Bytes}
     [string]${Working Rate}
     [string]${Port Function}
+    [string]${Host Initiators}
 
     OceanStorPortETH ([array]$portReceived)
     {
