@@ -13,7 +13,7 @@ class OceanStorPortBond{
 
         switch ($portReceived.TYPE)
         {
-            235 {$this.{Port Type} = "SAS Port"}
+            235 {$this.{Port Type} = "Bond Port"}
         }
 
         $this.{Port Id} = $portReceived.ID
