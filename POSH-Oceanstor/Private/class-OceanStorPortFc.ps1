@@ -5,7 +5,7 @@ class OceanStorPortFC{
     [string]${Parent Type}
     [string]${Parent Id}
     [string]${Location}
-    [string]${health Status}
+    [string]${Health Status}
     [string]${Running Status}
     [string]${Logic Type}
     [string]${Operating Rate}
@@ -47,11 +47,11 @@ class OceanStorPortFC{
 
         switch ($portReceived.HEALTHSTATUS)
         {
-            0 {$this.{health Status} = "unknown"}
-            1 {$this.{health Status} = "normal"}
-            2 {$this.{health Status} = "faulty"}
-            3 {$this.{health Status} = "about to fail"}
-            9 {$this.{health Status} = "inconsistency"}
+            0 {$this.{Health Status} = "unknown"}
+            1 {$this.{Health Status} = "normal"}
+            2 {$this.{Health Status} = "faulty"}
+            3 {$this.{Health Status} = "about to fail"}
+            9 {$this.{Health Status} = "inconsistency"}
         }
 
         switch ($portReceived.RUNNINGSTATUS)
@@ -98,7 +98,7 @@ class OceanStorPortFC{
         switch ($portReceived.FCRUNMODE)
         {
             0 {$this.{FC Running Mode} = "fabric"}
-            1 {$this.{FC ConRunningfigured Mode} = "FC-AL"}
+            1 {$this.{FC Running Mode} = "FC-AL"}
             2 {$this.{FC Running Mode} = "P2P"}
             3 {$this.{FC Running Mode} = "auto"}
             -1 {$this.{FC Running Mode} = "incorrect"}
