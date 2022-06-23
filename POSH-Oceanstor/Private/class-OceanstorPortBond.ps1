@@ -2,7 +2,7 @@ class OceanStorPortBond{
     [string]${Port Type}
     [string]${Port Id}
     [string]${Port Name}
-    [string]${health Status}
+    [string]${Health Status}
     [string]${Running Status}
     [string]${Ethernet Ports}
     [string]${MTU}
@@ -21,11 +21,11 @@ class OceanStorPortBond{
 
         switch ($portReceived.HEALTHSTATUS)
         {
-            0 {$this.{health Status} = "unknown"}
-            1 {$this.{health Status} = "normal"}
-            2 {$this.{health Status} = "faulty"}
-            3 {$this.{health Status} = "about to fail"}
-            9 {$this.{health Status} = "partially damaged"}
+            0 {$this.{Health Status} = "unknown"}
+            1 {$this.{Health Status} = "normal"}
+            2 {$this.{Health Status} = "faulty"}
+            3 {$this.{Health Status} = "about to fail"}
+            9 {$this.{Health Status} = "partially damaged"}
         }
 
         switch ($portReceived.RUNNINGSTATUS)
