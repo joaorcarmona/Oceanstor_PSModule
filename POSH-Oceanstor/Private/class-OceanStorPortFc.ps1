@@ -11,7 +11,7 @@ class OceanStorPortFC{
     [string]${Operating Rate}
     [string]${Configured Speed}
     [string]${WWN}
-    [string]${Working Mote}
+    [string]${Working Mode}
     [string]${SFP Status}
     [string]${FC Configured Mode}
     [string]${FC Running Mode}
@@ -74,9 +74,9 @@ class OceanStorPortFC{
 
         switch ($portReceived.INIORTGT)
         {
-            2 {$this.{Working Mote} = "initiator"}
-            3 {$this.{Working Mote} = "target"}
-            4 {$this.{Working Mote} = "initiator and target"}
+            2 {$this.{Working Mode} = "initiator"}
+            3 {$this.{Working Mode} = "target"}
+            4 {$this.{Working Mode} = "initiator and target"}
         }
 
         switch ($portReceived.SFPSTATUS)
