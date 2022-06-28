@@ -87,9 +87,36 @@ function export-DMStorageToExcel{
 		$IncludeLunGroups = $True
 		$IncludeHostGroups = $True
 		$IncludevStore = $True
-		$storageVersion = $storage.version.substr(0,2)
+		$storageVersion = $storage.system.version.Substring(0,2)
 	}
 
+	#1) Adding System Report
+	if ($IncludeSystem -eq $True)
+	{
+		Export-Excel $ReportFile -AutoSize -TableName System -InputObject $storage.system -WorksheetName "Basic System"
+	}
+
+	#2) adding Disks
+	if ($IncludeDisks -eq $True)
+	{
+		$DiskReport = new-DMObjectReport -Object $storage.disks -ReportType disks
+		Export-Excel $ReportFile -AutoSize -TableName Disks -InputObject $DiskReport -WorksheetName "System Disks"
+	}
+
+	#3) Adding Storage Pools
+	If ($IncludeStoragePools -eq $True)
+	{
+		Export-Excel $ReportFile -AutoSize -TableName StoragePools -InputObject $storage.StoragePools -WorksheetName "Storage Pools"
+	}
+
+	#4) Adding Lun Groups
+	If ($IncludeLunGroups -eq $True)
+	{
+		$LunGroupsReport = new-DMObjectReport -Object $storage.LunGroups -ReportType lungroups
+		Export-Excel $ReportFile -AutoSize -TableName LunGroups -InputObject $LunGroupsReport -WorksheetName "Lun Groups"
+	}
+
+	#5) Addings LUNs
 	if ($IncludeLuns -eq $True)
 	{
 		if ($storageVersion -eq "V3")
@@ -105,43 +132,27 @@ function export-DMStorageToExcel{
 		Export-Excel $ReportFile -AutoSize -TableName Luns -InputObject $lunsReport -WorksheetName "Luns"
 	}
 
+	#6) Adding LUN Groups
+	if ($IncludeHostGroups -eq $True)
+	{
+		$hostGroupsReport = new-DMObjectReport -Object $storage.hostgroups -ReportType hostgroups
+		Export-Excel $ReportFile -AutoSize -TableName HostGroups -InputObject $hostGroupsReport -WorksheetName "Host Groups"
+	}
+
+	#7) Adding Hosts
 	if ($IncludeHosts -eq $True)
 	{
 		$hostsReport = new-DMObjectReport -Object $storage.hosts -ReportType hosts
 		Export-Excel $ReportFile -AutoSize -TableName Hosts -InputObject $hostsReport -WorksheetName "Hosts"
 	}
 
-	if ($IncludeHostGroups -eq $True)
-	{
-		$hostGroupsReport = new-DMObjectReport -Object $storage.HostGroups -ReportType hostgroups
-		Export-Excel $ReportFile -AutoSize -TableName HostGroups -InputObject $hostGroupsReport -WorksheetName "Hosts Groups"
-	}
-
-	if ($IncludeSystem -eq $True)
-	{
-		Export-Excel $ReportFile -AutoSize -TableName System -InputObject $storage.system -WorksheetName "Basic System"
-	}
-
-	if ($IncludeDisks -eq $True)
-	{
-		$DiskReport = new-DMObjectReport -Object $storage.disk -ReportType disks
-		Export-Excel $ReportFile -AutoSize -TableName Disks -InputObject $DiskReport -WorksheetName "System Disks"
-	}
-
-	If ($IncludeLunGroups -eq $True)
-	{
-		$LunGroupsReport = new-DMObjectReport -Object $storage.LunGroups -ReportType hostgroups
-		Export-Excel $ReportFile -AutoSize -TableName LunGroups -InputObject $LunGroupsReport -WorksheetName "Lun Groups"
-	}
-
-	If ($IncludeStoragePools -eq $True)
-	{
-		Export-Excel $ReportFile -AutoSize -TableName StoragePools -InputObject $storage.StoragePools -WorksheetName "Storage Pools"
-	}
-
+	#8) Adding vStores
 	if ($IncludevStore -eq $true)
 	{
 		Export-Excel $ReportFile -AutoSize -TableName vStores -InputObject $storage.vStores -WorksheetName "System vStores"
 	}
 
+	#TODO Adding MappingView
+	#remove after 
+	return $LunGroupsReport
 }
