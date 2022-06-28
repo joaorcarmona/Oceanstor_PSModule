@@ -153,6 +153,4 @@ function export-DMStorageToExcel{
 	}
 
 	#TODO Adding MappingView
-	#remove after 
-	return $LunGroupsReport
 }
