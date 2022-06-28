@@ -3,7 +3,7 @@ Oceanstor PowerShell Module, is a module to operate with Huawei Oceanstor device
 
 Currently only get functions are developed, but in the future more operations could be added.
 
-### How to Install
+## How to Install
 
 ```powershell
 # Install
@@ -53,7 +53,7 @@ $storage1luns = get-DMLuns -webSession $storage1
 $storage2luns = get-DMLuns -webSession $storage2
 ```
 
-# Export Storage Configuration to Excel
+#### Export Storage Configuration to Excel
 ```powershell
 #Connect to a storage (System will request to input your username and password)
 $storage = connect-deviceManager -hostname "10.0.0.1" -Secure
@@ -62,7 +62,7 @@ $storage = connect-deviceManager -hostname "10.0.0.1" -Secure
 export-DMStorageToExcel -OceanStor $storage -ReportFile "c:\temp\MyStorage.xlsx"
 ```
 
-# Search one lun by WWN
+#### Search one lun by WWN
 ```powershell
 #Connect to a storage (System will request to input your username and password)
 $storage = connect-deviceManager -hostname "10.0.0.1" -Secure
@@ -71,8 +71,8 @@ $storage = connect-deviceManager -hostname "10.0.0.1" -Secure
  $luns = get-DMlunsByWWN -webSession $storage -wwn "6a08cf810075766e1efc050700000005"
 ```
 
-# Additional Resources
+## Additional Resources
 
-## Links
+### Links
 
 - [OceanStor V3 V300R006C50 REST Interface Reference] (https://support.huawei.com/enterprise/en/doc/EDOC1100136666)
