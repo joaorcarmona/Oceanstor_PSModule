@@ -50,7 +50,7 @@ class OceanstorViewStorage{
 
 	#Define Enclosures
 	[array]$Enclosures
-	
+
 	#Define Controllers
 	[array]$Controllers
 
