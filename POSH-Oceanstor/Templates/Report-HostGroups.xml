@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<hostGroups>
+<hostgroups>
   <properties>
     <property>
       <name>HostGroup ID</name>
@@ -74,4 +74,4 @@
       <enabled>1</enabled>
     </property>
   </properties>
-</hostGroups>
+</hostgroups>
