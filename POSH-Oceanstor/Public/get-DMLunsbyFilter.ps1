@@ -9,14 +9,14 @@ function get-DMLunsbyFilter{
 	.PARAMETER webSession
 		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
 	.PARAMETER filter
-		Mandatory parameter [string], to be used as filter in the query
+		Mandatory parameter [string], to be used as filter in the query. Needs to be a valid property name for the lun Object.
     .PARAMETER filter
-        Mandatory parameter [string], to be used as keyword to search for luns. No need explicit wildcard (*), because is always implicit
+        Mandatory parameter [string], to be used as keyword to search for luns. No need explicit wildcard (*), because it's implicit
 
 	.INPUTS
 
 	.OUTPUTS
-		returns the Huawei Oceanstor Storage lun, by applying a inputer filter and a keyword
+		returns the Huawei Oceanstor Storage lun, by applying a input filter and a keyword
 
 	.EXAMPLE
 
@@ -29,8 +29,8 @@ function get-DMLunsbyFilter{
 	.NOTES
 		Filename: get-DMLunsbyFilter.ps1
 		Author: Joao Carmona
-		Modified date: 2022-06-21
-		Version 0.1
+		Modified date: 2022-06-28
+		Version 0.2
 
 	.LINK
 	#>
