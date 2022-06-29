@@ -1,10 +1,10 @@
 function get-DMWorkLoadTypes{
 	<#
 	.SYNOPSIS
-		To Get Huawei Oceanstor Storage disks
+		To Get Huawei Oceanstor Storage workload Type configured (only works for v6)
 
 	.DESCRIPTION
-		Function to request Huawei Oceanstor Storage disks installed
+		Function to request Huawei Oceanstor Storage workload Type configured (only works for v6)
 
 	.PARAMETER webSession
 		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
@@ -12,7 +12,7 @@ function get-DMWorkLoadTypes{
 	.INPUTS
 
 	.OUTPUTS
-		returns the Huawei Oceanstor Storage disks installed
+		returns the Huawei Oceanstor Storage workload Type configured (only works for v6)
 
 	.EXAMPLE
 
