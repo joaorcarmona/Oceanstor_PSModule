@@ -42,7 +42,9 @@ function invoke-DeviceManager{
         [ValidateSet("GET","POST","PUT","DELETE")]
         [string]$Method,
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=2,Mandatory=$true)]
-        [String]$Resource
+        [String]$Resource,
+	[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Mandatory=$false)]
+		[System.Collections.Hashtable]$BodyData
 	)
 
     if ($WebSession){
@@ -51,9 +53,15 @@ function invoke-DeviceManager{
         $session = $deviceManager
     }
 
-    $RestURI = "https://$($session.hostname):8088/deviceManager/rest/$($session.DeviceId)/$resource"
+	$RestURI = "https://$($session.hostname):8088/deviceManager/rest/$($session.DeviceId)/$resource"
 
-	$result = Invoke-RestMethod -Method $Method -uri $RestURI -Headers $session.Headers -WebSession $session.WebSession -ContentType "application/json" -Credential $session.Credentials
+	if ($BodyData)
+	{
+		$JsonBody = ConvertTo-Json $BodyData
+		$result = Invoke-RestMethod -Method $Method -uri $RestURI -Headers $session.Headers -WebSession $session.WebSession -ContentType "application/json" -Credential $session.Credentials -Body $JsonBody
+	} else {
+		$result = Invoke-RestMethod -Method $Method -uri $RestURI -Headers $session.Headers -WebSession $session.WebSession -ContentType "application/json" -Credential $session.Credentials
+	}
 
     if ($result.error.code -ne 0)
     {

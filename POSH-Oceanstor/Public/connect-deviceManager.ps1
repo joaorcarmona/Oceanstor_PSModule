@@ -58,7 +58,7 @@ function connect-deviceManager {
 
 	if ($Secure -eq $true)
 	{
-		[pscredential]$credentials = Get-Credential #TODO create optional parameter for unsecure username/password to be passed as parameter
+		[pscredential]$credentials = Get-Credential
 	} else {
 		[securestring]$SecPassword = ConvertTo-SecureString -String	$LoginPwd -AsPlainText -Force
 		[pscredential]$credentials = New-Object System.Management.Automation.PSCredential ($LoginUser, $SecPassword)

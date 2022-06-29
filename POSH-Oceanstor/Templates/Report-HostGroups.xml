@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<hostgroups>
+  <properties>
+    <property>
+      <name>HostGroup ID</name>
+      <order>1</order>
+      <description>Host Group Identification</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>HostGroup Name</name>
+      <order>2</order>
+      <description>Host Group Name</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Description</name>
+      <order>3</order>
+      <description>Host Group Description</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>HostGroup Type</name>
+      <order>4</order>
+      <description>Object Type</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>vStore ID</name>
+      <order>5</order>
+      <description>vStore Id</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>vStore Name</name>
+      <order>6</order>
+      <description>vStore Name</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Is Mapped</name>
+      <order>7</order>
+      <description>Is the Host Group in a Mpping View</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Host Member Number</name>
+      <order>8</order>
+      <description>Number of Member Hosts</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Mapped Luns Number</name>
+      <order>9</order>
+      <description>Number of Mapped LUNs</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Total Capacity</name>
+      <order>10</order>
+      <description>Total Capacity</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Allocated Capacity</name>
+      <order>11</order>
+      <description>Allocated Capacity</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Protection Capacity</name>
+      <order>12</order>
+      <description>Data Protection Capacity</description>
+      <enabled>1</enabled>
+    </property>
+  </properties>
+</hostgroups>

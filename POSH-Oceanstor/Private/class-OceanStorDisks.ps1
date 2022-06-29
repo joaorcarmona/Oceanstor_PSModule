@@ -1,6 +1,4 @@
 class OceanStorDisks{
-    [string]${Vendor Name}
-	#Define Variables
 	[string]$id
 	[string]$location
 	[string]${Part Number}
@@ -42,6 +40,7 @@ class OceanStorDisks{
 	[string]$formatRemainTime
 	[string]$type
 	[string]$name
+	[string]${Vendor Name}
 
 	OceanStorDisks ([array]$disks)
 	{
