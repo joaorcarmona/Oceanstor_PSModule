@@ -59,7 +59,10 @@ $storage2luns = get-DMLuns -webSession $storage2
 $storage = connect-deviceManager -hostname "10.0.0.1" -Secure
 
 #export all storage data to excel
-export-DMStorageToExcel -OceanStor $storage -ReportFile "c:\temp\MyStorage.xlsx"
+export-DMStorageToExcel -OceanStor $storage -ReportFile "c:\temp\MyStorage.xlsx" -IncludeObject full
+
+#export some properties to excel (can me choosen multiple from: "luns","system","hostgroups","lungroups","disks","hosts","vstores","storagepools",)
+export-DMStorageToExcel -OceanStor $storage -ReportFile "c:\temp\MyStorage.xlsx" -IncludeObject luns, lungroups
 ```
 
 #### Search one lun by WWN
