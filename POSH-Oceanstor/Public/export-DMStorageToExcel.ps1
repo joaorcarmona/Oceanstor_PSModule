@@ -13,8 +13,8 @@ function export-DMStorageToExcel{
 		is mandatory/optional [pscustomObject] parameter. Is Huawei Oceanstor Device Object
 	.PARAMETER ReportFile
 		is a mandatory parameter, that sets the filepath to save the Excel File Report.
-	.PARAMETER ReportObject
-		Choose the type of report object ("luns","system","hostgroups","lungroups","disks","hosts","vstores","storagepools","full"). Multiple item are allowed
+	.PARAMETER IncludeObject
+		Choose the type of report object to include ("luns","system","hostgroups","lungroups","disks","hosts","vstores","storagepools","full"). Multiple item are allowed
 
 	.INPUTS
 
@@ -23,9 +23,9 @@ function export-DMStorageToExcel{
 
 	.EXAMPLE
 
-		PS C:\> export-DMStorageToExcel -hostname storage.domain.tld -ReportFile "c:\temp\StorageReport.xlsx" -ReportObject full
+		PS C:\> export-DMStorageToExcel -hostname storage.domain.tld -ReportFile "c:\temp\StorageReport.xlsx" IncludeObject full
 
-		PS C:\> export-DMStorageToExcel -OceanStor $StorageDevice -ReportFile "c:\temp\StorageReport.xlsx" -ReportObject system, luns
+		PS C:\> export-DMStorageToExcel -OceanStor $StorageDevice -ReportFile "c:\temp\StorageReport.xlsx" IncludeObject system, luns
 
 	.NOTES
 		Filename: export-DMStorageToExcel.ps1
@@ -48,12 +48,11 @@ function export-DMStorageToExcel{
 		[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=1,Mandatory=$true,ParameterSetName="CurrentConnection")]
 			[PSCustomObject]$OceanStor,
 		[Parameter(ValueFromPipeline=$false,ValueFromPipelineByPropertyName=$false,Position=2,Mandatory=$true)]
-			[string]$ReportFile,
-		[Parameter(ValueFromPipeline=$false,ValueFromPipelineByPropertyName=$false,Position=3,Mandatory=$true)]
 			[ValidateSet("luns","system","hostgroups","lungroups","disks","hosts","vstores","storagepools","full")]
-			[string[]]$ReportObject
+			[string[]]$IncludeObject,
+		[Parameter(ValueFromPipeline=$false,ValueFromPipelineByPropertyName=$false,Position=3,Mandatory=$true)]
+			[string]$ReportFile
 )
-
 
 	if ($hostname -ne "")
 	{
@@ -66,7 +65,7 @@ function export-DMStorageToExcel{
 
 	#TODO Use SaveFileDialog Form to select file
 
-	if ($ReportObject -eq "full")
+	if ($IncludeObject -eq "full")
 	{
 		$IncludeLuns = $True
 		$IncludeHosts = $True
@@ -77,7 +76,7 @@ function export-DMStorageToExcel{
 		$IncludeHostGroups = $True
 		$IncludevStore = $True
 	}else {
-			$reportObject = $ReportObject | Get-Unique
+			$reportObject = $IncludeObject | Get-Unique
 			foreach ($reportObj in $reportObject)
 			{
 				Write-Host "conta um"
