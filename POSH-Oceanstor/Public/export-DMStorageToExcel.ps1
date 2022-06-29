@@ -28,8 +28,8 @@ function export-DMStorageToExcel{
 	.NOTES
 		Filename: export-DMStorageToExcel.ps1
 		Author: Joao Carmona
-		Modified date: 2022-05-22
-		Version 0.2
+		Modified date: 2022-07-29
+		Version 0.4
 
 	.LINK
 	#>
