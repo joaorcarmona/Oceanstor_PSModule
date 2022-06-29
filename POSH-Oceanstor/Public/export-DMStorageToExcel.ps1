@@ -13,6 +13,8 @@ function export-DMStorageToExcel{
 		is mandatory/optional [pscustomObject] parameter. Is Huawei Oceanstor Device Object
 	.PARAMETER ReportFile
 		is a mandatory parameter, that sets the filepath to save the Excel File Report.
+	.PARAMETER ReportObject
+		Choose the type of report object ("luns","system","hostgroups","lungroups","disks","hosts","vstores","storagepools","full"). Multiple item are allowed
 
 	.INPUTS
 
@@ -21,22 +23,22 @@ function export-DMStorageToExcel{
 
 	.EXAMPLE
 
-		PS C:\> export-DMStorageToExcel -hostname storage.domain.tld -ReportFile "c:\temp\StorageReport.xlsx"
+		PS C:\> export-DMStorageToExcel -hostname storage.domain.tld -ReportFile "c:\temp\StorageReport.xlsx" -ReportObject full
 
-		PS C:\> export-DMStorageToExcel -OceanStor $StorageDevice -ReportFile "c:\temp\StorageReport.xlsx"
+		PS C:\> export-DMStorageToExcel -OceanStor $StorageDevice -ReportFile "c:\temp\StorageReport.xlsx" -ReportObject system, luns
 
 	.NOTES
 		Filename: export-DMStorageToExcel.ps1
 		Author: Joao Carmona
-		Modified date: 2022-07-29
-		Version 0.4
+		Modified date: 2022-06-29
+		Version 0.5
 
 	.LINK
 	#>
 	[Cmdletbinding()]
 	Param(
-		[Parameter(ValueFromPipeline=$True,
-				ValueFromPipelineByPropertyName=$True,
+		[Parameter(ValueFromPipeline=$false,
+				ValueFromPipelineByPropertyName=$false,
 				Position=0,
 				Mandatory=$true,
 				ParameterSetName="NewConnection",
@@ -45,26 +47,11 @@ function export-DMStorageToExcel{
 			[String]$Hostname,
 		[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=1,Mandatory=$true,ParameterSetName="CurrentConnection")]
 			[PSCustomObject]$OceanStor,
-		[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=2,Mandatory=$true)]
+		[Parameter(ValueFromPipeline=$false,ValueFromPipelineByPropertyName=$false,Position=2,Mandatory=$true)]
 			[string]$ReportFile,
-		[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=3,Mandatory=$false)]
-			[switch]$IncludeLuns = $false,
-		[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=4,Mandatory=$false)]
-			[switch]$IncludeHosts = $false,
-		[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=5,Mandatory=$false)]
-			[switch]$IncludeSystem = $false,
-		[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=6,Mandatory=$false)]
-			[switch]$IncludeDisks = $false,
-		[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=7,Mandatory=$false)]
-			[switch]$IncludeStoragePools = $false,
-		[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=8,Mandatory=$false)]
-			[switch]$IncludeLunGroups= $false,
-		[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=9,Mandatory=$false)]
-			[switch]$IncludeHostGroups= $false,
-		[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=10,Mandatory=$false)]
-			[switch]$IncludevStore= $false,
-		[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=11,Mandatory=$false)]
-			[switch]$FullReport= $false
+		[Parameter(ValueFromPipeline=$false,ValueFromPipelineByPropertyName=$false,Position=3,Mandatory=$true)]
+			[ValidateSet("luns","system","hostgroups","lungroups","disks","hosts","vstores","storagepools","full")]
+			[string[]]$ReportObject
 )
 
 
@@ -75,9 +62,11 @@ function export-DMStorageToExcel{
 		$storage = $OceanStor
 	}
 
+	$storageVersion = $storage.system.version.Substring(0,2)
+
 	#TODO Use SaveFileDialog Form to select file
 
-	if ($FullReport -eq $true)
+	if ($ReportObject -eq "full")
 	{
 		$IncludeLuns = $True
 		$IncludeHosts = $True
@@ -87,8 +76,25 @@ function export-DMStorageToExcel{
 		$IncludeLunGroups = $True
 		$IncludeHostGroups = $True
 		$IncludevStore = $True
-		$storageVersion = $storage.system.version.Substring(0,2)
+	}else {
+			$reportObject = $ReportObject | Get-Unique
+			foreach ($reportObj in $reportObject)
+			{
+				Write-Host "conta um"
+				switch ($reportObj)
+				{
+					luns {$IncludeLuns = $True}
+					lungroups {$IncludeLunGroups = $True}
+					system {$IncludeSystem = $True}
+					hosts {$IncludeHosts = $True}
+					hostgroups {$IncludeHostGroups = $True}
+					disks {$IncludeDisks = $True}
+					vstores {$IncludevStore = $True}
+					storagepools {$IncludeStoragePools = $true}
+				}
+			}
 	}
+
 
 	#1) Adding System Report
 	if ($IncludeSystem -eq $True)
