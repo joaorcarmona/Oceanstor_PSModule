@@ -6,11 +6,9 @@ class OceanStorHost{
 	[string]${Running Status}
 	[string]$type
 	[string]$description
-	[string]${HostGroup Name}
-	[string]${HostGroup Id}
-	[string]${MappingView Name}
-	[string]${MappingView Id}
 	[string]${Parent Type}
+	[string]${Parent Id}
+	[string]${Parent Name}
 	[string]${Initiators Number}
 	[string]$ip
 	[boolean]$isadd2hostgroup
@@ -65,20 +63,17 @@ class OceanStorHost{
 			13 {$this.{Operation System} = "Oracle_VM_Server_for_SPARC"}
 		}
 
-		switch($hostReceived.PARENTTYPE)
-		{
-			14
+		#Works for v6 for v3 dont insert nothing for now
+		#TODO - get parents for Hosts on v3
+		if($hostReceived.PARENTTYPE){
+			switch($hostReceived.PARENTTYPE)
 			{
-				$this.{Parent Type}  = "Host Group"
-				$this.{HostGroup Name} = $hostReceived.PARENTNAME
-				$this.{HostGroup Id} = $hostReceived.PARENTID
+				14 {$this.{Parent Type}  = "Host Group"}
+				245 {$this.{Parent Type}  = "Mapping View" }
 			}
-			245
-			{
-				$this.{Parent Type}  = "Mapping View"
-				$this.{MappingView Name} = $hostReceived.PARENTNAME
-				$this.{MappingView Id} = $hostReceived.PARENTID
-			}
+
+			$this.{Parent Name} = $hostReceived.PARENTNAME
+			$this.{Parent Id} = $hostReceived.PARENTID
 		}
 
 		switch($hostReceived.RUNNINGSTATUS)

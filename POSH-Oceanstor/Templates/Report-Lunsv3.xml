@@ -1,0 +1,467 @@
+<?xml version="1.0" encoding="utf-8"?>
+<lunsv3>
+  <properties>
+    <property>
+      <name>Object Type</name>
+      <order>1</order>
+      <description>Manage Object Type</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Lun Id</name>
+      <order>2</order>
+      <description>Lun identifier</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Lun Name</name>
+      <order>3</order>
+      <description>Lun Name</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Storage Pool Id</name>
+      <order>4</order>
+      <description>Parent Id / Storage Pool Id</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Storage Pool Name</name>
+      <order>5</order>
+      <description>Parent Id / Storage Pool Name</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Lun SubType</name>
+      <order>6</order>
+      <description>Lun SubType</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Health Status</name>
+      <order>7</order>
+      <description>Health Status</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Running Status</name>
+      <order>8</order>
+      <description>Running Status</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Description</name>
+      <order>9</order>
+      <description>Description</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Allocation Type</name>
+      <order>10</order>
+      <description>Allocation Type</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Lun Size</name>
+      <order>11</order>
+      <description>Configured Capacity</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Lun Used Capacity</name>
+      <order>12</order>
+      <description>Used Capacity</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Sector Size</name>
+      <order>13</order>
+      <description>Sector Size</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>is Mapped</name>
+      <order>14</order>
+      <description>Is Mapped</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>WWN</name>
+      <order>15</order>
+      <description>WWN Address</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Default Write Policy</name>
+      <order>16</order>
+      <description>Default Write Policy</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Running Write Policy</name>
+      <order>17</order>
+      <description>Running Write Policy</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Prefetch Policy</name>
+      <order>18</order>
+      <description>Prefetch Policy</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Prefetch Value</name>
+      <order>19</order>
+      <description>Prefetch Value</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Owning Controller</name>
+      <order>20</order>
+      <description>Owning Controller</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Working Controller</name>
+      <order>21</order>
+      <description>Working Controller</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Thin Capacity Usage</name>
+      <order>22</order>
+      <description>Ratio of thin LUN capacity occupied by data to the capacity available to the thin LUN.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Owner Controller List</name>
+      <order>22</order>
+      <description>List of owning controllers that support switchover.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Belong Lun Group</name>
+      <order>23</order>
+      <description>Indicates whether a LUN has been added to a LUN group.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Replication Capacity</name>
+      <order>24</order>
+      <description>Data replication capacity, expressed in sectors. Capacity consumed by data replication refers to the capacity used for snapshot copy-onwrite (COW).</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Remote Lun Id</name>
+      <order>25</order>
+      <description>ID of the external LUN that maps to the eDevLUN.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Remote Lun WWN</name>
+      <order>26</order>
+      <description>WWN of the external LUN.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Usage Type</name>
+      <order>27</order>
+      <description>LUN Usage</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>iSCSI Thin Lun Threshold</name>
+      <order>28</order>
+      <description>Capacity alarm threshold when thin LUNs are mounted to Windows 2012.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>iSCSI Thin Lun Threshold Enabled</name>
+      <order>29</order>
+      <description>iSCSI thin LUN alarm switch in Windows 2012.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>External DIF Support</name>
+      <order>30</order>
+      <description>Wheter the external DIF feature is supported</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Value Added Service Status</name>
+      <order>31</order>
+      <description>Status list of associated valueadded service objects</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>VASA DRS Enabled</name>
+      <order>32</order>
+      <description>VMware vStorage APIs for Storage Awareness (VASA): DRS supported or not.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>VASA Capabilities</name>
+      <order>33</order>
+      <description>Vmware VASA: storage capability level.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>VASA Thin Lun Severity</name>
+      <order>34</order>
+      <description>Vmware VASA: thin LUN capacity alarm severity.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Mirror Type</name>
+      <order>35</order>
+      <description>Mirror Type</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Lun Masq Status</name>
+      <order>36</order>
+      <description>Lun Masquerading Status</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Takeover Lun WWN</name>
+      <order>37</order>
+      <description>WWN of the takeover LUN.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Retention Time</name>
+      <order>38</order>
+      <description>Retention Time.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Retention Set Time</name>
+      <order>39</order>
+      <description>Retention Set Time</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Retention Status</name>
+      <order>40</order>
+      <description>Retention State.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Retention Term</name>
+      <order>41</order>
+      <description>Retention Term</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Total Space Original</name>
+      <order>42</order>
+      <description>Total space before saving.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>SmartCache Partition Id</name>
+      <order>43</order>
+      <description>ID of the SmartCache partition.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>SmartCache Hit Rate</name>
+      <order>44</order>
+      <description>SmartCache Hit Rate</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>SmartCache Size</name>
+      <order>45</order>
+      <description>SmartCache Size</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>SmartCache State</name>
+      <order>46</order>
+      <description>SmartCache State</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>IO Class Id</name>
+      <order>47</order>
+      <description>I/O class</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>IO Priority</name>
+      <order>48</order>
+      <description>I/O Priority</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Cache Partition Id</name>
+      <order>49</order>
+      <description>Cache partition ID.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>SmartTier Enabled</name>
+      <order>50</order>
+      <description>Whether the SmartTier feature is applicable to the storage pool (controlled by the license).</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>TierData Distributing</name>
+      <order>51</order>
+      <description>Data distribution (the percentage of LUN data on each tier).</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>TierData Migration Policy</name>
+      <order>52</order>
+      <description>Tiering data migration policy.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>TierData Initial Policy</name>
+      <order>53</order>
+      <description>Tiering Initial Distribution Policy</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Tier Data Move Tier 0</name>
+      <order>54</order>
+      <description>Amount of data to be migrated to tier 0.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Tier Data Move Tier 1</name>
+      <order>55</order>
+      <description>Amount of data to be migrated to tier 1.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Tier Data Move Tier 2</name>
+      <order>56</order>
+      <description>Amount of data to be migrated to tier 2.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Mirror Policy</name>
+      <order>57</order>
+      <description>Mirror Policy</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Check Zero Page Enabled</name>
+      <order>58</order>
+      <description>Tag of the all-zero page check</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Metadata Capacity</name>
+      <order>59</order>
+      <description>Metadata Capacity</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>DataDestruction Progress</name>
+      <order>60</order>
+      <description>Progress of the data destruction task.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Read Cache Policy</name>
+      <order>61</order>
+      <description>Read cache policy.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Write Cache Policy</name>
+      <order>62</order>
+      <description>Write cache policy.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Deduplication Enabled</name>
+      <order>63</order>
+      <description>Deduplication enabled or not.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Deduplication Check Enabled</name>
+      <order>64</order>
+      <description>Indicates whether deduplication check is enabled.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Compression Enabled</name>
+      <order>65</order>
+      <description>Indicates whether compression is enabled</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>SmartDedupe Enabled</name>
+      <order>66</order>
+      <description>Deduplication enabled or not</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Compression Algorithm</name>
+      <order>67</order>
+      <description>Compression Algorithm</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Deduplication Saved Ratio</name>
+      <order>68</order>
+      <description>Space saving ratio of deduplication.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Compression Saved Ratio</name>
+      <order>69</order>
+      <description>Space saving ratio of compression.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Total Saved Ratio</name>
+      <order>70</order>
+      <description>Total space saving ratio.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Dedupe Saved Capacity</name>
+      <order>71</order>
+      <description>Space saved by deduplication.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Compression Saved Capacity</name>
+      <order>72</order>
+      <description>Space Saved by Compression.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Total Saved Capacity</name>
+      <order>73</order>
+      <description>Total space saved.</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>Total Consumer Space</name>
+      <order>74</order>
+      <description>Used data capacity (excluding metadata).</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>vStore Id</name>
+      <order>75</order>
+      <description>Tenant vStore Id (This field must be returned in vStore scenarios.)</description>
+      <enabled>1</enabled>
+    </property>
+    <property>
+      <name>vStore Name</name>
+      <order>76</order>
+      <description>Tenant vStore Name (This field must be returned in vStore scenarios.)</description>
+      <enabled>1</enabled>
+    </property>
+  </properties>
+</lunsv3>

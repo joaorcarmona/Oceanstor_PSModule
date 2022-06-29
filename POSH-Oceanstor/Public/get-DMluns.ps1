@@ -45,9 +45,18 @@ function get-DMluns{
     $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "lun" | Select-Object -ExpandProperty data
     $StorageLuns = New-Object System.Collections.ArrayList
 
+	$StorageVersion = $session.version.Substring(0,2)
+
+	if ($storageVersion -eq "V6")
+	{
+		$LunObjectClass = "OceanstorLunv6"
+	} else {
+		$LunObjectClass = "OceanstorLunv3"
+	}
+
 	foreach ($tlun in $response)
 	{
-		$lun = [OceanstorLun]::new($tlun)
+		$lun = New-Object -TypeName $LunObjectClass -ArgumentList @($tlun,$session)
 		$StorageLuns += $lun
 	}
 
