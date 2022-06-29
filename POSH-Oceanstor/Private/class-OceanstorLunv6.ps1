@@ -234,12 +234,15 @@ class OceanstorLunv6{
 			3 {$this.{VASA Thin Lun Severity} = "warning"}
 			2 {$this.{VASA Thin Lun Severity} = "critical"}
 		}
+
 		$this.{Workload Type Id} = $lunReceived.WORKLOADTYPEID
+
 		if ($lunReceived.WORKLOADTYPEID){
 			$this.{Workload Type Name} = "invalid"
 		} else {
 			$this.{Workload Type Name} = $lunReceived.WORKLOADTYPENAME
 		}
+
 		$this.{Takeover Lun WWN} = $lunReceived.takeOverLunWwn
 		$this.{Snapshot Schedule Id} = $lunReceived.SNAPSHOTSCHEDULEID
 		$this.{IO Class Id} = $lunReceived.IOCLASSID
