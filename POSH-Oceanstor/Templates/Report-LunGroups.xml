@@ -2,15 +2,15 @@
 <lungroups>
   <properties>
     <property>
-      <name>LunGroup ID</name>
+      <name>Id</name>
       <order>1</order>
-      <description>Lun Group Id</description>
+      <description>LunGroup Id</description>
       <enabled>1</enabled>
     </property>
     <property>
-      <name>LunGroup Name</name>
+      <name>Name</name>
       <order>2</order>
-      <description>Lun Group Name</description>
+      <description>LunGroup Name</description>
       <enabled>1</enabled>
     </property>
     <property>
