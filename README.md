@@ -1,5 +1,5 @@
 # Huawei Oceanstor_PSModule
-Oceanstor PowerShell Module, is a module to operate with Huawei Oceanstor devices (v3) - v5 and v6 not tested but should work
+Oceanstor PowerShell Module, is a module to operate with Huawei Oceanstor devices (v3 & v5) - v6 not fully tested. Please report bugs on v6.
 
 Currently only get functions are developed, but in the future more operations could be added.
 
@@ -76,6 +76,9 @@ $storage = connect-deviceManager -hostname "10.0.0.1" -Secure
 
 ## Additional Resources
 
+NOTE: This Module have been modfied to support Powershell version 6 and 7. Previous version will not work.
+
 ### Links
 
 - [OceanStor V3 V300R006C50 REST Interface Reference] (https://support.huawei.com/enterprise/en/doc/EDOC1100136666)
+- [OceanStor Dorado 6.1.6 REST Interface Reference] (https://support.huawei.com/enterprise/en/doc/EDOC1100324309)
