@@ -54,6 +54,9 @@ class OceanstorViewStorage{
 	#Define Controllers
 	[array]$Controllers
 
+	#Define Interface Modules
+	[array]$InterfaceModules
+
     # Constructor
     OceanstorViewStorage ([String] $Hostname)
     {
@@ -75,5 +78,6 @@ class OceanstorViewStorage{
 		$this.{Active Alarms} = get-DMAlarms -webSession $storageConnection -AlarmStatus "Unrecovered"
 		$this.Enclosures = get-DMEnclosures -WebSession $storageConnection
 		$this.Controllers = get-DMControllers -WebSession $storageConnection
+		$this.InterfaceModules = get-DMInterfaceModules -WebSession $storageConnection
     }
 }
