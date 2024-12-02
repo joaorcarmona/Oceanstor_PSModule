@@ -1,4 +1,10 @@
 class OceanstorFileSystem{
+    [string]${Id}
+    [string]${Name}
+    [string]${Parent ID}
+    [string]${Parent Name}
+    [string]${Parent Snapshot ID}
+    [string]${Parent Type}
     [string]${Actual File System Type}
     [int64]${Allocated Pool Quota}
     [int64]${Allocation Capacity}
@@ -38,7 +44,6 @@ class OceanstorFileSystem{
     [string]${Health Status}
     [string]${Hypermetro Pair Ids}
     [string]${Hypervault Pair Ids}
-    [string]${Id}
     [int64]${Initial Allocated Capacity}
     [string]${Initial Allocation Policy}
     [int64]${Inode Total Count}
@@ -56,13 +61,8 @@ class OceanstorFileSystem{
     [int64]${Minimum Auto Size}
     [string]${Minimum Protect Time Unit}
     [int64]${Minimum Size FS Capacity}
-    [string]${Name}
     [string]${Owning Controller}
     [string]${Parent FileSystem Name}
-    [string]${Parent ID}
-    [string]${Parent Name}
-    [string]${Parent Snapshot ID}
-    [string]${Parent Type}
     [string]${Path Name Separator String}
     [boolean]${Read Only}
     [string]${Recycle Bin}
