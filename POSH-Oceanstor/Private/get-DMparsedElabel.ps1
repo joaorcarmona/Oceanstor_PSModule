@@ -7,8 +7,12 @@ function get-DMparsedElabel
     )
 
     $eLabels = New-Object System.Collections.ArrayList
-    $eLabels = $eLabelString.split("`n")
-    
+    if ($eLabels -match "`r`n"){
+        $eLabels = $eLabelString.split("`r`n")
+    } else {
+        $eLabels = $eLabelString.split("`n")
+    }
+   
     $labels = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
 
     foreach ($label in $eLabels)
