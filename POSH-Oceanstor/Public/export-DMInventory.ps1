@@ -56,6 +56,7 @@ function export-DMInventory
 	$StorageInventory = $storage.Enclosures
 	$StorageInventory += $storage.Controllers
 	$StorageInventory += $storage.disks
+	$StorageInventory += $storage.InterfaceModules
 
 	#Define Inventory Table Header Array
 	$headers = @("Storage","Id";"Name","Part Number","Serial Number","Description")
