@@ -1,7 +1,7 @@
 class OceanStorvStore{
 	#Define Properties
-	[int]${vStore ID}
-	[string]${vStore Name}
+	[int]${ID}
+	[string]${Name}
 	[string]${Running Status}
 	[string]$Description
 	[int64]${SAN Capacity Quota}
