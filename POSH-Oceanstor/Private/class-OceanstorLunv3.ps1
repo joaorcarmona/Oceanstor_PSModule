@@ -1,7 +1,7 @@
 class OceanstorLunv3{
-	[string]${Object Type}
-	[string]${Lun Id}
-	[string]${Lun Name}
+	hidden[string]${Object Type}
+	[string]${Id}
+	[string]${Name}
 	[string]${Storage Pool Id}
 	[string]${Storage Pool Name}
 	[string]${Lun SubType}

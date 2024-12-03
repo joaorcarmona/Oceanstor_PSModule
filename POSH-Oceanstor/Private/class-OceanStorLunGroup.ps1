@@ -1,7 +1,7 @@
 class OceanStorLunGroup{
 	#Define Properties
-	[int]${LunGroup ID}
-	[string]${LunGroup Name}
+	[int]${Id}
+	[string]${Name}
 	[string]$Description
 	[string]${Application Type} # for v3 only
 	[string]${LunGroup Type}

@@ -1,7 +1,7 @@
 class OceanStorPortFC{
+    [string]${Id}
+    [string]${Name}
     [string]${Port Type}
-    [string]${Port Id}
-    [string]${Port Name}
     [string]${Parent Type}
     [string]${Parent Id}
     [string]${Location}

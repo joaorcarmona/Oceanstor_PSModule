@@ -4,10 +4,10 @@ class OceanStorStoragePool{
 	[string]$id
 	[string]$name
 	[string]$type
-	[string]$healthstatus
-	[string]$runningstatus
-	[string]$parentid
-	[string]$parentname
+	[string]${Health Status}
+	[string]${Running Status}
+	[string]${Parent Id}
+	[string]${Parent Name}
 	[string]$description
 	[string]$autodeactivesnapshotswitch
 	[int64]$dataspace
@@ -86,7 +86,7 @@ class OceanStorStoragePool{
 			3 {$this.dstrunningstatus = "suspended"}
 		}
 
-		switch($spoolReceived.HEALTHSTATUS)
+		switch($spoolReceived.dststatus)
 		{
 			1 {$this.dststatus = "active"}
 			2 {$this.dststatus = "inactive"}
@@ -114,9 +114,9 @@ class OceanStorStoragePool{
 
 		switch($spoolReceived.HEALTHSTATUS)
 		{
-			1 {$this.healthstatus = "Normal"}
-			2 {$this.healthstatus = "Fault"}
-			3 {$this.healthstatus = "Degraded"}
+			1 {$this.{Health Status} = "Normal"}
+			2 {$this.{Health Status} = "Fault"}
+			3 {$this.{Health Status} = "Degraded"}
 		}
 
 		switch($spoolReceived.IMMEDIATEMIGRATION)
@@ -156,8 +156,8 @@ class OceanStorStoragePool{
 		$this.movedupdata = $spoolReceived.MOVEDUPDATA / $sectorSize / $unitUsed
 		$this.moveupdata = $spoolReceived.MOVEUPDATA / $sectorSize / $unitUsed
 		$this.name = $spoolReceived.NAME
-		$this.parentid = $spoolReceived.PARENTID
-		$this.parentname = $spoolReceived.PARENTNAME
+		$this.{Parent Id} = $spoolReceived.PARENTID
+		$this.{Parent Name} = $spoolReceived.PARENTNAME
 
 		switch($spoolReceived.PAUSEMIGRATIONSWITCH)
 		{
@@ -171,12 +171,12 @@ class OceanStorStoragePool{
 
 		switch($spoolReceived.RUNNINGSTATUS)
 		{
-			14 {$this.runningstatus = "pre-copy"}
-			26 {$this.runningstatus = "reconstruction"}
-			27 {$this.runningstatus = "online"}
-			28 {$this.runningstatus = "offline"}
-			32 {$this.runningstatus = "balancing"}
-			53 {$this.runningstatus = "initializing"}
+			14 {$this.{Running Status} = "pre-copy"}
+			26 {$this.{Running Status} = "reconstruction"}
+			27 {$this.{Running Status} = "online"}
+			28 {$this.{Running Status} = "offline"}
+			32 {$this.{Running Status} = "balancing"}
+			53 {$this.{Running Status} = "initializing"}
 		}
 
 		$this.tier0capacity = $spoolReceived.TIER0CAPACITY / $sectorSize / $unitUsed

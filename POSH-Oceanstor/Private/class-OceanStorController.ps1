@@ -13,7 +13,6 @@ class OceanStorController
     [string]${BMC Version}
     [string]${CPU Info}
     [string]${CPU Usage %}
-    #[string]${Description} => replaced by elabel description
     [string]${Dirty Page Usage %}
     #[string]${elabel}
     [string]${Health Status}

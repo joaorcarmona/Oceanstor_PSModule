@@ -154,6 +154,7 @@ class OceanstorInterfaceModule
 			1 {$this.{Operating Mode} = "Fibre Channel"}
 			2 {$this.{Operating Mode} = "Ethernet (FCoE/iSCSI)"}
             3 {$this.{Operating Mode} = "cluster"}
+            4 {$this.{Operating Mode} = "Unknown"}
         }
 
         $this.{runmodelist} = $moduleReceived.RUNMODELIST

@@ -8,13 +8,13 @@
       <enabled>1</enabled>
     </property>
     <property>
-      <name>Lun Id</name>
+      <name>Id</name>
       <order>2</order>
       <description>Lun identifier</description>
       <enabled>1</enabled>
     </property>
     <property>
-      <name>Lun Name</name>
+      <name>Name</name>
       <order>3</order>
       <description>Lun Name</description>
       <enabled>1</enabled>
