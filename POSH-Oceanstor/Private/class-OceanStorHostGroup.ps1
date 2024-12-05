@@ -1,7 +1,7 @@
 class OceanStorHostGroup{
 	#Define Properties
-	[int]${HostGroup ID}
-	[string]${HostGroup Name}
+	[int]${Id}
+	[string]${Name}
 	[string]$Description
 	[string]${HostGroup Type}
 	[int]${vStore ID}

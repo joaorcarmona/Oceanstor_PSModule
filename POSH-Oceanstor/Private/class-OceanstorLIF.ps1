@@ -1,6 +1,7 @@
 class OceanStorLIF
 {
     #Define Proerties
+    [string]${Id}
     [string]${Address Family}
     [string]${Can Failover}
     [string]${Current Node Id}
@@ -14,7 +15,6 @@ class OceanStorLIF
     [string]${Home Port Id}
     [string]${Home Port Name}
     [string]${Home Port Type}
-    [string]${Id}
     [string]${IPv4 Address}
     [string]${IPv4 Gateway}
     [string]${IPv4 Mask}
