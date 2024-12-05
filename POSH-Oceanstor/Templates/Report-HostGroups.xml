@@ -2,13 +2,13 @@
 <hostgroups>
   <properties>
     <property>
-      <name>HostGroup ID</name>
+      <name>Id</name>
       <order>1</order>
       <description>Host Group Identification</description>
       <enabled>1</enabled>
     </property>
     <property>
-      <name>HostGroup Name</name>
+      <name>Name</name>
       <order>2</order>
       <description>Host Group Name</description>
       <enabled>1</enabled>

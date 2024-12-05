@@ -1,6 +1,6 @@
 class OceanStorWorkload {
-    [string]${Workload Id}
-    [string]${Workload Name}
+    [string]${Id}
+    [string]${Name}
     [string]${Workload Type}
     [string]${Block Size}
     [string]${Compression Enabled}
