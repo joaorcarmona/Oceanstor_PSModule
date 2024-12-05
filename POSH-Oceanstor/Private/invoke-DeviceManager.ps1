@@ -58,9 +58,9 @@ function invoke-DeviceManager{
 	if ($BodyData)
 	{
 		$JsonBody = ConvertTo-Json $BodyData
-		$result = Invoke-RestMethod -Method $Method -uri $RestURI -Headers $session.Headers -WebSession $session.WebSession -ContentType "application/json" -Credential $session.Credentials -Body $JsonBody
+		$result = Invoke-RestMethod -Method $Method -uri $RestURI -Headers $session.Headers -WebSession $session.WebSession -ContentType "application/json" -Credential $session.Credentials -SkipCertificateCheck -Body $JsonBody
 	} else {
-		$result = Invoke-RestMethod -Method $Method -uri $RestURI -Headers $session.Headers -WebSession $session.WebSession -ContentType "application/json" -Credential $session.Credentials
+		$result = Invoke-RestMethod -Method $Method -uri $RestURI -Headers $session.Headers -WebSession $session.WebSession -ContentType "application/json" -Credential $session.Credentials -SkipCertificateCheck
 	}
 
     if ($result.error.code -ne 0)

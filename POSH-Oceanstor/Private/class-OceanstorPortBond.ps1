@@ -1,7 +1,7 @@
 class OceanStorPortBond{
+    [string]${Id}
+    [string]${Name}
     [string]${Port Type}
-    [string]${Port Id}
-    [string]${Port Name}
     [string]${Health Status}
     [string]${Running Status}
     [string]${Ethernet Ports}

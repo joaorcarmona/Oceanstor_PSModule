@@ -2,9 +2,9 @@ class OceanStorvLan
 {
     #Define properties
     [string]$Id
+    [string]${Name}
     [string]${Type}
     [string]${Vlan Tag Id}
-    [string]${Name}
     [string]${Port Type}
     [string]${Port Id}
     [string]${Port Name}
