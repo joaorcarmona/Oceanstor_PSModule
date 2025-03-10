@@ -8,6 +8,60 @@ function new-DMFileSystem{
 
 	.PARAMETER webSession
 		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
+    
+    .PARAMETER FileSystemName
+        Name of the FileSystem to be created
+    
+    .PARAMETER StoragePoolID
+        ID of the Storage Pool where the FileSystem will be created 
+
+    .PARAMETER description
+        Description of the FileSystem to be created
+    
+    .PARAMETER Worm
+        If the FileSystem is a WORM FileSystem  (Write Once Read Many)
+    
+    .PARAMETER capacity
+        Capacity of the FileSystem to be created
+    
+    .PARAMETER snapShotReserve
+        Percentage of the FileSystem capacity to be reserved for Snapshots  (default 20%)
+    
+    .PARAMETER autoDeleteSnap
+        If the Snapshots will be automatically deleted  (default false)
+    
+    .PARAMETER AlarmThresold
+        Alarm Thresold for the FileSystem capacity  (default 90%)   
+    
+    .PARAMETER usage
+        Usage of the FileSystem (database, VM, user-defined)  (default user-defined)
+    
+    .PARAMETER checkSumEnable
+        If the Checksum is enabled on the FileSystem  (default true) 
+    
+    .PARAMETER accessTime
+        If the Access Time is enabled on the FileSystem  (default false)
+    
+    .PARAMETER accessTimeUpdateMode
+        Mode of the Access Time Update (Hourly, Daily, disabled)  (default disabled)
+    
+    .PARAMETER readOnly
+        If the FileSystem is Read Only  (default false)
+    
+    .PARAMETER FileSystemIOpriority
+        Priority of the FileSystem IO (low, medium, high)  (default low)
+    
+    .PARAMETER Compression  
+        If the Compression is enabled on the FileSystem  (default false)
+    
+    .PARAMETER CompressionAlgorithm
+        Algorithm of the Compression (rapid, deep)  (default rapid)
+    
+    .PARAMETER Dedupe        
+        If the Deduplication is enabled on the FileSystem  (default false)
+    
+    .PARAMETER Autogrow
+        If the FileSystem is Autogrow  (default false) 
 
 	.INPUTS
 
@@ -37,10 +91,10 @@ function new-DMFileSystem{
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=0,Mandatory=$true)]
         [string]$FileSystemName,
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=0,Mandatory=$true)]
-        [string]$StoragePoolID,
+        [Int16]$StoragePoolID,
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=0,Mandatory=$false)]
         [string]$description,
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=0,Mandatory=$true)]
+    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=0,Mandatory=$false)]
         [bool]$Worm=$false,
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=0,Mandatory=$false)]
         [Int64]$capacity,
@@ -108,7 +162,7 @@ function new-DMFileSystem{
     $body = @{
             NAME = $FileSystemName;
             PARENTTYPE = 216;
-            PARENTID = $StoragePool;
+            PARENTID = $StoragePoolID;
             ALLOCTYPE = 1;
             SUBTYPE = $Worm;
             SNAPSHOTRESERVEPER = $snapShotReserve;
@@ -124,8 +178,21 @@ function new-DMFileSystem{
             COMPRESSION = $algoritmCompression
     }
 
+    if ($description){
+        $body.Add("DESCRIPTION",$description)
+    }
+
+    if ($capacity){
+        $body.Add("CAPACITY",$capacity)
+    }
+
     $response = invoke-DeviceManager -WebSession $session -Method "POST" -Resource "filesystem" -BodyData $body
 
-    return $response
+    if ($response.error.Code -eq 0){
+        $result = [OceanstorFileSystem]::new($response.data)
+    } else {
+        $result = $response.error
+    }
 
+    return $result
 }
