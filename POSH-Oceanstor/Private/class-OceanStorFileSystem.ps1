@@ -117,7 +117,14 @@ class OceanstorFileSystem{
 		}
 
         $this.{Allocated Pool Quota} = $FileSystem.allocatedPoolQuota
-        $this.{Allocation Capacity} = $FileSystem.ALLOCCAPACITY / $this.{Sector Size} / 1GB
+        
+        if ($FileSystem.ALLOCCAPACITY -eq "0")
+        {
+            $this.{Allocation Capacity} = "0"
+        } else {
+            $this.{Allocation Capacity} = $FileSystem.ALLOCCAPACITY / $this.{Sector Size} / 1GB
+        }   
+        
         $this.{Allocation Type} = $FileSystem.ALLOCTYPE
 
         switch($FileSystem.ALLOCTYPE)
