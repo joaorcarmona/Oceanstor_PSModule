@@ -73,7 +73,7 @@ function connect-deviceManager {
 
     $webSession = New-Object Microsoft.PowerShell.Commands.WebRequestSession
 
-    $logonsession=Invoke-RestMethod -Method Post -Uri "https://$($Hostname):8088/deviceManager/rest/xxxxx/sessions" -Body (ConvertTo-Json $body) -SessionVariable WebSession
+    $logonsession=Invoke-RestMethod -Method Post -Uri "https://$($Hostname):8088/deviceManager/rest/xxxxx/sessions" -Body (ConvertTo-Json $body) -SkipCertificateCheck -SessionVariable WebSession
 
     if ($logonsession.error.code -ne 0)
     {
@@ -99,3 +99,4 @@ function connect-deviceManager {
        $global:deviceManager = $connection
     }
 }
+Export-ModuleMember -Variable 'logonsession'
