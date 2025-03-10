@@ -111,7 +111,6 @@ function new-DMFileSystem{
             PARENTID = $StoragePool;
             ALLOCTYPE = 1;
             SUBTYPE = $Worm;
-            #CAPACITY = $capacity;
             SNAPSHOTRESERVEPER = $snapShotReserve;
             AUTODELSNAPSHOTENABLE = $autoDeleteSnap;
             CAPACITYTHRESOLD = $AlarmThresold;
