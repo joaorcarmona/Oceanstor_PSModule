@@ -37,7 +37,7 @@ function new-DMFileSystem{
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=0,Mandatory=$true)]
         [string]$FileSystemName,
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=0,Mandatory=$true)]
-        [string]$StoragePool,
+        [string]$StoragePoolID,
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=0,Mandatory=$false)]
         [string]$description,
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=0,Mandatory=$true)]

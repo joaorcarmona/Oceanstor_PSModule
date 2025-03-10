@@ -99,4 +99,4 @@ function connect-deviceManager {
        $global:deviceManager = $connection
     }
 }
-Export-ModuleMember -Variable 'logonsession'
+#Export-ModuleMember -Variable 'logonsession'
