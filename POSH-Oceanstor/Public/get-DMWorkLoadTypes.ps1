@@ -41,7 +41,7 @@ function get-DMWorkLoadTypes{
     } else {
         $session = $deviceManager
     }
-    #host_link?INITIATOR_TYPE=$LinkType&PARENTID=$HostId
+    
     $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "workload_type?isDetailInfo=true" | Select-Object -ExpandProperty data
     $workloads = New-Object System.Collections.ArrayList
 
