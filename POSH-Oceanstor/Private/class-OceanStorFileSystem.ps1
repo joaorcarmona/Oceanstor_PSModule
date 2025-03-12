@@ -107,9 +107,10 @@ class OceanstorFileSystem{
     [boolean]${Write Check}
 
     OceanstorFileSystem ([array]$FileSystem)
-    {
+    {  
+        [int64]$fSector = 512
         $this.{Sector Size} = $FileSystem.SECTORSIZE
-
+        
         switch($FileSystem.ACTUALFILESYSTEMTYPE)
 		{
 			0 {$this.{Actual File System Type} = "Wushan FS"}
@@ -181,7 +182,14 @@ class OceanstorFileSystem{
 
         $this.{Auto Size Increment} = $FileSystem.AUTOSIZEINCREMENT
         $this.{Available And Allocation Capacity Ratio} = $FileSystem.AVAILABLEANDALLOCCAPACITYRATIO
-        $this.{Available Capacity} = $FileSystem.AVAILABLECAPCITY / $this.{Sector Size} / 1GB
+
+        if ($FileSystem.AVAILABLECAPCITY -eq "0")
+        {
+            $this.{Available Capacity} = "0"
+        } else {
+            $this.{Available Capacity} = $FileSystem.AVAILABLECAPCITY / $fSector/ 1GB
+        }
+
         $this.{Cache Patition Id} = $FileSystem.CACHEPARTITIONID
 
         switch($FileSystem.CAPABILITY)
@@ -192,7 +200,10 @@ class OceanstorFileSystem{
             3 {$this.{Capability} = "Based on Tiers"}
 		}
 
-        $this.{Capacity} = $FileSystem.CAPACITY / $this.{Sector Size} / 1GB
+        [int64]$fCapacity = $FileSystem.CAPACITY
+        [int64]$fscapacity = $fCapacity * $fSector / 1GB
+        $this.{Capacity} = $fscapacity
+        
         $this.{Capacity Threshold} = $FileSystem.CAPACITYTHRESHOLD
 
         if ($FileSystem.CASEPRESERVED -eq "TRUE")
@@ -224,7 +235,7 @@ class OceanstorFileSystem{
             1 {$this.{Compression Type}  = "Deep"}
 		}
 
-        $this.{Compression Saved Capacity} = $FileSystem.COMPRESSIONSAVEDCAPACITY / $this.{Sector Size} / 1GB
+        $this.{Compression Saved Capacity} = $FileSystem.COMPRESSIONSAVEDCAPACITY / $fSector / 1GB
         $this.{Compression Saved Ratio} = $FileSystem.COMPRESSIONSAVEDRATIO
 
         switch($FileSystem.DATATRANSFERPOLICY)
@@ -235,7 +246,7 @@ class OceanstorFileSystem{
             3 {$this.{DataTransferPolicy} = "Migrate to Lower Tier"}
 		}
 
-        $this.{Dedup Saved Capacity} = $FileSystem.DEDUPSAVEDCAPACITY / $this.{Sector Size} / 1GB
+        $this.{Dedup Saved Capacity} = $FileSystem.DEDUPSAVEDCAPACITY / $fSector / 1GB
         $this.{Dedup Saved Ratio} = $FileSystem.DEDUPSAVEDRATIO
 
         switch($FileSystem.DEFPROTECTTIMEUNIT)
@@ -285,7 +296,7 @@ class OceanstorFileSystem{
         $this.{Hypermetro Pair Ids} = $FileSystem.HYPERMETROPAIRIDS
         $this.{Hypervault Pair Ids} = $FileSystem.HYPERVAULTPAIRIDS
         $this.{Id} = $FileSystem.ID
-        $this.{Initial Allocated Capacity} = $FileSystem.INITIALALLOCCAPACITY  / $this.{Sector Size} / 1GB
+        $this.{Initial Allocated Capacity} = $FileSystem.INITIALALLOCCAPACITY  / $fSector / 1GB
 
         switch($FileSystem.INITIALDISTRIBUTEPOLICY)
 		{
@@ -349,7 +360,7 @@ class OceanstorFileSystem{
             48 {$this.{Minimum Protect Time Unit} = "year"}
 		}
 
-        $this.{Minimum Size FS Capacity} = $FileSystem.MINSIZEFSCAPACITY / $this.{Sector Size} / 1GB
+        $this.{Minimum Size FS Capacity} = $FileSystem.MINSIZEFSCAPACITY / $fSector / 1GB
         $this.{Name} = $FileSystem.NAME
         $this.{Owning Controller} = $FileSystem.OWNINGCONTROLLER
         $this.{Parent FileSystem Name} = $FileSystem.PARENTFILESYSTEMNAME
@@ -407,7 +418,7 @@ class OceanstorFileSystem{
         $this.{SmartTier Config} = $FileSystem.SMARTTIERCONFIG
         $this.{Snapshot Reserve Capacity} = $FileSystem.SNAPSHOTRESERVECAPACITY
         $this.{Snapshot Reserve Per} = $FileSystem.SNAPSHOTRESERVEPER
-        $this.{Snapshot Use Capacity} = $FileSystem.SNAPSHOTUSECAPACITY / $this.{Sector Size} / 1GB
+        $this.{Snapshot Use Capacity} = $FileSystem.SNAPSHOTUSECAPACITY / $fSector / 1GB
 
         switch($FileSystem.SPACERECYCLEMODE)
 		{

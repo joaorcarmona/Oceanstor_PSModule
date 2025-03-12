@@ -23,8 +23,8 @@ class OceanStorLunGroup{
 
 	OceanStorLunGroup ([array]$LunGroupReceived)
 	{
-		$this.{LunGroup ID} = $LunGroupReceived.ID
-		$this.{LunGroup Name} = $LunGroupReceived.NAME
+		$this.{Id} = $LunGroupReceived.ID
+		$this.{Name} = $LunGroupReceived.NAME
 		$this.Description = $LunGroupReceived.DESCRIPTION
 		$this.{Application Type} = $LunGroupReceived.APPTYPE
 
