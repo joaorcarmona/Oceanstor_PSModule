@@ -22,7 +22,7 @@ function new-DMFileSystem{
         If the FileSystem is a WORM FileSystem  (Write Once Read Many)
     
     .PARAMETER capacity
-        Capacity of the FileSystem to be created
+        Capacity of the FileSystem to be created (in gigabytes)
     
     .PARAMETER snapShotReserve
         Percentage of the FileSystem capacity to be reserved for Snapshots  (default 20%)
@@ -183,7 +183,8 @@ function new-DMFileSystem{
     }
 
     if ($capacity){
-        $body.Add("CAPACITY",$capacity)
+        $fcapacity = [math]::Round($capacity / 512 * 1GB)
+        $body.Add("CAPACITY",$fcapacity)
     }
 
     $response = invoke-DeviceManager -WebSession $session -Method "POST" -Resource "filesystem" -BodyData $body

@@ -72,8 +72,8 @@ class OceanstorLunv6{
 			11 {$this.{Object Type} = "LUN"}
 		}
 
-		$this.{Lun Id} = $LunReceived.ID
-		$this.{Lun Name} = $LunReceived.NAME
+		$this.{Id} = $LunReceived.ID
+		$this.{Name} = $LunReceived.NAME
 		$this.{Storage Pool Id} = $lunReceived.PARENTID
 		$this.{Storage Pool Name} = $lunReceived.PARENTNAME
 
