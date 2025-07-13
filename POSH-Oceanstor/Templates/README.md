@@ -1,10 +1,10 @@
 # Huawei Oceanstor_PSModule Templates
 
-This XML files, are templates that represents all the properties that any object have, and that are going to be exported when any of this object types are used.
+This XML files, are templates that represents all the properties that any object have, and that are going to be exported when any of these object types are used.
 
 The XML schema explanation:
 
- + First field is the property name the properties/atribute (dont change this, because this maps the Object property)
+ + First field is the property name the properties/attribute (dont change this, because this maps the Object property)
  + Second is order that the property show up when the object is exported.
  + Third is the property description, describing the property values
  + Fourth is enable or disable tag (shown/exported or not shown/exported in the report). To disable one property you just need to change the <enabled> to 0 (ZERO).
@@ -13,11 +13,11 @@ The XML schema explanation:
 Any change to templates included have impact on the default reports. If you want to make your own reports, is recommended to copy the existent template and modify the copy. That way you will have a fresh backup that can be called.
 ```
 
-The default templates are loaded in the module variables, when the module is initilize by calling the file:
+The default templates are loaded in the module variables, when the module is initialize by calling the file:
 import-ReportTemplates.ps1 inside the private folder. This files have currently 6 global variables. It is expected that more could be added in the future.
 
 ```powershell
-#Locattion for Lun Report Template
+#Location for Lun Report Template
 $global:Lunsv3ReportTemplate  = $workDir + "/Templates/Report-Lunsv3.xml"
 $global:Lunsv6ReportTemplate  = $workDir + "/Templates/Report-Lunsv6.xml"
 $global:HostsReportTemplate  = $workDir + "/Templates/Report-Hosts.xml"

@@ -68,6 +68,6 @@ function get-DMShares{
 		$shares += $share
 	}
 
-	$result = $share
+	$result = $shares
 	return $result
 }
