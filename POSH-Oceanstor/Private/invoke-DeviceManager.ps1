@@ -55,8 +55,7 @@ function invoke-DeviceManager{
 
 	$RestURI = "https://$($session.hostname):8088/deviceManager/rest/$($session.DeviceId)/$resource"
 
-	if ($BodyData)
-	{
+	if ($BodyData){
 		$JsonBody = ConvertTo-Json $BodyData
 		$result = Invoke-RestMethod -Method $Method -uri $RestURI -Headers $session.Headers -WebSession $session.WebSession -ContentType "application/json" -Credential $session.Credentials -SkipCertificateCheck -Body $JsonBody
 	} else {

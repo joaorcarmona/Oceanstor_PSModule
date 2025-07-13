@@ -13,7 +13,7 @@
 RootModule = "posh-oceanstor.psm1"
 
 # Version number of this module.
-ModuleVersion = "0.0.6"
+ModuleVersion = "0.0.8"
 
 # ID used to uniquely identify this module
 GUID = "67f4a145-d50d-4c26-bd26-b1303fd48aa1"
@@ -25,13 +25,13 @@ Author = "Joao Carmona"
 #CompanyName = "Unknown"
 
 # Copyright statement for this module
-Copyright = "(c) 2022 Joao Carmona All rights reserved."
+Copyright = "(c) 2025 Joao Carmona All rights reserved."
 
 # Description of the functionality provided by this module
 Description = "PowerShell module to interact with Huawei Oceanstor Devices"
 
 # Minimum version of the Windows PowerShell engine required by this module
-PowerShellVersion = "5.0"
+PowerShellVersion = "7.5"
 
 # Name of the Windows PowerShell host required by this module
 # PowerShellHostName = ""
@@ -93,7 +93,7 @@ PrivateData = @{
     PSData = @{
 
         # Tags applied to this module. These help with module discovery in online galleries.
-         Tags = @("Huawei", "Oceanstor", "DeviceManager")
+         Tags = @("Huawei", "Oceanstor", "DeviceManager", "Dorado")
 
         # A URL to the license for this module.
          LicenseUri = "https://github.com/joaorcarmona/Oceanstor_PSModule/blob/master/LICENSE"

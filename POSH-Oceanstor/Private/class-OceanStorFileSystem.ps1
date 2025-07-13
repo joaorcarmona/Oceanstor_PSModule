@@ -1,4 +1,5 @@
 class OceanstorFileSystem{
+    [int64]$RealCapacity
     [string]${Id}
     [string]${Name}
     [string]${Parent ID}
@@ -22,7 +23,7 @@ class OceanstorFileSystem{
     [int64]${Available Capacity}
     [string]${Cache Patition Id}
     [string]${Capability}
-    [int64]${Capacity}
+    [int64]${Capacity (GB)}
     [string]${Capacity Threshold}
     [boolean]${Case Preserved}
     [boolean]${Case Sensitive}
@@ -202,7 +203,8 @@ class OceanstorFileSystem{
 
         [int64]$fCapacity = $FileSystem.CAPACITY
         [int64]$fscapacity = $fCapacity * $fSector / 1GB
-        $this.{Capacity} = $fscapacity
+        $this.{Capacity (GB)} = $fscapacity
+        $this.{RealCapacity} = $fCapacity
         
         $this.{Capacity Threshold} = $FileSystem.CAPACITYTHRESHOLD
 
