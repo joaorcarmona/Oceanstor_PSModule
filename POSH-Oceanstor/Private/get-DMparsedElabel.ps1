@@ -13,7 +13,7 @@ function get-DMparsedElabel
     } else {
         $eLabels = $eLabelString.split("`n")
     }
-    
+
     $labels = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
 
     foreach ($label in $eLabels)

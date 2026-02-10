@@ -6,6 +6,7 @@ class OceanStorBBU
     [string]${Controller Id}
     [string]${PSU Location}
     [string]${name}
+    [string]${ESN}
     [string]${Manufacter Date}
     [string]${Charge Times}
     [string]${Description}
@@ -13,8 +14,11 @@ class OceanStorBBU
     [string]${Health Status}
     [string]${Remaining Life}
     [string]${running Status}
+    [string]${Board Type}
+    [string]${Part Number}
     [string]${PSU Type}
-    [string]${voltage}
+    [Int64]${voltage}
+    hidden [string]$eLabel
 
     OceanStorBBU ([array]$bbu)
     {
@@ -30,10 +34,17 @@ class OceanStorBBU
         $this.{Controller Id} = $bbu.CONTROLLERID
         $this.{PSU Location} = $bbu.LOCATION
         $this.{name} = $bbu.NAME
-        $this.{Manufacter Date} = $bbu.MANUFACTUREDATE
+        $this.{Manufacter Date} = $bbu.MANUFACTUREDDATE
         $this.{Charge Times} = $bbu.CHARGETIMES
-        $this.{Description} = $bbu.DESCRIPTION
-        $this.{Firmware Version} = $bbu.FIRMWAREVERSION
+
+        # Need to parse the elabel to get the description and part number, as the API does not return part number and description separately for BBU, but they are included in elabel. The format of elabel is "partnumber_description", so we can split it by "_" to get the part number and description.
+        $labels =  get-DMparsedElabel -eLabelString $bbu.ELABEL
+
+        $this.{ESN} = $labels.BarCode
+        $this.{Description} = $labels.Description
+        $this.{Part Number} = $labels.Item
+        $this.{Board Type} = $labels.BoardType
+        $this.{Firmware Version} = $bbu.FIRMWAREVER
 
         switch ($bbu.healthstatus)
         {
@@ -44,7 +55,16 @@ class OceanStorBBU
             12 {$this.{Health Status} = "low battery"}
         }
 
-        $this.{Remaining Life} = $bbu.REMAININGLIFE
+        if ($bbu.REMAINLIFEDAYS -ne -1)
+        {
+            $this.{Remaining Life} = $bbu.REMAINLIFEDAYS
+        }
+        else
+        {
+            $age = [datetime] $bbu.MANUFACTUREDDATE
+            $bbuAge = $age.AddYears(8)
+            $this.{Remaining Life} = $bbuAge.ToString("yyyy-MM-dd")
+        }
 
         switch ($bbu.RUNNINGSTATUS)
         {
@@ -62,6 +82,6 @@ class OceanStorBBU
         {
             210 {$this.{PSU Type} = "BBU"}
         }
-        $this.{voltage} = $bbu.VOLTAGE
+        $this.{voltage} = $bbu.VOLTAGE / 10
     }
 }
