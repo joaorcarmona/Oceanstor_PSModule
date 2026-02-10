@@ -90,7 +90,7 @@ function connect-deviceManager {
     $SessionHeader.Add("Authorization", "Basic $EncodedCredentials")
     $SessionHeader.Add("iBaseToken", $logonsession.data.iBaseToken)
 
-    $connection = [OceanstorSession]::new($logonSession,$SessionHeader,$webSession,$Hostname,$credentials)
+    $connection = [OceanstorSession]::new($logonSession,$SessionHeader,$webSession,$Hostname)
 
     if ($return -eq $true)
     {
