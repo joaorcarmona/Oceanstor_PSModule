@@ -1,13 +1,13 @@
 class OceanstorSession{
     #Define Hostname Property OceanstorDeviceManager
-	hidden [string]$Hostname
+	[string]$Hostname
 
 	#Define Host Credentials Property
 	# dont need credential in the session, just use it to get the token and then discard it. Dont want to have the credentials in memory for long time
 	#hidden [System.Management.Automation.PSCredential]$Credentials 
 
 	#Define DeviceID Property
-	hidden [string]$DeviceId
+	[string]$DeviceId
 
 	#Define WebSession Property
 	hidden [Microsoft.PowerShell.Commands.WebRequestSession]$WebSession
@@ -19,7 +19,7 @@ class OceanstorSession{
 	hidden [string]$iBaseToken
 
 	#Define Software Version
-	hidden [string]$Version
+	[string]$Version
 
     # Constructor
     OceanstorSession ([PSCustomObject] $logonSession, [System.Collections.IDictionary]$SessionHeader, [Microsoft.PowerShell.Commands.WebRequestSession]$webSession, [string] $hostname)
