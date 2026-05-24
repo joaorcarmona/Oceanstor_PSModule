@@ -99,7 +99,7 @@ function new-DMLunSnapshot {
     if ($SnapshotName) {
         $body.Add('NAME', $SnapshotName)
     } else { 
-        $body.Add('NAME', "snap-$($SourceLunName)-$(Get-Date -Format 'yyyyMMddHHmmss')")
+        $body.Add('NAME', "snap_$($SourceLunName)-$(Get-Date -Format 'yyyyMMddHHmmss')")
     }
 
     if ($Description) {
