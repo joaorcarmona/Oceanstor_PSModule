@@ -91,4 +91,16 @@ class OceanstorLunSnapshot {
     [psobject] Rollback([string]$RollbackSpeed) {
         return (Restore-DMLunSnapshot -WebSession $this.Session -SnapShotName $this.Name -RollbackSpeed $RollbackSpeed)
     }
+
+    [psobject] CreateCopy() {
+        return (new-DMLunSnapshotCopy -WebSession $this.Session -SourceSnapShotName $this.Name)
+    }
+
+    [psobject] CreateCopy([string]$SnapshotCopyName) {
+        return (new-DMLunSnapshotCopy -WebSession $this.Session -SourceSnapShotName $this.Name -SnapshotCopyName $SnapshotCopyName)
+    }
+
+    [psobject] CreateCopy([string]$SnapshotCopyName, [string]$Description) {
+        return (new-DMLunSnapshotCopy -WebSession $this.Session -SourceSnapShotName $this.Name -SnapshotCopyName $SnapshotCopyName -Description $Description)
+    }
 }

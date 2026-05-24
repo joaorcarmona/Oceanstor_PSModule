@@ -72,7 +72,7 @@ Describe 'new-DMLunSnapshot' {
     It 'generates a snapshot name when one is not supplied' {
         $null = new-DMLunSnapshot -WebSession $script:session -SourceLunName 'data-lun'
 
-        $script:snapshotRequest.NAME | Should -Match '^snap-data-lun-\d{14}$'
+        $script:snapshotRequest.NAME | Should -Match '^snap_data-lun-\d{14}$'
         $script:snapshotRequest.PARENTID | Should -Be 'lun-01'
     }
 

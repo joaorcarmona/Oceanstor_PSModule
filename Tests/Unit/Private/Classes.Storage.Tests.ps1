@@ -1,5 +1,6 @@
 BeforeAll {
     function global:new-DMLunSnapshot {}
+    function global:new-DMLunSnapshotCopy {}
     function global:get-DMLunSnapshots {}
     function global:remove-DMLunSnapShot {}
     function global:Enable-DMLunSnapshot {}
@@ -20,6 +21,7 @@ BeforeAll {
 
 AfterAll {
     Remove-Item -LiteralPath 'Function:\global:new-DMLunSnapshot' -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:new-DMLunSnapshotCopy' -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath 'Function:\global:get-DMLunSnapshots' -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath 'Function:\global:remove-DMLunSnapShot' -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath 'Function:\global:Enable-DMLunSnapshot' -ErrorAction SilentlyContinue
@@ -30,6 +32,7 @@ AfterAll {
     Remove-Variable -Name LunSnapshotQuery -Scope Global -ErrorAction SilentlyContinue
     Remove-Variable -Name LunSnapshotRemoval -Scope Global -ErrorAction SilentlyContinue
     Remove-Variable -Name LunSnapshotAction -Scope Global -ErrorAction SilentlyContinue
+    Remove-Variable -Name LunSnapshotCopyInvocation -Scope Global -ErrorAction SilentlyContinue
 }
 
 Describe 'Storage and share model classes' {
@@ -308,6 +311,58 @@ Describe 'Storage and share model classes' {
         $snapshot.Rollback('High').Code | Should -Be 0
         $global:LunSnapshotAction.Action | Should -Be 'Rollback'
         $global:LunSnapshotAction.RollbackSpeed | Should -Be 'High'
+    }
+
+    It 'creates a copy from a LUN snapshot object with the default name behavior' {
+        function global:new-DMLunSnapshotCopy {
+            param(
+                [pscustomobject]$WebSession,
+                [string]$SourceSnapShotName,
+                [string]$SnapshotCopyName
+            )
+
+            $global:LunSnapshotCopyInvocation = [pscustomobject]@{
+                WebSession = $WebSession
+                SourceSnapShotName = $SourceSnapShotName
+                SnapshotCopyName = $SnapshotCopyName
+            }
+
+            [pscustomobject]@{ Id = 'snap-copy-01' }
+        }
+        $source = [pscustomobject]@{ ID = 'snap-01'; NAME = 'before-patch'; SOURCELUNID = 'lun-v6'; SOURCELUNNAME = 'modern' }
+        $snapshot = New-Object -TypeName OceanstorLunSnapshot -ArgumentList @($source, $script:session)
+
+        $snapshot.CreateCopy().Id | Should -Be 'snap-copy-01'
+        $global:LunSnapshotCopyInvocation.WebSession | Should -Be $script:session
+        $global:LunSnapshotCopyInvocation.SourceSnapShotName | Should -Be 'before-patch'
+        $global:LunSnapshotCopyInvocation.SnapshotCopyName | Should -BeNullOrEmpty
+    }
+
+    It 'creates a named copy from a LUN snapshot object with a description' {
+        function global:new-DMLunSnapshotCopy {
+            param(
+                [pscustomobject]$WebSession,
+                [string]$SourceSnapShotName,
+                [string]$SnapshotCopyName,
+                [string]$Description
+            )
+
+            $global:LunSnapshotCopyInvocation = [pscustomobject]@{
+                WebSession = $WebSession
+                SourceSnapShotName = $SourceSnapShotName
+                SnapshotCopyName = $SnapshotCopyName
+                Description = $Description
+            }
+
+            [pscustomobject]@{ Id = 'snap-copy-02' }
+        }
+        $source = [pscustomobject]@{ ID = 'snap-01'; NAME = 'before-patch'; SOURCELUNID = 'lun-v6'; SOURCELUNNAME = 'modern' }
+        $snapshot = New-Object -TypeName OceanstorLunSnapshot -ArgumentList @($source, $script:session)
+
+        $snapshot.CreateCopy('copy-name', 'Copy checkpoint').Id | Should -Be 'snap-copy-02'
+        $global:LunSnapshotCopyInvocation.SourceSnapShotName | Should -Be 'before-patch'
+        $global:LunSnapshotCopyInvocation.SnapshotCopyName | Should -Be 'copy-name'
+        $global:LunSnapshotCopyInvocation.Description | Should -Be 'Copy checkpoint'
     }
 
     It 'maps an NFS client access policy' {
