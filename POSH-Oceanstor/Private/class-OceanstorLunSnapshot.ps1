@@ -67,4 +67,28 @@ class OceanstorLunSnapshot {
 
         return $response
     }
+
+    [psobject] Activate() {
+        return (Enable-DMLunSnapshot -WebSession $this.Session -SnapShotName $this.Name)
+    }
+
+    [psobject] Activacate() {
+        return $this.Activate()
+    }
+
+    [psobject] Reactivate() {
+        return (Restart-DMLunSnapshot -WebSession $this.Session -SnapShotName $this.Name)
+    }
+
+    [psobject] Expand([uint64]$UserCapacity) {
+        return (Resize-DMLunSnapshot -WebSession $this.Session -SnapShotName $this.Name -UserCapacity $UserCapacity)
+    }
+
+    [psobject] Rollback() {
+        return (Restore-DMLunSnapshot -WebSession $this.Session -SnapShotName $this.Name)
+    }
+
+    [psobject] Rollback([string]$RollbackSpeed) {
+        return (Restore-DMLunSnapshot -WebSession $this.Session -SnapShotName $this.Name -RollbackSpeed $RollbackSpeed)
+    }
 }
