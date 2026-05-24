@@ -56,7 +56,7 @@ function get-DMFileSystem{
 
 	foreach ($fs in $response)
 	{
-		$fileSystem = [OceanstorFileSystem]::new($fs)
+		$fileSystem = [OceanstorFileSystem]::new($fs, $session)
 		[void]$FileSystems.Add($fileSystem)
 	}
 

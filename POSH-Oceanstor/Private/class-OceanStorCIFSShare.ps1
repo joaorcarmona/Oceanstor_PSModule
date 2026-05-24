@@ -1,5 +1,6 @@
 class OceanStorCIFSShare
 {
+    hidden [pscustomobject]${Session}
     [string]${Id}
     [string]${Name}
     [string]${Share Path}
@@ -21,8 +22,9 @@ class OceanStorCIFSShare
     [string]${vStore ID}
     [string]${vStore Name}
 
-    OceanStorCIFSShare ([array]$cifsShare)
+    OceanStorCIFSShare ([array]$cifsShare, [pscustomobject]$Session)
     {
+        $this.Session = $Session
         $this.{Id} = $cifsShare.ID
         $this.{Name} = $cifsShare.NAME
         $this.{Share Path} = $cifsShare.SHAREPATH

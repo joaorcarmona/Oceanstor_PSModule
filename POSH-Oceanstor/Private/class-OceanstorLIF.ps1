@@ -1,5 +1,6 @@
 class OceanStorLIF
 {
+    hidden [pscustomobject]${Session}
     #Define Proerties
     [string]${Id}
     [string]${Address Family}
@@ -36,8 +37,9 @@ class OceanStorLIF
     [string]${vStore Name}
 
     #Constructor
-    OceanStorLIF ([array]$lifReceived)
+    OceanStorLIF ([array]$lifReceived, [pscustomobject]$Session)
     {
+        $this.Session = $Session
         switch ($lifReceived.ADDRESSFAMILY)
         {
             0 {$this.{Address Family} = "IPv4"}

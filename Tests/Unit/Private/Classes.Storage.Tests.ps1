@@ -10,14 +10,19 @@ BeforeAll {
 }
 
 Describe 'Storage and share model classes' {
+    BeforeAll {
+        $script:session = [pscustomobject]@{ Name = 'test-session' }
+    }
+
     It 'maps CIFS share policy flags' {
         $source = [pscustomobject]@{ ID = 'cifs-01'; NAME = 'share'; subType = 0; ABEENABLE = $true; ENABLEOPLOCK = $false; OFFLINEFILEMODE = 1 }
 
-        $result = New-Object -TypeName OceanStorCIFSShare -ArgumentList (,$source)
+        $result = New-Object -TypeName OceanStorCIFSShare -ArgumentList @($source, $script:session)
 
         $result.Id | Should -Be 'cifs-01'
         $result.'Enable ABE' | Should -Be 'enabled'
         $result.'Offline File Mode' | Should -Be 'manual'
+        $result.Session | Should -Be $script:session
     }
 
     It 'maps a file system and converts capacity' {
@@ -26,7 +31,7 @@ Describe 'Storage and share model classes' {
             HEALTHSTATUS = 1; RUNNINGSTATUS = 27; ALLOCTYPE = 1; PARENTTYPE = 216
         }
 
-        $result = New-Object -TypeName OceanstorFileSystem -ArgumentList (,$source)
+        $result = New-Object -TypeName OceanstorFileSystem -ArgumentList @($source, $script:session)
 
         $result.Id | Should -Be 'fs-01'
         $result.'Capacity (GB)' | Should -Be 1
@@ -36,7 +41,7 @@ Describe 'Storage and share model classes' {
     It 'maps a LUN group' {
         $source = [pscustomobject]@{ ID = 12; NAME = 'application-luns'; APPTYPE = 1; GROUPTYPE = 0; CAPCITY = 1GB; ISADD2MAPPINGVIEW = 'false' }
 
-        $result = New-Object -TypeName OceanStorLunGroup -ArgumentList @($source, [pscustomobject]@{})
+        $result = New-Object -TypeName OceanStorLunGroup -ArgumentList @($source, $script:session)
 
         $result.Id | Should -Be 12
         $result.'Application Type' | Should -Be 'Oracle'
@@ -46,7 +51,7 @@ Describe 'Storage and share model classes' {
     It 'maps a version 3 LUN' {
         $source = [pscustomobject]@{ ID = 'lun-v3'; NAME = 'legacy'; TYPE = 11; SECTORSIZE = 512; CAPACITY = 2097152; ALLOCCAPACITY = 1048576; HEALTHSTATUS = 1; RUNNINGSTATUS = 27; ALLOCTYPE = 1 }
 
-        $result = New-Object -TypeName OceanstorLunv3 -ArgumentList @($source, [pscustomobject]@{})
+        $result = New-Object -TypeName OceanstorLunv3 -ArgumentList @($source, $script:session)
 
         $result.Id | Should -Be 'lun-v3'
         $result.'Lun Size' | Should -Be 1
@@ -56,7 +61,7 @@ Describe 'Storage and share model classes' {
     It 'maps a version 6 LUN' {
         $source = [pscustomobject]@{ ID = 'lun-v6'; NAME = 'modern'; TYPE = 11; SECTORSIZE = 512; CAPACITY = 2097152; ALLOCCAPACITY = 1048576; HEALTHSTATUS = 1; RUNNINGSTATUS = 27; ALLOCTYPE = 1; mapped = $true }
 
-        $result = New-Object -TypeName OceanstorLunv6 -ArgumentList @($source, [pscustomobject]@{})
+        $result = New-Object -TypeName OceanstorLunv6 -ArgumentList @($source, $script:session)
 
         $result.Id | Should -Be 'lun-v6'
         $result.'Lun Size' | Should -Be 1
@@ -66,7 +71,7 @@ Describe 'Storage and share model classes' {
     It 'maps an NFS client access policy' {
         $source = [pscustomobject]@{ ID = 'client-01'; NAME = '10.0.0.0/24'; ACCESSVAL = 1; SYNC = 0; CHARSET = 0; securityType = 0 }
 
-        $result = New-Object -TypeName OceanstorNFSclient -ArgumentList (,$source)
+        $result = New-Object -TypeName OceanstorNFSclient -ArgumentList @($source, $script:session)
 
         $result.Id | Should -Be 'client-01'
         $result.'Access Permission' | Should -Be 'read and write'
@@ -76,7 +81,7 @@ Describe 'Storage and share model classes' {
     It 'maps an NFS share' {
         $source = [pscustomobject]@{ ID = 'nfs-01'; NAME = 'exports'; CHARACTERENCODING = 0; ENABLESHOWSNAPSHOT = $true; LOCKPOLICY = 1 }
 
-        $result = New-Object -TypeName OceanStorNFSShare -ArgumentList (,$source)
+        $result = New-Object -TypeName OceanStorNFSShare -ArgumentList @($source, $script:session)
 
         $result.Id | Should -Be 'nfs-01'
         $result.'Character Enconding' | Should -Be 'UTF-8'
@@ -86,7 +91,7 @@ Describe 'Storage and share model classes' {
     It 'maps a logical interface' {
         $source = [pscustomobject]@{ ID = 'lif-01'; NAME = 'service'; ADDRESSFAMILY = 0; IPV4ADDR = '10.1.1.10'; ROLE = 2; RUNNINGSTATUS = 10; SUPPORTPROTOCOL = 3 }
 
-        $result = New-Object -TypeName OceanStorLIF -ArgumentList (,$source)
+        $result = New-Object -TypeName OceanStorLIF -ArgumentList @($source, $script:session)
 
         $result.Id | Should -Be 'lif-01'
         $result.'Address Family' | Should -Be 'IPv4'

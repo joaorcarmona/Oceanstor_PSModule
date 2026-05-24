@@ -56,7 +56,7 @@ $ethPorts = New-Object System.Collections.ArrayList
 
 foreach ($peth in $response)
 {
-    $ethpObj = [OceanStorPortETH]::new($peth)
+    $ethpObj = [OceanStorPortETH]::new($peth, $session)
     [void]$ethPorts.Add($ethpObj)
 }
 

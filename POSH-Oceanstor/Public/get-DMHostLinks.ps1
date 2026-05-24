@@ -73,7 +73,7 @@ function get-DMHostLinks{
 
 	foreach ($hlinks in $response)
 	{
-		$hostlink = [OceanStorHostLink]::new($hlinks)
+		$hostlink = [OceanStorHostLink]::new($hlinks, $session)
 		[void]$hostLinks.Add($hostlink)
 	}
 

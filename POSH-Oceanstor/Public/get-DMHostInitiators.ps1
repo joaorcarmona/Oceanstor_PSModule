@@ -110,8 +110,8 @@ function get-DMHostInitiators{
 	{
 		switch ($initatorType)
 		{
-			FibreChannel {$HostInitiator = [OceanstorHostinitiatorFC]::new($initator)}
-			ISCSI {$HostInitiator = [OceanstorHostinitiatorISCSI]::new($initator)}
+			FibreChannel {$HostInitiator = [OceanstorHostinitiatorFC]::new($initator, $session)}
+			ISCSI {$HostInitiator = [OceanstorHostinitiatorISCSI]::new($initator, $session)}
 		}
 
 		[void]$HostInitiators.Add($HostInitiator)

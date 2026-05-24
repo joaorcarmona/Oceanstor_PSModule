@@ -45,7 +45,7 @@ function get-dmbbus {
 
     foreach ($bbu in $response)
 	{
-        $bbu = [OceanstorBBU]::new($bbu)
+        $bbu = [OceanstorBBU]::new($bbu, $session)
 		[void]$bbus.Add($bbu)
 	}
 

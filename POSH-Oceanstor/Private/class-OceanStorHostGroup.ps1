@@ -1,5 +1,6 @@
 class OceanStorHostGroup{
 	#Define Properties
+	hidden [pscustomobject]${Session}
 	[int]${Id}
 	[string]${Name}
 	[string]$Description
@@ -13,8 +14,9 @@ class OceanStorHostGroup{
 	[string]${Allocated Capacity} # For v6
 	[string]${Protection Capacity} # For V6
 
-	OceanStorHostGroup ([array]$HostGroupReceived)
+	OceanStorHostGroup ([array]$HostGroupReceived, [pscustomobject]$Session)
 	{
+		$this.Session = $Session
 		$this.{Id} = $HostGroupReceived.ID
 		$this.{Name} = $HostGroupReceived.NAME
 		$this.Description = $HostGroupReceived.DESCRIPTION

@@ -56,7 +56,7 @@ function get-DMWorkLoadTypes{
 
 	foreach ($tworkload in $response)
 	{
-		$workload = [OceanStorWorkload]::new($tworkload)
+		$workload = [OceanStorWorkload]::new($tworkload, $session)
 		[void]$workloads.Add($workload)
 	}
 

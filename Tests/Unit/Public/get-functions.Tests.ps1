@@ -84,6 +84,7 @@ Describe 'Public getter functions' {
             $result[0].PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
                 Should -Be @('Name', 'Level', 'Alarm Status', 'Location', 'Start time')
             $result[0].'Event Type' | Should -Be 'alarm'
+            $result[0].Session | Should -Be $script:session
         }
 
         It 'gets battery backup units' {

@@ -61,7 +61,7 @@ function get-DMdisksbyPoolId{
 
 	foreach ($tdisk in $response)
 	{
-		$disk = [OceanStorDisks]::new($tdisk)
+		$disk = [OceanStorDisks]::new($tdisk, $session)
 		[void]$Storagedisks.Add($disk)
 	}
 

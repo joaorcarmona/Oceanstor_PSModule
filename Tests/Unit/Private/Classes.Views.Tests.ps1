@@ -60,6 +60,7 @@ Describe 'Session and view classes' {
 
         $result.Properties.Id | Should -Be 'host-01'
         $result.Paths[0].Id | Should -Be 'path-01'
+        $result.Session | Should -Be $session
         Should -Invoke get-DMHostLinks -Times 1 -Exactly
     }
 
@@ -87,6 +88,7 @@ Describe 'Session and view classes' {
         $result.DeviceId | Should -Be 'system-01'
         $result.Luns | Should -Contain 'lun-01'
         $result.Controllers | Should -Contain 'controller-01'
+        $result.Session | Should -Be $connection
         Should -Invoke connect-deviceManager -Times 1 -Exactly
         Should -Invoke get-DMShares -Times 2 -Exactly
     }

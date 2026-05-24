@@ -70,8 +70,8 @@ function get-DMShares{
 	{
 		switch ($shareType)
 		{
-			CIFS {$share = [OceanStorCIFSShare]::new($tshare)}
-			NFS {$share = [OceanStorNFSShare]::new($tshare)}
+			CIFS {$share = [OceanStorCIFSShare]::new($tshare, $session)}
+			NFS {$share = [OceanStorNFSShare]::new($tshare, $session)}
 		}
 
 		[void]$shares.Add($share)

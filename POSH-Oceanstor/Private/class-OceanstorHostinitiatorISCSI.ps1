@@ -1,4 +1,5 @@
 class OceanstorHostinitiatorISCSI {
+    hidden [pscustomobject]${Session}
     #Define properties
     [string]${Id}
     [string]${Host Id}
@@ -21,8 +22,9 @@ class OceanstorHostinitiatorISCSI {
     [int64]${vStore ID}
 	[string]${vStore Name}
 
-    OceanstorHostinitiatorISCSI ([array]$initiator)
+    OceanstorHostinitiatorISCSI ([array]$initiator, [pscustomobject]$Session)
     {
+        $this.Session = $Session
         $this.{Id} = $initiator.ID
         $this.{Host Id} = $initiator.PARENTID
         $this.{Host Name} = $initiator.PARENTNAME

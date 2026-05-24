@@ -1,4 +1,5 @@
 class OceanStorAlarm{
+	hidden [pscustomobject]${Session}
 	#Define Properties
     [string]${Alarm Object Type}
     [string]${Alarm Status}
@@ -22,8 +23,9 @@ class OceanStorAlarm{
     [string]${Suggestion Action}
     [string]${Type}
 
-	OceanStorAlarm ([array]$AlarmReceived)
+	OceanStorAlarm ([array]$AlarmReceived, [pscustomobject]$Session)
 	{
+        $this.Session = $Session
         $this.{Alarm Object Type} = $AlarmReceived.alarmObjType
         $this.{Username Cleared} = $AlarmReceived.clearName
 

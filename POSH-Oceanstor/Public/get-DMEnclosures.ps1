@@ -56,7 +56,7 @@ $enclosures = New-Object System.Collections.ArrayList
 
 foreach ($tenc in $response)
 {
-    $enc = [OceanStorEnclosure]::new($tenc)
+    $enc = [OceanStorEnclosure]::new($tenc, $session)
     [void]$enclosures.Add($enc)
 }
 

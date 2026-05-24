@@ -56,7 +56,7 @@ function get-DMvStore{
 
 	foreach ($tvstore in $response)
 	{
-		$vStore = [OceanStorvStore]::new($tvstore)
+		$vStore = [OceanStorvStore]::new($tvstore, $session)
 		[void]$vStores.Add($vStore)
 	}
 

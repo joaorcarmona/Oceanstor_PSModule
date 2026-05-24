@@ -1,4 +1,5 @@
 class OceanstorFileSystem{
+    hidden [pscustomobject]${Session}
     [int64]$RealCapacity
     [string]${Id}
     [string]${Name}
@@ -107,8 +108,9 @@ class OceanstorFileSystem{
     [string]${Worm Type}
     [boolean]${Write Check}
 
-    OceanstorFileSystem ([array]$FileSystem)
-    {  
+    OceanstorFileSystem ([array]$FileSystem, [pscustomobject]$Session)
+    {
+        $this.Session = $Session
         [int64]$fSector = 512
         $this.{Sector Size} = $FileSystem.SECTORSIZE
         

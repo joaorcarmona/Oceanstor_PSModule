@@ -1,4 +1,5 @@
 class OceanstorViewStorage{
+	hidden [pscustomobject]${Session}
 	#Define Hostname Property
 	[string]$Hostname
 
@@ -62,6 +63,7 @@ class OceanstorViewStorage{
     {
 		$storageConnection = connect-deviceManager -Hostname $Hostname -Return $true -Secure
 
+		$this.Session = $storageConnection
 		$this.Hostname = $Hostname
 		$this.System = get-DMSystem -WebSession $storageConnection
 		$this.Luns = get-DMluns -WebSession $storageConnection

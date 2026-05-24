@@ -56,7 +56,7 @@ function get-DMhostGroups{
 
 	foreach ($hgroup in $response)
 	{
-		$hostgroup = [OceanStorHostGroup]::new($hgroup)
+		$hostgroup = [OceanStorHostGroup]::new($hgroup, $session)
 		[void]$hostgroups.Add($hostgroup)
 	}
 

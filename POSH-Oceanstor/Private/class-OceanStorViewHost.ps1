@@ -1,6 +1,7 @@
 class OceanStorViewHost
 {
     #TODO
+    hidden [pscustomobject]${Session}
     [PSCustomObject]$Properties
     [PSCustomObject]$Paths
     [PSCustomObject]$Luns
@@ -11,6 +12,7 @@ class OceanStorViewHost
 
     OceanStorViewHost ([array]$thost,[psCustomObject]$webSession)
     {
+        $this.Session = $webSession
         $this.Properties = $thost
         $this.Paths = get-DMHostLinks -WebSession $webSession
 

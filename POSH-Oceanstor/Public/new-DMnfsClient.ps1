@@ -162,7 +162,7 @@ function new-DMnfsClient{
     $response = invoke-DeviceManager -WebSession $session -Method "POST" -Resource "NFS_SHARE_AUTH_CLIENT" -BodyData $body
 
     if ($response.error.Code -eq 0){
-        $result = [OceanstorNFSclient]::new($response.data)
+        $result = [OceanstorNFSclient]::new($response.data, $session)
     } else {
         $result = $response.error
     }

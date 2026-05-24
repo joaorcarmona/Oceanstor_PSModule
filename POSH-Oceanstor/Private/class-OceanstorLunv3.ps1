@@ -1,4 +1,5 @@
 class OceanstorLunv3{
+	hidden [pscustomobject]${Session}
 	hidden[string]${Object Type}
 	[string]${Id}
 	[string]${Name}
@@ -79,6 +80,7 @@ class OceanstorLunv3{
 
 	OceanstorLunv3 ([array]$LunReceived,[pscustomobject]$ObjStorage)
 	{
+		$this.Session = $ObjStorage
 		switch ($lunReceived.TYPE)
 		{
 			11 {$this.{Object Type} = "LUN"}

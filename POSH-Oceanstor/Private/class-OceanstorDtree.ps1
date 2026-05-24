@@ -1,4 +1,5 @@
 class OceanStorDtree {
+    hidden [pscustomobject]${Session}
     #Define Properties
     [string]$Id
     [string]$Name
@@ -15,8 +16,9 @@ class OceanStorDtree {
     [string]${Snapshot Count}
     [string]${Locking Policy}
     
-    OceanStorDtree ([array]$dtree)
+    OceanStorDtree ([array]$dtree, [pscustomobject]$Session)
     {
+        $this.Session = $Session
 
     }
 

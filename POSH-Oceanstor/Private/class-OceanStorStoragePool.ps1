@@ -1,4 +1,5 @@
 class OceanStorStoragePool{
+	hidden [pscustomobject]${Session}
 	#TODO DEFINE Properties with friendly Name & complete information
 	#Define Properties
 	[string]$id
@@ -61,8 +62,9 @@ class OceanStorStoragePool{
 	[int64]$dedupedcapacity
 	[string]$reductioninvolvedcapacity
 
-	OceanStorStoragePool ([array]$spoolReceived)
+	OceanStorStoragePool ([array]$spoolReceived, [pscustomobject]$Session)
 	{
+		$this.Session = $Session
 		#Define Constants for Space Operations
 		$sectorSize = 512
 		$unitUsed = 1GB

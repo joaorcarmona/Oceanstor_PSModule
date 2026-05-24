@@ -56,7 +56,7 @@ function get-DMstoragePools{
 
 	foreach ($spool in $response)
 	{
-		$storagepool = [OceanStorStoragePool]::new($spool)
+		$storagepool = [OceanStorStoragePool]::new($spool, $session)
 		[void]$storagePools.Add($storagepool)
 	}
 
