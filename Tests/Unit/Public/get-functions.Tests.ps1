@@ -5,6 +5,7 @@ BeforeDiscovery {
         function invoke-DeviceManager {}
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\get-DMparsedElabel.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Set-DMHostInitiators.ps1"
 
         Get-ChildItem -LiteralPath "$testRoot\..\..\..\POSH-Oceanstor\Private" -Filter 'class-*.ps1' |
             Where-Object Name -ne 'class-OceanStorMappingView.ps1' |
@@ -207,7 +208,16 @@ Describe 'Public getter functions' {
         }
 
         It 'gets hosts' {
-            Mock invoke-DeviceManager { [pscustomobject]@{ data = $script:hostRecords } }
+            Mock invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+
+                switch ($Resource) {
+                    'host' { [pscustomobject]@{ data = $script:hostRecords } }
+                    'fc_initiator?PARENTID=host-01' { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'fc-01'; TYPE = 223; PARENTID = 'host-01' }) } }
+                    'iscsi_initiator?PARENTID=host-01' { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'iscsi-01'; TYPE = 222; PARENTID = 'host-01' }) } }
+                    default { [pscustomobject]@{ data = @() } }
+                }
+            }
 
             $result = @(get-DMhosts -WebSession $script:session)
 
@@ -215,6 +225,8 @@ Describe 'Public getter functions' {
             $result[0].PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
                 Should -Be @('Id', 'Name', 'Health Status', 'Operation System', 'Parent Name')
             $result[0].'Parent Id' | Should -Be 'group-01'
+            $result[0].initiators.Id | Should -Be @('fc-01', 'iscsi-01')
+            $result[1].initiators | Should -BeNullOrEmpty
         }
 
         It 'gets hosts by id through the filtered endpoint' {
@@ -303,6 +315,14 @@ Describe 'Public getter functions' {
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
                 Should -Be @('Id', 'Type', 'Host Name', 'Running Status', 'Is Free')
             $result.'vStore ID' | Should -Be 4294967295
+        }
+
+        It 'returns no initiators when the requested protocol has no data' {
+            Mock invoke-DeviceManager { [pscustomobject]@{ error = [pscustomobject]@{ code = 0 } } }
+
+            $result = @(get-DMHostInitiators -WebSession $script:session -HostId 'host-fc-only' -InitatorType ISCSI)
+
+            $result | Should -BeNullOrEmpty
         }
     }
 
@@ -406,6 +426,44 @@ Describe 'Public getter functions' {
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
                 Should -Be @('Id', 'Name', 'LunGroup Capacity', 'Is Mapped', 'Luns Members number')
             $result.Description | Should -BeNullOrEmpty
+        }
+
+        It 'retrieves LUN objects associated with a LUN group through its method' {
+            Mock invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+
+                switch ($Resource) {
+                    'lungroup' { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 12; NAME = 'luns'; GROUPTYPE = 0; CAPCITY = 1GB }) } }
+                    'lungroup/12' { [pscustomobject]@{ data = [pscustomobject]@{ ASSOCIATELUNIDLIST = '["lun-02"]' } } }
+                    'lun' { [pscustomobject]@{ data = @((New-TestLun -Id 'lun-01' -Name 'database'), (New-TestLun -Id 'lun-02' -Name 'archive')) } }
+                    default { [pscustomobject]@{ data = @() } }
+                }
+            }
+
+            $lunGroup = (get-DMlunGroups -WebSession $script:session)[0]
+            $result = @($lunGroup.GetLuns())
+
+            $result.Name | Should -Be @('archive')
+            $result[0].GetType().Name | Should -Be 'OceanstorLunv6'
+            $result[0].PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
+                Should -Be @('Id', 'Name', 'Health Status', 'Lun Size', 'WWN')
+        }
+
+        It 'returns no LUNs for an empty LUN group association list' {
+            Mock invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+
+                switch ($Resource) {
+                    'lungroup' { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 12; NAME = 'empty-luns'; GROUPTYPE = 0; CAPCITY = 0 }) } }
+                    'lungroup/12' { [pscustomobject]@{ data = [pscustomobject]@{ ASSOCIATELUNIDLIST = '[]' } } }
+                }
+            }
+
+            $lunGroup = (get-DMlunGroups -WebSession $script:session)[0]
+            $result = @($lunGroup.GetLuns())
+
+            $result | Should -BeNullOrEmpty
+            Should -Invoke invoke-DeviceManager -ParameterFilter { $Resource -eq 'lun' } -Times 0 -Exactly
         }
 
         It 'gets version 6 LUNs' {

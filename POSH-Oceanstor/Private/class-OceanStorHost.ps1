@@ -10,6 +10,7 @@ class OceanStorHost{
 	[string]${Parent Id}
 	[string]${Parent Name}
 	[string]${Initiators Number}
+	[array]$initiators
 	[string]$ip
 	[boolean]$isadd2hostgroup
 	[string]$location

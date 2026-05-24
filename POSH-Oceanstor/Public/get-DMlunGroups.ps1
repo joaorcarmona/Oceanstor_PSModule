@@ -22,6 +22,11 @@ function get-DMlunGroups{
 
 		PS C:\> $lunGroups = get-DMlunGroups
 
+	.EXAMPLE
+
+		PS C:\> $lunGroup = (get-DMlunGroups -WebSession $session)[0]
+		PS C:\> $memberLuns = $lunGroup.GetLuns()
+
 	.NOTES
 		Filename: get-DMlunGroups.ps1
 		Author: Joao Carmona
@@ -56,7 +61,7 @@ function get-DMlunGroups{
 
 	foreach ($lgroup in $response)
 	{
-		$lunGroup = [OceanStorLunGroup]::new($lgroup)
+		$lunGroup = [OceanStorLunGroup]::new($lgroup, $session)
 		[void]$lunGroups.Add($lunGroup)
 	}
 

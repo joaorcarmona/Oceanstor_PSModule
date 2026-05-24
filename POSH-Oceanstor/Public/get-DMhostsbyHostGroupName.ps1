@@ -67,6 +67,8 @@ foreach ($thost in $response)
 
 $result = $hosts | Where-Object "Parent Name" -Match $HostGroupName
 
+$result = @(Set-DMHostInitiators -InputObject $result -WebSession $session)
+
 $result | ForEach-Object {
     $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
 }

@@ -1,5 +1,6 @@
 class OceanStorLunGroup{
 	#Define Properties
+	hidden [pscustomobject]${Session}
 	[int]${Id}
 	[string]${Name}
 	[string]$Description
@@ -21,8 +22,9 @@ class OceanStorLunGroup{
 	[string]${Clone Group Number} # for v6
 	[string]${DR Start Trio Number} # for v6
 
-	OceanStorLunGroup ([array]$LunGroupReceived)
+	OceanStorLunGroup ([array]$LunGroupReceived, [pscustomobject]$Session)
 	{
+		$this.Session = $Session
 		$this.{Id} = $LunGroupReceived.ID
 		$this.{Name} = $LunGroupReceived.NAME
 		$this.Description = $LunGroupReceived.DESCRIPTION
@@ -65,5 +67,10 @@ class OceanStorLunGroup{
 		$this.{HyperMetro Group Number} = $LunGroupReceived.hyperMetroGroupNum # Only for v6
 		$this.{Clone Group Number} = $LunGroupReceived.cloneGroupNum # Only for v6
 		$this.{DR Start Trio Number} = $LunGroupReceived.drStarNum # Only for v6
+	}
+
+	[array] GetLuns()
+	{
+		return @(get-DMlunsbyLunGroup -WebSession $this.Session -LunGroup $this)
 	}
 }

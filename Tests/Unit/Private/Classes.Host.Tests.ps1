@@ -15,6 +15,8 @@ Describe 'Host model classes' {
         $result.id | Should -Be 'host-01'
         $result.'Operation System' | Should -Be 'VMware ESX'
         $result.type | Should -Be 'Host'
+        $result.initiators = @('fc-01', 'iscsi-01')
+        $result.initiators | Should -Be @('fc-01', 'iscsi-01')
     }
 
     It 'maps host group identity and mapping state' {
