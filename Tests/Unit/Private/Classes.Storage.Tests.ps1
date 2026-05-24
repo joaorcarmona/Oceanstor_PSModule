@@ -1,12 +1,26 @@
 BeforeAll {
+    function global:new-DMLunSnapshot {}
+    function global:get-DMLunSnapshots {}
+    function global:remove-DMLunSnapShot {}
+
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorCIFSShare.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorFileSystem.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorLunGroup.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorLunv3.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorLunv6.ps1"
+    . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorLunSnapshot.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorNFSclient.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorNFSShare.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorLIF.ps1"
+}
+
+AfterAll {
+    Remove-Item -LiteralPath 'Function:\global:new-DMLunSnapshot' -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:get-DMLunSnapshots' -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:remove-DMLunSnapShot' -ErrorAction SilentlyContinue
+    Remove-Variable -Name LunSnapshotInvocation -Scope Global -ErrorAction SilentlyContinue
+    Remove-Variable -Name LunSnapshotQuery -Scope Global -ErrorAction SilentlyContinue
+    Remove-Variable -Name LunSnapshotRemoval -Scope Global -ErrorAction SilentlyContinue
 }
 
 Describe 'Storage and share model classes' {
@@ -66,6 +80,145 @@ Describe 'Storage and share model classes' {
         $result.Id | Should -Be 'lun-v6'
         $result.'Lun Size' | Should -Be 1
         $result.Mapped | Should -Be 'yes'
+    }
+
+    It 'creates a snapshot from a version 6 LUN object' {
+        function global:new-DMLunSnapshot {
+            param(
+                [pscustomobject]$WebSession,
+                [string]$SnapshotName,
+                [string]$SourceLunName,
+                [string]$Description,
+                [switch]$ReadOnly
+            )
+
+            $global:LunSnapshotInvocation = [pscustomobject]@{
+                WebSession = $WebSession
+                SnapshotName = $SnapshotName
+                SourceLunName = $SourceLunName
+                Description = $Description
+                ReadOnly = $ReadOnly.IsPresent
+            }
+
+            [pscustomobject]@{ Id = 'snap-01'; Name = $SnapshotName }
+        }
+        $source = [pscustomobject]@{ ID = 'lun-v6'; NAME = 'modern'; TYPE = 11; SECTORSIZE = 512; CAPACITY = 2097152; ALLOCCAPACITY = 1048576; HEALTHSTATUS = 1; RUNNINGSTATUS = 27; ALLOCTYPE = 1 }
+        $lun = New-Object -TypeName OceanstorLunv6 -ArgumentList @($source, $script:session)
+
+        $result = $lun.NewSnapShot('before-patch', 'Patch checkpoint', $true)
+
+        $result.Id | Should -Be 'snap-01'
+        $global:LunSnapshotInvocation.WebSession | Should -Be $script:session
+        $global:LunSnapshotInvocation.SnapshotName | Should -Be 'before-patch'
+        $global:LunSnapshotInvocation.SourceLunName | Should -Be 'modern'
+        $global:LunSnapshotInvocation.Description | Should -Be 'Patch checkpoint'
+        $global:LunSnapshotInvocation.ReadOnly | Should -BeTrue
+    }
+
+    It 'creates a snapshot with an automatically generated name from a version 6 LUN object' {
+        function global:new-DMLunSnapshot {
+            param(
+                [pscustomobject]$WebSession,
+                [string]$SnapshotName,
+                [string]$SourceLunName
+            )
+
+            $global:LunSnapshotInvocation = [pscustomobject]@{
+                WebSession = $WebSession
+                SnapshotName = $SnapshotName
+                SourceLunName = $SourceLunName
+            }
+
+            [pscustomobject]@{ Id = 'snap-02' }
+        }
+        $source = [pscustomobject]@{ ID = 'lun-v6'; NAME = 'modern'; TYPE = 11; SECTORSIZE = 512; CAPACITY = 2097152; ALLOCCAPACITY = 1048576; HEALTHSTATUS = 1; RUNNINGSTATUS = 27; ALLOCTYPE = 1 }
+        $lun = New-Object -TypeName OceanstorLunv6 -ArgumentList @($source, $script:session)
+
+        $result = $lun.NewSnapShot()
+
+        $result.Id | Should -Be 'snap-02'
+        $global:LunSnapshotInvocation.WebSession | Should -Be $script:session
+        $global:LunSnapshotInvocation.SourceLunName | Should -Be 'modern'
+        $global:LunSnapshotInvocation.SnapshotName | Should -BeNullOrEmpty
+    }
+
+    It 'retrieves snapshots for a version 6 LUN object' {
+        function global:get-DMLunSnapshots {
+            param(
+                [pscustomobject]$WebSession,
+                [string]$LunName
+            )
+
+            $global:LunSnapshotQuery = [pscustomobject]@{
+                WebSession = $WebSession
+                LunName = $LunName
+            }
+
+            @(
+                [pscustomobject]@{ Id = 'snap-01' }
+                [pscustomobject]@{ Id = 'snap-02' }
+            )
+        }
+        $source = [pscustomobject]@{ ID = 'lun-v6'; NAME = 'modern'; TYPE = 11; SECTORSIZE = 512; CAPACITY = 2097152; ALLOCCAPACITY = 1048576; HEALTHSTATUS = 1; RUNNINGSTATUS = 27; ALLOCTYPE = 1 }
+        $lun = New-Object -TypeName OceanstorLunv6 -ArgumentList @($source, $script:session)
+
+        $result = $lun.GetSnapShots()
+
+        $result.Id | Should -Be @('snap-01', 'snap-02')
+        $global:LunSnapshotQuery.WebSession | Should -Be $script:session
+        $global:LunSnapshotQuery.LunName | Should -Be 'modern'
+    }
+
+    It 'deletes a LUN snapshot object and invalidates it after success' {
+        function global:remove-DMLunSnapShot {
+            param(
+                [pscustomobject]$WebSession,
+                [string]$SnapShotName
+            )
+
+            $global:LunSnapshotRemoval = [pscustomobject]@{
+                WebSession = $WebSession
+                SnapShotName = $SnapShotName
+            }
+
+            [pscustomobject]@{ Code = 0 }
+        }
+        $source = [pscustomobject]@{
+            ID = 'snap-01'; NAME = 'before-patch'; DESCRIPTION = 'Checkpoint'
+            SOURCELUNID = 'lun-v6'; SOURCELUNNAME = 'modern'; HEALTHSTATUS = 1
+            RUNNINGSTATUS = 43; USERCAPACITY = 2097152; CONSUMEDCAPACITY = 1024
+            IOPRIORITY = 2; isReadOnly = $true; WWN = 'snapshot-wwn'
+        }
+        $snapshot = New-Object -TypeName OceanstorLunSnapshot -ArgumentList @($source, $script:session)
+
+        $result = $snapshot.DeleteSnapShot()
+
+        $result.Code | Should -Be 0
+        $global:LunSnapshotRemoval.WebSession | Should -Be $script:session
+        $global:LunSnapshotRemoval.SnapShotName | Should -Be 'before-patch'
+        $snapshot.Id | Should -BeNullOrEmpty
+        $snapshot.Name | Should -BeNullOrEmpty
+        $snapshot.Session | Should -BeNullOrEmpty
+    }
+
+    It 'keeps a LUN snapshot object when deletion does not succeed' {
+        function global:remove-DMLunSnapShot {
+            param(
+                [pscustomobject]$WebSession,
+                [string]$SnapShotName
+            )
+
+            [pscustomobject]@{ Code = 1 }
+        }
+        $source = [pscustomobject]@{ ID = 'snap-01'; NAME = 'before-patch'; SOURCELUNID = 'lun-v6'; SOURCELUNNAME = 'modern' }
+        $snapshot = New-Object -TypeName OceanstorLunSnapshot -ArgumentList @($source, $script:session)
+
+        $result = $snapshot.DeleteSnapShot()
+
+        $result.Code | Should -Be 1
+        $snapshot.Id | Should -Be 'snap-01'
+        $snapshot.Name | Should -Be 'before-patch'
+        $snapshot.Session | Should -Be $script:session
     }
 
     It 'maps an NFS client access policy' {

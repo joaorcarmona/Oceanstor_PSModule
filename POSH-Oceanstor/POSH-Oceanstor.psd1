@@ -61,7 +61,17 @@ PowerShellVersion = "7.5"
 # TypesToProcess = @()
 
 # Format files (.ps1xml) to be loaded when importing this module
-#FormatsToProcess = ""
+FormatsToProcess = @(
+    "Format\OceanstorLunSnapshot.format.ps1xml"
+    "Format\OceanstorLun.format.ps1xml"
+    "Format\OceanstorHost.format.ps1xml"
+    "Format\OceanstorHostGroup.format.ps1xml"
+    "Format\OceanstorLunGroup.format.ps1xml"
+    "Format\OceanstorFileSystem.format.ps1xml"
+    "Format\OceanstorDtree.format.ps1xml"
+    "Format\OceanstorNFSShare.format.ps1xml"
+    "Format\OceanstorNFSclient.format.ps1xml"
+)
 
 # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
 # NestedModules = @()

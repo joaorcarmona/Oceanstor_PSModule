@@ -87,6 +87,9 @@ try {
     $samples.Luns = Add-ValidationResult -Name 'get-DMluns' -Action {
         get-DMluns -WebSession $session
     }
+    Add-ValidationResult -Name 'get-DMLunSnapshots' -ExpectedType 'OceanstorLunSnapshot' -Action {
+        get-DMLunSnapshots -WebSession $session
+    } | Out-Null
     $samples.Workloads = Add-ValidationResult -Name 'get-DMWorkLoadTypes' -ExpectedType 'OceanStorWorkload' -Action {
         get-DMWorkLoadTypes -WebSession $session
     }

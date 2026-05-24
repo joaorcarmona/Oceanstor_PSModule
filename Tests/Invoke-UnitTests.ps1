@@ -16,14 +16,25 @@ $configuration.Run.PassThru = $true
 $configuration.Output.Verbosity = $Output
 
 if ($ResultPath) {
+    $resolvedResultPath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($ResultPath)
+    $resultDirectory = Split-Path -Path $resolvedResultPath -Parent
+
+    if (-not (Test-Path -LiteralPath $resultDirectory)) {
+        $null = New-Item -Path $resultDirectory -ItemType Directory -Force
+    }
+
     $configuration.TestResult.Enabled = $true
-    $configuration.TestResult.OutputPath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($ResultPath)
-    $configuration.TestResult.OutputFormat = 'NUnitXml'
+    $configuration.TestResult.OutputPath = $resolvedResultPath
+    $configuration.TestResult.OutputFormat = 'JUnitXml'
 }
 
 $result = Invoke-Pester -Configuration $configuration
 
-if ($result.FailedCount -gt 0) {
+if ($null -eq $result) {
+    throw 'Pester did not return a test result.'
+}
+
+if ($result.Result -ne 'Passed' -or $result.FailedCount -gt 0) {
     throw "Unit tests failed: $($result.FailedCount) failed, $($result.PassedCount) passed."
 }
 
