@@ -14,6 +14,7 @@ $validationModule = New-Module -Name OceanstorLiveGetterValidation -ArgumentList
     param($root)
 
     . (Join-Path $root 'Private\get-DMparsedElabel.ps1')
+    . (Join-Path $root 'Private\Set-DMHostInitiators.ps1')
     . (Join-Path $root 'Private\write-DMError.ps1')
     . (Join-Path $root 'Private\invoke-DeviceManager.ps1')
 
