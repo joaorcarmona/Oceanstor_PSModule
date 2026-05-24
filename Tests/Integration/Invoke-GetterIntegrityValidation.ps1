@@ -178,6 +178,9 @@ try {
     Add-ValidationResult -Name 'get-DMHostInitiators:ISCSI' -ExpectedType 'OceanstorHostinitiatorISCSI' -Action {
         get-DMHostInitiators -WebSession $session -InitatorType ISCSI -All
     } | Out-Null
+    Add-ValidationResult -Name 'Get-DMNvmeInitiator' -ExpectedType 'OceanstorHostinitiatorNVMe' -Action {
+        Get-DMNvmeInitiator -WebSession $session
+    } | Out-Null
 
     if ($samples.Disks.Count -gt 0) {
         $disk = $samples.Disks[0]
