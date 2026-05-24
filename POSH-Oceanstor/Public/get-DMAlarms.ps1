@@ -65,10 +65,18 @@ function get-DMAlarms {
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
     switch ($alarmStatus) {
-        Unrecovered { $statusAlarm = 1 }
-        Cleared { $statusAlarm = 2 }
-        Recovered { $statusAlarm = 4 }
-        default { $statusAlarm = 1 }
+        Unrecovered {
+            $statusAlarm = 1
+        }
+        Cleared {
+            $statusAlarm = 2
+        }
+        Recovered {
+            $statusAlarm = 4
+        }
+        default {
+            $statusAlarm = 1
+        }
     }
 
     $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "alarm/historyalarm?filter=alarmStatus:$statusAlarm" | Select-Object -ExpandProperty data

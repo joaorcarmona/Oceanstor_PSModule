@@ -8,60 +8,60 @@ function new-DMFileSystem {
 
 	.PARAMETER webSession
 		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
-    
+
     .PARAMETER FileSystemName
         Name of the FileSystem to be created
-    
+
     .PARAMETER StoragePoolID
-        ID of the Storage Pool where the FileSystem will be created 
+        ID of the Storage Pool where the FileSystem will be created
 
     .PARAMETER description
         Description of the FileSystem to be created
-    
+
     .PARAMETER Worm
         If the FileSystem is a WORM FileSystem  (Write Once Read Many)
-    
+
     .PARAMETER capacity
         Capacity of the FileSystem to be created (in gigabytes)
-    
+
     .PARAMETER snapShotReserve
         Percentage of the FileSystem capacity to be reserved for Snapshots  (default 20%)
-    
+
     .PARAMETER autoDeleteSnap
         If the Snapshots will be automatically deleted  (default false)
-    
+
     .PARAMETER AlarmThresold
-        Alarm Thresold for the FileSystem capacity  (default 90%)   
-    
+        Alarm Thresold for the FileSystem capacity  (default 90%)
+
     .PARAMETER usage
         Usage of the FileSystem (database, VM, user-defined)  (default user-defined)
-    
+
     .PARAMETER checkSumEnable
-        If the Checksum is enabled on the FileSystem  (default true) 
-    
+        If the Checksum is enabled on the FileSystem  (default true)
+
     .PARAMETER accessTime
         If the Access Time is enabled on the FileSystem  (default false)
-    
+
     .PARAMETER accessTimeUpdateMode
         Mode of the Access Time Update (Hourly, Daily, disabled)  (default disabled)
-    
+
     .PARAMETER readOnly
         If the FileSystem is Read Only  (default false)
-    
+
     .PARAMETER FileSystemIOpriority
         Priority of the FileSystem IO (low, medium, high)  (default low)
-    
-    .PARAMETER Compression  
+
+    .PARAMETER Compression
         If the Compression is enabled on the FileSystem  (default false)
-    
+
     .PARAMETER CompressionAlgorithm
         Algorithm of the Compression (rapid, deep)  (default rapid)
-    
-    .PARAMETER Dedupe        
+
+    .PARAMETER Dedupe
         If the Deduplication is enabled on the FileSystem  (default false)
-    
+
     .PARAMETER Autogrow
-        If the FileSystem is Autogrow  (default false) 
+        If the FileSystem is Autogrow  (default false)
 
 	.INPUTS
 
@@ -138,26 +138,48 @@ function new-DMFileSystem {
     }
 
     switch ($usage) {
-        "database" { $applicationscenario = 1 }
-        "VM" { $applicationscenario = 2 }
-        "user-defined" { $applicationscenario = 3 }
+        "database" {
+            $applicationscenario = 1
+        }
+        "VM" {
+            $applicationscenario = 2
+        }
+        "user-defined" {
+            $applicationscenario = 3
+        }
     }
 
     switch ($FileSystemIOpriority) {
-        "low" { $ioPriority = 1 }
-        "medium" { $ioPriority = 2 }
-        "high" { $ioPriority = 3 }
+        "low" {
+            $ioPriority = 1
+        }
+        "medium" {
+            $ioPriority = 2
+        }
+        "high" {
+            $ioPriority = 3
+        }
     }
 
     switch ($CompressionAlgorithm) {
-        "rapid" { $algoritmCompression = 0 }
-        "deep" { $algoritmCompression = 1 }
+        "rapid" {
+            $algoritmCompression = 0
+        }
+        "deep" {
+            $algoritmCompression = 1
+        }
     }
 
     switch ($accessTimeUpdateMode) {
-        "disabled" { $atimeupdatemode = 4294967295 }
-        "Hourly" { $atimeupdatemode = 3600 }
-        "Daily" { $atimeupdatemode = 86400 }
+        "disabled" {
+            $atimeupdatemode = 4294967295
+        }
+        "Hourly" {
+            $atimeupdatemode = 3600
+        }
+        "Daily" {
+            $atimeupdatemode = 86400
+        }
     }
 
     $body = @{

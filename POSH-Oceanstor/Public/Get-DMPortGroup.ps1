@@ -14,9 +14,16 @@ function Get-DMPortGroup {
         [string]$VstoreId
     )
 
-    $session = if ($WebSession) { $WebSession } else { $deviceManager }
+    $session = if ($WebSession) {
+        $WebSession
+    }
+    else {
+        $deviceManager
+    }
     $resource = 'portgroup'
-    if ($VstoreId) { $resource += "?vstoreId=$VstoreId" }
+    if ($VstoreId) {
+        $resource += "?vstoreId=$VstoreId"
+    }
 
     $response = invoke-DeviceManager -WebSession $session -Method 'GET' -Resource $resource |
         Select-Object -ExpandProperty data

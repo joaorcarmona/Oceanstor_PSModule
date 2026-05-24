@@ -79,14 +79,30 @@ function export-DMStorageToExcel {
         $reportObject = $IncludeObject | Get-Unique
         foreach ($reportObj in $reportObject) {
             switch ($reportObj) {
-                luns { $IncludeLuns = $True }
-                lungroups { $IncludeLunGroups = $True }
-                system { $IncludeSystem = $True }
-                hosts { $IncludeHosts = $True }
-                hostgroups { $IncludeHostGroups = $True }
-                disks { $IncludeDisks = $True }
-                vstores { $IncludevStore = $True }
-                storagepools { $IncludeStoragePools = $true }
+                luns {
+                    $IncludeLuns = $True
+                }
+                lungroups {
+                    $IncludeLunGroups = $True
+                }
+                system {
+                    $IncludeSystem = $True
+                }
+                hosts {
+                    $IncludeHosts = $True
+                }
+                hostgroups {
+                    $IncludeHostGroups = $True
+                }
+                disks {
+                    $IncludeDisks = $True
+                }
+                vstores {
+                    $IncludevStore = $True
+                }
+                storagepools {
+                    $IncludeStoragePools = $true
+                }
             }
         }
     }

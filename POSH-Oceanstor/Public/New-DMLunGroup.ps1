@@ -24,7 +24,12 @@ function New-DMLunGroup {
         [string]$VstoreId
     )
 
-    $session = if ($WebSession) { $WebSession } else { $deviceManager }
+    $session = if ($WebSession) {
+        $WebSession
+    }
+    else {
+        $deviceManager
+    }
     $applicationTypeValue = @{
         'Other'      = 0
         'Oracle'     = 1
@@ -38,8 +43,12 @@ function New-DMLunGroup {
         APPTYPE   = $applicationTypeValue
         GROUPTYPE = 0
     }
-    if ($PSBoundParameters.ContainsKey('Description')) { $body.DESCRIPTION = $Description }
-    if ($VstoreId) { $body.vstoreId = $VstoreId }
+    if ($PSBoundParameters.ContainsKey('Description')) {
+        $body.DESCRIPTION = $Description
+    }
+    if ($VstoreId) {
+        $body.vstoreId = $VstoreId
+    }
 
     $response = invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'lungroup' -BodyData $body
     if ($response.error.Code -eq 0) {

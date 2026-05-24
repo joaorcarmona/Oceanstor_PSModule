@@ -11,24 +11,42 @@ function New-DMCifsShare {
         [Parameter(Mandatory = $true, Position = 1)]
         [ValidateLength(1, 80)]
         [ValidateScript({
-                if ($_ -match '[/\\\[\]:|<>+;,?*=]') { throw 'ShareName contains a character not permitted by the CIFS share interface.' }
-                if ($_ -match '^\s|\s$' -or $_ -match '^(?i:ipc\$|autohome|~|print\$)$') { throw 'ShareName is reserved or begins/ends with a space.' }
+                if ($_ -match '[/\\\[\]:|<>+;,?*=]') {
+                    throw 'ShareName contains a character not permitted by the CIFS share interface.'
+                }
+                if ($_ -match '^\s|\s$' -or $_ -match '^(?i:ipc\$|autohome|~|print\$)$') {
+                    throw 'ShareName is reserved or begins/ends with a space.'
+                }
                 return $true
             })]
         [string]$ShareName,
 
         [Parameter(Mandatory = $true, Position = 2)]
         [ValidateScript({
-                $session = if ($WebSession) { $WebSession } else { $deviceManager }
+                $session = if ($WebSession) {
+                    $WebSession
+                }
+                else {
+                    $deviceManager
+                }
                 $fileSystems = @(get-DMFileSystem -WebSession $session)
                 $matchingItems = @($fileSystems | Where-Object Name -EQ $_)
-                if ($matchingItems.Count -eq 1) { return $true }
-                if ($matchingItems.Count -gt 1) { throw "FileSystemName is ambiguous because more than one file system is named '$_'." }
+                if ($matchingItems.Count -eq 1) {
+                    return $true
+                }
+                if ($matchingItems.Count -gt 1) {
+                    throw "FileSystemName is ambiguous because more than one file system is named '$_'."
+                }
                 throw "Invalid FileSystemName. Valid values are: $($fileSystems.Name -join ', ')"
             })]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
-                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) { $fakeBoundParameters.WebSession } else { $deviceManager }
+                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
+                    $fakeBoundParameters.WebSession
+                }
+                else {
+                    $deviceManager
+                }
                 (get-DMFileSystem -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$FileSystemName,
@@ -66,13 +84,23 @@ function New-DMCifsShare {
         [string]$DTreeId
     )
 
-    $session = if ($WebSession) { $WebSession } else { $deviceManager }
+    $session = if ($WebSession) {
+        $WebSession
+    }
+    else {
+        $deviceManager
+    }
     $fileSystem = @(get-DMFileSystem -WebSession $session | Where-Object Name -EQ $FileSystemName)[0]
     $subTypeValue = @{ Normal = 0; HomeDir = 1; All = 2 }[$SubType]
     $offlineFileModeValue = @{ None = 0; Manual = 1; Documents = 2; Programs = 3 }[$OfflineFileMode]
     $body = @{
         NAME                       = $ShareName
-        SHAREPATH                  = if ($SharePath) { $SharePath } else { "/$FileSystemName/" }
+        SHAREPATH                  = if ($SharePath) {
+            $SharePath
+        }
+        else {
+            "/$FileSystemName/"
+        }
         FSID                       = $fileSystem.Id
         subType                    = $subTypeValue
         OFFLINEFILEMODE            = $offlineFileModeValue
@@ -84,9 +112,15 @@ function New-DMCifsShare {
         smb3EncryptionEnable       = $EnableSmb3Encryption
         unencryptedAccess          = $AllowUnencryptedAccess
     }
-    if ($Description) { $body.DESCRIPTION = $Description }
-    if ($VstoreId) { $body.vstoreId = $VstoreId }
-    if ($DTreeId) { $body.DTREEID = $DTreeId }
+    if ($Description) {
+        $body.DESCRIPTION = $Description
+    }
+    if ($VstoreId) {
+        $body.vstoreId = $VstoreId
+    }
+    if ($DTreeId) {
+        $body.DTREEID = $DTreeId
+    }
 
     $response = invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'CIFSSHARE' -BodyData $body
     if ($response.error.Code -eq 0) {

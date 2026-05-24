@@ -13,13 +13,13 @@
             Enable             = $true
             OnSameLine         = $true
             NewLineAfter       = $true
-            IgnoreOneLineBlock = $true
+            IgnoreOneLineBlock = $false
         }
 
         PSPlaceCloseBrace = @{
             Enable             = $true
             NewLineAfter       = $true
-            IgnoreOneLineBlock = $true
+            IgnoreOneLineBlock = $false
             NoEmptyLineBefore  = $false
         }
 

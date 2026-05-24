@@ -17,13 +17,24 @@ function Add-DMLunGroupToMappingView {
         [string]$VstoreId
     )
 
-    $session = if ($WebSession) { $WebSession } else { $deviceManager }
+    $session = if ($WebSession) {
+        $WebSession
+    }
+    else {
+        $deviceManager
+    }
     $view = @(Get-DMMappingView -WebSession $session | Where-Object Name -EQ $MappingViewName)[0]
-    if (-not $view) { throw "Mapping view '$MappingViewName' was not found." }
+    if (-not $view) {
+        throw "Mapping view '$MappingViewName' was not found."
+    }
     $group = @(get-DMlunGroups -WebSession $session | Where-Object Name -EQ $LunGroupName)[0]
-    if (-not $group) { throw "LUN group '$LunGroupName' was not found." }
+    if (-not $group) {
+        throw "LUN group '$LunGroupName' was not found."
+    }
     $body = @{ TYPE = 245; ID = $view.Id; ASSOCIATEOBJTYPE = 256; ASSOCIATEOBJID = $group.Id }
-    if ($VstoreId) { $body.vstoreId = $VstoreId }
+    if ($VstoreId) {
+        $body.vstoreId = $VstoreId
+    }
 
     if ($PSCmdlet.ShouldProcess("$LunGroupName -> $MappingViewName", 'Associate LUN group with mapping view')) {
         return (invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'mappingview/CREATE_ASSOCIATE' -BodyData $body).error

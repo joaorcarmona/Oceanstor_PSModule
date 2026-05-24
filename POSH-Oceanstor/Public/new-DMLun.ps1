@@ -163,40 +163,68 @@ function new-DMLun {
 
     # Convert allocation type to Huawei API value
     switch ($allocType) {
-        "Thin" { $allocationType = 1 }
-        "Thick" { $allocationType = 0 }
+        "Thin" {
+            $allocationType = 1
+        }
+        "Thick" {
+            $allocationType = 0
+        }
     }
 
     # Convert IO Priority to Huawei API value
     switch ($IoPriority) {
-        "Low" { $ioPriorityValue = 1 }
-        "Medium" { $ioPriorityValue = 2 }
-        "High" { $ioPriorityValue = 3 }
+        "Low" {
+            $ioPriorityValue = 1
+        }
+        "Medium" {
+            $ioPriorityValue = 2
+        }
+        "High" {
+            $ioPriorityValue = 3
+        }
     }
 
     # Convert Write Cache Policy to Huawei API value
     switch ($writeCachePolicy) {
-        "WriteBack" { $writeCachePolicyValue = 1 }
-        "WriteThrough" { $writeCachePolicyValue = 0 }
+        "WriteBack" {
+            $writeCachePolicyValue = 1
+        }
+        "WriteThrough" {
+            $writeCachePolicyValue = 0
+        }
     }
 
     # Convert Read Cache Policy to Huawei API value
     switch ($readCachePolicy) {
-        "ReadAhead" { $readCachePolicyValue = 1 }
-        "NoReadAhead" { $readCachePolicyValue = 0 }
+        "ReadAhead" {
+            $readCachePolicyValue = 1
+        }
+        "NoReadAhead" {
+            $readCachePolicyValue = 0
+        }
     }
 
     # Convert Prefetch Policy to Huawei API value
     switch ($prefetchPolicy) {
-        "Intelligent" { $prefetchPolicyValue = 0 }
-        "Fixed" { $prefetchPolicyValue = 1 }
-        "Disabled" { $prefetchPolicyValue = 2 }
+        "Intelligent" {
+            $prefetchPolicyValue = 0
+        }
+        "Fixed" {
+            $prefetchPolicyValue = 1
+        }
+        "Disabled" {
+            $prefetchPolicyValue = 2
+        }
     }
 
     # Convert Mirror Policy to Huawei API value
     switch ($mirrorPolicy) {
-        "Linear" { $mirrorPolicyValue = 0 }
-        "Mirror" { $mirrorPolicyValue = 1 }
+        "Linear" {
+            $mirrorPolicyValue = 0
+        }
+        "Mirror" {
+            $mirrorPolicyValue = 1
+        }
     }
 
     # Build the request body

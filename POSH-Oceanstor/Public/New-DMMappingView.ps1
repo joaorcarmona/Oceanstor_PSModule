@@ -19,13 +19,22 @@ function New-DMMappingView {
         [string]$VstoreId
     )
 
-    $session = if ($WebSession) { $WebSession } else { $deviceManager }
+    $session = if ($WebSession) {
+        $WebSession
+    }
+    else {
+        $deviceManager
+    }
     $body = @{
         TYPE = 245
         NAME = $Name
     }
-    if ($PSBoundParameters.ContainsKey('Description')) { $body.DESCRIPTION = $Description }
-    if ($VstoreId) { $body.vstoreId = $VstoreId }
+    if ($PSBoundParameters.ContainsKey('Description')) {
+        $body.DESCRIPTION = $Description
+    }
+    if ($VstoreId) {
+        $body.vstoreId = $VstoreId
+    }
 
     $response = invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'mappingview' -BodyData $body
     if ($response.error.Code -eq 0) {

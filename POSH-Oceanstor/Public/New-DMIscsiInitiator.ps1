@@ -13,16 +13,30 @@ function New-DMIscsiInitiator {
 
         [ValidateScript({
                 $candidate = $_
-                $session = if ($WebSession) { $WebSession } else { $deviceManager }
+                $session = if ($WebSession) {
+                    $WebSession
+                }
+                else {
+                    $deviceManager
+                }
                 $hosts = @(get-DMhosts -WebSession $session)
                 $matchingItems = @($hosts | Where-Object Name -EQ $candidate)
-                if ($matchingItems.Count -eq 1) { return $true }
-                if ($matchingItems.Count -gt 1) { throw "HostName is ambiguous because more than one host is named '$candidate'." }
+                if ($matchingItems.Count -eq 1) {
+                    return $true
+                }
+                if ($matchingItems.Count -gt 1) {
+                    throw "HostName is ambiguous because more than one host is named '$candidate'."
+                }
                 throw "Invalid HostName. Valid values are: $($hosts.Name -join ', ')"
             })]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
-                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) { $fakeBoundParameters.WebSession } else { $deviceManager }
+                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
+                    $fakeBoundParameters.WebSession
+                }
+                else {
+                    $deviceManager
+                }
                 (get-DMhosts -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$HostName,
@@ -54,13 +68,20 @@ function New-DMIscsiInitiator {
         throw 'ChapName and ChapPassword are mandatory when UseChap is specified.'
     }
 
-    $session = if ($WebSession) { $WebSession } else { $deviceManager }
+    $session = if ($WebSession) {
+        $WebSession
+    }
+    else {
+        $deviceManager
+    }
     $body = @{
         ID            = $Identifier
         USECHAP       = $UseChap.IsPresent
         MULTIPATHTYPE = @{ Default = 0; ThirdParty = 1 }[$Multipath]
     }
-    if ($Name) { $body.NAME = $Name }
+    if ($Name) {
+        $body.NAME = $Name
+    }
     if ($HostName) {
         $hostObject = @(get-DMhosts -WebSession $session | Where-Object Name -EQ $HostName)[0]
         $body.PARENTTYPE = 21
@@ -73,9 +94,13 @@ function New-DMIscsiInitiator {
     if ($Multipath -eq 'ThirdParty') {
         $body.PATHTYPE = @{ Preferred = 0; NonPreferred = 1 }[$PathType]
         $body.FAILOVERMODE = @{ EarlyALUA = 0; CommonALUA = 1; NoALUA = 2; SpecialALUA = 3 }[$FailoverMode]
-        if ($FailoverMode -eq 'SpecialALUA') { $body.SPECIALMODETYPE = $SpecialModeType }
+        if ($FailoverMode -eq 'SpecialALUA') {
+            $body.SPECIALMODETYPE = $SpecialModeType
+        }
     }
-    if ($VstoreId) { $body.vstoreId = $VstoreId }
+    if ($VstoreId) {
+        $body.vstoreId = $VstoreId
+    }
 
     $response = invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'iscsi_initiator' -BodyData $body
     if ($response.error.Code -eq 0) {

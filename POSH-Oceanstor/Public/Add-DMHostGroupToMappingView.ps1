@@ -10,16 +10,30 @@ function Add-DMHostGroupToMappingView {
 
         [Parameter(Mandatory = $true, Position = 1)]
         [ValidateScript({
-                $session = if ($WebSession) { $WebSession } else { $deviceManager }
-                if (@(Get-DMMappingView -WebSession $session | Where-Object Name -EQ $_).Count -eq 1) { return $true }
+                $session = if ($WebSession) {
+                    $WebSession
+                }
+                else {
+                    $deviceManager
+                }
+                if (@(Get-DMMappingView -WebSession $session | Where-Object Name -EQ $_).Count -eq 1) {
+                    return $true
+                }
                 throw "Invalid MappingViewName. Valid values are: $((Get-DMMappingView -WebSession $session).Name -join ', ')"
             })]
         [string]$MappingViewName,
 
         [Parameter(Mandatory = $true, Position = 2)]
         [ValidateScript({
-                $session = if ($WebSession) { $WebSession } else { $deviceManager }
-                if (@(get-DMhostGroups -WebSession $session | Where-Object Name -EQ $_).Count -eq 1) { return $true }
+                $session = if ($WebSession) {
+                    $WebSession
+                }
+                else {
+                    $deviceManager
+                }
+                if (@(get-DMhostGroups -WebSession $session | Where-Object Name -EQ $_).Count -eq 1) {
+                    return $true
+                }
                 throw "Invalid HostGroupName. Valid values are: $((get-DMhostGroups -WebSession $session).Name -join ', ')"
             })]
         [string]$HostGroupName,
@@ -27,11 +41,18 @@ function Add-DMHostGroupToMappingView {
         [string]$VstoreId
     )
 
-    $session = if ($WebSession) { $WebSession } else { $deviceManager }
+    $session = if ($WebSession) {
+        $WebSession
+    }
+    else {
+        $deviceManager
+    }
     $view = @(Get-DMMappingView -WebSession $session | Where-Object Name -EQ $MappingViewName)[0]
     $group = @(get-DMhostGroups -WebSession $session | Where-Object Name -EQ $HostGroupName)[0]
     $body = @{ TYPE = 245; ID = $view.Id; ASSOCIATEOBJTYPE = 14; ASSOCIATEOBJID = $group.Id }
-    if ($VstoreId) { $body.vstoreId = $VstoreId }
+    if ($VstoreId) {
+        $body.vstoreId = $VstoreId
+    }
 
     if ($PSCmdlet.ShouldProcess("$HostGroupName -> $MappingViewName", 'Associate host group with mapping view')) {
         return (invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'mappingview/CREATE_ASSOCIATE' -BodyData $body).error

@@ -26,7 +26,7 @@ function connect-deviceManager {
 		Creates a object connection to a Huawei Storage Device
 
 	.EXAMPLE
-		Example syntax for running that sets $deviceManager global Variable Session 
+		Example syntax for running that sets $deviceManager global Variable Session
 		PS C:\> connect-deviceManager -$hostname storage.domain.tld -Secure
 
 		Example syntax for runnign that returns a session object connection

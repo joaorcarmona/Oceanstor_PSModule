@@ -8,31 +8,31 @@ function new-DMdTree {
 
 	.PARAMETER webSession
 		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
-    
+
     .PARAMETER FileSystemName
         Name of the FileSystem to be used as parent of the dTree. This parameter is mandatory if the FileSystemID is not defined
-    
+
     .PARAMETER FileSystemID
         ID of the FileSystem to be used as parent of the dTree. This parameter is mandatory if the FileSystemName is not defined
-    
+
     .PARAMETER dTreeName
         Name of the dTree to be created
-    
+
     .PARAMETER quotaSwitch
         If the Quota is enabled on the dTree  (default disabled)
-    
+
     .PARAMETER vStoreId
         ID of the vStore where the dTree will be created
-    
+
     .PARAMETER path
         Path of the dTree
-    
+
     .PARAMETER securityStyle
         Security Style of the dTree (Native, NTFS, UNIX, Mixed)  (default Native)
 
     .PARAMETER lockingPolicy
-        Locking Policy of the dTree (Mandatory, Advisory)  (default Mandatory)   
-    
+        Locking Policy of the dTree (Mandatory, Advisory)  (default Mandatory)
+
 	.INPUTS
 
 	.OUTPUTS
@@ -105,8 +105,12 @@ function new-DMdTree {
 
     if ($PSBoundParameters.ContainsKey('lockingPolicy')) {
         switch ($lockingPolicy) {
-            "Mandatory" { $body.Add("nasLockingPolicy", 0) }
-            "Advisory" { $body.Add("nasLockingPolicy", 1) }
+            "Mandatory" {
+                $body.Add("nasLockingPolicy", 0)
+            }
+            "Advisory" {
+                $body.Add("nasLockingPolicy", 1)
+            }
         }
     }
 
@@ -119,10 +123,18 @@ function new-DMdTree {
 
     if ($securityStyle) {
         switch ($securityStyle) {
-            "Native" { $body.Add("securityStyle", 1) }
-            "NTFS" { $body.Add("securityStyle", 2) }
-            "UNIX" { $body.Add("securityStyle", 3) }
-            "Mixed" { $body.Add("securityStyle", 4) }
+            "Native" {
+                $body.Add("securityStyle", 1)
+            }
+            "NTFS" {
+                $body.Add("securityStyle", 2)
+            }
+            "UNIX" {
+                $body.Add("securityStyle", 3)
+            }
+            "Mixed" {
+                $body.Add("securityStyle", 4)
+            }
         }
     }
 

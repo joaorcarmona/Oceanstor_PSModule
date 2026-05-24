@@ -59,8 +59,12 @@ function get-DMShares {
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
     switch ($shareType) {
-        CIFS { $resourceQuery = "CIFSHARE" }
-        NFS { $resourceQuery = "NFSHARE" }
+        CIFS {
+            $resourceQuery = "CIFSHARE"
+        }
+        NFS {
+            $resourceQuery = "NFSHARE"
+        }
     }
 
     $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource $resourceQuery | Select-Object -ExpandProperty data
@@ -68,8 +72,12 @@ function get-DMShares {
 
     foreach ($tshare in $response) {
         switch ($shareType) {
-            CIFS { $share = [OceanStorCIFSShare]::new($tshare, $session) }
-            NFS { $share = [OceanStorNFSShare]::new($tshare, $session) }
+            CIFS {
+                $share = [OceanStorCIFSShare]::new($tshare, $session)
+            }
+            NFS {
+                $share = [OceanStorNFSShare]::new($tshare, $session)
+            }
         }
 
         [void]$shares.Add($share)
