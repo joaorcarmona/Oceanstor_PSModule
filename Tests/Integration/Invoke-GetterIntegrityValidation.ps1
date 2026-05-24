@@ -91,6 +91,12 @@ try {
     Add-ValidationResult -Name 'get-DMLunSnapshots' -ExpectedType 'OceanstorLunSnapshot' -Action {
         get-DMLunSnapshots -WebSession $session
     } | Out-Null
+    Add-ValidationResult -Name 'Get-DMProtectionGroup' -ExpectedType 'OceanstorProtectionGroup' -Action {
+        Get-DMProtectionGroup -WebSession $session
+    } | Out-Null
+    Add-ValidationResult -Name 'Get-DMSnapshotConsistencyGroup' -ExpectedType 'OceanstorSnapshotConsistencyGroup' -Action {
+        Get-DMSnapshotConsistencyGroup -WebSession $session
+    } | Out-Null
     $samples.Workloads = Add-ValidationResult -Name 'get-DMWorkLoadTypes' -ExpectedType 'OceanStorWorkload' -Action {
         get-DMWorkLoadTypes -WebSession $session
     }

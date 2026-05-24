@@ -44,7 +44,9 @@ function invoke-DeviceManager{
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=2,Mandatory=$true)]
         [String]$Resource,
 	[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Mandatory=$false)]
-		[System.Collections.Hashtable]$BodyData
+		[System.Collections.Hashtable]$BodyData,
+	[Parameter(Mandatory=$false)]
+		[switch]$ApiV2
 	)
 
     if ($WebSession){
@@ -53,7 +55,11 @@ function invoke-DeviceManager{
         $session = $deviceManager
     }
 
-	$RestURI = "https://$($session.hostname):8088/deviceManager/rest/$($session.DeviceId)/$resource"
+	if ($ApiV2) {
+		$RestURI = "https://$($session.hostname):8088/api/v2/$resource"
+	} else {
+		$RestURI = "https://$($session.hostname):8088/deviceManager/rest/$($session.DeviceId)/$resource"
+	}
 
 	if ($BodyData){
 		$JsonBody = ConvertTo-Json $BodyData
