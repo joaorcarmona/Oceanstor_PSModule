@@ -51,13 +51,14 @@ foreach ($kind in @('Lun', 'LunSnapshot', 'LunGroup', 'ProtectionGroup', 'Snapsh
 function Add-ValidationResult {
     param(
         [string]$Name,
-        [scriptblock]$Action,
+        [Alias('Action')]
+        [scriptblock]$ValidationAction,
         [string]$ExpectedType,
         [string]$Category = 'Read'
     )
 
     try {
-        $rows = @(& $Action)
+        $rows = @(& $ValidationAction)
         $types = @($rows | ForEach-Object { $_.GetType().Name } | Sort-Object -Unique)
         $unexpected = if ($ExpectedType) { @($types | Where-Object { $_ -ne $ExpectedType }) } else { @() }
         $status = if ($rows.Count -eq 0) { 'NoData' } elseif ($unexpected.Count -gt 0) { 'UnexpectedType' } else { 'Passed' }
@@ -112,15 +113,18 @@ function Add-SkippedResult {
 function Invoke-MutationStep {
     param(
         [string]$Name,
-        [scriptblock]$Action,
+        [Alias('Action')]
+        [scriptblock]$MutationAction,
         [string]$ExpectedType
     )
 
+    $stepName = $Name
     return Add-ValidationResult -Name $Name -Action {
-        $result = @(& $Action)
+        $result = @(& $MutationAction)
         foreach ($item in $result) {
             if ($item.PSObject.Properties['Code'] -and $item.Code -ne 0) {
-                throw "$Name returned REST error code $($item.Code)."
+                $detail = if ($item.PSObject.Properties['Description']) { ": $($item.Description)" } else { '' }
+                throw "$stepName returned REST error code $($item.Code)$detail"
             }
         }
         return $result
@@ -181,7 +185,9 @@ function Invoke-OwnedRemoval {
         [Parameter(Mandatory)][string]$Name,
         [Parameter(Mandatory)][string]$Kind,
         [Parameter(Mandatory)][string]$Identity,
-        [Parameter(Mandatory)][scriptblock]$Action
+        [Parameter(Mandatory)]
+        [Alias('Action')]
+        [scriptblock]$RemovalAction
     )
 
     if (-not $owned[$Kind].Contains($Identity)) {
@@ -190,7 +196,7 @@ function Invoke-OwnedRemoval {
 
     $result = @(Invoke-MutationStep -Name $Name -Action {
         Assert-TestOwnedResource -Kind $Kind -Identity $Identity
-        & $Action
+        & $RemovalAction
     })
     if ($result.Count -gt 0) {
         Complete-TestOwnedResource -Kind $Kind -Identity $Identity
@@ -318,9 +324,9 @@ try {
     Add-ValidationResult -Name 'Get-DMFiberChannelInitiator' -ExpectedType 'OceanstorHostinitiatorFC' -Action {
         Get-DMFiberChannelInitiator -WebSession $session
     } | Out-Null
-    Add-ValidationResult -Name 'get-DMHostInitiators:ISCSI' -ExpectedType 'OceanstorHostinitiatorISCSI' -Action {
+    $samples.IscsiInitiators = Add-ValidationResult -Name 'get-DMHostInitiators:ISCSI' -ExpectedType 'OceanstorHostinitiatorISCSI' -Action {
         get-DMHostInitiators -WebSession $session -InitatorType ISCSI -All
-    } | Out-Null
+    }
     Add-ValidationResult -Name 'Get-DMIscsiInitiator' -ExpectedType 'OceanstorHostinitiatorISCSI' -Action {
         Get-DMIscsiInitiator -WebSession $session
     } | Out-Null
@@ -368,9 +374,12 @@ try {
         Add-ValidationResult -Name 'get-DMHostLinks:FC' -ExpectedType 'OceanStorHostLink' -Action {
             get-DMHostLinks -WebSession $session -HostId $hostRecord.Id -InitiatorType FC
         } | Out-Null
-        Add-ValidationResult -Name 'get-DMHostLinks:ISCSI' -ExpectedType 'OceanStorHostLink' -Action {
-            get-DMHostLinks -WebSession $session -HostId $hostRecord.Id -InitiatorType ISCSI
-        } | Out-Null
+        $iscsiWithHost = @($samples.IscsiInitiators | Where-Object { $_.'Host Id' })[0]
+        if ($iscsiWithHost) {
+            Add-ValidationResult -Name 'get-DMHostLinks:ISCSI' -ExpectedType 'OceanStorHostLink' -Action {
+                get-DMHostLinks -WebSession $session -HostId $iscsiWithHost.'Host Id' -InitiatorType ISCSI
+            } | Out-Null
+        }
     }
 
     if ($samples.Luns.Count -gt 0) {
@@ -399,7 +408,10 @@ try {
         'Add-DMPortToPortGroup',
         'Remove-DMPortFromPortGroup',
         'Remove-DMNvmeInitiatorFromHost',
-        'set-DMdnsServer'
+        'set-DMdnsServer',
+        'export-DeviceManager',
+        'export-DMInventory',
+        'export-DMStorageToExcel'
     )
 
     if (-not $RunMutatingTests) {
@@ -444,7 +456,7 @@ try {
         $protectionGroupName = New-TestName -Suffix 'protect'
         $consistencyGroupName = New-TestName -Suffix 'cgsnap'
         $consistencyCopyName = New-TestName -Suffix 'cgcopy'
-        $hostName = New-TestName -Suffix 'host'
+        $testHostName = New-TestName -Suffix 'host'
         $hostGroupName = New-TestName -Suffix 'hostgroup'
         $lunGroupContainsLun = $false
 
@@ -497,16 +509,17 @@ try {
                     Assert-TestOwnedResource -Kind Lun -Identity $lunName
                     Restart-DMLunSnapshot -WebSession $session -SnapShotName $snapshotName -Confirm:$false
                 } | Out-Null
-                if ($configuration.Lun.ExpandedSnapshotCapacitySectors -gt 0) {
-                    Invoke-MutationStep -Name 'Resize-DMLunSnapshot' -Action {
-                        Assert-TestOwnedResource -Kind LunSnapshot -Identity $snapshotName
-                        Resize-DMLunSnapshot -WebSession $session -SnapShotName $snapshotName `
-                            -UserCapacity $configuration.Lun.ExpandedSnapshotCapacitySectors -Confirm:$false
-                    } | Out-Null
+                $expandedSnapshotCapacity = if ($configuration.Lun.ExpandedSnapshotCapacitySectors -gt 0) {
+                    [uint64]$configuration.Lun.ExpandedSnapshotCapacitySectors
                 }
                 else {
-                    Add-SkippedResult -Name 'Resize-DMLunSnapshot' -Status 'NotConfigured' -Reason 'Set Lun.ExpandedSnapshotCapacitySectors to a larger capacity to validate snapshot expansion.'
+                    [uint64]$snapshot[0].'User Capacity' + 2048
                 }
+                Invoke-MutationStep -Name 'Resize-DMLunSnapshot' -Action {
+                    Assert-TestOwnedResource -Kind LunSnapshot -Identity $snapshotName
+                    Resize-DMLunSnapshot -WebSession $session -SnapShotName $snapshotName `
+                        -UserCapacity $expandedSnapshotCapacity -Confirm:$false
+                } | Out-Null
                 Invoke-MutationStep -Name 'Restore-DMLunSnapshot' -Action {
                     Assert-TestOwnedResource -Kind LunSnapshot -Identity $snapshotName
                     Assert-TestOwnedResource -Kind Lun -Identity $lunName
@@ -567,25 +580,25 @@ try {
                 Register-TestOwnedResource -Kind HostGroup -Identity $hostGroupName
             }
             $createdHost = @(Invoke-MutationStep -Name 'New-DMHost' -ExpectedType 'OceanStorHost' -Action {
-                if (@(get-DMhosts -WebSession $session | Where-Object Name -EQ $hostName).Count -gt 0) {
-                    throw "A host named '$hostName' already exists; refusing to claim it as test-owned."
+                if (@(get-DMhosts -WebSession $session | Where-Object Name -EQ $testHostName).Count -gt 0) {
+                    throw "A host named '$testHostName' already exists; refusing to claim it as test-owned."
                 }
-                New-DMHost -WebSession $session -Name $hostName -OperatingSystem $configuration.Host.OperatingSystem `
+                New-DMHost -WebSession $session -Name $testHostName -OperatingSystem $configuration.Host.OperatingSystem `
                     -Description "Integrity validation run $runId"
             })
-            if ($createdHost.Count -gt 0 -and $createdHost[0].Name -eq $hostName) {
-                Register-TestOwnedResource -Kind Host -Identity $hostName
+            if ($createdHost.Count -gt 0 -and $createdHost[0].Name -eq $testHostName) {
+                Register-TestOwnedResource -Kind Host -Identity $testHostName
             }
-            if ($owned.Host.Contains($hostName) -and $owned.HostGroup.Contains($hostGroupName)) {
+            if ($owned.Host.Contains($testHostName) -and $owned.HostGroup.Contains($hostGroupName)) {
                 Invoke-MutationStep -Name 'Add-DMHostToHostGroup' -Action {
-                    Assert-TestOwnedResource -Kind Host -Identity $hostName
+                    Assert-TestOwnedResource -Kind Host -Identity $testHostName
                     Assert-TestOwnedResource -Kind HostGroup -Identity $hostGroupName
-                    Add-DMHostToHostGroup -WebSession $session -HostName $hostName -HostGroupName $hostGroupName -Confirm:$false
+                    Add-DMHostToHostGroup -WebSession $session -HostName $testHostName -HostGroupName $hostGroupName -Confirm:$false
                 } | Out-Null
                 Invoke-MutationStep -Name 'Remove-DMHostFromHostGroup' -Action {
-                    Assert-TestOwnedResource -Kind Host -Identity $hostName
+                    Assert-TestOwnedResource -Kind Host -Identity $testHostName
                     Assert-TestOwnedResource -Kind HostGroup -Identity $hostGroupName
-                    Remove-DMHostFromHostGroup -WebSession $session -HostName $hostName -HostGroupName $hostGroupName -Confirm:$false
+                    Remove-DMHostFromHostGroup -WebSession $session -HostName $testHostName -HostGroupName $hostGroupName -Confirm:$false
                 } | Out-Null
             }
         }
@@ -764,8 +777,15 @@ try {
                 } | Out-Null
             }
             else {
+                $dependencyStatus = if ($configuration.Host.Enabled) { 'Blocked' } else { 'NotConfigured' }
+                $dependencyReason = if ($configuration.Host.Enabled) {
+                    'Host-group mapping could not run because a test-owned host group or mapping view was not created successfully.'
+                }
+                else {
+                    'Enable Host and Mapping workflows so both mapped resources are test-owned.'
+                }
                 Add-SkippedResult -Name @('Add-DMHostGroupToMappingView', 'Remove-DMHostGroupFromMappingView') `
-                    -Status 'NotConfigured' -Reason 'Enable Host and Mapping workflows so both mapped resources are test-owned.'
+                    -Status $dependencyStatus -Reason $dependencyReason
             }
             if ($owned.LunGroup.Contains($lunGroupName) -and $owned.MappingView.Contains($mappingViewName)) {
                 Invoke-MutationStep -Name 'Add-DMLunGroupToMappingView' -Action {
@@ -782,8 +802,15 @@ try {
                 } | Out-Null
             }
             else {
+                $dependencyStatus = if ($configuration.LunGroup.Enabled) { 'Blocked' } else { 'NotConfigured' }
+                $dependencyReason = if ($configuration.LunGroup.Enabled) {
+                    'LUN-group mapping could not run because a test-owned LUN group or mapping view was not created successfully.'
+                }
+                else {
+                    'Enable LunGroup and Mapping workflows so both mapped resources are test-owned.'
+                }
                 Add-SkippedResult -Name @('Add-DMLunGroupToMappingView', 'Remove-DMLunGroupFromMappingView') `
-                    -Status 'NotConfigured' -Reason 'Enable LunGroup and Mapping workflows so both mapped resources are test-owned.'
+                    -Status $dependencyStatus -Reason $dependencyReason
             }
             Invoke-OwnedRemoval -Name 'Remove-DMMappingView' -Kind MappingView -Identity $mappingViewName -Action {
                 Remove-DMMappingView -WebSession $session -MappingViewName $mappingViewName -Confirm:$false
@@ -862,13 +889,21 @@ try {
                 Remove-DMProtectionGroup -WebSession $session -Name $protectionGroupName -Confirm:$false
             }
         }
-        else {
+        elseif (-not $configuration.Protection.Enabled) {
             Add-SkippedResult -Name @(
                 'New-DMProtectionGroup', 'Remove-DMProtectionGroup', 'New-DMSnapshotConsistencyGroup',
                 'New-DMSnapshotConsistencyGroupCopy', 'Enable-DMSnapshotConsistencyGroup',
                 'Restart-DMSnapshotConsistencyGroup', 'Restore-DMSnapshotConsistencyGroup',
                 'Remove-DMSnapshotConsistencyGroup'
             ) -Status 'NotConfigured' -Reason 'Set Protection.Enabled = $true with Lun and LunGroup enabled to run the test-owned protection workflow.'
+        }
+        else {
+            Add-SkippedResult -Name @(
+                'New-DMProtectionGroup', 'Remove-DMProtectionGroup', 'New-DMSnapshotConsistencyGroup',
+                'New-DMSnapshotConsistencyGroupCopy', 'Enable-DMSnapshotConsistencyGroup',
+                'Restart-DMSnapshotConsistencyGroup', 'Restore-DMSnapshotConsistencyGroup',
+                'Remove-DMSnapshotConsistencyGroup'
+            ) -Status 'Blocked' -Reason 'Protection validation could not run because the test-owned LUN and LUN-group association was not created successfully.'
         }
 
         if ($lunGroupContainsLun) {
@@ -891,9 +926,9 @@ try {
                     if (@(Get-DMFiberChannelInitiator -WebSession $session | Where-Object Id -EQ $configuration.Initiators.FibreChannelWWN).Count -gt 0) {
                         throw 'The configured Fibre Channel WWN already exists; refusing to modify it.'
                     }
-                    if ($owned.Host.Contains($hostName)) {
-                        Assert-TestOwnedResource -Kind Host -Identity $hostName
-                        New-DMFiberChannelInitiator -WebSession $session -WWN $configuration.Initiators.FibreChannelWWN -HostName $hostName
+                    if ($owned.Host.Contains($testHostName)) {
+                        Assert-TestOwnedResource -Kind Host -Identity $testHostName
+                        New-DMFiberChannelInitiator -WebSession $session -WWN $configuration.Initiators.FibreChannelWWN -HostName $testHostName
                     }
                     else {
                         New-DMFiberChannelInitiator -WebSession $session -WWN $configuration.Initiators.FibreChannelWWN
@@ -902,17 +937,24 @@ try {
                 if ($fc.Count -gt 0 -and $fc[0].Id -eq $configuration.Initiators.FibreChannelWWN) {
                     Register-TestOwnedResource -Kind FibreChannelInitiator -Identity $configuration.Initiators.FibreChannelWWN
                 }
-                if ($owned.Host.Contains($hostName) -and $owned.FibreChannelInitiator.Contains($configuration.Initiators.FibreChannelWWN)) {
+                if ($owned.Host.Contains($testHostName) -and $owned.FibreChannelInitiator.Contains($configuration.Initiators.FibreChannelWWN)) {
                     Invoke-MutationStep -Name 'Remove-DMFiberChannelInitiatorFromHost' -Action {
-                        Assert-TestOwnedResource -Kind Host -Identity $hostName
+                        Assert-TestOwnedResource -Kind Host -Identity $testHostName
                         Assert-TestOwnedResource -Kind FibreChannelInitiator -Identity $configuration.Initiators.FibreChannelWWN
-                        Remove-DMFiberChannelInitiatorFromHost -WebSession $session -HostName $hostName `
+                        Remove-DMFiberChannelInitiatorFromHost -WebSession $session -HostName $testHostName `
                             -WWN $configuration.Initiators.FibreChannelWWN -Confirm:$false
                     } | Out-Null
                 }
                 else {
-                    Add-SkippedResult -Name 'Remove-DMFiberChannelInitiatorFromHost' -Status 'NotConfigured' `
-                        -Reason 'Set Host.Enabled = $true so the FC initiator can be attached to and removed from a test-owned host.'
+                    $detachStatus = if ($configuration.Host.Enabled) { 'Blocked' } else { 'NotConfigured' }
+                    $detachReason = if ($configuration.Host.Enabled) {
+                        'FC detachment could not run because the test-owned host or FC initiator was not created successfully.'
+                    }
+                    else {
+                        'Set Host.Enabled = $true so the FC initiator can be attached to and removed from a test-owned host.'
+                    }
+                    Add-SkippedResult -Name 'Remove-DMFiberChannelInitiatorFromHost' -Status $detachStatus `
+                        -Reason $detachReason
                 }
                 Invoke-OwnedRemoval -Name 'Remove-DMFiberChannelInitiator' -Kind FibreChannelInitiator `
                     -Identity $configuration.Initiators.FibreChannelWWN -Action {
@@ -928,9 +970,9 @@ try {
                     if (@(Get-DMIscsiInitiator -WebSession $session | Where-Object Id -EQ $configuration.Initiators.IscsiIdentifier).Count -gt 0) {
                         throw 'The configured iSCSI identifier already exists; refusing to modify it.'
                     }
-                    if ($owned.Host.Contains($hostName)) {
-                        Assert-TestOwnedResource -Kind Host -Identity $hostName
-                        New-DMIscsiInitiator -WebSession $session -Identifier $configuration.Initiators.IscsiIdentifier -HostName $hostName
+                    if ($owned.Host.Contains($testHostName)) {
+                        Assert-TestOwnedResource -Kind Host -Identity $testHostName
+                        New-DMIscsiInitiator -WebSession $session -Identifier $configuration.Initiators.IscsiIdentifier -HostName $testHostName
                     }
                     else {
                         New-DMIscsiInitiator -WebSession $session -Identifier $configuration.Initiators.IscsiIdentifier
@@ -939,17 +981,24 @@ try {
                 if ($iscsi.Count -gt 0 -and $iscsi[0].Id -eq $configuration.Initiators.IscsiIdentifier) {
                     Register-TestOwnedResource -Kind IscsiInitiator -Identity $configuration.Initiators.IscsiIdentifier
                 }
-                if ($owned.Host.Contains($hostName) -and $owned.IscsiInitiator.Contains($configuration.Initiators.IscsiIdentifier)) {
+                if ($owned.Host.Contains($testHostName) -and $owned.IscsiInitiator.Contains($configuration.Initiators.IscsiIdentifier)) {
                     Invoke-MutationStep -Name 'Remove-DMIscsiInitiatorFromHost' -Action {
-                        Assert-TestOwnedResource -Kind Host -Identity $hostName
+                        Assert-TestOwnedResource -Kind Host -Identity $testHostName
                         Assert-TestOwnedResource -Kind IscsiInitiator -Identity $configuration.Initiators.IscsiIdentifier
-                        Remove-DMIscsiInitiatorFromHost -WebSession $session -HostName $hostName `
+                        Remove-DMIscsiInitiatorFromHost -WebSession $session -HostName $testHostName `
                             -Identifier $configuration.Initiators.IscsiIdentifier -Confirm:$false
                     } | Out-Null
                 }
                 else {
-                    Add-SkippedResult -Name 'Remove-DMIscsiInitiatorFromHost' -Status 'NotConfigured' `
-                        -Reason 'Set Host.Enabled = $true so the iSCSI initiator can be attached to and removed from a test-owned host.'
+                    $detachStatus = if ($configuration.Host.Enabled) { 'Blocked' } else { 'NotConfigured' }
+                    $detachReason = if ($configuration.Host.Enabled) {
+                        'iSCSI detachment could not run because the test-owned host or iSCSI initiator was not created successfully.'
+                    }
+                    else {
+                        'Set Host.Enabled = $true so the iSCSI initiator can be attached to and removed from a test-owned host.'
+                    }
+                    Add-SkippedResult -Name 'Remove-DMIscsiInitiatorFromHost' -Status $detachStatus `
+                        -Reason $detachReason
                 }
                 Invoke-OwnedRemoval -Name 'Remove-DMIscsiInitiator' -Kind IscsiInitiator `
                     -Identity $configuration.Initiators.IscsiIdentifier -Action {
@@ -988,16 +1037,13 @@ try {
             ) -Status 'NotConfigured' -Reason 'Set Initiators.Enabled = $true and supply unused initiator identities to run these lifecycles.'
         }
 
-        Invoke-OwnedRemoval -Name 'Remove-DMHost' -Kind Host -Identity $hostName -Action {
-            Remove-DMHost -WebSession $session -HostName $hostName -Confirm:$false
+        Invoke-OwnedRemoval -Name 'Remove-DMHost' -Kind Host -Identity $testHostName -Action {
+            Remove-DMHost -WebSession $session -HostName $testHostName -Confirm:$false
         }
         Invoke-OwnedRemoval -Name 'Remove-DMHostGroup' -Kind HostGroup -Identity $hostGroupName -Action {
             Remove-DMHostGroup -WebSession $session -HostGroupName $hostGroupName -Confirm:$false
         }
     }
-
-    Add-SkippedResult -Name @('export-DeviceManager', 'export-DMInventory', 'export-DMStorageToExcel') `
-        -Status 'NotConfigured' -Reason 'Export validation needs local output/report configuration and does not change array resources.'
 
     $representedCommands = @($checks.Name | ForEach-Object { ($_ -split ':')[0] } | Sort-Object -Unique)
     $unrepresentedCommands = @(
@@ -1006,8 +1052,14 @@ try {
             Where-Object { $representedCommands -notcontains $_ -and $excludedCommands -notcontains $_ }
     )
     if ($unrepresentedCommands.Count -gt 0) {
-        Add-SkippedResult -Name $unrepresentedCommands -Status 'NotExecuted' `
-            -Reason 'This command did not have the prerequisite live data or an enabled safe lifecycle during this run.'
+        $unrepresentedStatus = if ($RunMutatingTests -and $configuration.AllowMutatingTests) { 'Blocked' } else { 'NotExecuted' }
+        $unrepresentedReason = if ($unrepresentedStatus -eq 'Blocked') {
+            'This command could not run because its test-owned prerequisite resource was not created successfully during this run.'
+        }
+        else {
+            'This command did not have the prerequisite live data or an enabled safe lifecycle during this run.'
+        }
+        Add-SkippedResult -Name $unrepresentedCommands -Status $unrepresentedStatus -Reason $unrepresentedReason
     }
 
     $remainingOwned = @(
@@ -1025,7 +1077,8 @@ try {
         RunId       = $runId
         Passed      = @($checks | Where-Object Status -eq 'Passed').Count
         NoData      = @($checks | Where-Object Status -eq 'NoData').Count
-        Skipped     = @($checks | Where-Object Status -in @('SkippedUnsafe', 'NotConfigured', 'NotRequested', 'NotExecuted')).Count
+        Skipped     = @($checks | Where-Object Status -in @('SkippedUnsafe', 'NotConfigured', 'NotRequested', 'NotExecuted', 'Blocked')).Count
+        Blocked     = @($checks | Where-Object Status -eq 'Blocked').Count
         Failed      = @($checks | Where-Object Status -in @('Failed', 'UnexpectedType')).Count
         ExcludedCommands = $excludedCommands
         RemainingTestOwnedResources = $remainingOwned
@@ -1033,7 +1086,7 @@ try {
     }
 
     $report | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $ReportPath
-    $report | Format-List Hostname, RunAt, Mode, RunId, Passed, NoData, Skipped, Failed, ExcludedCommands, RemainingTestOwnedResources
+    $report | Format-List Hostname, RunAt, Mode, RunId, Passed, NoData, Skipped, Blocked, Failed, ExcludedCommands, RemainingTestOwnedResources
     $checks | Format-Table Category, Name, Status, Count, ExpectedType, ActualTypes, Error -AutoSize
 }
 finally {
