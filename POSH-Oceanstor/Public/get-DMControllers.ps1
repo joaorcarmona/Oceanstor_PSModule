@@ -42,13 +42,26 @@ if ($WebSession){
     $session = $deviceManager
 }
 
+$defaultDisplaySet = "Id", "Location", "Health Status", "Running Status", "Is Master"
+
+$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+    'DefaultDisplayPropertySet',
+    [string[]]$defaultDisplaySet
+)
+
+$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+
 $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "controller" | Select-Object -ExpandProperty data
 $controllers = New-Object System.Collections.ArrayList
 
 foreach ($tcont in $response)
 {
     $controller = [OceanStorController]::new($tcont)
-    $controllers += $controller
+    [void]$controllers.Add($controller)
+}
+
+$controllers | ForEach-Object {
+    $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
 }
 
 $result = $controllers

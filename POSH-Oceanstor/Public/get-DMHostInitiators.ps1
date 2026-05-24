@@ -75,6 +75,15 @@ function get-DMHostInitiators{
         $session = $deviceManager
     }
 
+	$defaultDisplaySet = "Id", "Type", "Host Name", "Running Status", "Is Free"
+
+	$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+		'DefaultDisplayPropertySet',
+		[string[]]$defaultDisplaySet
+	)
+
+	$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+
 	switch ($initatorType)
 	{
 		FibreChannel {$resourceQuery = "fc_initiator"}
@@ -99,7 +108,11 @@ function get-DMHostInitiators{
 			ISCSI {$HostInitiator = [OceanstorHostinitiatorISCSI]::new($initator)}
 		}
 
-		$HostInitiators += $HostInitiator
+		[void]$HostInitiators.Add($HostInitiator)
+	}
+
+	$HostInitiators | ForEach-Object {
+		$_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
 	}
 
 	$result = $HostInitiators

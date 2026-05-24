@@ -42,13 +42,26 @@ function get-DMLifs{
         $session = $deviceManager
     }
 
+	$defaultDisplaySet = "Id", "LIF Name", "IPv4 Address", "Running Status", "Support Protocol"
+
+	$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+		'DefaultDisplayPropertySet',
+		[string[]]$defaultDisplaySet
+	)
+
+	$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+
     $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "lif" | Select-Object -ExpandProperty data
     $lifs = New-Object System.Collections.ArrayList
 
 	foreach ($tlif in $response)
 	{
 		$lif = [OceanStorLIF]::new($tlif)
-		$lifs += $lif
+		[void]$lifs.Add($lif)
+	}
+
+	$lifs | ForEach-Object {
+		$_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
 	}
 
 	$result = $lifs

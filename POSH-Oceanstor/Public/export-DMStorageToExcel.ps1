@@ -79,7 +79,6 @@ function export-DMStorageToExcel{
 			$reportObject = $IncludeObject | Get-Unique
 			foreach ($reportObj in $reportObject)
 			{
-				Write-Host "conta um"
 				switch ($reportObj)
 				{
 					luns {$IncludeLuns = $True}

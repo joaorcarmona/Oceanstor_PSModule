@@ -42,13 +42,26 @@ function get-DMvLans{
         $session = $deviceManager
     }
 
+	$defaultDisplaySet = "Id", "Name", "Vlan Tag Id", "Port Type", "Running Status"
+
+	$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+		'DefaultDisplayPropertySet',
+		[string[]]$defaultDisplaySet
+	)
+
+	$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+
     $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "vlan" | Select-Object -ExpandProperty data
     $vlans = New-Object System.Collections.ArrayList
 
 	foreach ($tvlan in $response)
 	{
 		$vlan = [OceanStorvLan]::new($tvlan,$session)
-		$vlans += $vlan
+		[void]$vlans.Add($vlan)
+	}
+
+	$vlans | ForEach-Object {
+		$_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
 	}
 
 	$result = $vlans

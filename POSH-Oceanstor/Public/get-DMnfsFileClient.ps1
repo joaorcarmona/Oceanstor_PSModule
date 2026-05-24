@@ -42,13 +42,26 @@ function get-DMnfsFileClient{
         $session = $deviceManager
     }
 
+	$defaultDisplaySet = "Id", "Name", "NFS Share Name", "Access Permission", "WriteMode"
+
+	$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+		'DefaultDisplayPropertySet',
+		[string[]]$defaultDisplaySet
+	)
+
+	$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+
     $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "NFS_SHARE_AUTH_CLIENT" | Select-Object -ExpandProperty data
     $exports = New-Object System.Collections.ArrayList
 
 	foreach ($fs in $response)
 	{
 		$fileSystem = [OceanstorNFSclient]::new($fs)
-		$exports += $fileSystem
+		[void]$exports.Add($fileSystem)
+	}
+
+	$exports | ForEach-Object {
+		$_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
 	}
 
 	$result = $exports

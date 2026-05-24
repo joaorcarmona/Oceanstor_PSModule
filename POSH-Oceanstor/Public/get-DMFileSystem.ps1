@@ -42,13 +42,26 @@ function get-DMFileSystem{
         $session = $deviceManager
     }
 
+	$defaultDisplaySet = "Id", "Name", "Health Status", "Running Status", "Capacity (GB)"
+
+	$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+		'DefaultDisplayPropertySet',
+		[string[]]$defaultDisplaySet
+	)
+
+	$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+
     $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "filesystem" | Select-Object -ExpandProperty data
     $FileSystems = New-Object System.Collections.ArrayList
 
 	foreach ($fs in $response)
 	{
 		$fileSystem = [OceanstorFileSystem]::new($fs)
-		$FileSystems += $fileSystem
+		[void]$FileSystems.Add($fileSystem)
+	}
+
+	$FileSystems | ForEach-Object {
+		$_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
 	}
 
 	$result = $FileSystems

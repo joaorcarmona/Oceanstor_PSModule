@@ -42,13 +42,26 @@ function get-DMlunGroups{
         $session = $deviceManager
     }
 
+	$defaultDisplaySet = "Id", "Name", "LunGroup Capacity", "Is Mapped", "Luns Members number"
+
+	$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+		'DefaultDisplayPropertySet',
+		[string[]]$defaultDisplaySet
+	)
+
+	$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+
     $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "lungroup" | Select-Object -ExpandProperty data
     $lunGroups = New-Object System.Collections.ArrayList
 
 	foreach ($lgroup in $response)
 	{
 		$lunGroup = [OceanStorLunGroup]::new($lgroup)
-		$lunGroups += $lunGroup
+		[void]$lunGroups.Add($lunGroup)
+	}
+
+	$lunGroups | ForEach-Object {
+		$_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
 	}
 
 	$result = $lunGroups

@@ -46,6 +46,15 @@ function get-DMlunsByWWN{
         $session = $deviceManager
     }
 
+	$defaultDisplaySet = "Id", "Name", "Health Status", "Lun Size", "WWN"
+
+	$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+		'DefaultDisplayPropertySet',
+		[string[]]$defaultDisplaySet
+	)
+
+	$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+
     $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "lun" | Select-Object -ExpandProperty data
     $StorageLuns = New-Object System.Collections.ArrayList
 
@@ -62,10 +71,14 @@ function get-DMlunsByWWN{
 	{
 		$lun = New-Object -TypeName $LunObjectClass -ArgumentList @($tlun,$session)
 		#$lun = [OceanstorLun]::new($tlun,$session)
-		$StorageLuns += $lun
+		[void]$StorageLuns.Add($lun)
 	}
 
 	$result = $StorageLuns | Where-Object wwn -Match $wwn
+
+	$result | ForEach-Object {
+		$_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
+	}
 
 	return $result
 }

@@ -10,8 +10,8 @@ class OceanStorWorkload {
 
     OceanStorWorkload([array]$workloadReceived){
 
-        $this.{Workload Id} = $workloadReceived.ID
-        $this.{Workload Name} = $workloadReceived.NAME
+        $this.{Id} = $workloadReceived.ID
+        $this.{Name} = $workloadReceived.NAME
 
         switch ($workloadReceived.CREATETYPE)
         {

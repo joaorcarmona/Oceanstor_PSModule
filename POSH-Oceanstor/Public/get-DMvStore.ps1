@@ -42,13 +42,26 @@ function get-DMvStore{
         $session = $deviceManager
     }
 
+	$defaultDisplaySet = "Id", "Name", "Running Status", "SAN Free Capacity Quota", "NAS Free Capacity Quota"
+
+	$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+		'DefaultDisplayPropertySet',
+		[string[]]$defaultDisplaySet
+	)
+
+	$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+
     $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "vstore" | Select-Object -ExpandProperty data
     $vStores = New-Object System.Collections.ArrayList
 
 	foreach ($tvstore in $response)
 	{
 		$vStore = [OceanStorvStore]::new($tvstore)
-		$vStores += $vStore
+		[void]$vStores.Add($vStore)
+	}
+
+	$vStores | ForEach-Object {
+		$_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
 	}
 
 	$result = $vStores

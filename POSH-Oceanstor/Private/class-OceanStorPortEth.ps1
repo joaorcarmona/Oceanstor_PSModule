@@ -61,8 +61,8 @@ class OceanStorPortETH {
             213 {$this.{Port Type} = "Ethernet Port"}
         }
 
-        $this.{Port Id} = $portReceived.ID
-        $this.{Port Name} = $portReceived.NAME
+        $this.{Id} = $portReceived.ID
+        $this.{Name} = $portReceived.NAME
         $this.{Location} = $portReceived.LOCATION
 
         switch ($portReceived.HEALTHSTATUS)
