@@ -60,6 +60,8 @@ foreach ($thost in $response)
     [void]$hosts.Add($hostobj)
 }
 
+$hosts = @(Set-DMHostInitiators -InputObject $hosts -WebSession $session)
+
 $hosts | ForEach-Object {
     $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
 }

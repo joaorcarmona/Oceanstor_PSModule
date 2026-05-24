@@ -36,7 +36,7 @@ Describe 'Storage and share model classes' {
     It 'maps a LUN group' {
         $source = [pscustomobject]@{ ID = 12; NAME = 'application-luns'; APPTYPE = 1; GROUPTYPE = 0; CAPCITY = 1GB; ISADD2MAPPINGVIEW = 'false' }
 
-        $result = New-Object -TypeName OceanStorLunGroup -ArgumentList (,$source)
+        $result = New-Object -TypeName OceanStorLunGroup -ArgumentList @($source, [pscustomobject]@{})
 
         $result.Id | Should -Be 12
         $result.'Application Type' | Should -Be 'Oracle'

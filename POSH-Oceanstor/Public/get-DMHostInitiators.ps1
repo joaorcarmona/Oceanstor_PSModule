@@ -97,7 +97,13 @@ function get-DMHostInitiators{
 		default {$resource = "$resourceQuery"}
 	}
 
-    $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource $resource | Select-Object -ExpandProperty data
+    $queryResult = invoke-DeviceManager -WebSession $session -Method "GET" -Resource $resource
+    $response = @()
+
+    if ($null -ne $queryResult -and $null -ne $queryResult.PSObject.Properties['data']) {
+        $response = @($queryResult.data)
+    }
+
     $HostInitiators = New-Object System.Collections.ArrayList
 
 	foreach ($initator in $response)
