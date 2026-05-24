@@ -91,14 +91,13 @@ function new-DMLunSnapshot {
 
     $body = @{
         TYPE       = 27
-        
         PARENTTYPE = 11
         PARENTID   = $sourceLun.Id
     }
 
     if ($SnapshotName) {
         $body.Add('NAME', $SnapshotName)
-    } else { 
+    } else {
         $body.Add('NAME', "snap_$($SourceLunName)-$(Get-Date -Format 'yyyyMMddHHmmss')")
     }
 

@@ -125,9 +125,14 @@ try {
     Add-ValidationResult -Name 'get-DMdnsServer' -ExpectedType 'Hashtable' -Action {
         get-DMdnsServer -WebSession $session
     } | Out-Null
-    Add-ValidationResult -Name 'get-DMFileSystem' -ExpectedType 'OceanstorFileSystem' -Action {
+    $samples.FileSystems = Add-ValidationResult -Name 'get-DMFileSystem' -ExpectedType 'OceanstorFileSystem' -Action {
         get-DMFileSystem -WebSession $session
-    } | Out-Null
+    }
+    if ($samples.FileSystems.Count -gt 0) {
+        Add-ValidationResult -Name 'Get-DMFileSystemSnapshots' -ExpectedType 'OceanstorFileSystemSnapshot' -Action {
+            Get-DMFileSystemSnapshots -WebSession $session -FileSystemName $samples.FileSystems[0].Name
+        } | Out-Null
+    }
     Add-ValidationResult -Name 'get-DMhostGroups' -ExpectedType 'OceanStorHostGroup' -Action {
         get-DMhostGroups -WebSession $session
     } | Out-Null
