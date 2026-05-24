@@ -68,11 +68,5 @@ function invoke-DeviceManager{
 		$result = Invoke-RestMethod -Method $Method -uri $RestURI -Headers $session.Headers -WebSession $session.WebSession -ContentType "application/json" -SkipCertificateCheck
 	}
 
-    if ($result.error.code -ne 0)
-    {
-        Write-Host $result.error
-        exit
-    }
-
 	return $result
 }
