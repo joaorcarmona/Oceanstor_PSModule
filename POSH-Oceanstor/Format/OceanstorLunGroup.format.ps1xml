@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Configuration>
+    <ViewDefinitions>
+        <View>
+            <Name>OceanstorLunGroupTable</Name>
+            <ViewSelectedBy>
+                <TypeName>OceanStorLunGroup</TypeName>
+            </ViewSelectedBy>
+            <TableControl>
+                <TableHeaders>
+                    <TableColumnHeader><Label>Id</Label></TableColumnHeader>
+                    <TableColumnHeader><Label>Name</Label></TableColumnHeader>
+                    <TableColumnHeader><Label>LunGroup Capacity</Label></TableColumnHeader>
+                    <TableColumnHeader><Label>Is Mapped</Label></TableColumnHeader>
+                    <TableColumnHeader><Label>Luns Members number</Label></TableColumnHeader>
+                </TableHeaders>
+                <TableRowEntries>
+                    <TableRowEntry>
+                        <TableColumnItems>
+                            <TableColumnItem><PropertyName>Id</PropertyName></TableColumnItem>
+                            <TableColumnItem><PropertyName>Name</PropertyName></TableColumnItem>
+                            <TableColumnItem><PropertyName>LunGroup Capacity</PropertyName></TableColumnItem>
+                            <TableColumnItem><PropertyName>Is Mapped</PropertyName></TableColumnItem>
+                            <TableColumnItem><PropertyName>Luns Members number</PropertyName></TableColumnItem>
+                        </TableColumnItems>
+                    </TableRowEntry>
+                </TableRowEntries>
+            </TableControl>
+        </View>
+    </ViewDefinitions>
+</Configuration>

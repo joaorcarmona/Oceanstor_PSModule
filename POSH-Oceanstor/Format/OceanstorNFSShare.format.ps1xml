@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Configuration>
+    <ViewDefinitions>
+        <View>
+            <Name>OceanstorNFSShareTable</Name>
+            <ViewSelectedBy>
+                <TypeName>OceanStorNFSShare</TypeName>
+            </ViewSelectedBy>
+            <TableControl>
+                <TableHeaders>
+                    <TableColumnHeader><Label>Id</Label></TableColumnHeader>
+                    <TableColumnHeader><Label>Name</Label></TableColumnHeader>
+                    <TableColumnHeader><Label>Share Path</Label></TableColumnHeader>
+                    <TableColumnHeader><Label>FileSystem ID</Label></TableColumnHeader>
+                    <TableColumnHeader><Label>vStore Name</Label></TableColumnHeader>
+                </TableHeaders>
+                <TableRowEntries>
+                    <TableRowEntry>
+                        <TableColumnItems>
+                            <TableColumnItem><PropertyName>Id</PropertyName></TableColumnItem>
+                            <TableColumnItem><PropertyName>Name</PropertyName></TableColumnItem>
+                            <TableColumnItem><PropertyName>Share Path</PropertyName></TableColumnItem>
+                            <TableColumnItem><PropertyName>FileSystem ID</PropertyName></TableColumnItem>
+                            <TableColumnItem><PropertyName>vStore Name</PropertyName></TableColumnItem>
+                        </TableColumnItems>
+                    </TableRowEntry>
+                </TableRowEntries>
+            </TableControl>
+        </View>
+    </ViewDefinitions>
+</Configuration>

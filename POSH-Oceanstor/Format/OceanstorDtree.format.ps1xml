@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Configuration>
+    <ViewDefinitions>
+        <View>
+            <Name>OceanstorDtreeTable</Name>
+            <ViewSelectedBy>
+                <TypeName>OceanStorDtree</TypeName>
+            </ViewSelectedBy>
+            <TableControl>
+                <TableHeaders>
+                    <TableColumnHeader><Label>Id</Label></TableColumnHeader>
+                    <TableColumnHeader><Label>Name</Label></TableColumnHeader>
+                    <TableColumnHeader><Label>Parent Id</Label></TableColumnHeader>
+                    <TableColumnHeader><Label>Security Style</Label></TableColumnHeader>
+                    <TableColumnHeader><Label>Quota Configured</Label></TableColumnHeader>
+                </TableHeaders>
+                <TableRowEntries>
+                    <TableRowEntry>
+                        <TableColumnItems>
+                            <TableColumnItem><PropertyName>Id</PropertyName></TableColumnItem>
+                            <TableColumnItem><PropertyName>Name</PropertyName></TableColumnItem>
+                            <TableColumnItem><PropertyName>parentId</PropertyName></TableColumnItem>
+                            <TableColumnItem><PropertyName>Security Style</PropertyName></TableColumnItem>
+                            <TableColumnItem><PropertyName>Quota Configured</PropertyName></TableColumnItem>
+                        </TableColumnItems>
+                    </TableRowEntry>
+                </TableRowEntries>
+            </TableControl>
+        </View>
+    </ViewDefinitions>
+</Configuration>

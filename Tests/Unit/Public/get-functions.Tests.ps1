@@ -64,6 +64,14 @@ Describe 'Public getter functions' {
                 RUNNINGSTATUS = 27; ALLOCTYPE = 1; mapped = $true
             }
         }
+
+        function script:New-TestLunSnapshot {
+            [pscustomobject]@{
+                ID = 'snap-01'; NAME = 'before-patch'; SOURCELUNID = 'lun-01'; SOURCELUNNAME = 'data-lun'
+                DESCRIPTION = 'Before patching'; HEALTHSTATUS = 1; RUNNINGSTATUS = 43; WWN = 'snap-wwn-01'
+                USERCAPACITY = 2097152; CONSUMEDCAPACITY = 1024; IOPRIORITY = 2; isReadOnly = $true
+            }
+        }
     }
 
     BeforeEach {
@@ -474,6 +482,57 @@ Describe 'Public getter functions' {
 
             $result[0].Id | Should -Be 'lun-01'
             $result[0].GetType().Name | Should -Be 'OceanstorLunv6'
+        }
+
+        It 'gets LUN snapshots' {
+            Mock invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                $script:snapshotGetSession = $WebSession
+                $script:snapshotGetMethod = $Method
+                $script:snapshotGetResource = $Resource
+                [pscustomobject]@{ data = @(New-TestLunSnapshot) }
+            }
+
+            $result = get-DMLunSnapshots -WebSession $script:session
+
+            $result[0].GetType().Name | Should -Be 'OceanstorLunSnapshot'
+            $result[0].Id | Should -Be 'snap-01'
+            $result[0].'Source Lun Name' | Should -Be 'data-lun'
+            $result[0].PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
+                Should -Be @('Id', 'Name', 'Source Lun Name', 'Health Status', 'Running Status')
+            $script:snapshotGetSession | Should -Be $script:session
+            $script:snapshotGetMethod | Should -Be 'GET'
+            $script:snapshotGetResource | Should -Be 'snapshot'
+        }
+
+        It 'gets LUN snapshots filtered by source LUN name' {
+            Mock invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+
+                switch ($Resource) {
+                    'lun' { [pscustomobject]@{ data = @(New-TestLun) } }
+                    'snapshot?filter=SOURCELUNID:lun-01' {
+                        $script:snapshotFilterResource = $Resource
+                        [pscustomobject]@{ data = @(New-TestLunSnapshot) }
+                    }
+                    default { [pscustomobject]@{ data = @() } }
+                }
+            }
+
+            $result = get-DMLunSnapshots -WebSession $script:session -LunName 'data-lun'
+
+            $result[0].Id | Should -Be 'snap-01'
+            $script:snapshotFilterResource | Should -Be 'snapshot?filter=SOURCELUNID:lun-01'
+        }
+
+        It 'rejects an invalid source LUN name for snapshot filtering' {
+            Mock invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                [pscustomobject]@{ data = @(New-TestLun) }
+            }
+
+            { get-DMLunSnapshots -WebSession $script:session -LunName 'missing' } |
+                Should -Throw '*Invalid LunName*'
         }
 
         It 'gets LUNs by filter' {

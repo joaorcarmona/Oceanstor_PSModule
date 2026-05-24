@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Configuration>
+    <ViewDefinitions>
+        <View>
+            <Name>OceanstorHostGroupTable</Name>
+            <ViewSelectedBy>
+                <TypeName>OceanStorHostGroup</TypeName>
+            </ViewSelectedBy>
+            <TableControl>
+                <TableHeaders>
+                    <TableColumnHeader><Label>Id</Label></TableColumnHeader>
+                    <TableColumnHeader><Label>Name</Label></TableColumnHeader>
+                    <TableColumnHeader><Label>Host Member Number</Label></TableColumnHeader>
+                    <TableColumnHeader><Label>Mapped Luns Number</Label></TableColumnHeader>
+                    <TableColumnHeader><Label>Is Mapped</Label></TableColumnHeader>
+                </TableHeaders>
+                <TableRowEntries>
+                    <TableRowEntry>
+                        <TableColumnItems>
+                            <TableColumnItem><PropertyName>Id</PropertyName></TableColumnItem>
+                            <TableColumnItem><PropertyName>Name</PropertyName></TableColumnItem>
+                            <TableColumnItem><PropertyName>Host Member Number</PropertyName></TableColumnItem>
+                            <TableColumnItem><PropertyName>Mapped Luns Number</PropertyName></TableColumnItem>
+                            <TableColumnItem><PropertyName>Is Mapped</PropertyName></TableColumnItem>
+                        </TableColumnItems>
+                    </TableRowEntry>
+                </TableRowEntries>
+            </TableControl>
+        </View>
+    </ViewDefinitions>
+</Configuration>
