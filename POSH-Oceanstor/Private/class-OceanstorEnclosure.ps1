@@ -1,5 +1,6 @@
 class OceanStorEnclosure
 {
+    hidden [pscustomobject]${Session}
     #Define Properties
     [string]${Id}
     [string]${Name}
@@ -26,8 +27,9 @@ class OceanStorEnclosure
     [string]${Temperature}
     #[string]${elabel}
 
-    OceanStorEnclosure ([array]$encReceived)
+    OceanStorEnclosure ([array]$encReceived, [pscustomobject]$Session)
     {
+        $this.Session = $Session
 
         $this.{Expander Depth} = $encReceived.EXPANDERDEPTH
         $this.{Expander Port} = $encReceived.EXPANDERPORT

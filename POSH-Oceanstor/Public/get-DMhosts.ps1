@@ -56,7 +56,7 @@ $hosts = New-Object System.Collections.ArrayList
 
 foreach ($thost in $response)
 {
-    $hostobj = [OceanStorHost]::new($thost)
+    $hostobj = [OceanStorHost]::new($thost, $session)
     [void]$hosts.Add($hostobj)
 }
 

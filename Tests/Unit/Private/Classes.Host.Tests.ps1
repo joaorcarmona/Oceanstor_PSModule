@@ -7,22 +7,27 @@ BeforeAll {
 }
 
 Describe 'Host model classes' {
+    BeforeAll {
+        $script:session = [pscustomobject]@{ Name = 'test-session' }
+    }
+
     It 'maps a host and its operating system' {
         $source = [pscustomobject]@{ ID = 'host-01'; NAME = 'server01'; HEALTHSTATUS = 1; RUNNINGSTATUS = 1; OPERATIONSYSTEM = 7; TYPE = 21 }
 
-        $result = New-Object -TypeName OceanStorHost -ArgumentList (,$source)
+        $result = New-Object -TypeName OceanStorHost -ArgumentList @($source, $script:session)
 
         $result.id | Should -Be 'host-01'
         $result.'Operation System' | Should -Be 'VMware ESX'
         $result.type | Should -Be 'Host'
         $result.initiators = @('fc-01', 'iscsi-01')
         $result.initiators | Should -Be @('fc-01', 'iscsi-01')
+        $result.Session | Should -Be $script:session
     }
 
     It 'maps host group identity and mapping state' {
         $source = [pscustomobject]@{ ID = 4; NAME = 'cluster'; TYPE = 0; ISADD2MAPPINGVIEW = 'true' }
 
-        $result = New-Object -TypeName OceanStorHostGroup -ArgumentList (,$source)
+        $result = New-Object -TypeName OceanStorHostGroup -ArgumentList @($source, $script:session)
 
         $result.Id | Should -Be 4
         $result.Name | Should -Be 'cluster'
@@ -32,7 +37,7 @@ Describe 'Host model classes' {
     It 'maps an active host link' {
         $source = [pscustomobject]@{ ID = 'link-01'; HEALTHSTATUS = 1; RUNNINGSTATUS = 10; TARGET_TYPE = 212; TYPE = 255 }
 
-        $result = New-Object -TypeName OceanStorHostLink -ArgumentList (,$source)
+        $result = New-Object -TypeName OceanStorHostLink -ArgumentList @($source, $script:session)
 
         $result.Id | Should -Be 'link-01'
         $result.'Running Status' | Should -Be 'Link UP'
@@ -42,7 +47,7 @@ Describe 'Host model classes' {
     It 'maps a fibre channel initiator' {
         $source = [pscustomobject]@{ ID = 'fc-01'; TYPE = 223; PARENTTYPE = 21; HEALTHSTATUS = 1; RUNNINGSTATUS = 27; OPERATIONSYSTEM = 0; vstoreid = 4294967295 }
 
-        $result = New-Object -TypeName OceanstorHostinitiatorFC -ArgumentList (,$source)
+        $result = New-Object -TypeName OceanstorHostinitiatorFC -ArgumentList @($source, $script:session)
 
         $result.Id | Should -Be 'fc-01'
         $result.Type | Should -Be 'FC Initiator'
@@ -53,7 +58,7 @@ Describe 'Host model classes' {
     It 'maps an iSCSI initiator and CHAP state' {
         $source = [pscustomobject]@{ ID = 'iscsi-01'; TYPE = 222; PARENTTYPE = 21; USECHAP = $true; CHAPNAME = 'chap-user'; RUNNINGSTATUS = 27; vstoreid = 4294967295 }
 
-        $result = New-Object -TypeName OceanstorHostinitiatorISCSI -ArgumentList (,$source)
+        $result = New-Object -TypeName OceanstorHostinitiatorISCSI -ArgumentList @($source, $script:session)
 
         $result.Id | Should -Be 'iscsi-01'
         $result.Type | Should -Be 'ISCSI Initiator'

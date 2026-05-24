@@ -56,7 +56,7 @@ $fcPorts = New-Object System.Collections.ArrayList
 
 foreach ($pfc in $response)
 {
-    $fcpObj = [OceanStorPortFC]::new($pfc)
+    $fcpObj = [OceanStorPortFC]::new($pfc, $session)
     [void]$fcPorts.Add($fcpObj)
 }
 

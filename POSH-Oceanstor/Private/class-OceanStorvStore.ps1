@@ -1,4 +1,5 @@
 class OceanStorvStore{
+	hidden [pscustomobject]${Session}
 	#Define Properties
 	[int]${ID}
 	[string]${Name}
@@ -11,8 +12,9 @@ class OceanStorvStore{
 	[int64]${NAS Free Capacity Quota}
 	[int64]${NAS Total Capacity}
 
-	OceanStorvStore ([array]$vStoresReceived)
+	OceanStorvStore ([array]$vStoresReceived, [pscustomobject]$Session)
 	{
+		$this.Session = $Session
 		$this.{ID} = $vStoresReceived.ID
 		$this.{Name} = $vStoresReceived.NAME
 

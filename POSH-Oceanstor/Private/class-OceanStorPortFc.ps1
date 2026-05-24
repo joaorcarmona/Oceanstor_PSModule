@@ -1,4 +1,5 @@
 class OceanStorPortFC{
+    hidden [pscustomobject]${Session}
     [string]${Id}
     [string]${Name}
     [string]${Port Type}
@@ -29,7 +30,8 @@ class OceanStorPortFC{
     [string]${EndSign Error}
     [string]${Host Initiators}
 
-    OceanStorPortFC([array]$portReceived){
+    OceanStorPortFC([array]$portReceived, [pscustomobject]$Session){
+        $this.Session = $Session
 
         switch ($portReceived.TYPE)
         {

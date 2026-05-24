@@ -56,7 +56,7 @@ $bonds = New-Object System.Collections.ArrayList
 
 foreach ($tbond in $response)
 {
-    $bondObj = [OceanStorPortBond]::new($tbond)
+    $bondObj = [OceanStorPortBond]::new($tbond, $session)
     [void]$bonds.Add($bondObj)
 }
 

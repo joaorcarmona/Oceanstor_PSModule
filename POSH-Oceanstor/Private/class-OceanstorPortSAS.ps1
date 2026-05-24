@@ -1,4 +1,5 @@
 class OceanstorPortSAS{
+    hidden [pscustomobject]${Session}
     [string]${Id}
     [string]${Name}
     [string]${Port Type}
@@ -24,8 +25,9 @@ class OceanstorPortSAS{
     [string]${Disk Enclosure WWN}
     [string]${Maximum Speed}
 
-    OceanstorPortSAS ([array]$portReceived)
+    OceanstorPortSAS ([array]$portReceived, [pscustomobject]$Session)
     {
+        $this.Session = $Session
         switch ($portReceived.TYPE)
         {
             214 {$this.{Port Type} = "SAS Port"}

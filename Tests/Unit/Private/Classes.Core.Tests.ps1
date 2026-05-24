@@ -8,21 +8,26 @@ BeforeAll {
 }
 
 Describe 'Core model classes' {
+    BeforeAll {
+        $script:session = [pscustomobject]@{ Name = 'test-session' }
+    }
+
     It 'maps alarm state and severity' {
         $source = [pscustomobject]@{
             name = 'Controller warning'; alarmStatus = 1; level = 3; type = 1; eventType = 1
             clearTime = 0; recoverTime = 0; startTime = 0
         }
 
-        $result = New-Object -TypeName OceanStorAlarm -ArgumentList (,$source)
+        $result = New-Object -TypeName OceanStorAlarm -ArgumentList @($source, $script:session)
 
         $result.Name | Should -Be 'Controller warning'
         $result.'Alarm Status' | Should -Be 'unrecovered'
         $result.Level | Should -Be 'major'
+        $result.Session | Should -Be $script:session
     }
 
     It 'creates a dtree model instance' {
-        $result = New-Object -TypeName OceanStorDtree -ArgumentList (,[pscustomobject]@{ ID = 'dtree-01' })
+        $result = New-Object -TypeName OceanStorDtree -ArgumentList @([pscustomobject]@{ ID = 'dtree-01' }, $script:session)
 
         $result.GetType().Name | Should -Be 'OceanStorDtree'
     }
@@ -33,7 +38,7 @@ Describe 'Core model classes' {
             DATASPACE = (512 * 1GB); USERTOTALCAPACITY = (512 * 2GB); USAGETYPE = 1
         }
 
-        $result = New-Object -TypeName OceanStorStoragePool -ArgumentList (,$source)
+        $result = New-Object -TypeName OceanStorStoragePool -ArgumentList @($source, $script:session)
 
         $result.id | Should -Be 'pool-01'
         $result.'Health Status' | Should -Be 'Normal'
@@ -44,7 +49,7 @@ Describe 'Core model classes' {
     It 'maps system key-value data' {
         $source = @('ID=system-01', 'PRODUCTVERSION=V600R001', 'wwn=wwn-01', 'HEALTHSTATUS=1', 'RUNNINGSTATUS=1', 'HOTSPAREDISKSCAPACITY=2')
 
-        $result = New-Object -TypeName OceanStorSystem -ArgumentList (,$source)
+        $result = New-Object -TypeName OceanStorSystem -ArgumentList @($source, $script:session)
 
         $result.sn | Should -Be 'system-01'
         $result.version | Should -Be 'V600R001'
@@ -58,7 +63,7 @@ Describe 'Core model classes' {
             nasFreeCapacityQuata = -1; nasTotalCapacity = 2097152
         }
 
-        $result = New-Object -TypeName OceanStorvStore -ArgumentList (,$source)
+        $result = New-Object -TypeName OceanStorvStore -ArgumentList @($source, $script:session)
 
         $result.ID | Should -Be 7
         $result.Name | Should -Be 'tenant-a'
@@ -71,7 +76,7 @@ Describe 'Core model classes' {
             ENABLECOMPRESS = $true; ENABLEDEDUP = $false; templateType = 0; distAlg = 0
         }
 
-        $result = New-Object -TypeName OceanStorWorkload -ArgumentList (,$source)
+        $result = New-Object -TypeName OceanStorWorkload -ArgumentList @($source, $script:session)
 
         $result.Id | Should -Be 'workload-01'
         $result.Name | Should -Be 'database'

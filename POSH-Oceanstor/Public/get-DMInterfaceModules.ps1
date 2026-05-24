@@ -56,7 +56,7 @@ $interfaceModules = New-Object System.Collections.ArrayList
 
 foreach ($imodule in $response)
 {
-    $interfaceModule = [OceanstorInterfaceModule]::new($imodule)
+    $interfaceModule = [OceanstorInterfaceModule]::new($imodule, $session)
     [void]$interfaceModules.Add($interfaceModule)
 }
 

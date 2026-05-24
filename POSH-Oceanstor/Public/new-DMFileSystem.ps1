@@ -190,7 +190,7 @@ function new-DMFileSystem{
     $response = invoke-DeviceManager -WebSession $session -Method "POST" -Resource "filesystem" -BodyData $body
 
     if ($response.error.Code -eq 0){
-        $result = [OceanstorFileSystem]::new($response.data)
+        $result = [OceanstorFileSystem]::new($response.data, $session)
     } else {
         $result = $response.error
     }

@@ -56,7 +56,7 @@ function get-DMnfsFileClient{
 
 	foreach ($fs in $response)
 	{
-		$fileSystem = [OceanstorNFSclient]::new($fs)
+		$fileSystem = [OceanstorNFSclient]::new($fs, $session)
 		[void]$exports.Add($fileSystem)
 	}
 

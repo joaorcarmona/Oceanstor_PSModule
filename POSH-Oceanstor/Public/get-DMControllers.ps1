@@ -56,7 +56,7 @@ $controllers = New-Object System.Collections.ArrayList
 
 foreach ($tcont in $response)
 {
-    $controller = [OceanStorController]::new($tcont)
+    $controller = [OceanStorController]::new($tcont, $session)
     [void]$controllers.Add($controller)
 }
 

@@ -92,7 +92,7 @@ function new-DMnfsShare{
     $response = invoke-DeviceManager -WebSession $session -Method "POST" -Resource "NFSSHARE" -BodyData $body
 
     if ($response.error.Code -eq 0){
-        $result = [OceanStorNFSShare]::new($response.data)
+        $result = [OceanStorNFSShare]::new($response.data, $session)
     } else {
         $result = $response.error
     }

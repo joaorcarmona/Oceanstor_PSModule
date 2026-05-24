@@ -1,4 +1,5 @@
 class OceanStorDisks{
+	hidden [pscustomobject]${Session}
 	[string]$id
 	[string]$location
 	[string]${Part Number}
@@ -42,8 +43,9 @@ class OceanStorDisks{
 	[string]$name
 	[string]${Vendor Name}
 
-	OceanStorDisks ([array]$disks)
+	OceanStorDisks ([array]$disks, [pscustomobject]$Session)
 	{
+		$this.Session = $Session
 		switch ($disks.TYPE)
 		{
 			10 {$this.Type = "disk"}

@@ -56,7 +56,7 @@ $sasPorts = New-Object System.Collections.ArrayList
 
 foreach ($psas in $response)
 {
-    $saspObj = [OceanstorPortSAS]::new($psas)
+    $saspObj = [OceanstorPortSAS]::new($psas, $session)
     [void]$sasPorts.Add($saspObj)
 }
 

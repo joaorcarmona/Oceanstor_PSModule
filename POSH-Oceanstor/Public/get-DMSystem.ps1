@@ -55,7 +55,7 @@ function get-DMSystem{
 
 	$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    $result = [OceanStorSystem]::new($systemArray)
+    $result = [OceanStorSystem]::new($systemArray, $session)
 	$result | Add-Member MemberSet PSStandardMembers $standardMembers -Force
 
 	return $result

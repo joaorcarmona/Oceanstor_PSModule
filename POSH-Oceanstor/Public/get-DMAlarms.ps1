@@ -75,7 +75,7 @@ function get-DMAlarms{
 
 	foreach ($talarm in $response)
 	{
-		$alarm = [OceanStorAlarm]::new($talarm)
+		$alarm = [OceanStorAlarm]::new($talarm, $session)
 		[void]$alarms.Add($alarm)
 	}
 

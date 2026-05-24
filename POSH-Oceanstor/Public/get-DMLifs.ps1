@@ -56,7 +56,7 @@ function get-DMLifs{
 
 	foreach ($tlif in $response)
 	{
-		$lif = [OceanStorLIF]::new($tlif)
+		$lif = [OceanStorLIF]::new($tlif, $session)
 		[void]$lifs.Add($lif)
 	}
 

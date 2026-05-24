@@ -1,4 +1,5 @@
 class OceanStorSystem{
+	hidden [pscustomobject]${Session}
 	#Define Properties
 	[string]$sn
 	[string]$version
@@ -9,8 +10,9 @@ class OceanStorSystem{
 	[string]${Running Status}
 	[int]$HotSpareNumbers
 
-	OceanStorSystem ([array]$systemArray)
+	OceanStorSystem ([array]$systemArray, [pscustomobject]$Session)
 	{
+		$this.Session = $Session
 		$SystemProperties = @{}
 
 		foreach ($line in $systemArray)

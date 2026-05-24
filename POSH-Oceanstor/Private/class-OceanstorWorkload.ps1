@@ -1,4 +1,5 @@
 class OceanStorWorkload {
+    hidden [pscustomobject]${Session}
     [string]${Id}
     [string]${Name}
     [string]${Workload Type}
@@ -8,7 +9,8 @@ class OceanStorWorkload {
     [string]${Application Type}
     [string]${DataDistribution Alg.}
 
-    OceanStorWorkload([array]$workloadReceived){
+    OceanStorWorkload([array]$workloadReceived, [pscustomobject]$Session){
+        $this.Session = $Session
 
         $this.{Id} = $workloadReceived.ID
         $this.{Name} = $workloadReceived.NAME

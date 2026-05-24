@@ -1,4 +1,5 @@
 class OceanStorPortETH {
+    hidden [pscustomobject]${Session}
     [string]${Id}
     [string]${Name}
     [string]${Port Type}
@@ -54,8 +55,9 @@ class OceanStorPortETH {
     [string]${Port Function}
     [string]${Host Initiators}
 
-    OceanStorPortETH ([array]$portReceived)
+    OceanStorPortETH ([array]$portReceived, [pscustomobject]$Session)
     {
+        $this.Session = $Session
         switch ($portReceived.TYPE)
         {
             213 {$this.{Port Type} = "Ethernet Port"}

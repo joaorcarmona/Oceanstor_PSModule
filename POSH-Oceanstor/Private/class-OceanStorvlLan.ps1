@@ -1,6 +1,7 @@
 class OceanStorvLan
 {
     #Define properties
+    hidden [pscustomobject]${Session}
     [string]$Id
     [string]${Name}
     [string]${Type}
@@ -13,6 +14,7 @@ class OceanStorvLan
 
     OceanStorvLan ([array]$vlanReceived,[pscustomobject]$webSession)
     {
+        $this.Session = $webSession
         switch ($vlanReceived.TYPE)
         {
             280 {$this.Type = "VLAN"}

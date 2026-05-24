@@ -1,5 +1,6 @@
 class OceanStorBBU
 {
+    hidden [pscustomobject]${Session}
     [string]${Id}
     [string]${Parent Id}
     [string]${Parent Type}
@@ -20,8 +21,9 @@ class OceanStorBBU
     [Int64]${voltage}
     hidden [string]$eLabel
 
-    OceanStorBBU ([array]$bbu)
+    OceanStorBBU ([array]$bbu, [pscustomobject]$Session)
     {
+        $this.Session = $Session
         $this.{Id} = $bbu.ID
         $this.{Parent Id} = $bbu.PARENTID
 
