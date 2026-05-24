@@ -1,5 +1,5 @@
-function get-DMLunsbyFilter{
-	<#
+function get-DMLunsbyFilter {
+    <#
 	.SYNOPSIS
 		To Search for lun by lun WWN
 
@@ -34,55 +34,55 @@ function get-DMLunsbyFilter{
 
 	.LINK
 	#>
-	[Cmdletbinding()]
-    Param(
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+    [Cmdletbinding()]
+    param(
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession,
-	[Parameter(ValueFromPipeline=$false,ValueFromPipelineByPropertyName=$True,Position=1,Mandatory=$true)]
+        [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $True, Position = 1, Mandatory = $true)]
         [pscustomobject]$filter,
-    [Parameter(ValueFromPipeline=$false,ValueFromPipelineByPropertyName=$True,Position=2,Mandatory=$true)]
+        [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $True, Position = 2, Mandatory = $true)]
         [pscustomobject]$keyword
-	)
+    )
 
-	if ($WebSession){
+    if ($WebSession) {
         $session = $WebSession
-    } else {
+    }
+    else {
         $session = $deviceManager
     }
 
-	$defaultDisplaySet = "Id", "Name", "Health Status", "Lun Size", "WWN"
+    $defaultDisplaySet = "Id", "Name", "Health Status", "Lun Size", "WWN"
 
-	$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
-		'DefaultDisplayPropertySet',
-		[string[]]$defaultDisplaySet
-	)
+    $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+        'DefaultDisplayPropertySet',
+        [string[]]$defaultDisplaySet
+    )
 
-	$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+    $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
     $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "lun" | Select-Object -ExpandProperty data
     $StorageLuns = New-Object System.Collections.ArrayList
 
-	$StorageVersion = $session.version.Substring(0,2)
+    $StorageVersion = $session.version.Substring(0, 2)
 
-	if ($storageVersion -eq "V6")
-	{
-		$LunObjectClass = "OceanstorLunv6"
-	} else {
-		$LunObjectClass = "OceanstorLunv3"
-	}
+    if ($storageVersion -eq "V6") {
+        $LunObjectClass = "OceanstorLunv6"
+    }
+    else {
+        $LunObjectClass = "OceanstorLunv3"
+    }
 
-	foreach ($tlun in $response)
-	{
-		$lun = New-Object -TypeName $LunObjectClass -ArgumentList $tlun,$session
-		#$lun = [OceanstorLun]::new($tlun,$session)
-		[void]$StorageLuns.Add($lun)
-	}
+    foreach ($tlun in $response) {
+        $lun = New-Object -TypeName $LunObjectClass -ArgumentList $tlun, $session
+        #$lun = [OceanstorLun]::new($tlun,$session)
+        [void]$StorageLuns.Add($lun)
+    }
 
-	$result = $StorageLuns | Where-Object $filter -Match $keyword
+    $result = $StorageLuns | Where-Object $filter -Match $keyword
 
-	$result | ForEach-Object {
-		$_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
-	}
+    $result | ForEach-Object {
+        $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
+    }
 
-	return $result
+    return $result
 }

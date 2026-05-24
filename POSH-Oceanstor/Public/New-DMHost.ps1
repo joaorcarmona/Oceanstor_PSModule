@@ -26,20 +26,20 @@ function New-DMHost {
 
     $session = if ($WebSession) { $WebSession } else { $deviceManager }
     $operatingSystemValue = @{
-        'Linux'                       = 0
-        'Windows'                     = 1
-        'Solaris'                     = 2
-        'HP-UX'                       = 3
-        'AIX'                         = 4
-        'XenServer'                   = 5
-        'Mac OS'                      = 6
-        'VMware ESX'                  = 7
-        'LINUX_VIS'                   = 8
-        'Windows Server 2012'         = 9
-        'Oracle VM'                   = 10
-        'OpenVMS'                     = 11
-        'Oracle_VM_Server_for_x86'    = 12
-        'Oracle_VM_Server_for_SPARC'  = 13
+        'Linux'                      = 0
+        'Windows'                    = 1
+        'Solaris'                    = 2
+        'HP-UX'                      = 3
+        'AIX'                        = 4
+        'XenServer'                  = 5
+        'Mac OS'                     = 6
+        'VMware ESX'                 = 7
+        'LINUX_VIS'                  = 8
+        'Windows Server 2012'        = 9
+        'Oracle VM'                  = 10
+        'OpenVMS'                    = 11
+        'Oracle_VM_Server_for_x86'   = 12
+        'Oracle_VM_Server_for_SPARC' = 13
     }[$OperatingSystem]
     $body = @{
         TYPE            = 21

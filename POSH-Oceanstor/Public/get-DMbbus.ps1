@@ -20,14 +20,15 @@ function get-dmbbus {
         Filename: get-DMbbus.ps1
     #>
     [Cmdletbinding()]
-    Param(
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+    param(
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession
-	)
+    )
 
-    if ($WebSession){
+    if ($WebSession) {
         $session = $WebSession
-    } else {
+    }
+    else {
         $session = $deviceManager
     }
 
@@ -43,17 +44,16 @@ function get-dmbbus {
     $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "backup_power" | Select-Object -ExpandProperty data
     $bbus = New-Object System.Collections.ArrayList
 
-    foreach ($bbu in $response)
-	{
+    foreach ($bbu in $response) {
         $bbu = [OceanstorBBU]::new($bbu, $session)
-		[void]$bbus.Add($bbu)
-	}
+        [void]$bbus.Add($bbu)
+    }
 
-	$bbus | ForEach-Object {
-		$_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
-	}
+    $bbus | ForEach-Object {
+        $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
+    }
 
-	$result = $bbus
+    $result = $bbus
 
-	return $result
+    return $result
 }

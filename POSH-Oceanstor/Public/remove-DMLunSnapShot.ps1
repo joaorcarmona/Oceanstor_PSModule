@@ -31,42 +31,47 @@ function remove-DMLunSnapShot {
 
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, Position = 1)]
         [ValidateScript({
-            if ($WebSession) {
-                $session = $WebSession
-            } else {
-                $session = $deviceManager
-            }
+                if ($WebSession) {
+                    $session = $WebSession
+                }
+                else {
+                    $session = $deviceManager
+                }
 
-            $snapshots = @(get-DMLunSnapshots -WebSession $session)
-            $matchingSnapshots = @($snapshots | Where-Object Name -EQ $_)
+                $snapshots = @(get-DMLunSnapshots -WebSession $session)
+                $matchingSnapshots = @($snapshots | Where-Object Name -EQ $_)
 
-            if ($matchingSnapshots.Count -eq 1) {
-                $true
-            } elseif ($matchingSnapshots.Count -gt 1) {
-                throw "SnapShotName is ambiguous because more than one snapshot is named '$_'."
-            } else {
-                throw "Invalid SnapShotName. Valid values are: $($snapshots.Name -join ', ')"
-            }
-        })]
+                if ($matchingSnapshots.Count -eq 1) {
+                    $true
+                }
+                elseif ($matchingSnapshots.Count -gt 1) {
+                    throw "SnapShotName is ambiguous because more than one snapshot is named '$_'."
+                }
+                else {
+                    throw "Invalid SnapShotName. Valid values are: $($snapshots.Name -join ', ')"
+                }
+            })]
         [ArgumentCompleter({
-            param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+                param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
 
-            if ($fakeBoundParameters.ContainsKey('WebSession')) {
-                $session = $fakeBoundParameters.WebSession
-            } else {
-                $session = $deviceManager
-            }
+                if ($fakeBoundParameters.ContainsKey('WebSession')) {
+                    $session = $fakeBoundParameters.WebSession
+                }
+                else {
+                    $session = $deviceManager
+                }
 
-            (get-DMLunSnapshots -WebSession $session).Name |
-                Sort-Object -Unique |
-                Where-Object { $_ -like "$wordToComplete*" }
-        })]
+                (get-DMLunSnapshots -WebSession $session).Name |
+                    Sort-Object -Unique |
+                    Where-Object { $_ -like "$wordToComplete*" }
+            })]
         [string]$SnapShotName
     )
 
     if ($WebSession) {
         $session = $WebSession
-    } else {
+    }
+    else {
         $session = $deviceManager
     }
 

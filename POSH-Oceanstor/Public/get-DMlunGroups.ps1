@@ -1,5 +1,5 @@
-function get-DMlunGroups{
-	<#
+function get-DMlunGroups {
+    <#
 	.SYNOPSIS
 		To Get Huawei Oceanstor Storage Lun Groups
 
@@ -35,41 +35,41 @@ function get-DMlunGroups{
 
 	.LINK
 	#>
-	[Cmdletbinding()]
-    Param(
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+    [Cmdletbinding()]
+    param(
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession
-	)
+    )
 
-	if ($WebSession){
+    if ($WebSession) {
         $session = $WebSession
-    } else {
+    }
+    else {
         $session = $deviceManager
     }
 
-	$defaultDisplaySet = "Id", "Name", "LunGroup Capacity", "Is Mapped", "Luns Members number"
+    $defaultDisplaySet = "Id", "Name", "LunGroup Capacity", "Is Mapped", "Luns Members number"
 
-	$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
-		'DefaultDisplayPropertySet',
-		[string[]]$defaultDisplaySet
-	)
+    $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+        'DefaultDisplayPropertySet',
+        [string[]]$defaultDisplaySet
+    )
 
-	$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+    $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
     $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "lungroup" | Select-Object -ExpandProperty data
     $lunGroups = New-Object System.Collections.ArrayList
 
-	foreach ($lgroup in $response)
-	{
-		$lunGroup = [OceanStorLunGroup]::new($lgroup, $session)
-		[void]$lunGroups.Add($lunGroup)
-	}
+    foreach ($lgroup in $response) {
+        $lunGroup = [OceanStorLunGroup]::new($lgroup, $session)
+        [void]$lunGroups.Add($lunGroup)
+    }
 
-	$lunGroups | ForEach-Object {
-		$_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
-	}
+    $lunGroups | ForEach-Object {
+        $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
+    }
 
-	$result = $lunGroups
+    $result = $lunGroups
 
-	return $result
+    return $result
 }

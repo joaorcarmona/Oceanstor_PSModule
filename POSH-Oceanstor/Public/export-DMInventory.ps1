@@ -1,6 +1,5 @@
-function export-DMInventory
-{
-	<#
+function export-DMInventory {
+    <#
 	.SYNOPSIS
 		Function that exports to Excel a Huawei Storage Device Inventory
 
@@ -34,59 +33,56 @@ function export-DMInventory
 
 	.LINK
 	#>
-	[Cmdletbinding()]
-	Param(
-		[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$true,ParameterSetName="NewConnection")]
-			[String]$Hostname,
-		[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$true,ParameterSetName="CurrentConnection")]
-			[PSCustomObject]$OceanStor,
-		[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$true)]
-			[string]$ReportFile
-	)
+    [Cmdletbinding()]
+    param(
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $true, ParameterSetName = "NewConnection")]
+        [String]$Hostname,
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $true, ParameterSetName = "CurrentConnection")]
+        [PSCustomObject]$OceanStor,
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $true)]
+        [string]$ReportFile
+    )
 
-	if ($hostname -ne "")
-	{
-		$storage = export-DeviceManager -Hostname $Hostname
-	} else {
-		$storage = $OceanStor
-	}
+    if ($hostname -ne "") {
+        $storage = export-DeviceManager -Hostname $Hostname
+    }
+    else {
+        $storage = $OceanStor
+    }
 
-	#TODO Use SaveFileDialog Form to select file
+    #TODO Use SaveFileDialog Form to select file
 
-	$StorageInventory = $storage.Enclosures
-	$StorageInventory += $storage.Controllers
-	$StorageInventory += $storage.disks
-	$StorageInventory += $storage.InterfaceModules
+    $StorageInventory = $storage.Enclosures
+    $StorageInventory += $storage.Controllers
+    $StorageInventory += $storage.disks
+    $StorageInventory += $storage.InterfaceModules
 
-	#Define Inventory Table Header Array
-	$headers = @("Storage","Id";"Name","Part Number","Serial Number","Description")
+    #Define Inventory Table Header Array
+    $headers = @("Storage", "Id"; "Name", "Part Number", "Serial Number", "Description")
 
-	#Create Table Inventory
- 	$inventory = New-Object System.Data.Datatable
+    #Create Table Inventory
+    $inventory = New-Object System.Data.Datatable
 
-	 #Add Columns to Inventory Table
-	foreach ($head in $headers)
-	{
-		[void]$inventory.Columns.Add("$head")
-	}
+    #Add Columns to Inventory Table
+    foreach ($head in $headers) {
+        [void]$inventory.Columns.Add("$head")
+    }
 
-	#Add Enclosures to Inventory Table
-	foreach ($item in $StorageInventory)
-	{
-		$InventoryRow = $inventory.NewRow()
+    #Add Enclosures to Inventory Table
+    foreach ($item in $StorageInventory) {
+        $InventoryRow = $inventory.NewRow()
 
-		foreach ($header in $headers)
-		{
-			if ($header -eq "Storage")
-			{
-				$InventoryRow.Storage = $storage.Hostname
-			} else {
-				$InventoryRow.$header = $item.$header
-			}
-		}
+        foreach ($header in $headers) {
+            if ($header -eq "Storage") {
+                $InventoryRow.Storage = $storage.Hostname
+            }
+            else {
+                $InventoryRow.$header = $item.$header
+            }
+        }
 
-		$Inventory.Rows.Add($InventoryRow)
-	}
+        $Inventory.Rows.Add($InventoryRow)
+    }
 
-	Export-Excel $ReportFile -AutoSize -TableName Inventory -InputObject $inventory -WorksheetName "Inventory"
+    Export-Excel $ReportFile -AutoSize -TableName Inventory -InputObject $inventory -WorksheetName "Inventory"
 }

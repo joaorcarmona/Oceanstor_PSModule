@@ -1,5 +1,5 @@
-function get-DMLifs{
-	<#
+function get-DMLifs {
+    <#
 	.SYNOPSIS
 		To Get Huawei Oceanstor Storage existent LIFs
 
@@ -30,40 +30,40 @@ function get-DMLifs{
 
 	.LINK
 	#>
-	[Cmdletbinding()]
-    Param(
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+    [Cmdletbinding()]
+    param(
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession
-	)
+    )
 
-	if ($WebSession){
+    if ($WebSession) {
         $session = $WebSession
-    } else {
+    }
+    else {
         $session = $deviceManager
     }
 
-	$defaultDisplaySet = "Id", "LIF Name", "IPv4 Address", "Running Status", "Support Protocol"
+    $defaultDisplaySet = "Id", "LIF Name", "IPv4 Address", "Running Status", "Support Protocol"
 
-	$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
-		'DefaultDisplayPropertySet',
-		[string[]]$defaultDisplaySet
-	)
+    $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+        'DefaultDisplayPropertySet',
+        [string[]]$defaultDisplaySet
+    )
 
-	$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+    $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
     $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "lif" | Select-Object -ExpandProperty data
     $lifs = New-Object System.Collections.ArrayList
 
-	foreach ($tlif in $response)
-	{
-		$lif = [OceanStorLIF]::new($tlif, $session)
-		[void]$lifs.Add($lif)
-	}
+    foreach ($tlif in $response) {
+        $lif = [OceanStorLIF]::new($tlif, $session)
+        [void]$lifs.Add($lif)
+    }
 
-	$lifs | ForEach-Object {
-		$_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
-	}
+    $lifs | ForEach-Object {
+        $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
+    }
 
-	$result = $lifs
-	return $result
+    $result = $lifs
+    return $result
 }

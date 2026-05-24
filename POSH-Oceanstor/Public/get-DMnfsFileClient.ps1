@@ -1,5 +1,5 @@
-function get-DMnfsFileClient{
-	<#
+function get-DMnfsFileClient {
+    <#
 	.SYNOPSIS
 		To Get Huawei Oceanstor Storage NFS File Clients
 
@@ -30,41 +30,41 @@ function get-DMnfsFileClient{
 
 	.LINK
 	#>
-	[Cmdletbinding()]
-    Param(
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+    [Cmdletbinding()]
+    param(
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession
-	)
+    )
 
-	if ($WebSession){
+    if ($WebSession) {
         $session = $WebSession
-    } else {
+    }
+    else {
         $session = $deviceManager
     }
 
-	$defaultDisplaySet = "Id", "Name", "NFS Share Name", "Access Permission", "WriteMode"
+    $defaultDisplaySet = "Id", "Name", "NFS Share Name", "Access Permission", "WriteMode"
 
-	$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
-		'DefaultDisplayPropertySet',
-		[string[]]$defaultDisplaySet
-	)
+    $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+        'DefaultDisplayPropertySet',
+        [string[]]$defaultDisplaySet
+    )
 
-	$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+    $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
     $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "NFS_SHARE_AUTH_CLIENT" | Select-Object -ExpandProperty data
     $exports = New-Object System.Collections.ArrayList
 
-	foreach ($fs in $response)
-	{
-		$fileSystem = [OceanstorNFSclient]::new($fs, $session)
-		[void]$exports.Add($fileSystem)
-	}
+    foreach ($fs in $response) {
+        $fileSystem = [OceanstorNFSclient]::new($fs, $session)
+        [void]$exports.Add($fileSystem)
+    }
 
-	$exports | ForEach-Object {
-		$_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
-	}
+    $exports | ForEach-Object {
+        $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
+    }
 
-	$result = $exports
+    $result = $exports
 
-	return $result
+    return $result
 }

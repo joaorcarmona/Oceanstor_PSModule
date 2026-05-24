@@ -1,5 +1,5 @@
-function get-DMAlarms{
-	<#
+function get-DMAlarms {
+    <#
 	.SYNOPSIS
 		To Get Huawei Oceanstor Storage alarms
 
@@ -39,50 +39,50 @@ function get-DMAlarms{
 
 	.LINK
 	#>
-	[Cmdletbinding()]
-    Param(
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+    [Cmdletbinding()]
+    param(
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession,
-	[Parameter(ValueFromPipeline=$false,ValueFromPipelineByPropertyName=$false,Position=0,Mandatory=$false)]
-	[ValidateSet('Unrecovered','Cleared','Recovered')]
+        [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [ValidateSet('Unrecovered', 'Cleared', 'Recovered')]
         [string]$AlarmStatus
-	)
+    )
 
-	if ($WebSession){
+    if ($WebSession) {
         $session = $WebSession
-    } else {
+    }
+    else {
         $session = $deviceManager
     }
 
-	$defaultDisplaySet = "Name", "Level", "Alarm Status", "Location", "Start time"
+    $defaultDisplaySet = "Name", "Level", "Alarm Status", "Location", "Start time"
 
-	$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
-		'DefaultDisplayPropertySet',
-		[string[]]$defaultDisplaySet
-	)
+    $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+        'DefaultDisplayPropertySet',
+        [string[]]$defaultDisplaySet
+    )
 
-	$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+    $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-	switch ($alarmStatus) {
-		Unrecovered {$statusAlarm = 1}
-		Cleared {$statusAlarm = 2}
-		Recovered {$statusAlarm = 4}
-		default {$statusAlarm = 1}
-	}
+    switch ($alarmStatus) {
+        Unrecovered { $statusAlarm = 1 }
+        Cleared { $statusAlarm = 2 }
+        Recovered { $statusAlarm = 4 }
+        default { $statusAlarm = 1 }
+    }
 
     $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "alarm/historyalarm?filter=alarmStatus:$statusAlarm" | Select-Object -ExpandProperty data
     $alarms = New-Object System.Collections.ArrayList
 
-	foreach ($talarm in $response)
-	{
-		$alarm = [OceanStorAlarm]::new($talarm, $session)
-		[void]$alarms.Add($alarm)
-	}
+    foreach ($talarm in $response) {
+        $alarm = [OceanStorAlarm]::new($talarm, $session)
+        [void]$alarms.Add($alarm)
+    }
 
-	$alarms | ForEach-Object {
-		$_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
-	}
+    $alarms | ForEach-Object {
+        $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
+    }
 
-	$result = $alarms
-	return $result
+    $result = $alarms
+    return $result
 }

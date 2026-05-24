@@ -1,6 +1,5 @@
-function set-DMdnsServer
-{
-        <#
+function set-DMdnsServer {
+    <#
     .SYNOPSIS
         To Configure the Oceanstor DNS Server
 
@@ -28,38 +27,38 @@ function set-DMdnsServer
 	.LINK
 	#>
     [Cmdletbinding()]
-    Param(
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+    param(
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession,
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [array]$DNSserver
-	)
+    )
 
-	if ($WebSession){
+    if ($WebSession) {
         $session = $WebSession
-    } else {
+    }
+    else {
         $session = $deviceManager
     }
 
     #Validate All IpAddresses in the Array
-    foreach ($dns in $DNSserver)
-    {
+    foreach ($dns in $DNSserver) {
         $IPResult = test-IPv4Address -IPv4 $dns
-        If ($IPResult -eq $false){
-            write-Host $dns " isnt a valid IP Address"
+        if ($IPResult -eq $false) {
+            Write-Host $dns " isnt a valid IP Address"
             exit
         }
     }
 
     $PostData = New-Object System.Collections.Hashtable
 
-    $PostData.Add("ADDRESS",$DNSserver)
+    $PostData.Add("ADDRESS", $DNSserver)
     $SetConfig = invoke-DeviceManager -WebSession $session -Method "PUT" -Resource "dns_server" -BodyData $PostData
 
-    if ($SetConfig.error.code -eq 0)
-    {
+    if ($SetConfig.error.code -eq 0) {
         $result = get-DMdnsServer -WebSession $session
-    } else {
+    }
+    else {
         $result = "error setting DNS Server"
     }
 

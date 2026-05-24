@@ -1,5 +1,5 @@
 function connect-deviceManager {
-	<#
+    <#
 	.SYNOPSIS
 		Connects to a Huawei Storage by rest.
 
@@ -40,63 +40,63 @@ function connect-deviceManager {
 
 	.LINK
 	#>
-	[Cmdletbinding()]
-	Param(
-		[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$true)]
-			[String]$Hostname,
-		[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=1,Mandatory=$false)]
-			[boolean]$Return = $false,
-		[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=2,Mandatory=$true,ParameterSetName="secure")]
-			[switch]$Secure = $false,
-		[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=3,Mandatory=$false,ParameterSetName="unsecure")]
-			[String]$LoginUser,
-		[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=4,Mandatory=$true,ParameterSetName="unsecure")]
-			[String]$LoginPwd,
-		[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=5,Mandatory=$true,ParameterSetName="unsecure")]
-			[switch]$Unsecure = $false
-	)
+    [Cmdletbinding()]
+    param(
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $true)]
+        [String]$Hostname,
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 1, Mandatory = $false)]
+        [boolean]$Return = $false,
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 2, Mandatory = $true, ParameterSetName = "secure")]
+        [switch]$Secure = $false,
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 3, Mandatory = $false, ParameterSetName = "unsecure")]
+        [String]$LoginUser,
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 4, Mandatory = $true, ParameterSetName = "unsecure")]
+        [String]$LoginPwd,
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 5, Mandatory = $true, ParameterSetName = "unsecure")]
+        [switch]$Unsecure = $false
+    )
 
-	if ($Secure -eq $true)
-	{
-		[pscredential]$credentials = Get-Credential
-	} else {
-		[securestring]$SecPassword = ConvertTo-SecureString -String	$LoginPwd -AsPlainText -Force
-		[pscredential]$credentials = New-Object System.Management.Automation.PSCredential ($LoginUser, $SecPassword)
-	}
+    if ($Secure -eq $true) {
+        [pscredential]$credentials = Get-Credential
+    }
+    else {
+        [securestring]$SecPassword = ConvertTo-SecureString -String	$LoginPwd -AsPlainText -Force
+        [pscredential]$credentials = New-Object System.Management.Automation.PSCredential ($LoginUser, $SecPassword)
+    }
 
-	$username = $credentials.GetNetworkCredential().UserName
-	$password = $credentials.GetNetworkCredential().Password
+    $username = $credentials.GetNetworkCredential().UserName
+    $password = $credentials.GetNetworkCredential().Password
 
     $body = @{username = $username;
-            password = $password;
-            scope = 0}
+        password       = $password;
+        scope          = 0
+    }
 
     $webSession = New-Object Microsoft.PowerShell.Commands.WebRequestSession
 
-    $logonsession=Invoke-RestMethod -Method Post -Uri "https://$($Hostname):8088/deviceManager/rest/xxxxx/sessions" -Body (ConvertTo-Json $body) -SkipCertificateCheck -SessionVariable WebSession
+    $logonsession = Invoke-RestMethod -Method Post -Uri "https://$($Hostname):8088/deviceManager/rest/xxxxx/sessions" -Body (ConvertTo-Json $body) -SkipCertificateCheck -SessionVariable WebSession
 
-    if ($logonsession.error.code -ne 0)
-    {
+    if ($logonsession.error.code -ne 0) {
         #Write-Host $logonsession.error
-		$SessionError = $logonsession.error
-		write-DMError -SessionError $SessionError
-		exit
+        $SessionError = $logonsession.error
+        write-DMError -SessionError $SessionError
+        exit
     }
 
-    $CredentialsBytes = [System.Text.Encoding]::UTF8.GetBytes(-join("{0}:{1}" -f $username,$password))
+    $CredentialsBytes = [System.Text.Encoding]::UTF8.GetBytes( -join ("{0}:{1}" -f $username, $password))
     $EncodedCredentials = [Convert]::ToBase64String($CredentialsBytes)
 
     $SessionHeader = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
     $SessionHeader.Add("Authorization", "Basic $EncodedCredentials")
     $SessionHeader.Add("iBaseToken", $logonsession.data.iBaseToken)
 
-    $connection = [OceanstorSession]::new($logonSession,$SessionHeader,$webSession,$Hostname)
+    $connection = [OceanstorSession]::new($logonSession, $SessionHeader, $webSession, $Hostname)
 
-    if ($return -eq $true)
-    {
-       return $connection
-    } else {
-       $global:deviceManager = $connection
+    if ($return -eq $true) {
+        return $connection
+    }
+    else {
+        $global:deviceManager = $connection
     }
 }
 #Export-ModuleMember -Variable 'logonsession'

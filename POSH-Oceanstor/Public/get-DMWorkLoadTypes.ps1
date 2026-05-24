@@ -1,5 +1,5 @@
-function get-DMWorkLoadTypes{
-	<#
+function get-DMWorkLoadTypes {
+    <#
 	.SYNOPSIS
 		To Get Huawei Oceanstor Storage workload Type configured (only works for v6)
 
@@ -30,40 +30,40 @@ function get-DMWorkLoadTypes{
 
 	.LINK
 	#>
-	[Cmdletbinding()]
-    Param(
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+    [Cmdletbinding()]
+    param(
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession
-	)
+    )
 
-	if ($WebSession){
+    if ($WebSession) {
         $session = $WebSession
-    } else {
+    }
+    else {
         $session = $deviceManager
     }
 
-	$defaultDisplaySet = "Id", "Name", "Workload Type", "Block Size", "Compression Enabled"
+    $defaultDisplaySet = "Id", "Name", "Workload Type", "Block Size", "Compression Enabled"
 
-	$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
-		'DefaultDisplayPropertySet',
-		[string[]]$defaultDisplaySet
-	)
+    $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+        'DefaultDisplayPropertySet',
+        [string[]]$defaultDisplaySet
+    )
 
-	$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+    $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
     $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "workload_type?isDetailInfo=true" | Select-Object -ExpandProperty data
     $workloads = New-Object System.Collections.ArrayList
 
-	foreach ($tworkload in $response)
-	{
-		$workload = [OceanStorWorkload]::new($tworkload, $session)
-		[void]$workloads.Add($workload)
-	}
+    foreach ($tworkload in $response) {
+        $workload = [OceanStorWorkload]::new($tworkload, $session)
+        [void]$workloads.Add($workload)
+    }
 
-	$workloads | ForEach-Object {
-		$_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
-	}
+    $workloads | ForEach-Object {
+        $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
+    }
 
-	$result = $workloads
-	return $result
+    $result = $workloads
+    return $result
 }

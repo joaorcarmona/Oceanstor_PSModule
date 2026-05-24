@@ -1,5 +1,5 @@
-function get-DMhostGroups{
-	<#
+function get-DMhostGroups {
+    <#
 	.SYNOPSIS
 		To Get Huawei Oceanstor Storage Host Groups
 
@@ -30,41 +30,41 @@ function get-DMhostGroups{
 
 	.LINK
 	#>
-	[Cmdletbinding()]
-    Param(
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+    [Cmdletbinding()]
+    param(
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession
-	)
+    )
 
-	if ($WebSession){
+    if ($WebSession) {
         $session = $WebSession
-    } else {
+    }
+    else {
         $session = $deviceManager
     }
 
-	$defaultDisplaySet = "Id", "Name", "Is Mapped", "Host Member Number", "vStore Name"
+    $defaultDisplaySet = "Id", "Name", "Is Mapped", "Host Member Number", "vStore Name"
 
-	$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
-		'DefaultDisplayPropertySet',
-		[string[]]$defaultDisplaySet
-	)
+    $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+        'DefaultDisplayPropertySet',
+        [string[]]$defaultDisplaySet
+    )
 
-	$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+    $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
     $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "hostgroup" | Select-Object -ExpandProperty data
     $hostgroups = New-Object System.Collections.ArrayList
 
-	foreach ($hgroup in $response)
-	{
-		$hostgroup = [OceanStorHostGroup]::new($hgroup, $session)
-		[void]$hostgroups.Add($hostgroup)
-	}
+    foreach ($hgroup in $response) {
+        $hostgroup = [OceanStorHostGroup]::new($hgroup, $session)
+        [void]$hostgroups.Add($hostgroup)
+    }
 
-	$hostgroups | ForEach-Object {
-		$_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
-	}
+    $hostgroups | ForEach-Object {
+        $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
+    }
 
-	$result = $hostgroups
+    $result = $hostgroups
 
-	return $result
+    return $result
 }

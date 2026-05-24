@@ -10,19 +10,19 @@ function Remove-DMPortFromPortGroup {
 
         [Parameter(Mandatory = $true, Position = 1)]
         [ValidateScript({
-            $candidate = $_
-            $session = if ($WebSession) { $WebSession } else { $deviceManager }
-            $groups = @(Get-DMPortGroup -WebSession $session)
-            $matchingItems = @($groups | Where-Object Name -EQ $candidate)
-            if ($matchingItems.Count -eq 1) { return $true }
-            if ($matchingItems.Count -gt 1) { throw "PortGroupName is ambiguous because more than one port group is named '$candidate'." }
-            throw "Invalid PortGroupName. Valid values are: $($groups.Name -join ', ')"
-        })]
+                $candidate = $_
+                $session = if ($WebSession) { $WebSession } else { $deviceManager }
+                $groups = @(Get-DMPortGroup -WebSession $session)
+                $matchingItems = @($groups | Where-Object Name -EQ $candidate)
+                if ($matchingItems.Count -eq 1) { return $true }
+                if ($matchingItems.Count -gt 1) { throw "PortGroupName is ambiguous because more than one port group is named '$candidate'." }
+                throw "Invalid PortGroupName. Valid values are: $($groups.Name -join ', ')"
+            })]
         [ArgumentCompleter({
-            param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
-            $session = if ($fakeBoundParameters.ContainsKey('WebSession')) { $fakeBoundParameters.WebSession } else { $deviceManager }
-            (Get-DMPortGroup -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
-        })]
+                param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) { $fakeBoundParameters.WebSession } else { $deviceManager }
+                (Get-DMPortGroup -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+            })]
         [string]$PortGroupName,
 
         [Parameter(Mandatory = $true, Position = 2)]
@@ -31,21 +31,21 @@ function Remove-DMPortFromPortGroup {
 
         [Parameter(Mandatory = $true, Position = 3)]
         [ValidateScript({
-            $candidate = $_
-            $session = if ($WebSession) { $WebSession } else { $deviceManager }
-            $ports = @(get-DMPortGroupCandidates -WebSession $session -PortType $PortType)
-            $matchingItems = @($ports | Where-Object Name -EQ $candidate)
-            if ($matchingItems.Count -eq 1) { return $true }
-            if ($matchingItems.Count -gt 1) { throw "PortName is ambiguous because more than one $PortType port is named '$candidate'." }
-            throw "Invalid PortName for $PortType. Valid values are: $($ports.Name -join ', ')"
-        })]
+                $candidate = $_
+                $session = if ($WebSession) { $WebSession } else { $deviceManager }
+                $ports = @(get-DMPortGroupCandidates -WebSession $session -PortType $PortType)
+                $matchingItems = @($ports | Where-Object Name -EQ $candidate)
+                if ($matchingItems.Count -eq 1) { return $true }
+                if ($matchingItems.Count -gt 1) { throw "PortName is ambiguous because more than one $PortType port is named '$candidate'." }
+                throw "Invalid PortName for $PortType. Valid values are: $($ports.Name -join ', ')"
+            })]
         [ArgumentCompleter({
-            param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
-            if (-not $fakeBoundParameters.ContainsKey('PortType')) { return }
-            $session = if ($fakeBoundParameters.ContainsKey('WebSession')) { $fakeBoundParameters.WebSession } else { $deviceManager }
-            (get-DMPortGroupCandidates -WebSession $session -PortType $fakeBoundParameters.PortType).Name |
-                Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
-        })]
+                param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+                if (-not $fakeBoundParameters.ContainsKey('PortType')) { return }
+                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) { $fakeBoundParameters.WebSession } else { $deviceManager }
+                (get-DMPortGroupCandidates -WebSession $session -PortType $fakeBoundParameters.PortType).Name |
+                    Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+            })]
         [string]$PortName,
 
         [string]$VstoreId
@@ -58,7 +58,7 @@ function Remove-DMPortFromPortGroup {
     if ($VstoreId) { $associationResource += "&vstoreId=$VstoreId" }
 
     $associations = @(invoke-DeviceManager -WebSession $session -Method 'GET' -Resource $associationResource |
-        Select-Object -ExpandProperty data)
+            Select-Object -ExpandProperty data)
     if (-not @($associations | Where-Object ID -EQ $group.Id)) {
         throw "Port '$PortName' is not a member of port group '$PortGroupName'."
     }

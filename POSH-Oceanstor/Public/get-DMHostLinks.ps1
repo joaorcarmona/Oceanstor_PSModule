@@ -1,5 +1,5 @@
-function get-DMHostLinks{
-	<#
+function get-DMHostLinks {
+    <#
 	.SYNOPSIS
 		To Get Huawei Oceanstor Storage Host links
 
@@ -36,52 +36,52 @@ function get-DMHostLinks{
 
 	.LINK
 	#>
-	[Cmdletbinding()]
-    Param(
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+    [Cmdletbinding()]
+    param(
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession,
-	[Parameter(ValueFromPipeline=$false,ValueFromPipelineByPropertyName=$false,Position=0,Mandatory=$true)]
-		[string]$HostId,
-	[Parameter(ValueFromPipeline=$false,ValueFromPipelineByPropertyName=$false,Position=0,Mandatory=$true)]
-		[ValidateSet("ISCSI","FC","Infiniband")]
-		[string]$InitiatorType
-	)
+        [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $true)]
+        [string]$HostId,
+        [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $true)]
+        [ValidateSet("ISCSI", "FC", "Infiniband")]
+        [string]$InitiatorType
+    )
 
-	if ($WebSession){
+    if ($WebSession) {
         $session = $WebSession
-    } else {
+    }
+    else {
         $session = $deviceManager
     }
 
-	$defaultDisplaySet = "Id", "Host Name", "Initiator Type", "Target Type", "Running Status"
+    $defaultDisplaySet = "Id", "Host Name", "Initiator Type", "Target Type", "Running Status"
 
-	$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
-		'DefaultDisplayPropertySet',
-		[string[]]$defaultDisplaySet
-	)
+    $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+        'DefaultDisplayPropertySet',
+        [string[]]$defaultDisplaySet
+    )
 
-	$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+    $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-	switch ($InitiatorType) {
-		ISCSI {$LinkType = 222}
-		FC {$LinkType = 223}
-		Infiniband {$LinkType = 16499}
-	}
+    switch ($InitiatorType) {
+        ISCSI { $LinkType = 222 }
+        FC { $LinkType = 223 }
+        Infiniband { $LinkType = 16499 }
+    }
 
     $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "host_link?INITIATOR_TYPE=$LinkType&PARENTID=$HostId" | Select-Object -ExpandProperty data
     $hostLinks = New-Object System.Collections.ArrayList
 
-	foreach ($hlinks in $response)
-	{
-		$hostlink = [OceanStorHostLink]::new($hlinks, $session)
-		[void]$hostLinks.Add($hostlink)
-	}
+    foreach ($hlinks in $response) {
+        $hostlink = [OceanStorHostLink]::new($hlinks, $session)
+        [void]$hostLinks.Add($hostlink)
+    }
 
-	$hostLinks | ForEach-Object {
-		$_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
-	}
+    $hostLinks | ForEach-Object {
+        $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
+    }
 
-	$result = $hostLinks
+    $result = $hostLinks
 
-	return $result
+    return $result
 }

@@ -1,5 +1,5 @@
-function get-DMdisks{
-	<#
+function get-DMdisks {
+    <#
 	.SYNOPSIS
 		To Get Huawei Oceanstor Storage disks
 
@@ -30,41 +30,41 @@ function get-DMdisks{
 
 	.LINK
 	#>
-	[Cmdletbinding()]
-    Param(
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+    [Cmdletbinding()]
+    param(
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession
-	)
+    )
 
-	if ($WebSession){
+    if ($WebSession) {
         $session = $WebSession
-    } else {
+    }
+    else {
         $session = $deviceManager
     }
 
-	$defaultDisplaySet = "Id", "Location", "Health Status", "Disk Usage", "PoolName"
+    $defaultDisplaySet = "Id", "Location", "Health Status", "Disk Usage", "PoolName"
 
-	$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
-		'DefaultDisplayPropertySet',
-		[string[]]$defaultDisplaySet
-	)
+    $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+        'DefaultDisplayPropertySet',
+        [string[]]$defaultDisplaySet
+    )
 
-	$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+    $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
     $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "disk" | Select-Object -ExpandProperty data
     $Storagedisks = New-Object System.Collections.ArrayList
 
-	foreach ($tdisk in $response)
-	{
-		$disk = [OceanStorDisks]::new($tdisk, $session)
-		[void]$Storagedisks.Add($disk)
-	}
+    foreach ($tdisk in $response) {
+        $disk = [OceanStorDisks]::new($tdisk, $session)
+        [void]$Storagedisks.Add($disk)
+    }
 
-	$Storagedisks | ForEach-Object {
-		$_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
-	}
+    $Storagedisks | ForEach-Object {
+        $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
+    }
 
-	$result = $Storagedisks
+    $result = $Storagedisks
 
-	return $result
+    return $result
 }

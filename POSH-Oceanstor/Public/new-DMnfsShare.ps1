@@ -1,5 +1,5 @@
-function new-DMnfsShare{
-	<#
+function new-DMnfsShare {
+    <#
 	.SYNOPSIS
 		To Create a Huawei Oceanstor Storage NFS Share (requires the NAS License)
 
@@ -45,55 +45,57 @@ function new-DMnfsShare{
 
 	.LINK
 	#>
-	[Cmdletbinding()]
-    Param(
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+    [Cmdletbinding()]
+    param(
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession,
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$true)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $true)]
         [string]$sharepath,
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$true)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $true)]
         [string]$FileSystemId,
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [ValidateSet("UTF-8")]
         [string]$encoding = "UTF-8",
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [string]$dTree,
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
-        [ValidateSet("normal share","Private share")]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
+        [ValidateSet("normal share", "Private share")]
         [string]$privateShare = "normal share"
     )
 
-    if ($WebSession){
+    if ($WebSession) {
         $session = $WebSession
-    } else {
+    }
+    else {
         $session = $deviceManager
     }
 
-    switch ($encoding){
-        "UTF-8" {$characterEncoding = 0}
+    switch ($encoding) {
+        "UTF-8" { $characterEncoding = 0 }
     }
 
-    switch ($privateShare){
-        "normal share" {$sharePrivate = 0}
-        "private share" {$sharePrivate = 1}
+    switch ($privateShare) {
+        "normal share" { $sharePrivate = 0 }
+        "private share" { $sharePrivate = 1 }
     }
 
     $body = @{
-        SHAREPATH = $sharepath;
-        FSID = $FileSystemId;
+        SHAREPATH         = $sharepath;
+        FSID              = $FileSystemId;
         CHARACTERENCODING = $characterEncoding;
-        sharePrivate = $sharePrivate;
+        sharePrivate      = $sharePrivate;
     }   
 
-    if ($dTree){
-        $body.Add("DTREEID",$dTree)
+    if ($dTree) {
+        $body.Add("DTREEID", $dTree)
     }
     
     $response = invoke-DeviceManager -WebSession $session -Method "POST" -Resource "NFSSHARE" -BodyData $body
 
-    if ($response.error.Code -eq 0){
+    if ($response.error.Code -eq 0) {
         $result = [OceanStorNFSShare]::new($response.data, $session)
-    } else {
+    }
+    else {
         $result = $response.error
     }
 

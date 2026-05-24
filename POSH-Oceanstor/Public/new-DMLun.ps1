@@ -1,5 +1,5 @@
-function new-DMLun{
-	<#
+function new-DMLun {
+    <#
 	.SYNOPSIS
 		To Create a Huawei Oceanstor Storage LUN
 
@@ -78,77 +78,81 @@ function new-DMLun{
 
 	.LINK
 	#>
-    Param(
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+    param(
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession,
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=1,Mandatory=$true)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 1, Mandatory = $true)]
         [string]$LunName,
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=2,Mandatory=$true)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 2, Mandatory = $true)]
         [Int64]$capacity,
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=3,Mandatory=$true)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 3, Mandatory = $true)]
         [ValidateScript({
-            # Validate that the StoragePoolID exists by checking against existing storage pools
-            If ($WebSession){
-                $session = $WebSession
-            } else {
-                $session = $deviceManager
-            }
-            $storagePools = get-DMstoragePools -WebSession $session
-            if ($storagePools.Id -contains $_) {
-                $true
-            } else {
-                throw "Invalid StoragePoolID. Valid values are: $($storagePools.Id -join ', ')"
-            }
+                # Validate that the StoragePoolID exists by checking against existing storage pools
+                if ($WebSession) {
+                    $session = $WebSession
+                }
+                else {
+                    $session = $deviceManager
+                }
+                $storagePools = get-DMstoragePools -WebSession $session
+                if ($storagePools.Id -contains $_) {
+                    $true
+                }
+                else {
+                    throw "Invalid StoragePoolID. Valid values are: $($storagePools.Id -join ', ')"
+                }
             })]
 
         [ArgumentCompleter({
-            param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
-            If ($WebSession){
-                $session = $WebSession
-            } else {
-                $session = $deviceManager
-            }
-            (get-DMstoragePools -WebSession $session).Id | Where-Object { $_ -like "$wordToComplete*" }
-        })]
+                param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+                if ($WebSession) {
+                    $session = $WebSession
+                }
+                else {
+                    $session = $deviceManager
+                }
+                (get-DMstoragePools -WebSession $session).Id | Where-Object { $_ -like "$wordToComplete*" }
+            })]
         [string]$StoragePoolID,
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=4,Mandatory=$false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 4, Mandatory = $false)]
         [string]$description,
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=5,Mandatory=$false)]
-        [ValidateSet(512,4096)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 5, Mandatory = $false)]
+        [ValidateSet(512, 4096)]
         [int]$sectorSize = 512,
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=6,Mandatory=$false)]
-        [ValidateSet("Thin","Thick")]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 6, Mandatory = $false)]
+        [ValidateSet("Thin", "Thick")]
         [string]$allocType = "Thick",
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=7,Mandatory=$false)]
-        [ValidateSet("Low","Medium","High")]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 7, Mandatory = $false)]
+        [ValidateSet("Low", "Medium", "High")]
         [string]$IoPriority = "Low",
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=8,Mandatory=$false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 8, Mandatory = $false)]
         [bool]$enableCompression = $false,
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=9,Mandatory=$false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 9, Mandatory = $false)]
         [bool]$enableDeduplication = $false,
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=10,Mandatory=$false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 10, Mandatory = $false)]
         [bool]$enableSmartTier = $false,
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=11,Mandatory=$false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 11, Mandatory = $false)]
         [string]$workloadTypeId,
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=12,Mandatory=$false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 12, Mandatory = $false)]
         [bool]$EnableCache = $true,
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=13,Mandatory=$false)]
-        [ValidateSet("WriteBack","WriteThrough")]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 13, Mandatory = $false)]
+        [ValidateSet("WriteBack", "WriteThrough")]
         [string]$writeCachePolicy = "WriteBack",
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=14,Mandatory=$false)]
-        [ValidateSet("ReadAhead","NoReadAhead")]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 14, Mandatory = $false)]
+        [ValidateSet("ReadAhead", "NoReadAhead")]
         [string]$readCachePolicy = "ReadAhead",
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=15,Mandatory=$false)]
-        [ValidateSet("Intelligent","Fixed","Disabled")]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 15, Mandatory = $false)]
+        [ValidateSet("Intelligent", "Fixed", "Disabled")]
         [string]$prefetchPolicy = "Intelligent",
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=16,Mandatory=$false)]
-        [ValidateSet("Linear","Mirror")]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 16, Mandatory = $false)]
+        [ValidateSet("Linear", "Mirror")]
         [string]$mirrorPolicy = "Linear"
-	)
+    )
 
-	if ($WebSession){
+    if ($WebSession) {
         $session = $WebSession
-    } else {
+    }
+    else {
         $session = $deviceManager
     }
 
@@ -158,87 +162,89 @@ function new-DMLun{
     }
 
     # Convert allocation type to Huawei API value
-    switch ($allocType){
-        "Thin" {$allocationType = 1}
-        "Thick" {$allocationType = 0}
+    switch ($allocType) {
+        "Thin" { $allocationType = 1 }
+        "Thick" { $allocationType = 0 }
     }
 
     # Convert IO Priority to Huawei API value
-    switch ($IoPriority){
-        "Low" {$ioPriorityValue = 1}
-        "Medium" {$ioPriorityValue = 2}
-        "High" {$ioPriorityValue = 3}
+    switch ($IoPriority) {
+        "Low" { $ioPriorityValue = 1 }
+        "Medium" { $ioPriorityValue = 2 }
+        "High" { $ioPriorityValue = 3 }
     }
 
     # Convert Write Cache Policy to Huawei API value
-    switch ($writeCachePolicy){
-        "WriteBack" {$writeCachePolicyValue = 1}
-        "WriteThrough" {$writeCachePolicyValue = 0}
+    switch ($writeCachePolicy) {
+        "WriteBack" { $writeCachePolicyValue = 1 }
+        "WriteThrough" { $writeCachePolicyValue = 0 }
     }
 
     # Convert Read Cache Policy to Huawei API value
-    switch ($readCachePolicy){
-        "ReadAhead" {$readCachePolicyValue = 1}
-        "NoReadAhead" {$readCachePolicyValue = 0}
+    switch ($readCachePolicy) {
+        "ReadAhead" { $readCachePolicyValue = 1 }
+        "NoReadAhead" { $readCachePolicyValue = 0 }
     }
 
     # Convert Prefetch Policy to Huawei API value
-    switch ($prefetchPolicy){
-        "Intelligent" {$prefetchPolicyValue = 0}
-        "Fixed" {$prefetchPolicyValue = 1}
-        "Disabled" {$prefetchPolicyValue = 2}
+    switch ($prefetchPolicy) {
+        "Intelligent" { $prefetchPolicyValue = 0 }
+        "Fixed" { $prefetchPolicyValue = 1 }
+        "Disabled" { $prefetchPolicyValue = 2 }
     }
 
     # Convert Mirror Policy to Huawei API value
-    switch ($mirrorPolicy){
-        "Linear" {$mirrorPolicyValue = 0}
-        "Mirror" {$mirrorPolicyValue = 1}
+    switch ($mirrorPolicy) {
+        "Linear" { $mirrorPolicyValue = 0 }
+        "Mirror" { $mirrorPolicyValue = 1 }
     }
 
     # Build the request body
     $body = @{
-        NAME = $LunName;
-        PARENTID = $StoragePoolID;
-        CAPACITY = $capacity;
-        SECTORSIZE = $sectorSize;
-        ALLOCTYPE = $allocationType;
-        IOPRIORITY = $ioPriorityValue;
-        COMPRESSION = [int]$enableCompression;
-        DEDUPLICATION = [int]$enableDeduplication;
-        SMARTTIER = [int]$enableSmartTier;
-        CACHETPOLICY = $writeCachePolicyValue;
+        NAME            = $LunName;
+        PARENTID        = $StoragePoolID;
+        CAPACITY        = $capacity;
+        SECTORSIZE      = $sectorSize;
+        ALLOCTYPE       = $allocationType;
+        IOPRIORITY      = $ioPriorityValue;
+        COMPRESSION     = [int]$enableCompression;
+        DEDUPLICATION   = [int]$enableDeduplication;
+        SMARTTIER       = [int]$enableSmartTier;
+        CACHETPOLICY    = $writeCachePolicyValue;
         READCACHEPOLICY = $readCachePolicyValue;
-        PREFETCHPOLICY = $prefetchPolicyValue;
+        PREFETCHPOLICY  = $prefetchPolicyValue;
         MIRRORMULTIPLEX = $mirrorPolicyValue;
-        ENABLE_CACHE = [int]$EnableCache;
+        ENABLE_CACHE    = [int]$EnableCache;
     }
 
     # Add optional parameters if provided
-    if ($description){
-        $body.Add("DESCRIPTION",$description)
+    if ($description) {
+        $body.Add("DESCRIPTION", $description)
     }
 
-    if ($workloadTypeId){
-        $body.Add("WORKLOADTYPEID",$workloadTypeId)
+    if ($workloadTypeId) {
+        $body.Add("WORKLOADTYPEID", $workloadTypeId)
     }
 
     # Make the REST API call
     $response = invoke-DeviceManager -WebSession $session -Method "POST" -Resource "lun" -BodyData $body
 
     # Check if the operation was successful and create the appropriate object
-    if ($response.error.Code -eq 0){
+    if ($response.error.Code -eq 0) {
         # Determine the correct LUN class based on device version
-        $storageVersion = $session.version.Substring(0,2)
+        $storageVersion = $session.version.Substring(0, 2)
 
-        if ($storageVersion -eq "V6"){
+        if ($storageVersion -eq "V6") {
             $LunObjectClass = "OceanstorLunv6"
-        } else {
+        }
+        else {
             $LunObjectClass = "OceanstorLunv3"
         }
 
         # Create the LUN object from the response
-        $result = New-Object -TypeName $LunObjectClass -ArgumentList @($response.data,$session)
-    } else {
+        $result = New-Object -TypeName $LunObjectClass -ArgumentList @($response.data, $session)
+    }
+    else {
         $result = $response.error
     }
 

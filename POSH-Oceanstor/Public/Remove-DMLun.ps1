@@ -10,18 +10,18 @@ function Remove-DMLun {
 
         [Parameter(Mandatory = $true, Position = 1)]
         [ValidateScript({
-            $session = if ($WebSession) { $WebSession } else { $deviceManager }
-            $luns = @(get-DMluns -WebSession $session)
-            $matchingItems = @($luns | Where-Object Name -EQ $_)
-            if ($matchingItems.Count -eq 1) { return $true }
-            if ($matchingItems.Count -gt 1) { throw "LunName is ambiguous because more than one LUN is named '$_'." }
-            throw "Invalid LunName. Valid values are: $($luns.Name -join ', ')"
-        })]
+                $session = if ($WebSession) { $WebSession } else { $deviceManager }
+                $luns = @(get-DMluns -WebSession $session)
+                $matchingItems = @($luns | Where-Object Name -EQ $_)
+                if ($matchingItems.Count -eq 1) { return $true }
+                if ($matchingItems.Count -gt 1) { throw "LunName is ambiguous because more than one LUN is named '$_'." }
+                throw "Invalid LunName. Valid values are: $($luns.Name -join ', ')"
+            })]
         [ArgumentCompleter({
-            param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
-            $session = if ($fakeBoundParameters.ContainsKey('WebSession')) { $fakeBoundParameters.WebSession } else { $deviceManager }
-            (get-DMluns -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
-        })]
+                param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) { $fakeBoundParameters.WebSession } else { $deviceManager }
+                (get-DMluns -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+            })]
         [string]$LunName,
 
         [switch]$ImmediateDelete,

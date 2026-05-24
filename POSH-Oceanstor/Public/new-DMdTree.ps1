@@ -1,5 +1,5 @@
-function new-DMdTree{
-	<#
+function new-DMdTree {
+    <#
 	.SYNOPSIS
 		To Create a Huawei Oceanstor Storage Filesystem (requires the NAS License)
 
@@ -54,81 +54,84 @@ function new-DMdTree{
 
 	.LINK
 	#>
-	[Cmdletbinding(DefaultParameterSetName = 'byId')]
-    Param(
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
-    [pscustomobject]$WebSession,
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=1,Mandatory=$true)]
+    [Cmdletbinding(DefaultParameterSetName = 'byId')]
+    param(
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
+        [pscustomobject]$WebSession,
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 1, Mandatory = $true)]
         [string]$dTreeName,
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=2,Mandatory=$true,ParameterSetName = "byName")]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 2, Mandatory = $true, ParameterSetName = "byName")]
         [string]$fileSystemName,
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=0,Mandatory=$true,ParameterSetName = "byId")]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $true, ParameterSetName = "byId")]
         [string]$fileSystemId,
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=0,Mandatory=$false)]
-        [ValidateSet("enabled","disabled")]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [ValidateSet("enabled", "disabled")]
         [string]$quotaSwitch,
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=0,Mandatory=$false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
         [string]$vStoreId,
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=0,Mandatory=$false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
         [string]$path,
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=0,Mandatory=$false)]
-        [ValidateSet("Native","NTFS","UNIX","Mixed")]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [ValidateSet("Native", "NTFS", "UNIX", "Mixed")]
         [string]$securityStyle,
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=0,Mandatory=$false)]
-        [ValidateSet("Mandatory","Advisory")]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [ValidateSet("Mandatory", "Advisory")]
         [string]$lockingPolicy
     )
 
-    if ($WebSession){
+    if ($WebSession) {
         $session = $WebSession
-    } else {
+    }
+    else {
         $session = $deviceManager
     }
 
     $body = @{
-        NAME = $dTreeName;
+        NAME       = $dTreeName;
         PARENTTYPE = 40
     }
 
-    if ($vStoreId){
-        $body.Add("vstoreId",$vStoreId)
+    if ($vStoreId) {
+        $body.Add("vstoreId", $vStoreId)
     }
 
-    if ($PSBoundParameters.ContainsKey('quotaSwitch')){
+    if ($PSBoundParameters.ContainsKey('quotaSwitch')) {
         $body.Add("QUOTASWITCH", ($quotaSwitch -eq "enabled"))
     }
 
-    if ($path){
-        $body.Add("path",$path)
+    if ($path) {
+        $body.Add("path", $path)
     }
 
-    if ($PSBoundParameters.ContainsKey('lockingPolicy')){
-        switch ($lockingPolicy){
-            "Mandatory" {$body.Add("nasLockingPolicy",0)}
-            "Advisory" {$body.Add("nasLockingPolicy",1)}
+    if ($PSBoundParameters.ContainsKey('lockingPolicy')) {
+        switch ($lockingPolicy) {
+            "Mandatory" { $body.Add("nasLockingPolicy", 0) }
+            "Advisory" { $body.Add("nasLockingPolicy", 1) }
         }
     }
 
-    if($fileSystemId){
-        $body.Add("PARENTID",$fileSystemId)
-    } else {
-        $body.Add("PARENTNAME",$fileSystemName)
+    if ($fileSystemId) {
+        $body.Add("PARENTID", $fileSystemId)
+    }
+    else {
+        $body.Add("PARENTNAME", $fileSystemName)
     }
 
-    if($securityStyle){
-        switch ($securityStyle){
-            "Native" {$body.Add("securityStyle",1)}
-            "NTFS" {$body.Add("securityStyle",2)}
-            "UNIX" {$body.Add("securityStyle",3)}
-            "Mixed" {$body.Add("securityStyle",4)}
+    if ($securityStyle) {
+        switch ($securityStyle) {
+            "Native" { $body.Add("securityStyle", 1) }
+            "NTFS" { $body.Add("securityStyle", 2) }
+            "UNIX" { $body.Add("securityStyle", 3) }
+            "Mixed" { $body.Add("securityStyle", 4) }
         }
     }
 
     $response = invoke-DeviceManager -WebSession $session -Method "POST" -Resource "QUOTATREE" -BodyData $body
 
-    if ($response.error.Code -eq 0){
+    if ($response.error.Code -eq 0) {
         $result = [OceanStorDtree]::new($response.data, $session)
-    } else {
+    }
+    else {
         $result = $response.error
     }
 

@@ -1,4 +1,4 @@
-function get-DMdnsServer{
+function get-DMdnsServer {
     <#
     .SYNOPSIS
         To Get Huawei Oceanstor Storage configured DNS Servers
@@ -28,14 +28,15 @@ function get-DMdnsServer{
 	.LINK
 	#>
     [Cmdletbinding()]
-    Param(
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+    param(
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession
-	)
+    )
 
-	if ($WebSession){
+    if ($WebSession) {
         $session = $WebSession
-    } else {
+    }
+    else {
         $session = $deviceManager
     }
 
@@ -43,19 +44,17 @@ function get-DMdnsServer{
 
     $DnsServers = @{}
 
-    $splitResponse = $($response.Substring(0, $response.Length -1)).substring(1).Split(",")
+    $splitResponse = $($response.Substring(0, $response.Length - 1)).substring(1).Split(",")
 
     $i = 1
 
-	foreach ($dnsS in $splitResponse)
-	{
-        $dnstoAdd = $($dnsS.Substring(0, $dnsS.Length -1)).substring(1).Split(",")
-        if ($dnstoAdd -ne "")
-        {
-            $DnsServers.add("DNS Server $i",$dnstoAdd)
+    foreach ($dnsS in $splitResponse) {
+        $dnstoAdd = $($dnsS.Substring(0, $dnsS.Length - 1)).substring(1).Split(",")
+        if ($dnstoAdd -ne "") {
+            $DnsServers.add("DNS Server $i", $dnstoAdd)
             $i = $i + 1
         }
-	}
+    }
 
     return $DnsServers
 }

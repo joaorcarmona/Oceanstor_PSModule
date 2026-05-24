@@ -1,5 +1,5 @@
-function get-DMWorkLoadTypesbyFilter{
-	<#
+function get-DMWorkLoadTypesbyFilter {
+    <#
 	.SYNOPSIS
 		To Get Huawei Oceanstor Storage workload Type configured (only works for v6), by inputing a filter
 
@@ -35,45 +35,45 @@ function get-DMWorkLoadTypesbyFilter{
 
 	.LINK
 	#>
-	[Cmdletbinding()]
-    Param(
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+    [Cmdletbinding()]
+    param(
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession,
-	[Parameter(ValueFromPipeline=$false,ValueFromPipelineByPropertyName=$True,Position=1,Mandatory=$true)]
-			[pscustomobject]$filter,
-	[Parameter(ValueFromPipeline=$false,ValueFromPipelineByPropertyName=$True,Position=2,Mandatory=$true)]
-			[pscustomobject]$keyword
-	)
+        [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $True, Position = 1, Mandatory = $true)]
+        [pscustomobject]$filter,
+        [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $True, Position = 2, Mandatory = $true)]
+        [pscustomobject]$keyword
+    )
 
-	if ($WebSession){
+    if ($WebSession) {
         $session = $WebSession
-    } else {
+    }
+    else {
         $session = $deviceManager
     }
 
-	$defaultDisplaySet = "Id", "Name", "Workload Type", "Block Size", "Compression Enabled"
+    $defaultDisplaySet = "Id", "Name", "Workload Type", "Block Size", "Compression Enabled"
 
-	$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
-		'DefaultDisplayPropertySet',
-		[string[]]$defaultDisplaySet
-	)
+    $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+        'DefaultDisplayPropertySet',
+        [string[]]$defaultDisplaySet
+    )
 
-	$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+    $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
     $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "workload_type?isDetailInfo=true" | Select-Object -ExpandProperty data
     $workloads = New-Object System.Collections.ArrayList
 
-	foreach ($tworkload in $response)
-	{
-		$workload = [OceanStorWorkload]::new($tworkload, $session)
-		[void]$workloads.Add($workload)
-	}
+    foreach ($tworkload in $response) {
+        $workload = [OceanStorWorkload]::new($tworkload, $session)
+        [void]$workloads.Add($workload)
+    }
 
-	$result = $workloads | Where-Object $filter -Match $keyword
+    $result = $workloads | Where-Object $filter -Match $keyword
 
-	$result | ForEach-Object {
-		$_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
-	}
+    $result | ForEach-Object {
+        $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
+    }
 
-	return $result
+    return $result
 }
