@@ -2,6 +2,10 @@ BeforeAll {
     function global:new-DMLunSnapshot {}
     function global:get-DMLunSnapshots {}
     function global:remove-DMLunSnapShot {}
+    function global:Enable-DMLunSnapshot {}
+    function global:Restart-DMLunSnapshot {}
+    function global:Resize-DMLunSnapshot {}
+    function global:Restore-DMLunSnapshot {}
 
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorCIFSShare.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorFileSystem.ps1"
@@ -18,9 +22,14 @@ AfterAll {
     Remove-Item -LiteralPath 'Function:\global:new-DMLunSnapshot' -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath 'Function:\global:get-DMLunSnapshots' -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath 'Function:\global:remove-DMLunSnapShot' -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:Enable-DMLunSnapshot' -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:Restart-DMLunSnapshot' -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:Resize-DMLunSnapshot' -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:Restore-DMLunSnapshot' -ErrorAction SilentlyContinue
     Remove-Variable -Name LunSnapshotInvocation -Scope Global -ErrorAction SilentlyContinue
     Remove-Variable -Name LunSnapshotQuery -Scope Global -ErrorAction SilentlyContinue
     Remove-Variable -Name LunSnapshotRemoval -Scope Global -ErrorAction SilentlyContinue
+    Remove-Variable -Name LunSnapshotAction -Scope Global -ErrorAction SilentlyContinue
 }
 
 Describe 'Storage and share model classes' {
@@ -219,6 +228,86 @@ Describe 'Storage and share model classes' {
         $snapshot.Id | Should -Be 'snap-01'
         $snapshot.Name | Should -Be 'before-patch'
         $snapshot.Session | Should -Be $script:session
+    }
+
+    It 'activates a LUN snapshot object with both method spellings' {
+        function global:Enable-DMLunSnapshot {
+            param([pscustomobject]$WebSession, [string]$SnapShotName)
+
+            $global:LunSnapshotAction = [pscustomobject]@{
+                Action = 'Activate'; WebSession = $WebSession; SnapShotName = $SnapShotName
+            }
+
+            [pscustomobject]@{ Code = 0 }
+        }
+        $source = [pscustomobject]@{ ID = 'snap-01'; NAME = 'before-patch'; SOURCELUNID = 'lun-v6'; SOURCELUNNAME = 'modern' }
+        $snapshot = New-Object -TypeName OceanstorLunSnapshot -ArgumentList @($source, $script:session)
+
+        $snapshot.Activate().Code | Should -Be 0
+        $global:LunSnapshotAction.Action | Should -Be 'Activate'
+        $global:LunSnapshotAction.WebSession | Should -Be $script:session
+        $global:LunSnapshotAction.SnapShotName | Should -Be 'before-patch'
+
+        $snapshot.Activacate().Code | Should -Be 0
+        $global:LunSnapshotAction.Action | Should -Be 'Activate'
+    }
+
+    It 'reactivates a LUN snapshot object' {
+        function global:Restart-DMLunSnapshot {
+            param([pscustomobject]$WebSession, [string]$SnapShotName)
+
+            $global:LunSnapshotAction = [pscustomobject]@{
+                Action = 'Reactivate'; WebSession = $WebSession; SnapShotName = $SnapShotName
+            }
+
+            [pscustomobject]@{ Code = 0 }
+        }
+        $source = [pscustomobject]@{ ID = 'snap-01'; NAME = 'before-patch'; SOURCELUNID = 'lun-v6'; SOURCELUNNAME = 'modern' }
+        $snapshot = New-Object -TypeName OceanstorLunSnapshot -ArgumentList @($source, $script:session)
+
+        $snapshot.Reactivate().Code | Should -Be 0
+        $global:LunSnapshotAction.Action | Should -Be 'Reactivate'
+        $global:LunSnapshotAction.WebSession | Should -Be $script:session
+        $global:LunSnapshotAction.SnapShotName | Should -Be 'before-patch'
+    }
+
+    It 'expands a LUN snapshot object using sector capacity' {
+        function global:Resize-DMLunSnapshot {
+            param([pscustomobject]$WebSession, [string]$SnapShotName, [uint64]$UserCapacity)
+
+            $global:LunSnapshotAction = [pscustomobject]@{
+                Action = 'Expand'; WebSession = $WebSession; SnapShotName = $SnapShotName; UserCapacity = $UserCapacity
+            }
+
+            [pscustomobject]@{ Code = 0 }
+        }
+        $source = [pscustomobject]@{ ID = 'snap-01'; NAME = 'before-patch'; SOURCELUNID = 'lun-v6'; SOURCELUNNAME = 'modern' }
+        $snapshot = New-Object -TypeName OceanstorLunSnapshot -ArgumentList @($source, $script:session)
+
+        $snapshot.Expand(10485760).Code | Should -Be 0
+        $global:LunSnapshotAction.Action | Should -Be 'Expand'
+        $global:LunSnapshotAction.UserCapacity | Should -Be 10485760
+    }
+
+    It 'rolls back a LUN snapshot object with default and selected speed' {
+        function global:Restore-DMLunSnapshot {
+            param([pscustomobject]$WebSession, [string]$SnapShotName, [string]$RollbackSpeed)
+
+            $global:LunSnapshotAction = [pscustomobject]@{
+                Action = 'Rollback'; WebSession = $WebSession; SnapShotName = $SnapShotName; RollbackSpeed = $RollbackSpeed
+            }
+
+            [pscustomobject]@{ Code = 0 }
+        }
+        $source = [pscustomobject]@{ ID = 'snap-01'; NAME = 'before-patch'; SOURCELUNID = 'lun-v6'; SOURCELUNNAME = 'modern' }
+        $snapshot = New-Object -TypeName OceanstorLunSnapshot -ArgumentList @($source, $script:session)
+
+        $snapshot.Rollback().Code | Should -Be 0
+        $global:LunSnapshotAction.RollbackSpeed | Should -BeNullOrEmpty
+
+        $snapshot.Rollback('High').Code | Should -Be 0
+        $global:LunSnapshotAction.Action | Should -Be 'Rollback'
+        $global:LunSnapshotAction.RollbackSpeed | Should -Be 'High'
     }
 
     It 'maps an NFS client access policy' {
