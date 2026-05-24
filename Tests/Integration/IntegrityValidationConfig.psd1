@@ -10,7 +10,7 @@
     # Mutating validation runs only when this is true AND the runner is called
     # with -RunMutatingTests. Every changed or removed storage object must first
     # have been created and registered by that same run.
-    AllowMutatingTests = $false
+    AllowMutatingTests = $true
 
     # Used for all generated storage object names. Keep this short enough that
     # "<prefix>_<yyyyMMddHHmmss>_<suffix>" satisfies array naming limits.
@@ -18,10 +18,10 @@
 
     # Required by LUN and NAS tests. Supply an existing storage pool ID only as
     # a placement target; the runner never modifies or deletes the pool.
-    StoragePoolId = ''
+    StoragePoolId = '0'
 
     Lun = @{
-        Enabled = $false
+        Enabled = $true
         CapacityMB = 1024
         AllocationType = 'Thin'
 
@@ -31,39 +31,46 @@
     }
 
     LunGroup = @{
-        Enabled = $false
+        Enabled = $true
         ApplicationType = 'Other'
     }
 
+    Protection = @{
+        # Requires Lun.Enabled and LunGroup.Enabled. Snapshot consistency
+        # rollback targets only the LUN created during this test run.
+        Enabled = $true
+    }
+
     Host = @{
-        Enabled = $false
+        Enabled = $true
         OperatingSystem = 'Linux'
     }
 
     Nas = @{
-        Enabled = $false
+        Enabled = $true
         FileSystemCapacityGB = 1
         EnableDTree = $true
         EnableFileSystemSnapshot = $true
         EnableNfs = $true
-        EnableCifs = $false
+        EnableCifs = $true
 
         # NFS client identity to grant on the export created by this test.
         # Example: '192.0.2.50' or 'validation.example.test'.
-        NfsClientName = ''
+        NfsClientName = '192.0.2.50'
     }
 
     Mapping = @{
-        Enabled = $false
+        Enabled = $true
     }
 
     Initiators = @{
-        Enabled = $false
+        Enabled = $true
 
         # Supply only unused/free identities that may be created and deleted by
-        # the test. Leave an identity blank to skip that protocol.
-        FibreChannelWWN = ''
-        IscsiIdentifier = ''
-        NvmeNqn = ''
+        # the test. Enable Host to also test FC and iSCSI detachment from the
+        # generated host. Leave an identity blank to skip that protocol.
+        FibreChannelWWN = '50:00:25:B5:11:11:11:11'
+        IscsiIdentifier = 'iqn.2003-01.com.example'
+        NvmeNqn = 'nqn.2014-08.org.nvmexpress:uuid:123e4567-e89b-12d3-a456-426614174000'
     }
 }
