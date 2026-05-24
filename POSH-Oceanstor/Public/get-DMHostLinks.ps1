@@ -53,6 +53,15 @@ function get-DMHostLinks{
         $session = $deviceManager
     }
 
+	$defaultDisplaySet = "Id", "Host Name", "Initiator Type", "Target Type", "Running Status"
+
+	$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+		'DefaultDisplayPropertySet',
+		[string[]]$defaultDisplaySet
+	)
+
+	$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+
 	switch ($InitiatorType) {
 		ISCSI {$LinkType = 222}
 		FC {$LinkType = 223}
@@ -65,7 +74,11 @@ function get-DMHostLinks{
 	foreach ($hlinks in $response)
 	{
 		$hostlink = [OceanStorHostLink]::new($hlinks)
-		$hostLinks += $hostlink
+		[void]$hostLinks.Add($hostlink)
+	}
+
+	$hostLinks | ForEach-Object {
+		$_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
 	}
 
 	$result = $hostLinks

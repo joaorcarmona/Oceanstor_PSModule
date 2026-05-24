@@ -16,8 +16,8 @@ class OceanStorPortBond{
             235 {$this.{Port Type} = "Bond Port"}
         }
 
-        $this.{Port Id} = $portReceived.ID
-        $this.{Port Name} = $portReceived.NAME
+        $this.{Id} = $portReceived.ID
+        $this.{Name} = $portReceived.NAME
 
         switch ($portReceived.HEALTHSTATUS)
         {

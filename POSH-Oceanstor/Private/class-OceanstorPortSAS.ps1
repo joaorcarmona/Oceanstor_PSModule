@@ -31,8 +31,8 @@ class OceanstorPortSAS{
             214 {$this.{Port Type} = "SAS Port"}
         }
 
-        $this.{Port Id} = $portReceived.ID
-        $this.{Port Name} = $portReceived.NAME
+        $this.{Id} = $portReceived.ID
+        $this.{Name} = $portReceived.NAME
         $this.{Parent Type} = $portReceived.PARENTTYPE
         $this.{Parent Id} = $portReceived.PARENTID
         $this.{Port Location} = $portReceived.LOCATION

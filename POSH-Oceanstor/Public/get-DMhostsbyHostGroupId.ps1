@@ -47,16 +47,29 @@ if ($WebSession){
     $session = $deviceManager
 }
 
+$defaultDisplaySet = "Id", "Name", "Health Status", "Operation System", "Parent Name"
+
+$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+    'DefaultDisplayPropertySet',
+    [string[]]$defaultDisplaySet
+)
+
+$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+
 $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "host" | Select-Object -ExpandProperty data
 $hosts = New-Object System.Collections.ArrayList
 
 foreach ($thost in $response)
 {
     $hostobj = [OceanStorHost]::new($thost)
-    $hosts += $hostobj
+    [void]$hosts.Add($hostobj)
 }
 
-$result = $hosts | Where-Object "HostGroup Id" -Match $HostGroupId
+$result = $hosts | Where-Object "Parent Id" -Match $HostGroupId
+
+$result | ForEach-Object {
+    $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
+}
 
 return $result
 }

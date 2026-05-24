@@ -8,7 +8,7 @@ function get-DMparsedElabel
 
     $eLabels = New-Object System.Collections.ArrayList
 
-    if ($eLabels -match "`r`n"){
+    if ($eLabelString -match "`r`n"){
         $eLabels = $eLabelString.split("`r`n")
     } else {
         $eLabels = $eLabelString.split("`n")

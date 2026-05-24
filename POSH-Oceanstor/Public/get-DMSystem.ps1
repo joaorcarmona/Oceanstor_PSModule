@@ -46,7 +46,17 @@ function get-DMSystem{
     $response = $response -replace "[@{}]"
     [array]$systemArray = $response.Split(";")
 
+	$defaultDisplaySet = "sn", "version", "Health Status", "Running Status", "WWN"
+
+	$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+		'DefaultDisplayPropertySet',
+		[string[]]$defaultDisplaySet
+	)
+
+	$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+
     $result = [OceanStorSystem]::new($systemArray)
+	$result | Add-Member MemberSet PSStandardMembers $standardMembers -Force
 
 	return $result
 }

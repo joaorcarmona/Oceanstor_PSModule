@@ -42,13 +42,26 @@ if ($WebSession){
     $session = $deviceManager
 }
 
+$defaultDisplaySet = "Id", "Name", "Health Status", "Running Status", "Port Location"
+
+$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+    'DefaultDisplayPropertySet',
+    [string[]]$defaultDisplaySet
+)
+
+$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+
 $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "sas_port" | Select-Object -ExpandProperty data
 $sasPorts = New-Object System.Collections.ArrayList
 
 foreach ($psas in $response)
 {
     $saspObj = [OceanstorPortSAS]::new($psas)
-    $sasPorts += $saspObj
+    [void]$sasPorts.Add($saspObj)
+}
+
+$sasPorts | ForEach-Object {
+    $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
 }
 
 $result = $sasPorts

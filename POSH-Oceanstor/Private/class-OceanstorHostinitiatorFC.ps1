@@ -13,7 +13,7 @@ class OceanstorHostinitiatorFC {
     [string]${Special Mode}
     [string]${Path}
     [string]${Operating System}
-    [int]${vStore ID}
+    [int64]${vStore ID}
 	[string]${vStore Name}
 
     OceanstorHostinitiatorFC ([array]$initiator)

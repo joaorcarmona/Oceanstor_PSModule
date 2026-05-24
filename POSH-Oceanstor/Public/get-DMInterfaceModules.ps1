@@ -42,13 +42,26 @@ if ($WebSession){
     $session = $deviceManager
 }
 
+$defaultDisplaySet = "Id", "Name", "Health Status", "Running Status", "Model"
+
+$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+    'DefaultDisplayPropertySet',
+    [string[]]$defaultDisplaySet
+)
+
+$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+
 $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "intf_module" | Select-Object -ExpandProperty data
 $interfaceModules = New-Object System.Collections.ArrayList
 
 foreach ($imodule in $response)
 {
     $interfaceModule = [OceanstorInterfaceModule]::new($imodule)
-    $interfaceModules += $interfaceModule
+    [void]$interfaceModules.Add($interfaceModule)
+}
+
+$interfaceModules | ForEach-Object {
+    $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
 }
 
 $result = $interfaceModules

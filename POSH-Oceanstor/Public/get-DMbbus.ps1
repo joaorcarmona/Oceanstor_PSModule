@@ -31,13 +31,26 @@ function get-dmbbus {
         $session = $deviceManager
     }
 
+    $defaultDisplaySet = "Id", "PSU Location", "Health Status", "Running Status", "Remaining Life"
+
+    $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+        'DefaultDisplayPropertySet',
+        [string[]]$defaultDisplaySet
+    )
+
+    $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+
     $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "backup_power" | Select-Object -ExpandProperty data
     $bbus = New-Object System.Collections.ArrayList
 
     foreach ($bbu in $response)
 	{
         $bbu = [OceanstorBBU]::new($bbu)
-		$bbus += $bbu
+		[void]$bbus.Add($bbu)
+	}
+
+	$bbus | ForEach-Object {
+		$_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
 	}
 
 	$result = $bbus

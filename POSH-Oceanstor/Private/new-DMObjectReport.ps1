@@ -12,7 +12,7 @@ function new-DMObjectReport{
 
     # IF ReportTemplate not set, use the default one
     if ($ReportTemplate){
-        $xmlTemplate = $ReportTemplate
+        [xml]$XMLFile = $ReportTemplate
     } else {
         switch ($ReportType)
         {
@@ -23,10 +23,8 @@ function new-DMObjectReport{
             lungroups {$defaultTemplate = $LunGroupsReportTemplate}
             disks {$defaultTemplate = $DisksReportTemplate}
         }
-        $xmlTemplate = $defaultTemplate
+        [xml]$XMLFile = get-content -Path $defaultTemplate
     }
-
-    [xml]$XMLFile = get-content -Path $xmlTemplate
 
     $propertiesCollected = $XMLFile.SelectNodes("/$ReportType/properties/property[enabled=1]") | Sort-Object { [int] $_.order }
 

@@ -54,6 +54,15 @@ function get-DMAlarms{
         $session = $deviceManager
     }
 
+	$defaultDisplaySet = "Name", "Level", "Alarm Status", "Location", "Start time"
+
+	$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+		'DefaultDisplayPropertySet',
+		[string[]]$defaultDisplaySet
+	)
+
+	$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+
 	switch ($alarmStatus) {
 		Unrecovered {$statusAlarm = 1}
 		Cleared {$statusAlarm = 2}
@@ -67,7 +76,11 @@ function get-DMAlarms{
 	foreach ($talarm in $response)
 	{
 		$alarm = [OceanStorAlarm]::new($talarm)
-		$alarms += $alarm
+		[void]$alarms.Add($alarm)
+	}
+
+	$alarms | ForEach-Object {
+		$_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
 	}
 
 	$result = $alarms

@@ -13,8 +13,8 @@ class OceanStorvStore{
 
 	OceanStorvStore ([array]$vStoresReceived)
 	{
-		$this.{vStore ID} = $vStoresReceived.ID
-		$this.{vStore Name} = $vStoresReceived.NAME
+		$this.{ID} = $vStoresReceived.ID
+		$this.{Name} = $vStoresReceived.NAME
 
 		switch($vStoresReceived.RUNNINGSTATUS)
 		{

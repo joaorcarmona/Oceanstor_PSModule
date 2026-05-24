@@ -50,16 +50,30 @@ function get-DMWorkLoadTypesbyFilter{
     } else {
         $session = $deviceManager
     }
-    
+
+	$defaultDisplaySet = "Id", "Name", "Workload Type", "Block Size", "Compression Enabled"
+
+	$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+		'DefaultDisplayPropertySet',
+		[string[]]$defaultDisplaySet
+	)
+
+	$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+
     $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "workload_type?isDetailInfo=true" | Select-Object -ExpandProperty data
     $workloads = New-Object System.Collections.ArrayList
 
 	foreach ($tworkload in $response)
 	{
 		$workload = [OceanStorWorkload]::new($tworkload)
-		$workloads += $workload
+		[void]$workloads.Add($workload)
 	}
 
 	$result = $workloads | Where-Object $filter -Match $keyword
+
+	$result | ForEach-Object {
+		$_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
+	}
+
 	return $result
 }

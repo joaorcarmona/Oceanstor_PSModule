@@ -42,16 +42,29 @@ function get-DMcofferDisks{
         $session = $deviceManager
     }
 
+	$defaultDisplaySet = "Id", "Location", "Health Status", "Disk Usage", "PoolName"
+
+	$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+		'DefaultDisplayPropertySet',
+		[string[]]$defaultDisplaySet
+	)
+
+	$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+
     $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "disk" | Select-Object -ExpandProperty data
     $Storagedisks = New-Object System.Collections.ArrayList
 
 	foreach ($tdisk in $response)
 	{
 		$disk = [OceanStorDisks]::new($tdisk)
-		$Storagedisks += $disk
+		[void]$Storagedisks.Add($disk)
 	}
 
 	$result = $Storagedisks | Where-Object cofferDisk -eq $true
+
+	$result | ForEach-Object {
+		$_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
+	}
 
 	return $result
 }

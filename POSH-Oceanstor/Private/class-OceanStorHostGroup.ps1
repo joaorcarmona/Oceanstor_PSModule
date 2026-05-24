@@ -15,8 +15,8 @@ class OceanStorHostGroup{
 
 	OceanStorHostGroup ([array]$HostGroupReceived)
 	{
-		$this.{HostGroup ID} = $HostGroupReceived.ID
-		$this.{HostGroup Name} = $HostGroupReceived.NAME
+		$this.{Id} = $HostGroupReceived.ID
+		$this.{Name} = $HostGroupReceived.NAME
 		$this.Description = $HostGroupReceived.DESCRIPTION
 		$this.{HostGroup Type} = $HostGroupReceived.TYPE
 

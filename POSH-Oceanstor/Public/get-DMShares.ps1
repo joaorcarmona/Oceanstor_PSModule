@@ -48,6 +48,15 @@ function get-DMShares{
         $session = $deviceManager
     }
 
+	$defaultDisplaySet = "Id", "Name", "Share Path", "FileSystem ID", "vStore Name"
+
+	$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+		'DefaultDisplayPropertySet',
+		[string[]]$defaultDisplaySet
+	)
+
+	$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+
 	switch ($shareType)
 	{
 		CIFS {$resourceQuery = "CIFSHARE"}
@@ -65,7 +74,11 @@ function get-DMShares{
 			NFS {$share = [OceanStorNFSShare]::new($tshare)}
 		}
 
-		$shares += $share
+		[void]$shares.Add($share)
+	}
+
+	$shares | ForEach-Object {
+		$_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
 	}
 
 	$result = $shares

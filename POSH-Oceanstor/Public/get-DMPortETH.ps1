@@ -42,13 +42,26 @@ if ($WebSession){
     $session = $deviceManager
 }
 
+$defaultDisplaySet = "Id", "Name", "Health Status", "Running Status", "IPv4 Address"
+
+$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+    'DefaultDisplayPropertySet',
+    [string[]]$defaultDisplaySet
+)
+
+$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+
 $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "eth_port" | Select-Object -ExpandProperty data
 $ethPorts = New-Object System.Collections.ArrayList
 
 foreach ($peth in $response)
 {
     $ethpObj = [OceanStorPortETH]::new($peth)
-    $ethPorts += $ethpObj
+    [void]$ethPorts.Add($ethpObj)
+}
+
+$ethPorts | ForEach-Object {
+    $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
 }
 
 $result = $ethPorts

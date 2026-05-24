@@ -42,13 +42,26 @@ if ($WebSession){
     $session = $deviceManager
 }
 
+$defaultDisplaySet = "Id", "Name", "Health Status", "Running Status", "WWN"
+
+$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+    'DefaultDisplayPropertySet',
+    [string[]]$defaultDisplaySet
+)
+
+$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+
 $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "fc_port" | Select-Object -ExpandProperty data
 $fcPorts = New-Object System.Collections.ArrayList
 
 foreach ($pfc in $response)
 {
     $fcpObj = [OceanStorPortFC]::new($pfc)
-    $fcPorts += $fcpObj
+    [void]$fcPorts.Add($fcpObj)
+}
+
+$fcPorts | ForEach-Object {
+    $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
 }
 
 $result = $fcPorts
