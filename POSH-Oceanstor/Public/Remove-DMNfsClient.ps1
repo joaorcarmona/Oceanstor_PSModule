@@ -12,9 +12,9 @@ function Remove-DMNfsClient {
         [ValidateScript({
             $session = if ($WebSession) { $WebSession } else { $deviceManager }
             $clients = @(get-DMnfsFileClient -WebSession $session)
-            $matches = @($clients | Where-Object Name -EQ $_)
-            if ($matches.Count -eq 1) { return $true }
-            if ($matches.Count -gt 1) { throw "ClientName is ambiguous because more than one NFS client is named '$_'." }
+            $matchingItems = @($clients | Where-Object Name -EQ $_)
+            if ($matchingItems.Count -eq 1) { return $true }
+            if ($matchingItems.Count -gt 1) { throw "ClientName is ambiguous because more than one NFS client is named '$_'." }
             throw "Invalid ClientName. Valid values are: $($clients.Name -join ', ')"
         })]
         [ArgumentCompleter({

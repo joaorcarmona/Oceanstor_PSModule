@@ -5,12 +5,19 @@ param(
 
     [string]$ReportPath = (Join-Path $PSScriptRoot 'getter-integrity-last-result.json'),
 
+    [string]$MutationLogPath = (Join-Path $PSScriptRoot 'mutation-trace-last-result.json'),
+
     [string]$ConfigurationPath = (Join-Path $PSScriptRoot 'IntegrityValidationConfig.psd1'),
 
-    [switch]$RunMutatingTests
+    [switch]$RunMutatingTests,
+
+    [switch]$NoProgress,
+
+    [switch]$ShowTestExecution
 )
 
 $ErrorActionPreference = 'Stop'
+$runStartedAt = Get-Date
 $configuration = Import-PowerShellDataFile -LiteralPath $ConfigurationPath
 $runId = Get-Date -Format 'yyyyMMddHHmmss'
 $moduleRoot = Join-Path (Split-Path -Parent $PSScriptRoot) '..\POSH-Oceanstor'
@@ -36,16 +43,66 @@ $validationModule = New-Module -Name OceanstorLiveGetterValidation -ArgumentList
     Get-ChildItem -LiteralPath (Join-Path $root 'Public') -Filter '*.ps1' |
         ForEach-Object { . $_.FullName }
 
+    function Enable-DMValidationRequestTrace {
+        param([System.Collections.Generic.List[object]]$Sink)
+
+        $script:DeviceManagerTraceSink = $Sink
+        $script:DeviceManagerTraceAction = {
+            param($entry)
+            [void]$script:DeviceManagerTraceSink.Add($entry)
+        }
+    }
+
+    function Set-DMValidationRequestTraceContext {
+        param(
+            [string]$Name,
+            [string]$Category
+        )
+
+        $script:DeviceManagerTraceContext = if ($Name) {
+            [pscustomobject]@{ Name = $Name; Category = $Category }
+        }
+        else {
+            $null
+        }
+    }
+
     Export-ModuleMember -Function '*'
 }
 
 Import-Module $validationModule -Force
 
 $checks = [System.Collections.Generic.List[object]]::new()
+$mutationRequests = [System.Collections.Generic.List[object]]::new()
+$cleanupActions = [System.Collections.Generic.List[object]]::new()
 $samples = @{}
 $owned = @{}
 foreach ($kind in @('Lun', 'LunSnapshot', 'LunGroup', 'ProtectionGroup', 'SnapshotConsistencyGroup', 'Host', 'HostGroup', 'FileSystem', 'FileSystemSnapshot', 'DTree', 'CifsShare', 'NfsShare', 'NfsClient', 'MappingView', 'PortGroup', 'FibreChannelInitiator', 'IscsiInitiator', 'NvmeInitiator')) {
     $owned[$kind] = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+}
+
+function Write-ValidationProgress {
+    param(
+        [Parameter(Mandatory)][string]$Name,
+        [Parameter(Mandatory)][string]$Category,
+        [string]$Status,
+        [Nullable[double]]$DurationMs
+    )
+
+    if (-not $NoProgress) {
+        $progressStatus = if ($Status) {
+            "Completed $($checks.Count) checks; last: [$Status] $Name"
+        }
+        else {
+            "Completed $($checks.Count) checks; running [$Category] $Name"
+        }
+        Write-Progress -Id 1 -Activity "Validating OceanStor $Hostname" -Status $progressStatus -CurrentOperation "[$Category] $Name"
+    }
+
+    if ($ShowTestExecution -and $Status) {
+        $durationText = if ($null -ne $DurationMs) { " ($DurationMs ms)" } else { '' }
+        Write-Host ("[{0}] {1}: {2}{3}" -f $Category, $Name, $Status, $durationText)
+    }
 }
 
 function Add-ValidationResult {
@@ -57,34 +114,42 @@ function Add-ValidationResult {
         [string]$Category = 'Read'
     )
 
+    Write-ValidationProgress -Name $Name -Category $Category
+    $startedAt = Get-Date
     try {
         $rows = @(& $ValidationAction)
         $types = @($rows | ForEach-Object { $_.GetType().Name } | Sort-Object -Unique)
         $unexpected = if ($ExpectedType) { @($types | Where-Object { $_ -ne $ExpectedType }) } else { @() }
         $status = if ($rows.Count -eq 0) { 'NoData' } elseif ($unexpected.Count -gt 0) { 'UnexpectedType' } else { 'Passed' }
+        $durationMs = [math]::Round(((Get-Date) - $startedAt).TotalMilliseconds, 2)
 
         $checks.Add([pscustomobject]@{
             Name         = $Name
             Category     = $Category
             Status       = $status
+            DurationMs   = $durationMs
             Count        = $rows.Count
             ExpectedType = $ExpectedType
             ActualTypes  = $types
             Error        = $null
         })
+        Write-ValidationProgress -Name $Name -Category $Category -Status $status -DurationMs $durationMs
 
         return $rows
     }
     catch {
+        $durationMs = [math]::Round(((Get-Date) - $startedAt).TotalMilliseconds, 2)
         $checks.Add([pscustomobject]@{
             Name         = $Name
             Category     = $Category
             Status       = 'Failed'
+            DurationMs   = $durationMs
             Count        = 0
             ExpectedType = $ExpectedType
             ActualTypes  = @()
             Error        = $_.Exception.Message
         })
+        Write-ValidationProgress -Name $Name -Category $Category -Status 'Failed' -DurationMs $durationMs
 
         return @()
     }
@@ -102,6 +167,7 @@ function Add-SkippedResult {
             Name         = $commandName
             Category     = 'Mutation'
             Status       = $Status
+            DurationMs   = $null
             Count        = 0
             ExpectedType = $null
             ActualTypes  = @()
@@ -120,15 +186,46 @@ function Invoke-MutationStep {
 
     $stepName = $Name
     return Add-ValidationResult -Name $Name -Action {
-        $result = @(& $MutationAction)
-        foreach ($item in $result) {
-            if ($item.PSObject.Properties['Code'] -and $item.Code -ne 0) {
-                $detail = if ($item.PSObject.Properties['Description']) { ": $($item.Description)" } else { '' }
-                throw "$stepName returned REST error code $($item.Code)$detail"
+        Set-DMValidationRequestTraceContext -Name $stepName -Category 'Mutation'
+        try {
+            $result = @(& $MutationAction)
+            foreach ($item in $result) {
+                if ($item.PSObject.Properties['Code'] -and $item.Code -ne 0) {
+                    $detail = if ($item.PSObject.Properties['Description']) { ": $($item.Description)" } else { '' }
+                    throw "$stepName returned REST error code $($item.Code)$detail"
+                }
             }
+            return $result
         }
-        return $result
+        finally {
+            Set-DMValidationRequestTraceContext
+        }
     } -ExpectedType $ExpectedType -Category 'Mutation'
+}
+
+function Add-MutationReadVerification {
+    param(
+        [string]$Name,
+        [Alias('Action')]
+        [scriptblock]$ValidationAction,
+        [string]$ExpectedType
+    )
+
+    $verificationName = $Name
+    $readAction = $ValidationAction
+    return Add-ValidationResult -Name "Verify:$Name" -Action {
+        Set-DMValidationRequestTraceContext -Name "Verify:$verificationName" -Category 'MutationRead'
+        try {
+            $rows = @(& $readAction)
+            if ($rows.Count -eq 0) {
+                throw "$verificationName did not return the test-owned object or association created by this run."
+            }
+            return $rows
+        }
+        finally {
+            Set-DMValidationRequestTraceContext
+        }
+    } -ExpectedType $ExpectedType -Category 'MutationRead'
 }
 
 function Register-TestOwnedResource {
@@ -157,6 +254,26 @@ function Complete-TestOwnedResource {
     [void]$owned[$Kind].Remove($Identity)
 }
 
+function Register-CleanupAction {
+    param(
+        [Parameter(Mandatory)][string]$Name,
+        [Parameter(Mandatory)]
+        [Alias('Action')]
+        [scriptblock]$CleanupAction
+    )
+
+    $cleanupActions.Add([pscustomobject]@{
+        Name   = $Name
+        Action = $CleanupAction
+    })
+}
+
+function Invoke-RegisteredCleanup {
+    for ($index = $cleanupActions.Count - 1; $index -ge 0; $index--) {
+        & $cleanupActions[$index].Action
+    }
+}
+
 function New-TestName {
     param([Parameter(Mandatory)][string]$Suffix)
     return "$($configuration.NamePrefix)_${runId}_$Suffix"
@@ -178,6 +295,24 @@ function Test-MutatingConfiguration {
     if ($configuration.Protection.Enabled -and (-not $configuration.Lun.Enabled -or -not $configuration.LunGroup.Enabled)) {
         throw 'Lun.Enabled and LunGroup.Enabled must be true when Protection.Enabled is true so protection tests use only test-owned storage.'
     }
+}
+
+function Wait-DMSnapshotConsistencyGroupReadyForRemoval {
+    param(
+        [Parameter(Mandatory)][string]$Name,
+        [int]$TimeoutSeconds = 300
+    )
+
+    $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+    do {
+        $group = @(Get-DMSnapshotConsistencyGroup -WebSession $session | Where-Object Name -EQ $Name)[0]
+        if (-not $group -or $group.'Running Status' -ne 'Rolling Back') {
+            return
+        }
+        Start-Sleep -Seconds 2
+    } while ((Get-Date) -lt $deadline)
+
+    throw "Timed out waiting for snapshot consistency group '$Name' to finish rolling back before cleanup."
 }
 
 function Invoke-OwnedRemoval {
@@ -205,16 +340,21 @@ function Invoke-OwnedRemoval {
 
 try {
     Write-Host "A credential prompt will open for validation of $Hostname. No credentials are read from or written to the configuration file."
+    Write-ValidationProgress -Name 'connect-deviceManager' -Category 'Session'
+    $connectionStartedAt = Get-Date
     $session = connect-deviceManager -Hostname $Hostname -Return $true -Secure
+    $connectionDurationMs = [math]::Round(((Get-Date) - $connectionStartedAt).TotalMilliseconds, 2)
     $checks.Add([pscustomobject]@{
         Name         = 'connect-deviceManager'
         Category     = 'Session'
         Status       = 'Passed'
+        DurationMs   = $connectionDurationMs
         Count        = 1
         ExpectedType = 'OceanstorSession'
         ActualTypes  = @($session.GetType().Name)
         Error        = $null
     })
+    Write-ValidationProgress -Name 'connect-deviceManager' -Category 'Session' -Status 'Passed' -DurationMs $connectionDurationMs
 
     $samples.System = Add-ValidationResult -Name 'get-DMSystem' -ExpectedType 'OceanStorSystem' -Action {
         get-DMSystem -WebSession $session
@@ -421,11 +561,11 @@ try {
             'Remove-DMLun', 'new-DMFileSystem', 'new-DMdTree', 'Remove-DMDTree',
             'New-DMFileSystemSnapshot', 'Restore-DMFileSystemSnapshot', 'Remove-DMFileSystemSnapshot',
             'new-DMnfsShare', 'new-DMnfsClient', 'Remove-DMNfsClient', 'Remove-DMNfsShare',
-            'Remove-DMFileSystem', 'New-DMPortGroup', 'New-DMMappingView',
+            'New-DMCifsShare', 'Remove-DMCifsShare', 'Remove-DMFileSystem', 'New-DMPortGroup', 'New-DMMappingView',
             'Add-DMPortGroupToMappingView', 'Remove-DMPortGroupFromMappingView',
             'Remove-DMMappingView', 'Remove-DMPortGroup', 'New-DMFiberChannelInitiator',
             'Remove-DMFiberChannelInitiator', 'New-DMIscsiInitiator', 'Remove-DMIscsiInitiator',
-            'New-DMNvmeInitiator', 'Remove-DMNvmeInitiator', 'New-DMCifsShare',
+            'New-DMNvmeInitiator', 'Remove-DMNvmeInitiator',
             'New-DMHost', 'New-DMHostGroup', 'Add-DMHostToHostGroup', 'Remove-DMHostFromHostGroup',
             'Remove-DMHost', 'Remove-DMHostGroup', 'New-DMLunGroup', 'Add-DMLunToLunGroup',
             'Remove-DMLunFromLunGroup', 'Remove-DMLunGroup', 'Add-DMHostGroupToMappingView',
@@ -442,6 +582,7 @@ try {
     }
     else {
         Test-MutatingConfiguration
+        Enable-DMValidationRequestTrace -Sink $mutationRequests
         $lunName = New-TestName -Suffix 'lun'
         $snapshotName = New-TestName -Suffix 'snap'
         $snapshotCopyName = New-TestName -Suffix 'snapcopy'
@@ -459,6 +600,10 @@ try {
         $testHostName = New-TestName -Suffix 'host'
         $hostGroupName = New-TestName -Suffix 'hostgroup'
         $lunGroupContainsLun = $false
+        $hostGroupContainsHost = $false
+        $mappingContainsHostGroup = $false
+        $mappingContainsLunGroup = $false
+        $mappingContainsPortGroup = $false
 
         if ($configuration.Lun.Enabled) {
             $lun = @(Invoke-MutationStep -Name 'new-DMLun' -Action {
@@ -471,6 +616,11 @@ try {
             })
             if ($lun.Count -gt 0 -and $lun[0].Name -eq $lunName) {
                 Register-TestOwnedResource -Kind Lun -Identity $lunName
+                Register-CleanupAction -Name 'Remove-DMLun' -Action {
+                    Invoke-OwnedRemoval -Name 'Remove-DMLun' -Kind Lun -Identity $lunName -Action {
+                        Remove-DMLun -WebSession $session -LunName $lunName -ImmediateDelete -Confirm:$false
+                    }
+                }
             }
 
             if ($owned.Lun.Contains($lunName)) {
@@ -484,6 +634,11 @@ try {
                 })
                 if ($snapshot.Count -gt 0 -and $snapshot[0].Name -eq $snapshotName) {
                     Register-TestOwnedResource -Kind LunSnapshot -Identity $snapshotName
+                    Register-CleanupAction -Name 'remove-DMLunSnapShot' -Action {
+                        Invoke-OwnedRemoval -Name 'remove-DMLunSnapShot' -Kind LunSnapshot -Identity $snapshotName -Action {
+                            remove-DMLunSnapShot -WebSession $session -SnapShotName $snapshotName -Confirm:$false
+                        }
+                    }
                 }
             }
 
@@ -498,6 +653,11 @@ try {
                 })
                 if ($copy.Count -gt 0 -and $copy[0].Name -eq $snapshotCopyName) {
                     Register-TestOwnedResource -Kind LunSnapshot -Identity $snapshotCopyName
+                    Register-CleanupAction -Name 'remove-DMLunSnapShot:Copy' -Action {
+                        Invoke-OwnedRemoval -Name 'remove-DMLunSnapShot:Copy' -Kind LunSnapshot -Identity $snapshotCopyName -Action {
+                            remove-DMLunSnapShot -WebSession $session -SnapShotName $snapshotCopyName -Confirm:$false
+                        }
+                    }
                 }
 
                 Invoke-MutationStep -Name 'Enable-DMLunSnapshot' -Action {
@@ -508,6 +668,11 @@ try {
                     Assert-TestOwnedResource -Kind LunSnapshot -Identity $snapshotName
                     Assert-TestOwnedResource -Kind Lun -Identity $lunName
                     Restart-DMLunSnapshot -WebSession $session -SnapShotName $snapshotName -Confirm:$false
+                } | Out-Null
+                Invoke-MutationStep -Name 'Restore-DMLunSnapshot' -Action {
+                    Assert-TestOwnedResource -Kind LunSnapshot -Identity $snapshotName
+                    Assert-TestOwnedResource -Kind Lun -Identity $lunName
+                    Restore-DMLunSnapshot -WebSession $session -SnapShotName $snapshotName -Confirm:$false
                 } | Out-Null
                 $expandedSnapshotCapacity = if ($configuration.Lun.ExpandedSnapshotCapacitySectors -gt 0) {
                     [uint64]$configuration.Lun.ExpandedSnapshotCapacitySectors
@@ -520,19 +685,8 @@ try {
                     Resize-DMLunSnapshot -WebSession $session -SnapShotName $snapshotName `
                         -UserCapacity $expandedSnapshotCapacity -Confirm:$false
                 } | Out-Null
-                Invoke-MutationStep -Name 'Restore-DMLunSnapshot' -Action {
-                    Assert-TestOwnedResource -Kind LunSnapshot -Identity $snapshotName
-                    Assert-TestOwnedResource -Kind Lun -Identity $lunName
-                    Restore-DMLunSnapshot -WebSession $session -SnapShotName $snapshotName -Confirm:$false
-                } | Out-Null
             }
 
-            Invoke-OwnedRemoval -Name 'remove-DMLunSnapShot:Copy' -Kind LunSnapshot -Identity $snapshotCopyName -Action {
-                remove-DMLunSnapShot -WebSession $session -SnapShotName $snapshotCopyName -Confirm:$false
-            }
-            Invoke-OwnedRemoval -Name 'remove-DMLunSnapShot' -Kind LunSnapshot -Identity $snapshotName -Action {
-                remove-DMLunSnapShot -WebSession $session -SnapShotName $snapshotName -Confirm:$false
-            }
         }
         else {
             Add-SkippedResult -Name @(
@@ -552,6 +706,11 @@ try {
             })
             if ($lunGroup.Count -gt 0 -and $lunGroup[0].Name -eq $lunGroupName) {
                 Register-TestOwnedResource -Kind LunGroup -Identity $lunGroupName
+                Register-CleanupAction -Name 'Remove-DMLunGroup' -Action {
+                    Invoke-OwnedRemoval -Name 'Remove-DMLunGroup' -Kind LunGroup -Identity $lunGroupName -Action {
+                        Remove-DMLunGroup -WebSession $session -LunGroupName $lunGroupName -Confirm:$false
+                    }
+                }
             }
             if ($owned.Lun.Contains($lunName) -and $owned.LunGroup.Contains($lunGroupName)) {
                 $associateLun = @(Invoke-MutationStep -Name 'Add-DMLunToLunGroup' -Action {
@@ -561,6 +720,13 @@ try {
                 })
                 if ($associateLun.Count -gt 0) {
                     $lunGroupContainsLun = $true
+                    Register-CleanupAction -Name 'Remove-DMLunFromLunGroup' -Action {
+                        Invoke-MutationStep -Name 'Remove-DMLunFromLunGroup' -Action {
+                            Assert-TestOwnedResource -Kind Lun -Identity $lunName
+                            Assert-TestOwnedResource -Kind LunGroup -Identity $lunGroupName
+                            Remove-DMLunFromLunGroup -WebSession $session -LunName $lunName -LunGroupName $lunGroupName -Confirm:$false
+                        } | Out-Null
+                    }
                 }
             }
         }
@@ -578,6 +744,11 @@ try {
             })
             if ($hostGroup.Count -gt 0 -and $hostGroup[0].Name -eq $hostGroupName) {
                 Register-TestOwnedResource -Kind HostGroup -Identity $hostGroupName
+                Register-CleanupAction -Name 'Remove-DMHostGroup' -Action {
+                    Invoke-OwnedRemoval -Name 'Remove-DMHostGroup' -Kind HostGroup -Identity $hostGroupName -Action {
+                        Remove-DMHostGroup -WebSession $session -HostGroupName $hostGroupName -Confirm:$false
+                    }
+                }
             }
             $createdHost = @(Invoke-MutationStep -Name 'New-DMHost' -ExpectedType 'OceanStorHost' -Action {
                 if (@(get-DMhosts -WebSession $session | Where-Object Name -EQ $testHostName).Count -gt 0) {
@@ -588,18 +759,28 @@ try {
             })
             if ($createdHost.Count -gt 0 -and $createdHost[0].Name -eq $testHostName) {
                 Register-TestOwnedResource -Kind Host -Identity $testHostName
+                Register-CleanupAction -Name 'Remove-DMHost' -Action {
+                    Invoke-OwnedRemoval -Name 'Remove-DMHost' -Kind Host -Identity $testHostName -Action {
+                        Remove-DMHost -WebSession $session -HostName $testHostName -Confirm:$false
+                    }
+                }
             }
             if ($owned.Host.Contains($testHostName) -and $owned.HostGroup.Contains($hostGroupName)) {
-                Invoke-MutationStep -Name 'Add-DMHostToHostGroup' -Action {
+                $hostAssociation = @(Invoke-MutationStep -Name 'Add-DMHostToHostGroup' -Action {
                     Assert-TestOwnedResource -Kind Host -Identity $testHostName
                     Assert-TestOwnedResource -Kind HostGroup -Identity $hostGroupName
                     Add-DMHostToHostGroup -WebSession $session -HostName $testHostName -HostGroupName $hostGroupName -Confirm:$false
-                } | Out-Null
-                Invoke-MutationStep -Name 'Remove-DMHostFromHostGroup' -Action {
-                    Assert-TestOwnedResource -Kind Host -Identity $testHostName
-                    Assert-TestOwnedResource -Kind HostGroup -Identity $hostGroupName
-                    Remove-DMHostFromHostGroup -WebSession $session -HostName $testHostName -HostGroupName $hostGroupName -Confirm:$false
-                } | Out-Null
+                })
+                if ($hostAssociation.Count -gt 0) {
+                    $hostGroupContainsHost = $true
+                    Register-CleanupAction -Name 'Remove-DMHostFromHostGroup' -Action {
+                        Invoke-MutationStep -Name 'Remove-DMHostFromHostGroup' -Action {
+                            Assert-TestOwnedResource -Kind Host -Identity $testHostName
+                            Assert-TestOwnedResource -Kind HostGroup -Identity $hostGroupName
+                            Remove-DMHostFromHostGroup -WebSession $session -HostName $testHostName -HostGroupName $hostGroupName -Confirm:$false
+                        } | Out-Null
+                    }
+                }
             }
         }
         else {
@@ -620,6 +801,11 @@ try {
             })
             if ($fileSystem.Count -gt 0 -and $fileSystem[0].Name -eq $fileSystemName) {
                 Register-TestOwnedResource -Kind FileSystem -Identity $fileSystemName
+                Register-CleanupAction -Name 'Remove-DMFileSystem' -Action {
+                    Invoke-OwnedRemoval -Name 'Remove-DMFileSystem' -Kind FileSystem -Identity $fileSystemName -Action {
+                        Remove-DMFileSystem -WebSession $session -FileSystemName $fileSystemName -Force -Confirm:$false
+                    }
+                }
             }
 
             if ($owned.FileSystem.Contains($fileSystemName) -and $configuration.Nas.EnableFileSystemSnapshot) {
@@ -630,6 +816,12 @@ try {
                 })
                 if ($fsSnapshot.Count -gt 0 -and $fsSnapshot[0].Name -eq $fileSystemSnapshotName) {
                     Register-TestOwnedResource -Kind FileSystemSnapshot -Identity $fileSystemSnapshotName
+                    Register-CleanupAction -Name 'Remove-DMFileSystemSnapshot' -Action {
+                        Invoke-OwnedRemoval -Name 'Remove-DMFileSystemSnapshot' -Kind FileSystemSnapshot -Identity $fileSystemSnapshotName -Action {
+                            Remove-DMFileSystemSnapshot -WebSession $session -FileSystemName $fileSystemName `
+                                -SnapshotName $fileSystemSnapshotName -Confirm:$false
+                        }
+                    }
                     Invoke-MutationStep -Name 'Restore-DMFileSystemSnapshot' -Action {
                         Assert-TestOwnedResource -Kind FileSystem -Identity $fileSystemName
                         Assert-TestOwnedResource -Kind FileSystemSnapshot -Identity $fileSystemSnapshotName
@@ -646,10 +838,15 @@ try {
             if ($owned.FileSystem.Contains($fileSystemName) -and $configuration.Nas.EnableDTree) {
                 $dTree = @(Invoke-MutationStep -Name 'new-DMdTree' -ExpectedType 'OceanStorDtree' -Action {
                     Assert-TestOwnedResource -Kind FileSystem -Identity $fileSystemName
-                    new-DMdTree -WebSession $session -FileSystemName $fileSystemName -DTreeName $dTreeName
+                    new-DMdTree -WebSession $session -FileSystemId $fileSystem[0].Id -DTreeName $dTreeName
                 })
                 if ($dTree.Count -gt 0) {
                     Register-TestOwnedResource -Kind DTree -Identity $dTreeName
+                    Register-CleanupAction -Name 'Remove-DMDTree' -Action {
+                        Invoke-OwnedRemoval -Name 'Remove-DMDTree' -Kind DTree -Identity $dTreeName -Action {
+                            Remove-DMDTree -WebSession $session -FileSystemName $fileSystemName -DTreeName $dTreeName -Confirm:$false
+                        }
+                    }
                 }
             }
             elseif (-not $configuration.Nas.EnableDTree) {
@@ -666,6 +863,11 @@ try {
                 })
                 if ($nfsShare.Count -gt 0 -and $nfsShare[0].'Share Path' -eq $nfsSharePath) {
                     Register-TestOwnedResource -Kind NfsShare -Identity $nfsSharePath
+                    Register-CleanupAction -Name 'Remove-DMNfsShare' -Action {
+                        Invoke-OwnedRemoval -Name 'Remove-DMNfsShare' -Kind NfsShare -Identity $nfsSharePath -Action {
+                            Remove-DMNfsShare -WebSession $session -SharePath $nfsSharePath -Confirm:$false
+                        }
+                    }
                     $nfsClient = @(Invoke-MutationStep -Name 'new-DMnfsClient' -Action {
                         Assert-TestOwnedResource -Kind NfsShare -Identity $nfsSharePath
                         if (@(get-DMnfsFileClient -WebSession $session | Where-Object Name -EQ $configuration.Nas.NfsClientName).Count -gt 0) {
@@ -676,6 +878,11 @@ try {
                     })
                     if ($nfsClient.Count -gt 0) {
                         Register-TestOwnedResource -Kind NfsClient -Identity $configuration.Nas.NfsClientName
+                        Register-CleanupAction -Name 'Remove-DMNfsClient' -Action {
+                            Invoke-OwnedRemoval -Name 'Remove-DMNfsClient' -Kind NfsClient -Identity $configuration.Nas.NfsClientName -Action {
+                                Remove-DMNfsClient -WebSession $session -ClientName $configuration.Nas.NfsClientName -Confirm:$false
+                            }
+                        }
                     }
                 }
             }
@@ -695,37 +902,23 @@ try {
                 })
                 if ($cifsShare.Count -gt 0 -and $cifsShare[0].Name -eq $cifsShareName) {
                     Register-TestOwnedResource -Kind CifsShare -Identity $cifsShareName
+                    Register-CleanupAction -Name 'Remove-DMCifsShare' -Action {
+                        Invoke-OwnedRemoval -Name 'Remove-DMCifsShare' -Kind CifsShare -Identity $cifsShareName -Action {
+                            Remove-DMCifsShare -WebSession $session -ShareName $cifsShareName -Confirm:$false
+                        }
+                    }
                 }
             }
             elseif (-not $configuration.Nas.EnableCifs) {
-                Add-SkippedResult -Name 'New-DMCifsShare' -Status 'NotConfigured' -Reason 'Set Nas.EnableCifs = $true to create a CIFS share below the test-owned file system; it is cleaned up with that parent.'
-            }
-
-            Invoke-OwnedRemoval -Name 'Remove-DMNfsClient' -Kind NfsClient -Identity $configuration.Nas.NfsClientName -Action {
-                Remove-DMNfsClient -WebSession $session -ClientName $configuration.Nas.NfsClientName -Confirm:$false
-            }
-            Invoke-OwnedRemoval -Name 'Remove-DMNfsShare' -Kind NfsShare -Identity $nfsSharePath -Action {
-                Remove-DMNfsShare -WebSession $session -SharePath $nfsSharePath -Confirm:$false
-            }
-            Invoke-OwnedRemoval -Name 'Remove-DMDTree' -Kind DTree -Identity $dTreeName -Action {
-                Remove-DMDTree -WebSession $session -FileSystemName $fileSystemName -DTreeName $dTreeName -Confirm:$false
-            }
-            Invoke-OwnedRemoval -Name 'Remove-DMFileSystemSnapshot' -Kind FileSystemSnapshot -Identity $fileSystemSnapshotName -Action {
-                Remove-DMFileSystemSnapshot -WebSession $session -FileSystemName $fileSystemName `
-                    -SnapshotName $fileSystemSnapshotName -Confirm:$false
-            }
-            Invoke-OwnedRemoval -Name 'Remove-DMFileSystem' -Kind FileSystem -Identity $fileSystemName -Action {
-                Remove-DMFileSystem -WebSession $session -FileSystemName $fileSystemName -Force -Confirm:$false
-            }
-            if (-not $owned.FileSystem.Contains($fileSystemName) -and $owned.CifsShare.Contains($cifsShareName)) {
-                Complete-TestOwnedResource -Kind CifsShare -Identity $cifsShareName
+                Add-SkippedResult -Name @('New-DMCifsShare', 'Remove-DMCifsShare') -Status 'NotConfigured' -Reason 'Set Nas.EnableCifs = $true to validate a CIFS share below the test-owned file system.'
             }
         }
         else {
             Add-SkippedResult -Name @(
                 'new-DMFileSystem', 'new-DMdTree', 'Remove-DMDTree', 'New-DMFileSystemSnapshot',
                 'Restore-DMFileSystemSnapshot', 'Remove-DMFileSystemSnapshot', 'new-DMnfsShare',
-                'new-DMnfsClient', 'Remove-DMNfsClient', 'Remove-DMNfsShare', 'New-DMCifsShare', 'Remove-DMFileSystem'
+                'new-DMnfsClient', 'Remove-DMNfsClient', 'Remove-DMNfsShare', 'New-DMCifsShare',
+                'Remove-DMCifsShare', 'Remove-DMFileSystem'
             ) -Status 'NotConfigured' -Reason 'Set Nas.Enabled = $true and provide StoragePoolId to run the test-owned NAS workflow.'
         }
 
@@ -738,6 +931,11 @@ try {
             })
             if ($portGroup.Count -gt 0 -and $portGroup[0].Name -eq $portGroupName) {
                 Register-TestOwnedResource -Kind PortGroup -Identity $portGroupName
+                Register-CleanupAction -Name 'Remove-DMPortGroup' -Action {
+                    Invoke-OwnedRemoval -Name 'Remove-DMPortGroup' -Kind PortGroup -Identity $portGroupName -Action {
+                        Remove-DMPortGroup -WebSession $session -PortGroupName $portGroupName -Confirm:$false
+                    }
+                }
             }
             $mappingView = @(Invoke-MutationStep -Name 'New-DMMappingView' -ExpectedType 'OceanStorMappingView' -Action {
                 if (@(Get-DMMappingView -WebSession $session | Where-Object Name -EQ $mappingViewName).Count -gt 0) {
@@ -747,34 +945,30 @@ try {
             })
             if ($mappingView.Count -gt 0 -and $mappingView[0].Name -eq $mappingViewName) {
                 Register-TestOwnedResource -Kind MappingView -Identity $mappingViewName
-            }
-            if ($owned.PortGroup.Contains($portGroupName) -and $owned.MappingView.Contains($mappingViewName)) {
-                Invoke-MutationStep -Name 'Add-DMPortGroupToMappingView' -Action {
-                    Assert-TestOwnedResource -Kind PortGroup -Identity $portGroupName
-                    Assert-TestOwnedResource -Kind MappingView -Identity $mappingViewName
-                    Add-DMPortGroupToMappingView -WebSession $session -MappingViewName $mappingViewName `
-                        -PortGroupName $portGroupName -Confirm:$false
-                } | Out-Null
-                Invoke-MutationStep -Name 'Remove-DMPortGroupFromMappingView' -Action {
-                    Assert-TestOwnedResource -Kind PortGroup -Identity $portGroupName
-                    Assert-TestOwnedResource -Kind MappingView -Identity $mappingViewName
-                    Remove-DMPortGroupFromMappingView -WebSession $session -MappingViewName $mappingViewName `
-                        -PortGroupName $portGroupName -Confirm:$false
-                } | Out-Null
+                Register-CleanupAction -Name 'Remove-DMMappingView' -Action {
+                    Invoke-OwnedRemoval -Name 'Remove-DMMappingView' -Kind MappingView -Identity $mappingViewName -Action {
+                        Remove-DMMappingView -WebSession $session -MappingViewName $mappingViewName -Confirm:$false
+                    }
+                }
             }
             if ($owned.HostGroup.Contains($hostGroupName) -and $owned.MappingView.Contains($mappingViewName)) {
-                Invoke-MutationStep -Name 'Add-DMHostGroupToMappingView' -Action {
+                $mapHostGroup = @(Invoke-MutationStep -Name 'Add-DMHostGroupToMappingView' -Action {
                     Assert-TestOwnedResource -Kind HostGroup -Identity $hostGroupName
                     Assert-TestOwnedResource -Kind MappingView -Identity $mappingViewName
                     Add-DMHostGroupToMappingView -WebSession $session -MappingViewName $mappingViewName `
                         -HostGroupName $hostGroupName -Confirm:$false
-                } | Out-Null
-                Invoke-MutationStep -Name 'Remove-DMHostGroupFromMappingView' -Action {
-                    Assert-TestOwnedResource -Kind HostGroup -Identity $hostGroupName
-                    Assert-TestOwnedResource -Kind MappingView -Identity $mappingViewName
-                    Remove-DMHostGroupFromMappingView -WebSession $session -MappingViewName $mappingViewName `
-                        -HostGroupName $hostGroupName -Confirm:$false
-                } | Out-Null
+                })
+                if ($mapHostGroup.Count -gt 0) {
+                    $mappingContainsHostGroup = $true
+                    Register-CleanupAction -Name 'Remove-DMHostGroupFromMappingView' -Action {
+                        Invoke-MutationStep -Name 'Remove-DMHostGroupFromMappingView' -Action {
+                            Assert-TestOwnedResource -Kind HostGroup -Identity $hostGroupName
+                            Assert-TestOwnedResource -Kind MappingView -Identity $mappingViewName
+                            Remove-DMHostGroupFromMappingView -WebSession $session -MappingViewName $mappingViewName `
+                                -HostGroupName $hostGroupName -Confirm:$false
+                        } | Out-Null
+                    }
+                }
             }
             else {
                 $dependencyStatus = if ($configuration.Host.Enabled) { 'Blocked' } else { 'NotConfigured' }
@@ -788,18 +982,23 @@ try {
                     -Status $dependencyStatus -Reason $dependencyReason
             }
             if ($owned.LunGroup.Contains($lunGroupName) -and $owned.MappingView.Contains($mappingViewName)) {
-                Invoke-MutationStep -Name 'Add-DMLunGroupToMappingView' -Action {
+                $mapLunGroup = @(Invoke-MutationStep -Name 'Add-DMLunGroupToMappingView' -Action {
                     Assert-TestOwnedResource -Kind LunGroup -Identity $lunGroupName
                     Assert-TestOwnedResource -Kind MappingView -Identity $mappingViewName
                     Add-DMLunGroupToMappingView -WebSession $session -MappingViewName $mappingViewName `
                         -LunGroupName $lunGroupName -Confirm:$false
-                } | Out-Null
-                Invoke-MutationStep -Name 'Remove-DMLunGroupFromMappingView' -Action {
-                    Assert-TestOwnedResource -Kind LunGroup -Identity $lunGroupName
-                    Assert-TestOwnedResource -Kind MappingView -Identity $mappingViewName
-                    Remove-DMLunGroupFromMappingView -WebSession $session -MappingViewName $mappingViewName `
-                        -LunGroupName $lunGroupName -Confirm:$false
-                } | Out-Null
+                })
+                if ($mapLunGroup.Count -gt 0) {
+                    $mappingContainsLunGroup = $true
+                    Register-CleanupAction -Name 'Remove-DMLunGroupFromMappingView' -Action {
+                        Invoke-MutationStep -Name 'Remove-DMLunGroupFromMappingView' -Action {
+                            Assert-TestOwnedResource -Kind LunGroup -Identity $lunGroupName
+                            Assert-TestOwnedResource -Kind MappingView -Identity $mappingViewName
+                            Remove-DMLunGroupFromMappingView -WebSession $session -MappingViewName $mappingViewName `
+                                -LunGroupName $lunGroupName -Confirm:$false
+                        } | Out-Null
+                    }
+                }
             }
             else {
                 $dependencyStatus = if ($configuration.LunGroup.Enabled) { 'Blocked' } else { 'NotConfigured' }
@@ -812,11 +1011,24 @@ try {
                 Add-SkippedResult -Name @('Add-DMLunGroupToMappingView', 'Remove-DMLunGroupFromMappingView') `
                     -Status $dependencyStatus -Reason $dependencyReason
             }
-            Invoke-OwnedRemoval -Name 'Remove-DMMappingView' -Kind MappingView -Identity $mappingViewName -Action {
-                Remove-DMMappingView -WebSession $session -MappingViewName $mappingViewName -Confirm:$false
-            }
-            Invoke-OwnedRemoval -Name 'Remove-DMPortGroup' -Kind PortGroup -Identity $portGroupName -Action {
-                Remove-DMPortGroup -WebSession $session -PortGroupName $portGroupName -Confirm:$false
+            if ($owned.PortGroup.Contains($portGroupName) -and $owned.MappingView.Contains($mappingViewName)) {
+                $mapPortGroup = @(Invoke-MutationStep -Name 'Add-DMPortGroupToMappingView' -Action {
+                    Assert-TestOwnedResource -Kind PortGroup -Identity $portGroupName
+                    Assert-TestOwnedResource -Kind MappingView -Identity $mappingViewName
+                    Add-DMPortGroupToMappingView -WebSession $session -MappingViewName $mappingViewName `
+                        -PortGroupName $portGroupName -Confirm:$false
+                })
+                if ($mapPortGroup.Count -gt 0) {
+                    $mappingContainsPortGroup = $true
+                    Register-CleanupAction -Name 'Remove-DMPortGroupFromMappingView' -Action {
+                        Invoke-MutationStep -Name 'Remove-DMPortGroupFromMappingView' -Action {
+                            Assert-TestOwnedResource -Kind PortGroup -Identity $portGroupName
+                            Assert-TestOwnedResource -Kind MappingView -Identity $mappingViewName
+                            Remove-DMPortGroupFromMappingView -WebSession $session -MappingViewName $mappingViewName `
+                                -PortGroupName $portGroupName -Confirm:$false
+                        } | Out-Null
+                    }
+                }
             }
         }
         else {
@@ -839,6 +1051,11 @@ try {
             })
             if ($protectionGroup.Count -gt 0 -and $protectionGroup[0].Name -eq $protectionGroupName) {
                 Register-TestOwnedResource -Kind ProtectionGroup -Identity $protectionGroupName
+                Register-CleanupAction -Name 'Remove-DMProtectionGroup' -Action {
+                    Invoke-OwnedRemoval -Name 'Remove-DMProtectionGroup' -Kind ProtectionGroup -Identity $protectionGroupName -Action {
+                        Remove-DMProtectionGroup -WebSession $session -Name $protectionGroupName -Confirm:$false
+                    }
+                }
             }
 
             if ($owned.ProtectionGroup.Contains($protectionGroupName)) {
@@ -852,6 +1069,12 @@ try {
                 })
                 if ($consistencyGroup.Count -gt 0 -and $consistencyGroup[0].Name -eq $consistencyGroupName) {
                     Register-TestOwnedResource -Kind SnapshotConsistencyGroup -Identity $consistencyGroupName
+                    Register-CleanupAction -Name 'Remove-DMSnapshotConsistencyGroup' -Action {
+                        Invoke-OwnedRemoval -Name 'Remove-DMSnapshotConsistencyGroup' -Kind SnapshotConsistencyGroup -Identity $consistencyGroupName -Action {
+                            Wait-DMSnapshotConsistencyGroupReadyForRemoval -Name $consistencyGroupName
+                            Remove-DMSnapshotConsistencyGroup -WebSession $session -Name $consistencyGroupName -Confirm:$false
+                        }
+                    }
                 }
             }
 
@@ -863,11 +1086,23 @@ try {
                 })
                 if ($consistencyCopy.Count -gt 0 -and $consistencyCopy[0].Name -eq $consistencyCopyName) {
                     Register-TestOwnedResource -Kind SnapshotConsistencyGroup -Identity $consistencyCopyName
+                    Register-CleanupAction -Name 'Remove-DMSnapshotConsistencyGroup:Copy' -Action {
+                        Invoke-OwnedRemoval -Name 'Remove-DMSnapshotConsistencyGroup:Copy' -Kind SnapshotConsistencyGroup -Identity $consistencyCopyName -Action {
+                            Remove-DMSnapshotConsistencyGroup -WebSession $session -Name $consistencyCopyName -Confirm:$false
+                        }
+                    }
                 }
-                Invoke-MutationStep -Name 'Enable-DMSnapshotConsistencyGroup' -Action {
-                    Assert-TestOwnedResource -Kind SnapshotConsistencyGroup -Identity $consistencyGroupName
-                    Enable-DMSnapshotConsistencyGroup -WebSession $session -Name $consistencyGroupName -Confirm:$false
-                } | Out-Null
+                $consistencyState = @(Get-DMSnapshotConsistencyGroup -WebSession $session | Where-Object Name -EQ $consistencyGroupName)[0]
+                if ($consistencyState.'Running Status' -eq 'Unactivated') {
+                    Invoke-MutationStep -Name 'Enable-DMSnapshotConsistencyGroup' -Action {
+                        Assert-TestOwnedResource -Kind SnapshotConsistencyGroup -Identity $consistencyGroupName
+                        Enable-DMSnapshotConsistencyGroup -WebSession $session -Name $consistencyGroupName -Confirm:$false
+                    } | Out-Null
+                }
+                else {
+                    Add-SkippedResult -Name 'Enable-DMSnapshotConsistencyGroup' -Status 'NotExecuted' `
+                        -Reason "The newly created snapshot consistency group is '$($consistencyState.'Running Status')'; activation is only valid while it is Unactivated."
+                }
                 Invoke-MutationStep -Name 'Restart-DMSnapshotConsistencyGroup' -Action {
                     Assert-TestOwnedResource -Kind SnapshotConsistencyGroup -Identity $consistencyGroupName
                     Restart-DMSnapshotConsistencyGroup -WebSession $session -Name $consistencyGroupName -Confirm:$false
@@ -879,15 +1114,6 @@ try {
                 } | Out-Null
             }
 
-            Invoke-OwnedRemoval -Name 'Remove-DMSnapshotConsistencyGroup:Copy' -Kind SnapshotConsistencyGroup -Identity $consistencyCopyName -Action {
-                Remove-DMSnapshotConsistencyGroup -WebSession $session -Name $consistencyCopyName -Confirm:$false
-            }
-            Invoke-OwnedRemoval -Name 'Remove-DMSnapshotConsistencyGroup' -Kind SnapshotConsistencyGroup -Identity $consistencyGroupName -Action {
-                Remove-DMSnapshotConsistencyGroup -WebSession $session -Name $consistencyGroupName -Confirm:$false
-            }
-            Invoke-OwnedRemoval -Name 'Remove-DMProtectionGroup' -Kind ProtectionGroup -Identity $protectionGroupName -Action {
-                Remove-DMProtectionGroup -WebSession $session -Name $protectionGroupName -Confirm:$false
-            }
         }
         elseif (-not $configuration.Protection.Enabled) {
             Add-SkippedResult -Name @(
@@ -906,20 +1132,6 @@ try {
             ) -Status 'Blocked' -Reason 'Protection validation could not run because the test-owned LUN and LUN-group association was not created successfully.'
         }
 
-        if ($lunGroupContainsLun) {
-            Invoke-MutationStep -Name 'Remove-DMLunFromLunGroup' -Action {
-                Assert-TestOwnedResource -Kind Lun -Identity $lunName
-                Assert-TestOwnedResource -Kind LunGroup -Identity $lunGroupName
-                Remove-DMLunFromLunGroup -WebSession $session -LunName $lunName -LunGroupName $lunGroupName -Confirm:$false
-            } | Out-Null
-        }
-        Invoke-OwnedRemoval -Name 'Remove-DMLunGroup' -Kind LunGroup -Identity $lunGroupName -Action {
-            Remove-DMLunGroup -WebSession $session -LunGroupName $lunGroupName -Confirm:$false
-        }
-        Invoke-OwnedRemoval -Name 'Remove-DMLun' -Kind Lun -Identity $lunName -Action {
-            Remove-DMLun -WebSession $session -LunName $lunName -ImmediateDelete -Confirm:$false
-        }
-
         if ($configuration.Initiators.Enabled) {
             if ($configuration.Initiators.FibreChannelWWN) {
                 $fc = @(Invoke-MutationStep -Name 'New-DMFiberChannelInitiator' -ExpectedType 'OceanstorHostinitiatorFC' -Action {
@@ -936,14 +1148,22 @@ try {
                 })
                 if ($fc.Count -gt 0 -and $fc[0].Id -eq $configuration.Initiators.FibreChannelWWN) {
                     Register-TestOwnedResource -Kind FibreChannelInitiator -Identity $configuration.Initiators.FibreChannelWWN
+                    Register-CleanupAction -Name 'Remove-DMFiberChannelInitiator' -Action {
+                        Invoke-OwnedRemoval -Name 'Remove-DMFiberChannelInitiator' -Kind FibreChannelInitiator `
+                            -Identity $configuration.Initiators.FibreChannelWWN -Action {
+                                Remove-DMFiberChannelInitiator -WebSession $session -WWN $configuration.Initiators.FibreChannelWWN -Confirm:$false
+                            }
+                    }
                 }
                 if ($owned.Host.Contains($testHostName) -and $owned.FibreChannelInitiator.Contains($configuration.Initiators.FibreChannelWWN)) {
-                    Invoke-MutationStep -Name 'Remove-DMFiberChannelInitiatorFromHost' -Action {
-                        Assert-TestOwnedResource -Kind Host -Identity $testHostName
-                        Assert-TestOwnedResource -Kind FibreChannelInitiator -Identity $configuration.Initiators.FibreChannelWWN
-                        Remove-DMFiberChannelInitiatorFromHost -WebSession $session -HostName $testHostName `
-                            -WWN $configuration.Initiators.FibreChannelWWN -Confirm:$false
-                    } | Out-Null
+                    Register-CleanupAction -Name 'Remove-DMFiberChannelInitiatorFromHost' -Action {
+                        Invoke-MutationStep -Name 'Remove-DMFiberChannelInitiatorFromHost' -Action {
+                            Assert-TestOwnedResource -Kind Host -Identity $testHostName
+                            Assert-TestOwnedResource -Kind FibreChannelInitiator -Identity $configuration.Initiators.FibreChannelWWN
+                            Remove-DMFiberChannelInitiatorFromHost -WebSession $session -HostName $testHostName `
+                                -WWN $configuration.Initiators.FibreChannelWWN -Confirm:$false
+                        } | Out-Null
+                    }
                 }
                 else {
                     $detachStatus = if ($configuration.Host.Enabled) { 'Blocked' } else { 'NotConfigured' }
@@ -956,10 +1176,6 @@ try {
                     Add-SkippedResult -Name 'Remove-DMFiberChannelInitiatorFromHost' -Status $detachStatus `
                         -Reason $detachReason
                 }
-                Invoke-OwnedRemoval -Name 'Remove-DMFiberChannelInitiator' -Kind FibreChannelInitiator `
-                    -Identity $configuration.Initiators.FibreChannelWWN -Action {
-                        Remove-DMFiberChannelInitiator -WebSession $session -WWN $configuration.Initiators.FibreChannelWWN -Confirm:$false
-                    }
             }
             else {
                 Add-SkippedResult -Name @('New-DMFiberChannelInitiator', 'Remove-DMFiberChannelInitiatorFromHost', 'Remove-DMFiberChannelInitiator') `
@@ -980,14 +1196,22 @@ try {
                 })
                 if ($iscsi.Count -gt 0 -and $iscsi[0].Id -eq $configuration.Initiators.IscsiIdentifier) {
                     Register-TestOwnedResource -Kind IscsiInitiator -Identity $configuration.Initiators.IscsiIdentifier
+                    Register-CleanupAction -Name 'Remove-DMIscsiInitiator' -Action {
+                        Invoke-OwnedRemoval -Name 'Remove-DMIscsiInitiator' -Kind IscsiInitiator `
+                            -Identity $configuration.Initiators.IscsiIdentifier -Action {
+                                Remove-DMIscsiInitiator -WebSession $session -Identifier $configuration.Initiators.IscsiIdentifier -Confirm:$false
+                            }
+                    }
                 }
                 if ($owned.Host.Contains($testHostName) -and $owned.IscsiInitiator.Contains($configuration.Initiators.IscsiIdentifier)) {
-                    Invoke-MutationStep -Name 'Remove-DMIscsiInitiatorFromHost' -Action {
-                        Assert-TestOwnedResource -Kind Host -Identity $testHostName
-                        Assert-TestOwnedResource -Kind IscsiInitiator -Identity $configuration.Initiators.IscsiIdentifier
-                        Remove-DMIscsiInitiatorFromHost -WebSession $session -HostName $testHostName `
-                            -Identifier $configuration.Initiators.IscsiIdentifier -Confirm:$false
-                    } | Out-Null
+                    Register-CleanupAction -Name 'Remove-DMIscsiInitiatorFromHost' -Action {
+                        Invoke-MutationStep -Name 'Remove-DMIscsiInitiatorFromHost' -Action {
+                            Assert-TestOwnedResource -Kind Host -Identity $testHostName
+                            Assert-TestOwnedResource -Kind IscsiInitiator -Identity $configuration.Initiators.IscsiIdentifier
+                            Remove-DMIscsiInitiatorFromHost -WebSession $session -HostName $testHostName `
+                                -Identifier $configuration.Initiators.IscsiIdentifier -Confirm:$false
+                        } | Out-Null
+                    }
                 }
                 else {
                     $detachStatus = if ($configuration.Host.Enabled) { 'Blocked' } else { 'NotConfigured' }
@@ -1000,10 +1224,6 @@ try {
                     Add-SkippedResult -Name 'Remove-DMIscsiInitiatorFromHost' -Status $detachStatus `
                         -Reason $detachReason
                 }
-                Invoke-OwnedRemoval -Name 'Remove-DMIscsiInitiator' -Kind IscsiInitiator `
-                    -Identity $configuration.Initiators.IscsiIdentifier -Action {
-                        Remove-DMIscsiInitiator -WebSession $session -Identifier $configuration.Initiators.IscsiIdentifier -Confirm:$false
-                    }
             }
             else {
                 Add-SkippedResult -Name @('New-DMIscsiInitiator', 'Remove-DMIscsiInitiatorFromHost', 'Remove-DMIscsiInitiator') `
@@ -1018,11 +1238,13 @@ try {
                 })
                 if ($nvme.Count -gt 0 -and $nvme[0].Id -eq $configuration.Initiators.NvmeNqn) {
                     Register-TestOwnedResource -Kind NvmeInitiator -Identity $configuration.Initiators.NvmeNqn
-                }
-                Invoke-OwnedRemoval -Name 'Remove-DMNvmeInitiator' -Kind NvmeInitiator `
-                    -Identity $configuration.Initiators.NvmeNqn -Action {
-                        Remove-DMNvmeInitiator -WebSession $session -Nqn $configuration.Initiators.NvmeNqn -Confirm:$false
+                    Register-CleanupAction -Name 'Remove-DMNvmeInitiator' -Action {
+                        Invoke-OwnedRemoval -Name 'Remove-DMNvmeInitiator' -Kind NvmeInitiator `
+                            -Identity $configuration.Initiators.NvmeNqn -Action {
+                                Remove-DMNvmeInitiator -WebSession $session -Nqn $configuration.Initiators.NvmeNqn -Confirm:$false
+                            }
                     }
+                }
             }
             else {
                 Add-SkippedResult -Name @('New-DMNvmeInitiator', 'Remove-DMNvmeInitiator') `
@@ -1037,12 +1259,88 @@ try {
             ) -Status 'NotConfigured' -Reason 'Set Initiators.Enabled = $true and supply unused initiator identities to run these lifecycles.'
         }
 
-        Invoke-OwnedRemoval -Name 'Remove-DMHost' -Kind Host -Identity $testHostName -Action {
-            Remove-DMHost -WebSession $session -HostName $testHostName -Confirm:$false
+        if ($owned.Lun.Contains($lunName)) {
+            Add-MutationReadVerification -Name 'get-DMluns:Created' -Action {
+                get-DMluns -WebSession $session | Where-Object Name -EQ $lunName
+            } | Out-Null
         }
-        Invoke-OwnedRemoval -Name 'Remove-DMHostGroup' -Kind HostGroup -Identity $hostGroupName -Action {
-            Remove-DMHostGroup -WebSession $session -HostGroupName $hostGroupName -Confirm:$false
+        if ($owned.LunSnapshot.Contains($snapshotName)) {
+            Add-MutationReadVerification -Name 'get-DMLunSnapshots:Created' -ExpectedType 'OceanstorLunSnapshot' -Action {
+                get-DMLunSnapshots -WebSession $session | Where-Object Name -EQ $snapshotName
+            } | Out-Null
         }
+        if ($owned.LunGroup.Contains($lunGroupName)) {
+            Add-MutationReadVerification -Name 'get-DMlunGroups:Created' -ExpectedType 'OceanStorLunGroup' -Action {
+                get-DMlunGroups -WebSession $session | Where-Object Name -EQ $lunGroupName
+            } | Out-Null
+        }
+        if ($lunGroupContainsLun) {
+            Add-MutationReadVerification -Name 'get-DMlunsbyLunGroup:Association' -Action {
+                get-DMlunsbyLunGroup -WebSession $session -LunGroup $lunGroup[0] | Where-Object Name -EQ $lunName
+            } | Out-Null
+        }
+        if ($owned.Host.Contains($testHostName)) {
+            Add-MutationReadVerification -Name 'get-DMhosts:Created' -ExpectedType 'OceanStorHost' -Action {
+                get-DMhosts -WebSession $session | Where-Object Name -EQ $testHostName
+            } | Out-Null
+        }
+        if ($hostGroupContainsHost) {
+            Add-MutationReadVerification -Name 'get-DMhostsbyHostGroupName:Association' -ExpectedType 'OceanStorHost' -Action {
+                get-DMhostsbyHostGroupName -WebSession $session -HostGroupName $hostGroupName | Where-Object Name -EQ $testHostName
+            } | Out-Null
+        }
+        if ($owned.FileSystem.Contains($fileSystemName)) {
+            Add-MutationReadVerification -Name 'get-DMFileSystem:Created' -ExpectedType 'OceanstorFileSystem' -Action {
+                get-DMFileSystem -WebSession $session | Where-Object Name -EQ $fileSystemName
+            } | Out-Null
+        }
+        if ($owned.FileSystemSnapshot.Contains($fileSystemSnapshotName)) {
+            Add-MutationReadVerification -Name 'Get-DMFileSystemSnapshots:Created' -ExpectedType 'OceanstorFileSystemSnapshot' -Action {
+                Get-DMFileSystemSnapshots -WebSession $session -FileSystemName $fileSystemName | Where-Object Name -EQ $fileSystemSnapshotName
+            } | Out-Null
+        }
+        if ($owned.NfsShare.Contains($nfsSharePath)) {
+            Add-MutationReadVerification -Name 'get-DMShares:NFS:Created' -ExpectedType 'OceanStorNFSShare' -Action {
+                get-DMShares -WebSession $session -ShareType NFS | Where-Object 'Share Path' -EQ $nfsSharePath
+            } | Out-Null
+        }
+        if ($owned.CifsShare.Contains($cifsShareName)) {
+            Add-MutationReadVerification -Name 'get-DMShares:CIFS:Created' -ExpectedType 'OceanStorCIFSShare' -Action {
+                get-DMShares -WebSession $session -ShareType CIFS | Where-Object Name -EQ $cifsShareName
+            } | Out-Null
+        }
+        if ($owned.MappingView.Contains($mappingViewName)) {
+            Add-MutationReadVerification -Name 'Get-DMMappingView:Created' -ExpectedType 'OceanStorMappingView' -Action {
+                Get-DMMappingView -WebSession $session | Where-Object Name -EQ $mappingViewName
+            } | Out-Null
+        }
+        if ($mappingContainsHostGroup) {
+            Add-MutationReadVerification -Name 'Get-DMMappingView:HostGroupAssociation' -ExpectedType 'OceanStorMappingView' -Action {
+                Get-DMMappingView -WebSession $session -HostGroupName $hostGroupName | Where-Object Name -EQ $mappingViewName
+            } | Out-Null
+        }
+        if ($mappingContainsLunGroup) {
+            Add-MutationReadVerification -Name 'Get-DMMappingView:LunGroupAssociation' -ExpectedType 'OceanStorMappingView' -Action {
+                Get-DMMappingView -WebSession $session -LunGroupName $lunGroupName | Where-Object Name -EQ $mappingViewName
+            } | Out-Null
+        }
+        if ($mappingContainsPortGroup) {
+            Add-MutationReadVerification -Name 'Get-DMMappingView:PortGroupAssociation' -ExpectedType 'OceanStorMappingView' -Action {
+                Get-DMMappingView -WebSession $session -PortGroupName $portGroupName | Where-Object Name -EQ $mappingViewName
+            } | Out-Null
+        }
+        if ($owned.ProtectionGroup.Contains($protectionGroupName)) {
+            Add-MutationReadVerification -Name 'Get-DMProtectionGroup:Created' -ExpectedType 'OceanstorProtectionGroup' -Action {
+                Get-DMProtectionGroup -WebSession $session | Where-Object Name -EQ $protectionGroupName
+            } | Out-Null
+        }
+        if ($owned.SnapshotConsistencyGroup.Contains($consistencyGroupName)) {
+            Add-MutationReadVerification -Name 'Get-DMSnapshotConsistencyGroup:Created' -ExpectedType 'OceanstorSnapshotConsistencyGroup' -Action {
+                Get-DMSnapshotConsistencyGroup -WebSession $session | Where-Object Name -EQ $consistencyGroupName
+            } | Out-Null
+        }
+
+        Invoke-RegisteredCleanup
     }
 
     $representedCommands = @($checks.Name | ForEach-Object { ($_ -split ':')[0] } | Sort-Object -Unique)
@@ -1073,6 +1371,7 @@ try {
     $report = [pscustomobject]@{
         Hostname    = $Hostname
         RunAt       = (Get-Date).ToString('o')
+        DurationMs  = [math]::Round(((Get-Date) - $runStartedAt).TotalMilliseconds, 2)
         Mode        = if ($RunMutatingTests) { 'GET validation and opt-in test-owned mutation workflows' } else { 'Read-only GET validation; mutation workflows not requested' }
         RunId       = $runId
         Passed      = @($checks | Where-Object Status -eq 'Passed').Count
@@ -1080,15 +1379,34 @@ try {
         Skipped     = @($checks | Where-Object Status -in @('SkippedUnsafe', 'NotConfigured', 'NotRequested', 'NotExecuted', 'Blocked')).Count
         Blocked     = @($checks | Where-Object Status -eq 'Blocked').Count
         Failed      = @($checks | Where-Object Status -in @('Failed', 'UnexpectedType')).Count
+        MutationLogPath = if ($RunMutatingTests -and $configuration.AllowMutatingTests) { $MutationLogPath } else { $null }
+        TracedMutationRequests = $mutationRequests.Count
         ExcludedCommands = $excludedCommands
         RemainingTestOwnedResources = $remainingOwned
         Checks      = $checks
     }
 
+    if ($RunMutatingTests -and $configuration.AllowMutatingTests) {
+        $mutationLog = [pscustomobject]@{
+            Hostname    = $Hostname
+            RunAt       = (Get-Date).ToString('o')
+            RunId       = $runId
+            ReportPath  = $ReportPath
+            RequestCount = $mutationRequests.Count
+            FailedChecks = @($checks | Where-Object { $_.Category -in @('Mutation', 'MutationRead') -and $_.Status -in @('Failed', 'UnexpectedType') })
+            RemainingTestOwnedResources = $remainingOwned
+            Requests    = $mutationRequests
+        }
+        $mutationLog | ConvertTo-Json -Depth 15 | Set-Content -LiteralPath $MutationLogPath
+    }
+
     $report | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $ReportPath
-    $report | Format-List Hostname, RunAt, Mode, RunId, Passed, NoData, Skipped, Blocked, Failed, ExcludedCommands, RemainingTestOwnedResources
-    $checks | Format-Table Category, Name, Status, Count, ExpectedType, ActualTypes, Error -AutoSize
+    $report | Format-List Hostname, RunAt, DurationMs, Mode, RunId, Passed, NoData, Skipped, Blocked, Failed, MutationLogPath, TracedMutationRequests, ExcludedCommands, RemainingTestOwnedResources
+    $checks | Format-Table Category, Name, Status, DurationMs, Count, ExpectedType, ActualTypes, Error -AutoSize
 }
 finally {
+    if (-not $NoProgress) {
+        Write-Progress -Id 1 -Activity "Validating OceanStor $Hostname" -Completed
+    }
     Remove-Module -Name OceanstorLiveGetterValidation -Force -ErrorAction SilentlyContinue
 }

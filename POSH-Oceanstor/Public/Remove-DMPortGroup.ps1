@@ -13,9 +13,9 @@ function Remove-DMPortGroup {
             $candidate = $_
             $session = if ($WebSession) { $WebSession } else { $deviceManager }
             $groups = @(Get-DMPortGroup -WebSession $session)
-            $matches = @($groups | Where-Object Name -EQ $candidate)
-            if ($matches.Count -eq 1) { return $true }
-            if ($matches.Count -gt 1) { throw "PortGroupName is ambiguous because more than one port group is named '$candidate'." }
+            $matchingItems = @($groups | Where-Object Name -EQ $candidate)
+            if ($matchingItems.Count -eq 1) { return $true }
+            if ($matchingItems.Count -gt 1) { throw "PortGroupName is ambiguous because more than one port group is named '$candidate'." }
             throw "Invalid PortGroupName. Valid values are: $($groups.Name -join ', ')"
         })]
         [ArgumentCompleter({

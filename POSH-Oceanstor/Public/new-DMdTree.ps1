@@ -66,7 +66,7 @@ function new-DMdTree{
         [string]$fileSystemId,
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=0,Mandatory=$false)]
         [ValidateSet("enabled","disabled")]
-        [string]$quotaSwitch = "disabled",
+        [string]$quotaSwitch,
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=0,Mandatory=$false)]
         [string]$vStoreId,
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=0,Mandatory=$false)]
@@ -76,7 +76,7 @@ function new-DMdTree{
         [string]$securityStyle,
     [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$false,Position=0,Mandatory=$false)]
         [ValidateSet("Mandatory","Advisory")]
-        [string]$lockingPolicy="Mandatory"
+        [string]$lockingPolicy
     )
 
     if ($WebSession){
@@ -87,14 +87,26 @@ function new-DMdTree{
 
     $body = @{
         NAME = $dTreeName;
-        PARENTTYPE = 40;
-        QUOTASWITCH = $quotaSwitch
-        path = $path
-        nasLockingPolicy = $lockingPolicy
+        PARENTTYPE = 40
     }
 
     if ($vStoreId){
         $body.Add("vstoreId",$vStoreId)
+    }
+
+    if ($PSBoundParameters.ContainsKey('quotaSwitch')){
+        $body.Add("QUOTASWITCH", ($quotaSwitch -eq "enabled"))
+    }
+
+    if ($path){
+        $body.Add("path",$path)
+    }
+
+    if ($PSBoundParameters.ContainsKey('lockingPolicy')){
+        switch ($lockingPolicy){
+            "Mandatory" {$body.Add("nasLockingPolicy",0)}
+            "Advisory" {$body.Add("nasLockingPolicy",1)}
+        }
     }
 
     if($fileSystemId){

@@ -13,9 +13,9 @@ function Remove-DMMappingView {
             $candidate = $_
             $session = if ($WebSession) { $WebSession } else { $deviceManager }
             $views = @(Get-DMMappingView -WebSession $session)
-            $matches = @($views | Where-Object Name -EQ $candidate)
-            if ($matches.Count -eq 1) { return $true }
-            if ($matches.Count -gt 1) { throw "MappingViewName is ambiguous because more than one mapping view is named '$candidate'." }
+            $matchingItems = @($views | Where-Object Name -EQ $candidate)
+            if ($matchingItems.Count -eq 1) { return $true }
+            if ($matchingItems.Count -gt 1) { throw "MappingViewName is ambiguous because more than one mapping view is named '$candidate'." }
             throw "Invalid MappingViewName. Valid values are: $($views.Name -join ', ')"
         })]
         [ArgumentCompleter({

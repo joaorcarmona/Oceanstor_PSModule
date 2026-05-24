@@ -12,9 +12,9 @@ function Remove-DMNfsShare {
         [ValidateScript({
             $session = if ($WebSession) { $WebSession } else { $deviceManager }
             $shares = @(get-DMShares -WebSession $session -ShareType NFS)
-            $matches = @($shares | Where-Object 'Share Path' -EQ $_)
-            if ($matches.Count -eq 1) { return $true }
-            if ($matches.Count -gt 1) { throw "SharePath is ambiguous because more than one NFS share uses '$_'." }
+            $matchingItems = @($shares | Where-Object 'Share Path' -EQ $_)
+            if ($matchingItems.Count -eq 1) { return $true }
+            if ($matchingItems.Count -gt 1) { throw "SharePath is ambiguous because more than one NFS share uses '$_'." }
             throw "Invalid SharePath. Valid values are: $($shares.'Share Path' -join ', ')"
         })]
         [ArgumentCompleter({

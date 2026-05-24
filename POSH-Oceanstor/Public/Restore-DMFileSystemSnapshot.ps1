@@ -16,9 +16,9 @@ function Restore-DMFileSystemSnapshot {
         [ValidateScript({
             $session = if ($WebSession) { $WebSession } else { $deviceManager }
             $fileSystems = @(get-DMFileSystem -WebSession $session)
-            $matches = @($fileSystems | Where-Object Name -EQ $_)
-            if ($matches.Count -eq 1) { return $true }
-            if ($matches.Count -gt 1) { throw "FileSystemName is ambiguous because more than one file system is named '$_'." }
+            $matchingItems = @($fileSystems | Where-Object Name -EQ $_)
+            if ($matchingItems.Count -eq 1) { return $true }
+            if ($matchingItems.Count -gt 1) { throw "FileSystemName is ambiguous because more than one file system is named '$_'." }
             throw "Invalid FileSystemName. Valid values are: $($fileSystems.Name -join ', ')"
         })]
         [ArgumentCompleter({
@@ -32,9 +32,9 @@ function Restore-DMFileSystemSnapshot {
         [ValidateScript({
             $session = if ($WebSession) { $WebSession } else { $deviceManager }
             $snapshots = @(Get-DMFileSystemSnapshots -WebSession $session -FileSystemName $FileSystemName)
-            $matches = @($snapshots | Where-Object Name -EQ $_)
-            if ($matches.Count -eq 1) { return $true }
-            if ($matches.Count -gt 1) { throw "SnapshotName is ambiguous because more than one snapshot is named '$_'." }
+            $matchingItems = @($snapshots | Where-Object Name -EQ $_)
+            if ($matchingItems.Count -eq 1) { return $true }
+            if ($matchingItems.Count -gt 1) { throw "SnapshotName is ambiguous because more than one snapshot is named '$_'." }
             throw "Invalid SnapshotName. Valid values are: $($snapshots.Name -join ', ')"
         })]
         [ArgumentCompleter({

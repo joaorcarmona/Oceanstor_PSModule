@@ -99,6 +99,12 @@ Describe 'Mapping view commands' {
         $script:resources | Should -Contain 'mappingview/associate?TYPE=245&ASSOCIATEOBJTYPE=257&ASSOCIATEOBJID=pg-01'
     }
 
+    It 'returns no mapping views when the API contains no data property' {
+        Mock invoke-DeviceManager { [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 } } }
+
+        @(Get-DMMappingView -WebSession $script:session -PortGroupName 'front-end') | Should -BeNullOrEmpty
+    }
+
     It 'removes a resolved mapping view by ID' {
         Mock Get-DMMappingView { @($script:view) }
         Mock invoke-DeviceManager {

@@ -12,9 +12,9 @@ function Get-DMFileSystemSnapshots {
         [ValidateScript({
             $session = if ($WebSession) { $WebSession } else { $deviceManager }
             $fileSystems = @(get-DMFileSystem -WebSession $session)
-            $matches = @($fileSystems | Where-Object Name -EQ $_)
-            if ($matches.Count -eq 1) { return $true }
-            if ($matches.Count -gt 1) { throw "FileSystemName is ambiguous because more than one file system is named '$_'." }
+            $matchingItems = @($fileSystems | Where-Object Name -EQ $_)
+            if ($matchingItems.Count -eq 1) { return $true }
+            if ($matchingItems.Count -gt 1) { throw "FileSystemName is ambiguous because more than one file system is named '$_'." }
             throw "Invalid FileSystemName. Valid values are: $($fileSystems.Name -join ', ')"
         })]
         [ArgumentCompleter({
@@ -31,8 +31,23 @@ function Get-DMFileSystemSnapshots {
     $session = if ($WebSession) { $WebSession } else { $deviceManager }
     $fileSystem = @(get-DMFileSystem -WebSession $session | Where-Object Name -EQ $FileSystemName)[0]
     $resource = "fssnapshot?PARENTID=$($fileSystem.Id)"
-    $response = invoke-DeviceManager -WebSession $session -Method 'GET' -Resource $resource |
-        Select-Object -ExpandProperty data
+    $queryResult = invoke-DeviceManager -WebSession $session -Method 'GET' -Resource $resource
+    $response = @()
+    if ($queryResult -is [string] -and -not [string]::IsNullOrWhiteSpace($queryResult)) {
+        $parsedResult = $queryResult | ConvertFrom-Json -AsHashtable -ErrorAction Stop
+        $response = @(
+            foreach ($snapshotData in @($parsedResult.data)) {
+                $normalizedData = [ordered]@{}
+                foreach ($key in $snapshotData.Keys) {
+                    $normalizedData[[string]$key] = $snapshotData[$key]
+                }
+                [pscustomobject]$normalizedData
+            }
+        )
+    }
+    elseif ($null -ne $queryResult -and $null -ne $queryResult.PSObject.Properties['data']) {
+        $response = @($queryResult.data)
+    }
     $defaultDisplaySet = 'Id', 'Name', 'Source File System Name', 'Health Status', 'Snapshot Type', 'Timestamp'
     $displayPropertySet = New-Object System.Management.Automation.PSPropertySet('DefaultDisplayPropertySet', [string[]]$defaultDisplaySet)
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)

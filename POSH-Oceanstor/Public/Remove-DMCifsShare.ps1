@@ -1,7 +1,7 @@
-function Remove-DMLun {
+function Remove-DMCifsShare {
     <#
     .SYNOPSIS
-        Removes a Huawei OceanStor LUN.
+        Removes a Huawei OceanStor CIFS share.
     #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
@@ -11,33 +11,29 @@ function Remove-DMLun {
         [Parameter(Mandatory = $true, Position = 1)]
         [ValidateScript({
             $session = if ($WebSession) { $WebSession } else { $deviceManager }
-            $luns = @(get-DMluns -WebSession $session)
-            $matchingItems = @($luns | Where-Object Name -EQ $_)
+            $shares = @(get-DMShares -WebSession $session -ShareType CIFS)
+            $matchingItems = @($shares | Where-Object Name -EQ $_)
             if ($matchingItems.Count -eq 1) { return $true }
-            if ($matchingItems.Count -gt 1) { throw "LunName is ambiguous because more than one LUN is named '$_'." }
-            throw "Invalid LunName. Valid values are: $($luns.Name -join ', ')"
+            if ($matchingItems.Count -gt 1) { throw "ShareName is ambiguous because more than one CIFS share is named '$_'." }
+            throw "Invalid ShareName. Valid values are: $($shares.Name -join ', ')"
         })]
         [ArgumentCompleter({
             param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
             $session = if ($fakeBoundParameters.ContainsKey('WebSession')) { $fakeBoundParameters.WebSession } else { $deviceManager }
-            (get-DMluns -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+            (get-DMShares -WebSession $session -ShareType CIFS).Name |
+                Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
         })]
-        [string]$LunName,
-
-        [switch]$ImmediateDelete,
+        [string]$ShareName,
 
         [string]$VstoreId
     )
 
     $session = if ($WebSession) { $WebSession } else { $deviceManager }
-    $lun = @(get-DMluns -WebSession $session | Where-Object Name -EQ $LunName)[0]
-    $parameters = @()
-    if ($ImmediateDelete) { $parameters += 'isDelayDelete=false' }
-    if ($VstoreId) { $parameters += "vstoreId=$VstoreId" }
-    $resource = "lun/$($lun.Id)"
-    if ($parameters.Count -gt 0) { $resource += "?$($parameters -join '&')" }
+    $share = @(get-DMShares -WebSession $session -ShareType CIFS | Where-Object Name -EQ $ShareName)[0]
+    $resource = "CIFSSHARE/$($share.Id)"
+    if ($VstoreId) { $resource += "?vstoreId=$VstoreId" }
 
-    if ($PSCmdlet.ShouldProcess($LunName, 'Remove LUN and its data')) {
+    if ($PSCmdlet.ShouldProcess($ShareName, 'Remove CIFS share')) {
         $response = invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
         return $response.error
     }

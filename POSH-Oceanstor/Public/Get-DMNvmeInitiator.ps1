@@ -9,9 +9,9 @@ function Get-DMNvmeInitiator {
             $candidate = $_
             $session = if ($WebSession) { $WebSession } else { $deviceManager }
             $hosts = @(get-DMhosts -WebSession $session)
-            $matches = @($hosts | Where-Object Name -EQ $candidate)
-            if ($matches.Count -eq 1) { return $true }
-            if ($matches.Count -gt 1) { throw "HostName is ambiguous because more than one host is named '$candidate'." }
+            $matchingItems = @($hosts | Where-Object Name -EQ $candidate)
+            if ($matchingItems.Count -eq 1) { return $true }
+            if ($matchingItems.Count -gt 1) { throw "HostName is ambiguous because more than one host is named '$candidate'." }
             throw "Invalid HostName. Valid values are: $($hosts.Name -join ', ')"
         })]
         [ArgumentCompleter({

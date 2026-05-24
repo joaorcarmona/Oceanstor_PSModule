@@ -1,3 +1,83 @@
+function Copy-DMTraceValue {
+	param(
+		[Parameter(ValueFromPipeline = $true)]
+		[object]$Value
+	)
+
+	if ($null -eq $Value -or $Value -is [string] -or $Value.GetType().IsValueType) {
+		return $Value
+	}
+
+	if ($Value -is [System.Collections.IDictionary]) {
+		$copy = [ordered]@{}
+		foreach ($key in $Value.Keys) {
+			if ([string]$key -match '(?i)(password|passwd|pwd|token|secret)') {
+				$copy[$key] = '[REDACTED]'
+			}
+			else {
+				$copy[$key] = Copy-DMTraceValue -Value $Value[$key]
+			}
+		}
+		return [pscustomobject]$copy
+	}
+
+	if ($Value -is [System.Collections.IEnumerable]) {
+		return @($Value | ForEach-Object { Copy-DMTraceValue -Value $_ })
+	}
+
+	$copy = [ordered]@{}
+	foreach ($property in $Value.PSObject.Properties) {
+		if ($property.Name -match '(?i)(password|passwd|pwd|token|secret)') {
+			$copy[$property.Name] = '[REDACTED]'
+		}
+		else {
+			$copy[$property.Name] = Copy-DMTraceValue -Value $property.Value
+		}
+	}
+	return [pscustomobject]$copy
+}
+
+function Write-DMRequestTrace {
+	param(
+		[Parameter(Mandatory)][datetime]$StartedAt,
+		[Parameter(Mandatory)][string]$Method,
+		[Parameter(Mandatory)][string]$Resource,
+		[Parameter(Mandatory)][string]$Uri,
+		[hashtable]$BodyData,
+		[switch]$ApiV2,
+		[object]$Response,
+		[string]$Exception
+	)
+
+	$traceAction = Get-Variable -Name DeviceManagerTraceAction -Scope Script -ErrorAction SilentlyContinue
+	if ($null -eq $traceAction -or $null -eq $traceAction.Value) {
+		return
+	}
+
+	$contextVariable = Get-Variable -Name DeviceManagerTraceContext -Scope Script -ErrorAction SilentlyContinue
+	$context = if ($null -ne $contextVariable) { $contextVariable.Value } else { $null }
+	$entry = [pscustomobject]@{
+		Timestamp  = $StartedAt.ToString('o')
+		DurationMs = [math]::Round(((Get-Date) - $StartedAt).TotalMilliseconds, 2)
+		Step       = if ($context) { $context.Name } else { $null }
+		Category   = if ($context) { $context.Category } else { $null }
+		Method     = $Method
+		Resource   = $Resource
+		ApiV2      = [bool]$ApiV2
+		Uri        = $Uri
+		Request    = Copy-DMTraceValue -Value $BodyData
+		Response   = Copy-DMTraceValue -Value $Response
+		Exception  = $Exception
+	}
+
+	try {
+		& $traceAction.Value $entry
+	}
+	catch {
+		Write-Verbose "DeviceManager trace action failed: $($_.Exception.Message)"
+	}
+}
+
 function invoke-DeviceManager{
 	<#
 	.SYNOPSIS
@@ -61,12 +141,22 @@ function invoke-DeviceManager{
 		$RestURI = "https://$($session.hostname):8088/deviceManager/rest/$($session.DeviceId)/$resource"
 	}
 
-	if ($BodyData){
-		$JsonBody = ConvertTo-Json $BodyData
-		$result = Invoke-RestMethod -Method $Method -uri $RestURI -Headers $session.Headers -WebSession $session.WebSession -ContentType "application/json" -SkipCertificateCheck -Body $JsonBody
-	} else {
-		$result = Invoke-RestMethod -Method $Method -uri $RestURI -Headers $session.Headers -WebSession $session.WebSession -ContentType "application/json" -SkipCertificateCheck
-	}
+	$startedAt = Get-Date
+	try {
+		if ($BodyData){
+			$JsonBody = ConvertTo-Json $BodyData
+			$result = Invoke-RestMethod -Method $Method -uri $RestURI -Headers $session.Headers -WebSession $session.WebSession -ContentType "application/json" -SkipCertificateCheck -Body $JsonBody
+		} else {
+			$result = Invoke-RestMethod -Method $Method -uri $RestURI -Headers $session.Headers -WebSession $session.WebSession -ContentType "application/json" -SkipCertificateCheck
+		}
 
-	return $result
+		Write-DMRequestTrace -StartedAt $startedAt -Method $Method -Resource $Resource -Uri $RestURI `
+			-BodyData $BodyData -ApiV2:$ApiV2 -Response $result
+		return $result
+	}
+	catch {
+		Write-DMRequestTrace -StartedAt $startedAt -Method $Method -Resource $Resource -Uri $RestURI `
+			-BodyData $BodyData -ApiV2:$ApiV2 -Exception $_.Exception.Message
+		throw
+	}
 }

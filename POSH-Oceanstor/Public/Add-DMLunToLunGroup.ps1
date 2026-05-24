@@ -13,9 +13,9 @@ function Add-DMLunToLunGroup {
             $candidate = $_
             $session = if ($WebSession) { $WebSession } else { $deviceManager }
             $luns = @(get-DMluns -WebSession $session)
-            $matches = @($luns | Where-Object Name -EQ $candidate)
-            if ($matches.Count -eq 1) { return $true }
-            if ($matches.Count -gt 1) { throw "LunName is ambiguous because more than one LUN is named '$candidate'." }
+            $matchingItems = @($luns | Where-Object Name -EQ $candidate)
+            if ($matchingItems.Count -eq 1) { return $true }
+            if ($matchingItems.Count -gt 1) { throw "LunName is ambiguous because more than one LUN is named '$candidate'." }
             throw "Invalid LunName. Valid values are: $($luns.Name -join ', ')"
         })]
         [ArgumentCompleter({
@@ -30,9 +30,9 @@ function Add-DMLunToLunGroup {
             $candidate = $_
             $session = if ($WebSession) { $WebSession } else { $deviceManager }
             $groups = @(get-DMlunGroups -WebSession $session)
-            $matches = @($groups | Where-Object Name -EQ $candidate)
-            if ($matches.Count -eq 1) { return $true }
-            if ($matches.Count -gt 1) { throw "LunGroupName is ambiguous because more than one LUN group is named '$candidate'." }
+            $matchingItems = @($groups | Where-Object Name -EQ $candidate)
+            if ($matchingItems.Count -eq 1) { return $true }
+            if ($matchingItems.Count -gt 1) { throw "LunGroupName is ambiguous because more than one LUN group is named '$candidate'." }
             throw "Invalid LunGroupName. Valid values are: $($groups.Name -join ', ')"
         })]
         [ArgumentCompleter({

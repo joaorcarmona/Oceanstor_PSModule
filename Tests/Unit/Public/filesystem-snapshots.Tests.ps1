@@ -91,6 +91,24 @@ Describe 'File-system snapshot commands' {
         $script:resource | Should -Be 'fssnapshot?PARENTID=5'
     }
 
+    It 'returns no file-system snapshots when the API contains no data property' {
+        Mock invoke-DeviceManager { [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 } } }
+
+        @(Get-DMFileSystemSnapshots -WebSession $script:session -FileSystemName 'documents') | Should -BeNullOrEmpty
+    }
+
+    It 'parses file-system snapshots returned as JSON text' {
+        Mock invoke-DeviceManager {
+            '{"data":[{"ID":"5@checkpoint","NAME":"checkpoint","PARENTID":"5","PARENTNAME":"documents","HEALTHSTATUS":"1","snapType":"0","SNAPTYPE":"1","TIMESTAMP":"1594990822"}],"error":{"code":0}}'
+        }
+
+        $result = Get-DMFileSystemSnapshots -WebSession $script:session -FileSystemName 'documents'
+
+        $result[0].Name | Should -Be 'checkpoint'
+        $result[0].GetType().Name | Should -Be 'OceanstorFileSystemSnapshot'
+        $result[0].'Snapshot Type' | Should -Be 'Manual'
+    }
+
     It 'deletes a selected file-system snapshot by ID' {
         Mock Get-DMFileSystemSnapshots {
             @([OceanstorFileSystemSnapshot]::new([pscustomobject]@{ ID = '5@checkpoint'; NAME = 'checkpoint'; PARENTID = '5'; PARENTNAME = 'documents' }, $script:session))

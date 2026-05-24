@@ -12,9 +12,9 @@ function Remove-DMDTree {
         [ValidateScript({
             $session = if ($WebSession) { $WebSession } else { $deviceManager }
             $fileSystems = @(get-DMFileSystem -WebSession $session)
-            $matches = @($fileSystems | Where-Object Name -EQ $_)
-            if ($matches.Count -eq 1) { return $true }
-            if ($matches.Count -gt 1) { throw "FileSystemName is ambiguous because more than one file system is named '$_'." }
+            $matchingItems = @($fileSystems | Where-Object Name -EQ $_)
+            if ($matchingItems.Count -eq 1) { return $true }
+            if ($matchingItems.Count -gt 1) { throw "FileSystemName is ambiguous because more than one file system is named '$_'." }
             throw "Invalid FileSystemName. Valid values are: $($fileSystems.Name -join ', ')"
         })]
         [ArgumentCompleter({
@@ -29,9 +29,9 @@ function Remove-DMDTree {
             $session = if ($WebSession) { $WebSession } else { $deviceManager }
             $fileSystem = @(get-DMFileSystem -WebSession $session | Where-Object Name -EQ $FileSystemName)[0]
             $dtrees = @((invoke-DeviceManager -WebSession $session -Method 'GET' -Resource "QUOTATREE?PARENTID=$($fileSystem.Id)").data)
-            $matches = @($dtrees | Where-Object NAME -EQ $_)
-            if ($matches.Count -eq 1) { return $true }
-            if ($matches.Count -gt 1) { throw "DTreeName is ambiguous because more than one dTree is named '$_'." }
+            $matchingItems = @($dtrees | Where-Object NAME -EQ $_)
+            if ($matchingItems.Count -eq 1) { return $true }
+            if ($matchingItems.Count -gt 1) { throw "DTreeName is ambiguous because more than one dTree is named '$_'." }
             throw "Invalid DTreeName. Valid values are: $($dtrees.NAME -join ', ')"
         })]
         [ArgumentCompleter({

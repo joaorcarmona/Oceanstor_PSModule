@@ -12,9 +12,9 @@ function Remove-DMLunGroup {
         [ValidateScript({
             $session = if ($WebSession) { $WebSession } else { $deviceManager }
             $groups = @(get-DMlunGroups -WebSession $session)
-            $matches = @($groups | Where-Object Name -EQ $_)
-            if ($matches.Count -eq 1) { return $true }
-            if ($matches.Count -gt 1) { throw "LunGroupName is ambiguous because more than one LUN group is named '$_'." }
+            $matchingItems = @($groups | Where-Object Name -EQ $_)
+            if ($matchingItems.Count -eq 1) { return $true }
+            if ($matchingItems.Count -gt 1) { throw "LunGroupName is ambiguous because more than one LUN group is named '$_'." }
             throw "Invalid LunGroupName. Valid values are: $($groups.Name -join ', ')"
         })]
         [ArgumentCompleter({

@@ -3,6 +3,15 @@
 #
 # Run configured test-owned create/modify/remove validation:
 #   ./Invoke-GetterIntegrityValidation.ps1 -Hostname '<array-address>' -RunMutatingTests
+#
+# Show a persistent line for each completed check in addition to live progress:
+#   ./Invoke-GetterIntegrityValidation.ps1 -Hostname '<array-address>' -RunMutatingTests -ShowTestExecution
+#
+# Hide the interactive progress display with -NoProgress when redirecting output.
+#
+# Mutation runs write REST request/response diagnostics to
+#   ./mutation-trace-last-result.json
+# Override the output location with -MutationLogPath when retaining multiple runs.
 @{
     # This file contains no login details. Hostname is supplied to the runner and
     # credentials are requested interactively by connect-deviceManager -Secure.
@@ -69,7 +78,7 @@
         # Supply only unused/free identities that may be created and deleted by
         # the test. Enable Host to also test FC and iSCSI detachment from the
         # generated host. Leave an identity blank to skip that protocol.
-        FibreChannelWWN = '50:00:25:B5:11:11:11:11'
+        FibreChannelWWN = '500025B511111111'
         IscsiIdentifier = 'iqn.2003-01.com.example'
         NvmeNqn = 'nqn.2014-08.org.nvmexpress:uuid:123e4567-e89b-12d3-a456-426614174000'
     }
