@@ -92,4 +92,15 @@ class OceanStorHost{
         $this.{vStore ID} = $hostReceived.vstoreid
 		$this.{vStore Name} = $hostReceived.vstoreName
 	}
+
+	[array] GetHostPaths()
+	{
+		$paths = @()
+		foreach ($initiatorType in @('FC', 'ISCSI', 'Infiniband'))
+		{
+			$paths += @(get-DMHostLinks -WebSession $this.Session -HostId $this.id -InitiatorType $initiatorType)
+		}
+
+		return $paths
+	}
 }

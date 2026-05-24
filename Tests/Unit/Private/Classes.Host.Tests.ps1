@@ -1,9 +1,16 @@
 BeforeAll {
+    function global:get-DMHostLinks {}
+
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorHost.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorHostGroup.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorHostLink.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorHostinitiatorFC.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorHostinitiatorISCSI.ps1"
+}
+
+AfterAll {
+    Remove-Item function:global:get-DMHostLinks -ErrorAction SilentlyContinue
+    Remove-Variable -Name HostPathsCall -Scope Global -ErrorAction SilentlyContinue
 }
 
 Describe 'Host model classes' {
@@ -22,6 +29,28 @@ Describe 'Host model classes' {
         $result.initiators = @('fc-01', 'iscsi-01')
         $result.initiators | Should -Be @('fc-01', 'iscsi-01')
         $result.Session | Should -Be $script:session
+    }
+
+    It 'retrieves all supported path types from a host object' {
+        function global:get-DMHostLinks {
+            param($WebSession, $HostId, $InitiatorType)
+            $global:HostPathsCall += [pscustomobject]@{
+                Session = $WebSession
+                HostId = $HostId
+                InitiatorType = $InitiatorType
+            }
+            [pscustomobject]@{ Id = "$HostId-$InitiatorType" }
+        }
+
+        $global:HostPathsCall = @()
+        $hostObject = [OceanStorHost]::new([pscustomobject]@{ ID = 'host-01'; NAME = 'server01' }, $script:session)
+
+        $result = @($hostObject.GetHostPaths())
+
+        $result.Id | Should -Be @('host-01-FC', 'host-01-ISCSI', 'host-01-Infiniband')
+        $global:HostPathsCall.HostId | Should -Be @('host-01', 'host-01', 'host-01')
+        $global:HostPathsCall.InitiatorType | Should -Be @('FC', 'ISCSI', 'Infiniband')
+        $global:HostPathsCall.Session | Should -Be @($script:session, $script:session, $script:session)
     }
 
     It 'maps host group identity and mapping state' {
