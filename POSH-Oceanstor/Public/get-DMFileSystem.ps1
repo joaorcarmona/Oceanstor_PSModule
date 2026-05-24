@@ -1,5 +1,5 @@
-function get-DMFileSystem{
-	<#
+function get-DMFileSystem {
+    <#
 	.SYNOPSIS
 		To Get Huawei Oceanstor Storage File Systems
 
@@ -30,41 +30,41 @@ function get-DMFileSystem{
 
 	.LINK
 	#>
-	[Cmdletbinding()]
-    Param(
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+    [Cmdletbinding()]
+    param(
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession
-	)
+    )
 
-	if ($WebSession){
+    if ($WebSession) {
         $session = $WebSession
-    } else {
+    }
+    else {
         $session = $deviceManager
     }
 
-	$defaultDisplaySet = "Id", "Name", "Health Status", "Running Status", "Capacity (GB)"
+    $defaultDisplaySet = "Id", "Name", "Health Status", "Running Status", "Capacity (GB)"
 
-	$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
-		'DefaultDisplayPropertySet',
-		[string[]]$defaultDisplaySet
-	)
+    $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+        'DefaultDisplayPropertySet',
+        [string[]]$defaultDisplaySet
+    )
 
-	$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+    $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
     $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "filesystem" | Select-Object -ExpandProperty data
     $FileSystems = New-Object System.Collections.ArrayList
 
-	foreach ($fs in $response)
-	{
-		$fileSystem = [OceanstorFileSystem]::new($fs, $session)
-		[void]$FileSystems.Add($fileSystem)
-	}
+    foreach ($fs in $response) {
+        $fileSystem = [OceanstorFileSystem]::new($fs, $session)
+        [void]$FileSystems.Add($fileSystem)
+    }
 
-	$FileSystems | ForEach-Object {
-		$_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
-	}
+    $FileSystems | ForEach-Object {
+        $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
+    }
 
-	$result = $FileSystems
+    $result = $FileSystems
 
-	return $result
+    return $result
 }

@@ -1,5 +1,5 @@
-function get-DMvStore{
-	<#
+function get-DMvStore {
+    <#
 	.SYNOPSIS
 		To Get Huawei Oceanstor Storage vStores configured
 
@@ -30,41 +30,41 @@ function get-DMvStore{
 
 	.LINK
 	#>
-	[Cmdletbinding()]
-    Param(
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+    [Cmdletbinding()]
+    param(
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession
-	)
+    )
 
-	if ($WebSession){
+    if ($WebSession) {
         $session = $WebSession
-    } else {
+    }
+    else {
         $session = $deviceManager
     }
 
-	$defaultDisplaySet = "Id", "Name", "Running Status", "SAN Free Capacity Quota", "NAS Free Capacity Quota"
+    $defaultDisplaySet = "Id", "Name", "Running Status", "SAN Free Capacity Quota", "NAS Free Capacity Quota"
 
-	$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
-		'DefaultDisplayPropertySet',
-		[string[]]$defaultDisplaySet
-	)
+    $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+        'DefaultDisplayPropertySet',
+        [string[]]$defaultDisplaySet
+    )
 
-	$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+    $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
     $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "vstore" | Select-Object -ExpandProperty data
     $vStores = New-Object System.Collections.ArrayList
 
-	foreach ($tvstore in $response)
-	{
-		$vStore = [OceanStorvStore]::new($tvstore, $session)
-		[void]$vStores.Add($vStore)
-	}
+    foreach ($tvstore in $response) {
+        $vStore = [OceanStorvStore]::new($tvstore, $session)
+        [void]$vStores.Add($vStore)
+    }
 
-	$vStores | ForEach-Object {
-		$_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
-	}
+    $vStores | ForEach-Object {
+        $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
+    }
 
-	$result = $vStores
+    $result = $vStores
 
-	return $result
+    return $result
 }

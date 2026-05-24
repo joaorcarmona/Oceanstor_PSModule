@@ -1,4 +1,4 @@
-function get-DMControllers{
+function get-DMControllers {
     <#
 .SYNOPSIS
     To Get Huawei Oceanstor Storage Controller
@@ -30,41 +30,41 @@ function get-DMControllers{
 
 .LINK
 #>
-[Cmdletbinding()]
-Param(
-[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
-    [pscustomobject]$WebSession
-)
+    [Cmdletbinding()]
+    param(
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
+        [pscustomobject]$WebSession
+    )
 
-if ($WebSession){
-    $session = $WebSession
-} else {
-    $session = $deviceManager
-}
+    if ($WebSession) {
+        $session = $WebSession
+    }
+    else {
+        $session = $deviceManager
+    }
 
-$defaultDisplaySet = "Id", "Location", "Health Status", "Running Status", "Is Master"
+    $defaultDisplaySet = "Id", "Location", "Health Status", "Running Status", "Is Master"
 
-$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
-    'DefaultDisplayPropertySet',
-    [string[]]$defaultDisplaySet
-)
+    $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+        'DefaultDisplayPropertySet',
+        [string[]]$defaultDisplaySet
+    )
 
-$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+    $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-$response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "controller" | Select-Object -ExpandProperty data
-$controllers = New-Object System.Collections.ArrayList
+    $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "controller" | Select-Object -ExpandProperty data
+    $controllers = New-Object System.Collections.ArrayList
 
-foreach ($tcont in $response)
-{
-    $controller = [OceanStorController]::new($tcont, $session)
-    [void]$controllers.Add($controller)
-}
+    foreach ($tcont in $response) {
+        $controller = [OceanStorController]::new($tcont, $session)
+        [void]$controllers.Add($controller)
+    }
 
-$controllers | ForEach-Object {
-    $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
-}
+    $controllers | ForEach-Object {
+        $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
+    }
 
-$result = $controllers
+    $result = $controllers
 
-return $result
+    return $result
 }

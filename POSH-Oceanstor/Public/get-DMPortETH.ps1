@@ -1,4 +1,4 @@
-function get-DMPortETH{
+function get-DMPortETH {
     <#
 .SYNOPSIS
     To Get Huawei Oceanstor Storage configured Ethernet Ports
@@ -30,41 +30,41 @@ function get-DMPortETH{
 
 .LINK
 #>
-[Cmdletbinding()]
-Param(
-[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
-    [pscustomobject]$WebSession
-)
+    [Cmdletbinding()]
+    param(
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
+        [pscustomobject]$WebSession
+    )
 
-if ($WebSession){
-    $session = $WebSession
-} else {
-    $session = $deviceManager
-}
+    if ($WebSession) {
+        $session = $WebSession
+    }
+    else {
+        $session = $deviceManager
+    }
 
-$defaultDisplaySet = "Id", "Name", "Health Status", "Running Status", "IPv4 Address"
+    $defaultDisplaySet = "Id", "Name", "Health Status", "Running Status", "IPv4 Address"
 
-$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
-    'DefaultDisplayPropertySet',
-    [string[]]$defaultDisplaySet
-)
+    $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+        'DefaultDisplayPropertySet',
+        [string[]]$defaultDisplaySet
+    )
 
-$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+    $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-$response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "eth_port" | Select-Object -ExpandProperty data
-$ethPorts = New-Object System.Collections.ArrayList
+    $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "eth_port" | Select-Object -ExpandProperty data
+    $ethPorts = New-Object System.Collections.ArrayList
 
-foreach ($peth in $response)
-{
-    $ethpObj = [OceanStorPortETH]::new($peth, $session)
-    [void]$ethPorts.Add($ethpObj)
-}
+    foreach ($peth in $response) {
+        $ethpObj = [OceanStorPortETH]::new($peth, $session)
+        [void]$ethPorts.Add($ethpObj)
+    }
 
-$ethPorts | ForEach-Object {
-    $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
-}
+    $ethPorts | ForEach-Object {
+        $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
+    }
 
-$result = $ethPorts
+    $result = $ethPorts
 
-return $result
+    return $result
 }

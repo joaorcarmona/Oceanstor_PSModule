@@ -1,4 +1,4 @@
-function get-DMPortSAS{
+function get-DMPortSAS {
     <#
 .SYNOPSIS
     To Get Huawei Oceanstor Storage configured SAS Ports
@@ -30,41 +30,41 @@ function get-DMPortSAS{
 
 .LINK
 #>
-[Cmdletbinding()]
-Param(
-[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
-    [pscustomobject]$WebSession
-)
+    [Cmdletbinding()]
+    param(
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
+        [pscustomobject]$WebSession
+    )
 
-if ($WebSession){
-    $session = $WebSession
-} else {
-    $session = $deviceManager
-}
+    if ($WebSession) {
+        $session = $WebSession
+    }
+    else {
+        $session = $deviceManager
+    }
 
-$defaultDisplaySet = "Id", "Name", "Health Status", "Running Status", "Port Location"
+    $defaultDisplaySet = "Id", "Name", "Health Status", "Running Status", "Port Location"
 
-$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
-    'DefaultDisplayPropertySet',
-    [string[]]$defaultDisplaySet
-)
+    $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+        'DefaultDisplayPropertySet',
+        [string[]]$defaultDisplaySet
+    )
 
-$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+    $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-$response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "sas_port" | Select-Object -ExpandProperty data
-$sasPorts = New-Object System.Collections.ArrayList
+    $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "sas_port" | Select-Object -ExpandProperty data
+    $sasPorts = New-Object System.Collections.ArrayList
 
-foreach ($psas in $response)
-{
-    $saspObj = [OceanstorPortSAS]::new($psas, $session)
-    [void]$sasPorts.Add($saspObj)
-}
+    foreach ($psas in $response) {
+        $saspObj = [OceanstorPortSAS]::new($psas, $session)
+        [void]$sasPorts.Add($saspObj)
+    }
 
-$sasPorts | ForEach-Object {
-    $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
-}
+    $sasPorts | ForEach-Object {
+        $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
+    }
 
-$result = $sasPorts
+    $result = $sasPorts
 
-return $result
+    return $result
 }

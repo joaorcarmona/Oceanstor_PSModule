@@ -1,5 +1,5 @@
-function get-DMvLans{
-	<#
+function get-DMvLans {
+    <#
 	.SYNOPSIS
 		To Get Huawei Oceanstor Storage existent vlans
 
@@ -30,40 +30,40 @@ function get-DMvLans{
 
 	.LINK
 	#>
-	[Cmdletbinding()]
-    Param(
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+    [Cmdletbinding()]
+    param(
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession
-	)
+    )
 
-	if ($WebSession){
+    if ($WebSession) {
         $session = $WebSession
-    } else {
+    }
+    else {
         $session = $deviceManager
     }
 
-	$defaultDisplaySet = "Id", "Name", "Vlan Tag Id", "Port Type", "Running Status"
+    $defaultDisplaySet = "Id", "Name", "Vlan Tag Id", "Port Type", "Running Status"
 
-	$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
-		'DefaultDisplayPropertySet',
-		[string[]]$defaultDisplaySet
-	)
+    $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+        'DefaultDisplayPropertySet',
+        [string[]]$defaultDisplaySet
+    )
 
-	$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+    $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
     $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "vlan" | Select-Object -ExpandProperty data
     $vlans = New-Object System.Collections.ArrayList
 
-	foreach ($tvlan in $response)
-	{
-		$vlan = [OceanStorvLan]::new($tvlan,$session)
-		[void]$vlans.Add($vlan)
-	}
+    foreach ($tvlan in $response) {
+        $vlan = [OceanStorvLan]::new($tvlan, $session)
+        [void]$vlans.Add($vlan)
+    }
 
-	$vlans | ForEach-Object {
-		$_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
-	}
+    $vlans | ForEach-Object {
+        $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
+    }
 
-	$result = $vlans
-	return $result
+    $result = $vlans
+    return $result
 }

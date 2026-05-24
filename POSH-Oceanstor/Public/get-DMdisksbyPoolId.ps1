@@ -1,5 +1,5 @@
-function get-DMdisksbyPoolId{
-	<#
+function get-DMdisksbyPoolId {
+    <#
 	.SYNOPSIS
 		To Get Huawei Oceanstor Storage disks configured in a Storage Pool
 
@@ -33,43 +33,43 @@ function get-DMdisksbyPoolId{
 
 	.LINK
 	#>
-	[Cmdletbinding()]
-    Param(
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+    [Cmdletbinding()]
+    param(
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession,
-	[Parameter(ValueFromPipeline=$false,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$true)]
-			[pscustomobject]$poolId
-	)
+        [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $true)]
+        [pscustomobject]$poolId
+    )
 
-	if ($WebSession){
+    if ($WebSession) {
         $session = $WebSession
-    } else {
+    }
+    else {
         $session = $deviceManager
     }
 
-	$defaultDisplaySet = "Id", "Location", "Health Status", "Disk Usage", "PoolName"
+    $defaultDisplaySet = "Id", "Location", "Health Status", "Disk Usage", "PoolName"
 
-	$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
-		'DefaultDisplayPropertySet',
-		[string[]]$defaultDisplaySet
-	)
+    $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+        'DefaultDisplayPropertySet',
+        [string[]]$defaultDisplaySet
+    )
 
-	$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+    $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
     $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "disk" | Select-Object -ExpandProperty data
     $Storagedisks = New-Object System.Collections.ArrayList
 
-	foreach ($tdisk in $response)
-	{
-		$disk = [OceanStorDisks]::new($tdisk, $session)
-		[void]$Storagedisks.Add($disk)
-	}
+    foreach ($tdisk in $response) {
+        $disk = [OceanStorDisks]::new($tdisk, $session)
+        [void]$Storagedisks.Add($disk)
+    }
 
-	$result = $Storagedisks | Where-Object poolId -Match $poolID
+    $result = $Storagedisks | Where-Object poolId -Match $poolID
 
-	$result | ForEach-Object {
-		$_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
-	}
+    $result | ForEach-Object {
+        $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
+    }
 
-	return $result
+    return $result
 }

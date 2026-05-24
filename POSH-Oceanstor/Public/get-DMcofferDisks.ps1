@@ -1,5 +1,5 @@
-function get-DMcofferDisks{
-	<#
+function get-DMcofferDisks {
+    <#
 	.SYNOPSIS
 		To Get Huawei Oceanstor Storage System coffer disks
 
@@ -30,41 +30,41 @@ function get-DMcofferDisks{
 
 	.LINK
 	#>
-	[Cmdletbinding()]
-    Param(
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+    [Cmdletbinding()]
+    param(
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession
-	)
+    )
 
-	if ($WebSession){
+    if ($WebSession) {
         $session = $WebSession
-    } else {
+    }
+    else {
         $session = $deviceManager
     }
 
-	$defaultDisplaySet = "Id", "Location", "Health Status", "Disk Usage", "PoolName"
+    $defaultDisplaySet = "Id", "Location", "Health Status", "Disk Usage", "PoolName"
 
-	$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
-		'DefaultDisplayPropertySet',
-		[string[]]$defaultDisplaySet
-	)
+    $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+        'DefaultDisplayPropertySet',
+        [string[]]$defaultDisplaySet
+    )
 
-	$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+    $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
     $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "disk" | Select-Object -ExpandProperty data
     $Storagedisks = New-Object System.Collections.ArrayList
 
-	foreach ($tdisk in $response)
-	{
-		$disk = [OceanStorDisks]::new($tdisk, $session)
-		[void]$Storagedisks.Add($disk)
-	}
+    foreach ($tdisk in $response) {
+        $disk = [OceanStorDisks]::new($tdisk, $session)
+        [void]$Storagedisks.Add($disk)
+    }
 
-	$result = $Storagedisks | Where-Object cofferDisk -eq $true
+    $result = $Storagedisks | Where-Object cofferDisk -EQ $true
 
-	$result | ForEach-Object {
-		$_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
-	}
+    $result | ForEach-Object {
+        $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
+    }
 
-	return $result
+    return $result
 }

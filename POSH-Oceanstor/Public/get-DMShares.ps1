@@ -1,5 +1,5 @@
-function get-DMShares{
-	<#
+function get-DMShares {
+    <#
 	.SYNOPSIS
 		To Get Huawei Oceanstor Storage Shares
 
@@ -33,54 +33,52 @@ function get-DMShares{
 
 	.LINK
 	#>
-	[Cmdletbinding()]
-    Param(
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+    [Cmdletbinding()]
+    param(
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession,
-	[Parameter(Position=1,Mandatory=$true)]
-        [ValidateSet("CIFS","NFS")]
+        [Parameter(Position = 1, Mandatory = $true)]
+        [ValidateSet("CIFS", "NFS")]
         [string]$shareType
-	)
+    )
 
-	if ($WebSession){
+    if ($WebSession) {
         $session = $WebSession
-    } else {
+    }
+    else {
         $session = $deviceManager
     }
 
-	$defaultDisplaySet = "Id", "Name", "Share Path", "FileSystem ID", "vStore Name"
+    $defaultDisplaySet = "Id", "Name", "Share Path", "FileSystem ID", "vStore Name"
 
-	$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
-		'DefaultDisplayPropertySet',
-		[string[]]$defaultDisplaySet
-	)
+    $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+        'DefaultDisplayPropertySet',
+        [string[]]$defaultDisplaySet
+    )
 
-	$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+    $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-	switch ($shareType)
-	{
-		CIFS {$resourceQuery = "CIFSHARE"}
-		NFS {$resourceQuery = "NFSHARE"}
-	}
+    switch ($shareType) {
+        CIFS { $resourceQuery = "CIFSHARE" }
+        NFS { $resourceQuery = "NFSHARE" }
+    }
 
     $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource $resourceQuery | Select-Object -ExpandProperty data
     $shares = New-Object System.Collections.ArrayList
 
-	foreach ($tshare in $response)
-	{
-		switch ($shareType)
-		{
-			CIFS {$share = [OceanStorCIFSShare]::new($tshare, $session)}
-			NFS {$share = [OceanStorNFSShare]::new($tshare, $session)}
-		}
+    foreach ($tshare in $response) {
+        switch ($shareType) {
+            CIFS { $share = [OceanStorCIFSShare]::new($tshare, $session) }
+            NFS { $share = [OceanStorNFSShare]::new($tshare, $session) }
+        }
 
-		[void]$shares.Add($share)
-	}
+        [void]$shares.Add($share)
+    }
 
-	$shares | ForEach-Object {
-		$_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
-	}
+    $shares | ForEach-Object {
+        $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
+    }
 
-	$result = $shares
-	return $result
+    $result = $shares
+    return $result
 }

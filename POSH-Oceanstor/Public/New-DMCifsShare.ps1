@@ -11,26 +11,26 @@ function New-DMCifsShare {
         [Parameter(Mandatory = $true, Position = 1)]
         [ValidateLength(1, 80)]
         [ValidateScript({
-            if ($_ -match '[/\\\[\]:|<>+;,?*=]') { throw 'ShareName contains a character not permitted by the CIFS share interface.' }
-            if ($_ -match '^\s|\s$' -or $_ -match '^(?i:ipc\$|autohome|~|print\$)$') { throw 'ShareName is reserved or begins/ends with a space.' }
-            return $true
-        })]
+                if ($_ -match '[/\\\[\]:|<>+;,?*=]') { throw 'ShareName contains a character not permitted by the CIFS share interface.' }
+                if ($_ -match '^\s|\s$' -or $_ -match '^(?i:ipc\$|autohome|~|print\$)$') { throw 'ShareName is reserved or begins/ends with a space.' }
+                return $true
+            })]
         [string]$ShareName,
 
         [Parameter(Mandatory = $true, Position = 2)]
         [ValidateScript({
-            $session = if ($WebSession) { $WebSession } else { $deviceManager }
-            $fileSystems = @(get-DMFileSystem -WebSession $session)
-            $matchingItems = @($fileSystems | Where-Object Name -EQ $_)
-            if ($matchingItems.Count -eq 1) { return $true }
-            if ($matchingItems.Count -gt 1) { throw "FileSystemName is ambiguous because more than one file system is named '$_'." }
-            throw "Invalid FileSystemName. Valid values are: $($fileSystems.Name -join ', ')"
-        })]
+                $session = if ($WebSession) { $WebSession } else { $deviceManager }
+                $fileSystems = @(get-DMFileSystem -WebSession $session)
+                $matchingItems = @($fileSystems | Where-Object Name -EQ $_)
+                if ($matchingItems.Count -eq 1) { return $true }
+                if ($matchingItems.Count -gt 1) { throw "FileSystemName is ambiguous because more than one file system is named '$_'." }
+                throw "Invalid FileSystemName. Valid values are: $($fileSystems.Name -join ', ')"
+            })]
         [ArgumentCompleter({
-            param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
-            $session = if ($fakeBoundParameters.ContainsKey('WebSession')) { $fakeBoundParameters.WebSession } else { $deviceManager }
-            (get-DMFileSystem -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
-        })]
+                param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) { $fakeBoundParameters.WebSession } else { $deviceManager }
+                (get-DMFileSystem -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+            })]
         [string]$FileSystemName,
 
         [Parameter(Position = 3)]

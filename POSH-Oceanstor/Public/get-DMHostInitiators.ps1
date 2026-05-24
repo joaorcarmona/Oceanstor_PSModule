@@ -1,5 +1,5 @@
-function get-DMHostInitiators{
-	<#
+function get-DMHostInitiators {
+    <#
 	.SYNOPSIS
 		To Get Huawei Oceanstor Storage Host Initiators
 
@@ -54,48 +54,47 @@ function get-DMHostInitiators{
 
 	.LINK
 	#>
-	[Cmdletbinding(DefaultParameterSetName = "AllInitiators")]
-    Param(
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+    [Cmdletbinding(DefaultParameterSetName = "AllInitiators")]
+    param(
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession,
-	[Parameter(Position=1,Mandatory=$true)]
-        [ValidateSet("FibreChannel","ISCSI")]
+        [Parameter(Position = 1, Mandatory = $true)]
+        [ValidateSet("FibreChannel", "ISCSI")]
         [string]$initatorType,
-	[Parameter(ValueFromPipeline=$false,ValueFromPipelineByPropertyName=$false,Position=1,Mandatory=$false,ParameterSetName="HostInitiators")]
+        [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $false, Position = 1, Mandatory = $false, ParameterSetName = "HostInitiators")]
         [string]$hostId,
-	[Parameter(ValueFromPipeline=$false,ValueFromPipelineByPropertyName=$false,Position=2,Mandatory=$false,ParameterSetName="FreeInitiators")]
+        [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $false, Position = 2, Mandatory = $false, ParameterSetName = "FreeInitiators")]
         [switch]$FreeInitiators = $false,
-	[Parameter(ValueFromPipeline=$false,ValueFromPipelineByPropertyName=$false,Position=2,Mandatory=$false,ParameterSetName="AllInitiators")]
+        [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $false, Position = 2, Mandatory = $false, ParameterSetName = "AllInitiators")]
         [switch]$All = $false
-	)
+    )
 
-	if ($WebSession){
+    if ($WebSession) {
         $session = $WebSession
-    } else {
+    }
+    else {
         $session = $deviceManager
     }
 
-	$defaultDisplaySet = "Id", "Type", "Host Name", "Running Status", "Is Free"
+    $defaultDisplaySet = "Id", "Type", "Host Name", "Running Status", "Is Free"
 
-	$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
-		'DefaultDisplayPropertySet',
-		[string[]]$defaultDisplaySet
-	)
+    $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+        'DefaultDisplayPropertySet',
+        [string[]]$defaultDisplaySet
+    )
 
-	$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+    $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-	switch ($initatorType)
-	{
-		FibreChannel {$resourceQuery = "fc_initiator"}
-		ISCSI {$resourceQuery = "iscsi_initiator"}
-	}
+    switch ($initatorType) {
+        FibreChannel { $resourceQuery = "fc_initiator" }
+        ISCSI { $resourceQuery = "iscsi_initiator" }
+    }
 
-	switch ($PSCmdlet.ParameterSetName)
-	{
-		HostInitiators {$resource = $resourceQuery + "?PARENTID=" + $hostId}
-		FreeInitiators {$resource = $resourceQuery + "?ISFREE=true"}
-		default {$resource = "$resourceQuery"}
-	}
+    switch ($PSCmdlet.ParameterSetName) {
+        HostInitiators { $resource = $resourceQuery + "?PARENTID=" + $hostId }
+        FreeInitiators { $resource = $resourceQuery + "?ISFREE=true" }
+        default { $resource = "$resourceQuery" }
+    }
 
     $queryResult = invoke-DeviceManager -WebSession $session -Method "GET" -Resource $resource
     $response = @()
@@ -106,22 +105,20 @@ function get-DMHostInitiators{
 
     $HostInitiators = New-Object System.Collections.ArrayList
 
-	foreach ($initator in $response)
-	{
-		switch ($initatorType)
-		{
-			FibreChannel {$HostInitiator = [OceanstorHostinitiatorFC]::new($initator, $session)}
-			ISCSI {$HostInitiator = [OceanstorHostinitiatorISCSI]::new($initator, $session)}
-		}
+    foreach ($initator in $response) {
+        switch ($initatorType) {
+            FibreChannel { $HostInitiator = [OceanstorHostinitiatorFC]::new($initator, $session) }
+            ISCSI { $HostInitiator = [OceanstorHostinitiatorISCSI]::new($initator, $session) }
+        }
 
-		[void]$HostInitiators.Add($HostInitiator)
-	}
+        [void]$HostInitiators.Add($HostInitiator)
+    }
 
-	$HostInitiators | ForEach-Object {
-		$_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
-	}
+    $HostInitiators | ForEach-Object {
+        $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
+    }
 
-	$result = $HostInitiators
+    $result = $HostInitiators
 
-	return $result
+    return $result
 }

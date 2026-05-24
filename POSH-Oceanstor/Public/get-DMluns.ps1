@@ -1,5 +1,5 @@
-function get-DMluns{
-	<#
+function get-DMluns {
+    <#
 	.SYNOPSIS
 		To Get Huawei Oceanstor Storage Luns
 
@@ -30,51 +30,51 @@ function get-DMluns{
 
 	.LINK
 	#>
-	[Cmdletbinding()]
-    Param(
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+    [Cmdletbinding()]
+    param(
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession
-	)
+    )
 
-	if ($WebSession){
+    if ($WebSession) {
         $session = $WebSession
-    } else {
+    }
+    else {
         $session = $deviceManager
     }
 
-	$defaultDisplaySet = "Id", "Name", "Health Status", "Lun Size", "WWN"
+    $defaultDisplaySet = "Id", "Name", "Health Status", "Lun Size", "WWN"
 
-	$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
-		'DefaultDisplayPropertySet',
-		[string[]]$defaultDisplaySet
-	)
+    $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+        'DefaultDisplayPropertySet',
+        [string[]]$defaultDisplaySet
+    )
 
-	$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+    $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
 
     $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "lun" | Select-Object -ExpandProperty data
     $StorageLuns = New-Object System.Collections.ArrayList
 
-	$StorageVersion = $session.version.Substring(0,2)
+    $StorageVersion = $session.version.Substring(0, 2)
 
-	if ($storageVersion -eq "V6")
-	{
-		$LunObjectClass = "OceanstorLunv6"
-	} else {
-		$LunObjectClass = "OceanstorLunv3"
-	}
+    if ($storageVersion -eq "V6") {
+        $LunObjectClass = "OceanstorLunv6"
+    }
+    else {
+        $LunObjectClass = "OceanstorLunv3"
+    }
 
-	foreach ($tlun in $response)
-	{
-		$lun = New-Object -TypeName $LunObjectClass -ArgumentList @($tlun,$session)
-		[void]$StorageLuns.Add($lun)
-	}
+    foreach ($tlun in $response) {
+        $lun = New-Object -TypeName $LunObjectClass -ArgumentList @($tlun, $session)
+        [void]$StorageLuns.Add($lun)
+    }
 
-	$StorageLuns | ForEach-Object {
-		$_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
-	}
+    $StorageLuns | ForEach-Object {
+        $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
+    }
 
-	$result = $storageLuns
+    $result = $storageLuns
 
-	return $result
+    return $result
 }

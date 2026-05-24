@@ -1,4 +1,4 @@
-function get-DMInterfaceModules{
+function get-DMInterfaceModules {
     <#
 .SYNOPSIS
     To Get Huawei Oceanstor Storage Interface Modules
@@ -30,41 +30,41 @@ function get-DMInterfaceModules{
 
 .LINK
 #>
-[Cmdletbinding()]
-Param(
-[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
-    [pscustomobject]$WebSession
-)
+    [Cmdletbinding()]
+    param(
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
+        [pscustomobject]$WebSession
+    )
 
-if ($WebSession){
-    $session = $WebSession
-} else {
-    $session = $deviceManager
-}
+    if ($WebSession) {
+        $session = $WebSession
+    }
+    else {
+        $session = $deviceManager
+    }
 
-$defaultDisplaySet = "Id", "Name", "Health Status", "Running Status", "Model"
+    $defaultDisplaySet = "Id", "Name", "Health Status", "Running Status", "Model"
 
-$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
-    'DefaultDisplayPropertySet',
-    [string[]]$defaultDisplaySet
-)
+    $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+        'DefaultDisplayPropertySet',
+        [string[]]$defaultDisplaySet
+    )
 
-$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+    $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-$response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "intf_module" | Select-Object -ExpandProperty data
-$interfaceModules = New-Object System.Collections.ArrayList
+    $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "intf_module" | Select-Object -ExpandProperty data
+    $interfaceModules = New-Object System.Collections.ArrayList
 
-foreach ($imodule in $response)
-{
-    $interfaceModule = [OceanstorInterfaceModule]::new($imodule, $session)
-    [void]$interfaceModules.Add($interfaceModule)
-}
+    foreach ($imodule in $response) {
+        $interfaceModule = [OceanstorInterfaceModule]::new($imodule, $session)
+        [void]$interfaceModules.Add($interfaceModule)
+    }
 
-$interfaceModules | ForEach-Object {
-    $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
-}
+    $interfaceModules | ForEach-Object {
+        $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
+    }
 
-$result = $interfaceModules
+    $result = $interfaceModules
 
-return $result
+    return $result
 }

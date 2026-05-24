@@ -1,5 +1,5 @@
-function get-DMstoragePools{
-	<#
+function get-DMstoragePools {
+    <#
 	.SYNOPSIS
 		To Get Huawei Oceanstor Storage Pools Configured
 
@@ -30,41 +30,41 @@ function get-DMstoragePools{
 
 	.LINK
 	#>
-	[Cmdletbinding()]
-    Param(
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+    [Cmdletbinding()]
+    param(
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession
-	)
+    )
 
-	if ($WebSession){
+    if ($WebSession) {
         $session = $WebSession
-    } else {
+    }
+    else {
         $session = $deviceManager
     }
 
-	$defaultDisplaySet = "Id", "Name", "Health Status", "Running Status", "DataSpace"
+    $defaultDisplaySet = "Id", "Name", "Health Status", "Running Status", "DataSpace"
 
-	$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
-		'DefaultDisplayPropertySet',
-		[string[]]$defaultDisplaySet
-	)
+    $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+        'DefaultDisplayPropertySet',
+        [string[]]$defaultDisplaySet
+    )
 
-	$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+    $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
     $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "storagepool" | Select-Object -ExpandProperty data
     $storagePools = New-Object System.Collections.ArrayList
 
-	foreach ($spool in $response)
-	{
-		$storagepool = [OceanStorStoragePool]::new($spool, $session)
-		[void]$storagePools.Add($storagepool)
-	}
+    foreach ($spool in $response) {
+        $storagepool = [OceanStorStoragePool]::new($spool, $session)
+        [void]$storagePools.Add($storagepool)
+    }
 
-	$storagePools | ForEach-Object {
-		$_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
-	}
+    $storagePools | ForEach-Object {
+        $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
+    }
 
-	$result = $storagePools
+    $result = $storagePools
 
-	return $result
+    return $result
 }

@@ -1,4 +1,4 @@
-function get-DMPortBond{
+function get-DMPortBond {
     <#
 .SYNOPSIS
     To Get Huawei Oceanstor Storage configured Bonds
@@ -30,41 +30,41 @@ function get-DMPortBond{
 
 .LINK
 #>
-[Cmdletbinding()]
-Param(
-[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
-    [pscustomobject]$WebSession
-)
+    [Cmdletbinding()]
+    param(
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
+        [pscustomobject]$WebSession
+    )
 
-if ($WebSession){
-    $session = $WebSession
-} else {
-    $session = $deviceManager
-}
+    if ($WebSession) {
+        $session = $WebSession
+    }
+    else {
+        $session = $deviceManager
+    }
 
-$defaultDisplaySet = "Id", "Name", "Health Status", "Running Status", "Ethernet Ports"
+    $defaultDisplaySet = "Id", "Name", "Health Status", "Running Status", "Ethernet Ports"
 
-$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
-    'DefaultDisplayPropertySet',
-    [string[]]$defaultDisplaySet
-)
+    $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+        'DefaultDisplayPropertySet',
+        [string[]]$defaultDisplaySet
+    )
 
-$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+    $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-$response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "bond_port" | Select-Object -ExpandProperty data
-$bonds = New-Object System.Collections.ArrayList
+    $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "bond_port" | Select-Object -ExpandProperty data
+    $bonds = New-Object System.Collections.ArrayList
 
-foreach ($tbond in $response)
-{
-    $bondObj = [OceanStorPortBond]::new($tbond, $session)
-    [void]$bonds.Add($bondObj)
-}
+    foreach ($tbond in $response) {
+        $bondObj = [OceanStorPortBond]::new($tbond, $session)
+        [void]$bonds.Add($bondObj)
+    }
 
-$bonds | ForEach-Object {
-    $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
-}
+    $bonds | ForEach-Object {
+        $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
+    }
 
-$result = $bonds
+    $result = $bonds
 
-return $result
+    return $result
 }

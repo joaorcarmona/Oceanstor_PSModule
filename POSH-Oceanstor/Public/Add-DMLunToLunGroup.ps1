@@ -10,36 +10,36 @@ function Add-DMLunToLunGroup {
 
         [Parameter(Mandatory = $true, Position = 1)]
         [ValidateScript({
-            $candidate = $_
-            $session = if ($WebSession) { $WebSession } else { $deviceManager }
-            $luns = @(get-DMluns -WebSession $session)
-            $matchingItems = @($luns | Where-Object Name -EQ $candidate)
-            if ($matchingItems.Count -eq 1) { return $true }
-            if ($matchingItems.Count -gt 1) { throw "LunName is ambiguous because more than one LUN is named '$candidate'." }
-            throw "Invalid LunName. Valid values are: $($luns.Name -join ', ')"
-        })]
+                $candidate = $_
+                $session = if ($WebSession) { $WebSession } else { $deviceManager }
+                $luns = @(get-DMluns -WebSession $session)
+                $matchingItems = @($luns | Where-Object Name -EQ $candidate)
+                if ($matchingItems.Count -eq 1) { return $true }
+                if ($matchingItems.Count -gt 1) { throw "LunName is ambiguous because more than one LUN is named '$candidate'." }
+                throw "Invalid LunName. Valid values are: $($luns.Name -join ', ')"
+            })]
         [ArgumentCompleter({
-            param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
-            $session = if ($fakeBoundParameters.ContainsKey('WebSession')) { $fakeBoundParameters.WebSession } else { $deviceManager }
-            (get-DMluns -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
-        })]
+                param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) { $fakeBoundParameters.WebSession } else { $deviceManager }
+                (get-DMluns -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+            })]
         [string]$LunName,
 
         [Parameter(Mandatory = $true, Position = 2)]
         [ValidateScript({
-            $candidate = $_
-            $session = if ($WebSession) { $WebSession } else { $deviceManager }
-            $groups = @(get-DMlunGroups -WebSession $session)
-            $matchingItems = @($groups | Where-Object Name -EQ $candidate)
-            if ($matchingItems.Count -eq 1) { return $true }
-            if ($matchingItems.Count -gt 1) { throw "LunGroupName is ambiguous because more than one LUN group is named '$candidate'." }
-            throw "Invalid LunGroupName. Valid values are: $($groups.Name -join ', ')"
-        })]
+                $candidate = $_
+                $session = if ($WebSession) { $WebSession } else { $deviceManager }
+                $groups = @(get-DMlunGroups -WebSession $session)
+                $matchingItems = @($groups | Where-Object Name -EQ $candidate)
+                if ($matchingItems.Count -eq 1) { return $true }
+                if ($matchingItems.Count -gt 1) { throw "LunGroupName is ambiguous because more than one LUN group is named '$candidate'." }
+                throw "Invalid LunGroupName. Valid values are: $($groups.Name -join ', ')"
+            })]
         [ArgumentCompleter({
-            param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
-            $session = if ($fakeBoundParameters.ContainsKey('WebSession')) { $fakeBoundParameters.WebSession } else { $deviceManager }
-            (get-DMlunGroups -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
-        })]
+                param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) { $fakeBoundParameters.WebSession } else { $deviceManager }
+                (get-DMlunGroups -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+            })]
         [string]$LunGroupName,
 
         [ValidateRange(0, 4095)]

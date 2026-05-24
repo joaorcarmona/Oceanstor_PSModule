@@ -1,4 +1,4 @@
-function get-DMhostsbyHostGroupName{
+function get-DMhostsbyHostGroupName {
     <#
 .SYNOPSIS
     To Get Huawei Oceanstor Storage configured Hosts querying by HostGroupName
@@ -33,45 +33,45 @@ function get-DMhostsbyHostGroupName{
 
 .LINK
 #>
-[Cmdletbinding()]
-Param(
-[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
-    [pscustomobject]$WebSession,
-[Parameter(ValueFromPipeline=$false,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
-    [string]$HostGroupName
-)
+    [Cmdletbinding()]
+    param(
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
+        [pscustomobject]$WebSession,
+        [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
+        [string]$HostGroupName
+    )
 
-if ($WebSession){
-    $session = $WebSession
-} else {
-    $session = $deviceManager
-}
+    if ($WebSession) {
+        $session = $WebSession
+    }
+    else {
+        $session = $deviceManager
+    }
 
-$defaultDisplaySet = "Id", "Name", "Health Status", "Operation System", "Parent Name"
+    $defaultDisplaySet = "Id", "Name", "Health Status", "Operation System", "Parent Name"
 
-$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
-    'DefaultDisplayPropertySet',
-    [string[]]$defaultDisplaySet
-)
+    $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+        'DefaultDisplayPropertySet',
+        [string[]]$defaultDisplaySet
+    )
 
-$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+    $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-$response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "host" | Select-Object -ExpandProperty data
-$hosts = New-Object System.Collections.ArrayList
+    $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "host" | Select-Object -ExpandProperty data
+    $hosts = New-Object System.Collections.ArrayList
 
-foreach ($thost in $response)
-{
-    $hostobj = [OceanStorHost]::new($thost, $session)
-    [void]$hosts.Add($hostobj)
-}
+    foreach ($thost in $response) {
+        $hostobj = [OceanStorHost]::new($thost, $session)
+        [void]$hosts.Add($hostobj)
+    }
 
-$result = $hosts | Where-Object "Parent Name" -Match $HostGroupName
+    $result = $hosts | Where-Object "Parent Name" -Match $HostGroupName
 
-$result = @(Set-DMHostInitiators -InputObject $result -WebSession $session)
+    $result = @(Set-DMHostInitiators -InputObject $result -WebSession $session)
 
-$result | ForEach-Object {
-    $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
-}
+    $result | ForEach-Object {
+        $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
+    }
 
-return $result
+    return $result
 }

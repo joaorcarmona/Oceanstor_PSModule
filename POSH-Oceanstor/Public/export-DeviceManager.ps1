@@ -1,5 +1,5 @@
-function export-DeviceManager{
-	<#
+function export-DeviceManager {
+    <#
 	.SYNOPSIS
 		Function that returns an OceanStor Storage Device with all the properties currently in the module.
 
@@ -28,13 +28,13 @@ function export-DeviceManager{
 
 	.LINK
 	#>
-	[Cmdletbinding()]
-	Param(
-		[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$true)]
-			[String]$Hostname
-	)
+    [Cmdletbinding()]
+    param(
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $true)]
+        [String]$Hostname
+    )
 
-	$result = [OceanstorViewStorage]::new($Hostname)
+    $result = [OceanstorViewStorage]::new($Hostname)
 
-	return $result
+    return $result
 }

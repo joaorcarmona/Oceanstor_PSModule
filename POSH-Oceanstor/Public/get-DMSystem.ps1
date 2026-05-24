@@ -1,5 +1,5 @@
-function get-DMSystem{
-	<#
+function get-DMSystem {
+    <#
 	.SYNOPSIS
 		To Get Huawei Oceanstor DeviceManager basic properties
 
@@ -30,15 +30,16 @@ function get-DMSystem{
 
 	.LINK
 	#>
-	[Cmdletbinding()]
-    Param(
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+    [Cmdletbinding()]
+    param(
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession
-	)
+    )
 
-	if ($WebSession){
+    if ($WebSession) {
         $session = $WebSession
-    } else {
+    }
+    else {
         $session = $deviceManager
     }
 
@@ -46,17 +47,17 @@ function get-DMSystem{
     $response = $response -replace "[@{}]"
     [array]$systemArray = $response.Split(";")
 
-	$defaultDisplaySet = "sn", "version", "Health Status", "Running Status", "WWN"
+    $defaultDisplaySet = "sn", "version", "Health Status", "Running Status", "WWN"
 
-	$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
-		'DefaultDisplayPropertySet',
-		[string[]]$defaultDisplaySet
-	)
+    $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+        'DefaultDisplayPropertySet',
+        [string[]]$defaultDisplaySet
+    )
 
-	$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+    $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
     $result = [OceanStorSystem]::new($systemArray, $session)
-	$result | Add-Member MemberSet PSStandardMembers $standardMembers -Force
+    $result | Add-Member MemberSet PSStandardMembers $standardMembers -Force
 
-	return $result
+    return $result
 }

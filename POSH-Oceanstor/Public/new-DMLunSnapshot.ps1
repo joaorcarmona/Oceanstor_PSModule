@@ -42,36 +42,40 @@ function new-DMLunSnapshot {
 
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, Position = 2)]
         [ValidateScript({
-            if ($WebSession) {
-                $session = $WebSession
-            } else {
-                $session = $deviceManager
-            }
+                if ($WebSession) {
+                    $session = $WebSession
+                }
+                else {
+                    $session = $deviceManager
+                }
 
-            $luns = get-DMluns -WebSession $session
-            $matchingLuns = @($luns | Where-Object Name -EQ $_)
+                $luns = get-DMluns -WebSession $session
+                $matchingLuns = @($luns | Where-Object Name -EQ $_)
 
-            if ($matchingLuns.Count -eq 1) {
-                $true
-            } elseif ($matchingLuns.Count -gt 1) {
-                throw "SourceLunName is ambiguous because more than one LUN is named '$_'."
-            } else {
-                throw "Invalid SourceLunName. Valid values are: $($luns.Name -join ', ')"
-            }
-        })]
+                if ($matchingLuns.Count -eq 1) {
+                    $true
+                }
+                elseif ($matchingLuns.Count -gt 1) {
+                    throw "SourceLunName is ambiguous because more than one LUN is named '$_'."
+                }
+                else {
+                    throw "Invalid SourceLunName. Valid values are: $($luns.Name -join ', ')"
+                }
+            })]
         [ArgumentCompleter({
-            param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+                param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
 
-            if ($fakeBoundParameters.ContainsKey('WebSession')) {
-                $session = $fakeBoundParameters.WebSession
-            } else {
-                $session = $deviceManager
-            }
+                if ($fakeBoundParameters.ContainsKey('WebSession')) {
+                    $session = $fakeBoundParameters.WebSession
+                }
+                else {
+                    $session = $deviceManager
+                }
 
-            (get-DMluns -WebSession $session).Name |
-                Sort-Object -Unique |
-                Where-Object { $_ -like "$wordToComplete*" }
-        })]
+                (get-DMluns -WebSession $session).Name |
+                    Sort-Object -Unique |
+                    Where-Object { $_ -like "$wordToComplete*" }
+            })]
         [string]$SourceLunName,
 
         [Parameter(Position = 3)]
@@ -83,7 +87,8 @@ function new-DMLunSnapshot {
 
     if ($WebSession) {
         $session = $WebSession
-    } else {
+    }
+    else {
         $session = $deviceManager
     }
 
@@ -97,7 +102,8 @@ function new-DMLunSnapshot {
 
     if ($SnapshotName) {
         $body.Add('NAME', $SnapshotName)
-    } else {
+    }
+    else {
         $body.Add('NAME', "snap_$($SourceLunName)-$(Get-Date -Format 'yyyyMMddHHmmss')")
     }
 

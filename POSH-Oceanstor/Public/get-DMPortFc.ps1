@@ -1,4 +1,4 @@
-function get-DMPortFc{
+function get-DMPortFc {
     <#
 .SYNOPSIS
     To Get Huawei Oceanstor Storage configured FC Ports
@@ -30,41 +30,41 @@ function get-DMPortFc{
 
 .LINK
 #>
-[Cmdletbinding()]
-Param(
-[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
-    [pscustomobject]$WebSession
-)
+    [Cmdletbinding()]
+    param(
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
+        [pscustomobject]$WebSession
+    )
 
-if ($WebSession){
-    $session = $WebSession
-} else {
-    $session = $deviceManager
-}
+    if ($WebSession) {
+        $session = $WebSession
+    }
+    else {
+        $session = $deviceManager
+    }
 
-$defaultDisplaySet = "Id", "Name", "Health Status", "Running Status", "WWN"
+    $defaultDisplaySet = "Id", "Name", "Health Status", "Running Status", "WWN"
 
-$displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
-    'DefaultDisplayPropertySet',
-    [string[]]$defaultDisplaySet
-)
+    $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
+        'DefaultDisplayPropertySet',
+        [string[]]$defaultDisplaySet
+    )
 
-$standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
+    $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-$response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "fc_port" | Select-Object -ExpandProperty data
-$fcPorts = New-Object System.Collections.ArrayList
+    $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "fc_port" | Select-Object -ExpandProperty data
+    $fcPorts = New-Object System.Collections.ArrayList
 
-foreach ($pfc in $response)
-{
-    $fcpObj = [OceanStorPortFC]::new($pfc, $session)
-    [void]$fcPorts.Add($fcpObj)
-}
+    foreach ($pfc in $response) {
+        $fcpObj = [OceanStorPortFC]::new($pfc, $session)
+        [void]$fcPorts.Add($fcpObj)
+    }
 
-$fcPorts | ForEach-Object {
-    $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
-}
+    $fcPorts | ForEach-Object {
+        $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
+    }
 
-$result = $fcPorts
+    $result = $fcPorts
 
-return $result
+    return $result
 }

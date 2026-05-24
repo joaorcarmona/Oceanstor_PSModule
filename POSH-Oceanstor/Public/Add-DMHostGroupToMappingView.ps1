@@ -10,18 +10,18 @@ function Add-DMHostGroupToMappingView {
 
         [Parameter(Mandatory = $true, Position = 1)]
         [ValidateScript({
-            $session = if ($WebSession) { $WebSession } else { $deviceManager }
-            if (@(Get-DMMappingView -WebSession $session | Where-Object Name -EQ $_).Count -eq 1) { return $true }
-            throw "Invalid MappingViewName. Valid values are: $((Get-DMMappingView -WebSession $session).Name -join ', ')"
-        })]
+                $session = if ($WebSession) { $WebSession } else { $deviceManager }
+                if (@(Get-DMMappingView -WebSession $session | Where-Object Name -EQ $_).Count -eq 1) { return $true }
+                throw "Invalid MappingViewName. Valid values are: $((Get-DMMappingView -WebSession $session).Name -join ', ')"
+            })]
         [string]$MappingViewName,
 
         [Parameter(Mandatory = $true, Position = 2)]
         [ValidateScript({
-            $session = if ($WebSession) { $WebSession } else { $deviceManager }
-            if (@(get-DMhostGroups -WebSession $session | Where-Object Name -EQ $_).Count -eq 1) { return $true }
-            throw "Invalid HostGroupName. Valid values are: $((get-DMhostGroups -WebSession $session).Name -join ', ')"
-        })]
+                $session = if ($WebSession) { $WebSession } else { $deviceManager }
+                if (@(get-DMhostGroups -WebSession $session | Where-Object Name -EQ $_).Count -eq 1) { return $true }
+                throw "Invalid HostGroupName. Valid values are: $((get-DMhostGroups -WebSession $session).Name -join ', ')"
+            })]
         [string]$HostGroupName,
 
         [string]$VstoreId
