@@ -77,4 +77,16 @@ Describe 'invoke-DeviceManager' {
             $Uri -eq 'https://oceanstor.test:8088/api/v2/protectgroup'
         }
     }
+
+    It 'returns REST error responses so callers can report failures and perform cleanup' {
+        $errorResult = [pscustomobject]@{
+            error = [pscustomobject]@{ code = 1077948996; description = 'request rejected' }
+        }
+        Mock Invoke-RestMethod { $errorResult }
+
+        $result = invoke-DeviceManager -WebSession $script:session -Method POST -Resource 'lun' -BodyData @{ NAME = 'invalid' }
+
+        $result.error.code | Should -Be 1077948996
+        $result.error.description | Should -Be 'request rejected'
+    }
 }
