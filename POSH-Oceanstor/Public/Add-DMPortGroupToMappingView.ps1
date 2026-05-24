@@ -17,13 +17,24 @@ function Add-DMPortGroupToMappingView {
         [string]$VstoreId
     )
 
-    $session = if ($WebSession) { $WebSession } else { $deviceManager }
+    $session = if ($WebSession) {
+        $WebSession
+    }
+    else {
+        $deviceManager
+    }
     $view = @(Get-DMMappingView -WebSession $session | Where-Object Name -EQ $MappingViewName)[0]
-    if (-not $view) { throw "Mapping view '$MappingViewName' was not found." }
+    if (-not $view) {
+        throw "Mapping view '$MappingViewName' was not found."
+    }
     $group = @(Get-DMPortGroup -WebSession $session | Where-Object Name -EQ $PortGroupName)[0]
-    if (-not $group) { throw "Port group '$PortGroupName' was not found." }
+    if (-not $group) {
+        throw "Port group '$PortGroupName' was not found."
+    }
     $body = @{ TYPE = 245; ID = $view.Id; ASSOCIATEOBJTYPE = 257; ASSOCIATEOBJID = $group.Id }
-    if ($VstoreId) { $body.vstoreId = $VstoreId }
+    if ($VstoreId) {
+        $body.vstoreId = $VstoreId
+    }
 
     if ($PSCmdlet.ShouldProcess("$PortGroupName -> $MappingViewName", 'Associate port group with mapping view')) {
         return (invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'mappingview/CREATE_ASSOCIATE' -BodyData $body).error

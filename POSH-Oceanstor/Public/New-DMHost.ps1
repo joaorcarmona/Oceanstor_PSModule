@@ -24,7 +24,12 @@ function New-DMHost {
         [string]$VstoreId
     )
 
-    $session = if ($WebSession) { $WebSession } else { $deviceManager }
+    $session = if ($WebSession) {
+        $WebSession
+    }
+    else {
+        $deviceManager
+    }
     $operatingSystemValue = @{
         'Linux'                      = 0
         'Windows'                    = 1
@@ -46,8 +51,12 @@ function New-DMHost {
         NAME            = $Name
         OPERATIONSYSTEM = $operatingSystemValue
     }
-    if ($PSBoundParameters.ContainsKey('Description')) { $body.DESCRIPTION = $Description }
-    if ($VstoreId) { $body.vstoreId = $VstoreId }
+    if ($PSBoundParameters.ContainsKey('Description')) {
+        $body.DESCRIPTION = $Description
+    }
+    if ($VstoreId) {
+        $body.vstoreId = $VstoreId
+    }
 
     $response = invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'host' -BodyData $body
     if ($response.error.Code -eq 0) {

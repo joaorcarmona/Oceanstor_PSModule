@@ -14,10 +14,19 @@ function New-DMNvmeInitiator {
         [string]$VstoreId
     )
 
-    $session = if ($WebSession) { $WebSession } else { $deviceManager }
+    $session = if ($WebSession) {
+        $WebSession
+    }
+    else {
+        $deviceManager
+    }
     $body = @{ ID = $Nqn }
-    if ($Name) { $body.NAME = $Name }
-    if ($VstoreId) { $body.vstoreId = $VstoreId }
+    if ($Name) {
+        $body.NAME = $Name
+    }
+    if ($VstoreId) {
+        $body.vstoreId = $VstoreId
+    }
 
     $response = invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'NVMe_over_RoCE_initiator' -BodyData $body
     if ($response.error.Code -eq 0) {

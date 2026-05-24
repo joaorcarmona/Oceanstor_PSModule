@@ -18,9 +18,16 @@ function New-DMPortGroup {
         [string]$Description
     )
 
-    $session = if ($WebSession) { $WebSession } else { $deviceManager }
+    $session = if ($WebSession) {
+        $WebSession
+    }
+    else {
+        $deviceManager
+    }
     $body = @{ NAME = $Name }
-    if ($PSBoundParameters.ContainsKey('Description')) { $body.DESCRIPTION = $Description }
+    if ($PSBoundParameters.ContainsKey('Description')) {
+        $body.DESCRIPTION = $Description
+    }
 
     $response = invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'portgroup' -BodyData $body
     if ($response.error.Code -eq 0) {

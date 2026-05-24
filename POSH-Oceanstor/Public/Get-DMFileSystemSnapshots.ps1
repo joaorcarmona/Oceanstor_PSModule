@@ -10,16 +10,30 @@ function Get-DMFileSystemSnapshots {
 
         [Parameter(Mandatory = $true, Position = 1)]
         [ValidateScript({
-                $session = if ($WebSession) { $WebSession } else { $deviceManager }
+                $session = if ($WebSession) {
+                    $WebSession
+                }
+                else {
+                    $deviceManager
+                }
                 $fileSystems = @(get-DMFileSystem -WebSession $session)
                 $matchingItems = @($fileSystems | Where-Object Name -EQ $_)
-                if ($matchingItems.Count -eq 1) { return $true }
-                if ($matchingItems.Count -gt 1) { throw "FileSystemName is ambiguous because more than one file system is named '$_'." }
+                if ($matchingItems.Count -eq 1) {
+                    return $true
+                }
+                if ($matchingItems.Count -gt 1) {
+                    throw "FileSystemName is ambiguous because more than one file system is named '$_'."
+                }
                 throw "Invalid FileSystemName. Valid values are: $($fileSystems.Name -join ', ')"
             })]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
-                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) { $fakeBoundParameters.WebSession } else { $deviceManager }
+                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
+                    $fakeBoundParameters.WebSession
+                }
+                else {
+                    $deviceManager
+                }
                 (get-DMFileSystem -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$FileSystemName,
@@ -28,7 +42,12 @@ function Get-DMFileSystemSnapshots {
         [string]$SnapshotName
     )
 
-    $session = if ($WebSession) { $WebSession } else { $deviceManager }
+    $session = if ($WebSession) {
+        $WebSession
+    }
+    else {
+        $deviceManager
+    }
     $fileSystem = @(get-DMFileSystem -WebSession $session | Where-Object Name -EQ $FileSystemName)[0]
     $resource = "fssnapshot?PARENTID=$($fileSystem.Id)"
     $queryResult = invoke-DeviceManager -WebSession $session -Method 'GET' -Resource $resource

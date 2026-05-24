@@ -23,29 +23,45 @@ function Get-DMMappingView {
         [string]$VstoreId
     )
 
-    $session = if ($WebSession) { $WebSession } else { $deviceManager }
+    $session = if ($WebSession) {
+        $WebSession
+    }
+    else {
+        $deviceManager
+    }
     $resource = 'mappingview'
 
     switch ($PSCmdlet.ParameterSetName) {
         'HostGroup' {
             $group = @(get-DMhostGroups -WebSession $session | Where-Object Name -EQ $HostGroupName)[0]
-            if (-not $group) { throw "Host group '$HostGroupName' was not found." }
+            if (-not $group) {
+                throw "Host group '$HostGroupName' was not found."
+            }
             $resource = "mappingview/associate?TYPE=245&ASSOCIATEOBJTYPE=14&ASSOCIATEOBJID=$($group.Id)"
         }
         'LunGroup' {
             $group = @(get-DMlunGroups -WebSession $session | Where-Object Name -EQ $LunGroupName)[0]
-            if (-not $group) { throw "LUN group '$LunGroupName' was not found." }
+            if (-not $group) {
+                throw "LUN group '$LunGroupName' was not found."
+            }
             $resource = "mappingview/associate?TYPE=245&ASSOCIATEOBJTYPE=256&ASSOCIATEOBJID=$($group.Id)"
         }
         'PortGroup' {
             $group = @(Get-DMPortGroup -WebSession $session | Where-Object Name -EQ $PortGroupName)[0]
-            if (-not $group) { throw "Port group '$PortGroupName' was not found." }
+            if (-not $group) {
+                throw "Port group '$PortGroupName' was not found."
+            }
             $resource = "mappingview/associate?TYPE=245&ASSOCIATEOBJTYPE=257&ASSOCIATEOBJID=$($group.Id)"
         }
     }
 
     if ($VstoreId) {
-        $separator = if ($resource.Contains('?')) { '&' } else { '?' }
+        $separator = if ($resource.Contains('?')) {
+            '&'
+        }
+        else {
+            '?'
+        }
         $resource += "${separator}vstoreId=$VstoreId"
     }
 

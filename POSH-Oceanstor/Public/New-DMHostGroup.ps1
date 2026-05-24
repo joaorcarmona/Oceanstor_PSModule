@@ -20,13 +20,22 @@ function New-DMHostGroup {
         [string]$VstoreId
     )
 
-    $session = if ($WebSession) { $WebSession } else { $deviceManager }
+    $session = if ($WebSession) {
+        $WebSession
+    }
+    else {
+        $deviceManager
+    }
     $body = @{
         TYPE = 14
         NAME = $Name
     }
-    if ($PSBoundParameters.ContainsKey('Description')) { $body.DESCRIPTION = $Description }
-    if ($VstoreId) { $body.vstoreId = $VstoreId }
+    if ($PSBoundParameters.ContainsKey('Description')) {
+        $body.DESCRIPTION = $Description
+    }
+    if ($VstoreId) {
+        $body.vstoreId = $VstoreId
+    }
 
     $response = invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'hostgroup' -BodyData $body
     if ($response.error.Code -eq 0) {

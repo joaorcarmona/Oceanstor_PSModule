@@ -10,16 +10,30 @@ function Remove-DMCifsShare {
 
         [Parameter(Mandatory = $true, Position = 1)]
         [ValidateScript({
-                $session = if ($WebSession) { $WebSession } else { $deviceManager }
+                $session = if ($WebSession) {
+                    $WebSession
+                }
+                else {
+                    $deviceManager
+                }
                 $shares = @(get-DMShares -WebSession $session -ShareType CIFS)
                 $matchingItems = @($shares | Where-Object Name -EQ $_)
-                if ($matchingItems.Count -eq 1) { return $true }
-                if ($matchingItems.Count -gt 1) { throw "ShareName is ambiguous because more than one CIFS share is named '$_'." }
+                if ($matchingItems.Count -eq 1) {
+                    return $true
+                }
+                if ($matchingItems.Count -gt 1) {
+                    throw "ShareName is ambiguous because more than one CIFS share is named '$_'."
+                }
                 throw "Invalid ShareName. Valid values are: $($shares.Name -join ', ')"
             })]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
-                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) { $fakeBoundParameters.WebSession } else { $deviceManager }
+                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
+                    $fakeBoundParameters.WebSession
+                }
+                else {
+                    $deviceManager
+                }
                 (get-DMShares -WebSession $session -ShareType CIFS).Name |
                     Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -28,10 +42,17 @@ function Remove-DMCifsShare {
         [string]$VstoreId
     )
 
-    $session = if ($WebSession) { $WebSession } else { $deviceManager }
+    $session = if ($WebSession) {
+        $WebSession
+    }
+    else {
+        $deviceManager
+    }
     $share = @(get-DMShares -WebSession $session -ShareType CIFS | Where-Object Name -EQ $ShareName)[0]
     $resource = "CIFSSHARE/$($share.Id)"
-    if ($VstoreId) { $resource += "?vstoreId=$VstoreId" }
+    if ($VstoreId) {
+        $resource += "?vstoreId=$VstoreId"
+    }
 
     if ($PSCmdlet.ShouldProcess($ShareName, 'Remove CIFS share')) {
         $response = invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource

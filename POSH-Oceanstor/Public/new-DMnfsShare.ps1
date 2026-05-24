@@ -8,19 +8,19 @@ function new-DMnfsShare {
 
 	.PARAMETER webSession
 		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
-    
+
     .PARAMETER sharepath
         The path of the NFS Share to be created
-    
+
     .PARAMETER FileSystemId
-        The ID of the FileSystem to be used by the share    
-    
+        The ID of the FileSystem to be used by the share
+
     .PARAMETER encoding
         The encoding of the share. Default is "UTF-8"
-    
+
     .PARAMETER privateShare
         The type of the share. Default is "normal share"
-    
+
     .PARAMETER dTree
         The ID of the DTree to be used by the share
 
@@ -71,12 +71,18 @@ function new-DMnfsShare {
     }
 
     switch ($encoding) {
-        "UTF-8" { $characterEncoding = 0 }
+        "UTF-8" {
+            $characterEncoding = 0
+        }
     }
 
     switch ($privateShare) {
-        "normal share" { $sharePrivate = 0 }
-        "private share" { $sharePrivate = 1 }
+        "normal share" {
+            $sharePrivate = 0
+        }
+        "private share" {
+            $sharePrivate = 1
+        }
     }
 
     $body = @{
@@ -84,12 +90,12 @@ function new-DMnfsShare {
         FSID              = $FileSystemId;
         CHARACTERENCODING = $characterEncoding;
         sharePrivate      = $sharePrivate;
-    }   
+    }
 
     if ($dTree) {
         $body.Add("DTREEID", $dTree)
     }
-    
+
     $response = invoke-DeviceManager -WebSession $session -Method "POST" -Resource "NFSSHARE" -BodyData $body
 
     if ($response.error.Code -eq 0) {

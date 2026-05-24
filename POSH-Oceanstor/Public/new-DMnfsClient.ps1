@@ -8,34 +8,34 @@ function new-DMnfsClient {
 
 	.PARAMETER webSession
 		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
-    
+
     .PARAMETER clientName
         The name of the NFS Client
-    
+
     .PARAMETER shareId
         The ID of the NFS Share to be used by the client
-    
-    .PARAMETER Permission    
+
+    .PARAMETER Permission
         The permission of the client on the share. Default is "read-only"
-    
+
     .PARAMETER accessKrb5
         The permission of the client on the share. Default is "no-permission"
-    
+
     .PARAMETER accessKrb5i
         The permission of the client on the share. Default is "no-permission"
-    
-    .PARAMETER accessKrb5p  
+
+    .PARAMETER accessKrb5p
         The permission of the client on the share. Default is "no-permission"
-    
+
     .PARAMETER permissionContraint
         The permission constraint of the client on the share. Default is "no_all_squash"
-    
+
     .PARAMETER rootPermissionConstraint
         The root permission constraint of the client on the share. Default is "root_squash"
-    
+
     .PARAMETER sourcePortVerify
         The source port verification of the client on the share. Default is "disabled"
-    
+
     .PARAMETER vStoreId
         The ID of the vStore to be used by the client
 
@@ -104,24 +104,48 @@ function new-DMnfsClient {
     }
 
     switch ($Permission) {
-        "read-only" { $accessval = 0 }
-        "read-write" { $accessval = 1 }
-        "no-permission" { $accessval = 5 }
+        "read-only" {
+            $accessval = 0
+        }
+        "read-write" {
+            $accessval = 1
+        }
+        "no-permission" {
+            $accessval = 5
+        }
     }
     switch ($accessKrb5) {
-        "read-only" { $Krb5Access = 0 }
-        "read-write" { $Krb5Access = 1 }
-        "no-permission" { $Krb5Access = 5 }
+        "read-only" {
+            $Krb5Access = 0
+        }
+        "read-write" {
+            $Krb5Access = 1
+        }
+        "no-permission" {
+            $Krb5Access = 5
+        }
     }
     switch ($accessKrb5i) {
-        "read-only" { $Krb5iAccess = 0 }
-        "read-write" { $Krb5iAccess = 1 }
-        "no-permission" { $Krb5iAccess = 5 }
+        "read-only" {
+            $Krb5iAccess = 0
+        }
+        "read-write" {
+            $Krb5iAccess = 1
+        }
+        "no-permission" {
+            $Krb5iAccess = 5
+        }
     }
     switch ($accessKrb5p) {
-        "read-only" { $Krb5pAccess = 0 }
-        "read-write" { $Krb5pAccess = 1 }
-        "no-permission" { $Krb5pAccess = 5 }
+        "read-only" {
+            $Krb5pAccess = 0
+        }
+        "read-write" {
+            $Krb5pAccess = 1
+        }
+        "no-permission" {
+            $Krb5pAccess = 5
+        }
     }
 
     #switch ($writeMode){
@@ -130,18 +154,30 @@ function new-DMnfsClient {
     #}
 
     switch ($permissionContraint) {
-        "all_squash" { $allsquash = 0 }
-        "no_all_squash" { $allsquash = 1 }
+        "all_squash" {
+            $allsquash = 0
+        }
+        "no_all_squash" {
+            $allsquash = 1
+        }
     }
 
     switch ($rootPermissionConstraint) {
-        "root_squash" { $rootSquash = 0 }
-        "no_root_squash" { $rootSquash = 1 }
+        "root_squash" {
+            $rootSquash = 0
+        }
+        "no_root_squash" {
+            $rootSquash = 1
+        }
     }
 
     switch ($sourcePortVerify) {
-        "enabled" { $secure = 0 }
-        "disabled" { $secure = 1 }
+        "enabled" {
+            $secure = 0
+        }
+        "disabled" {
+            $secure = 1
+        }
     }
 
     $body = @{
@@ -155,11 +191,11 @@ function new-DMnfsClient {
         ROOTSQUASH = $rootSquash;
         SECURE     = $secure;
     }
-    
+
     if ($vStoreId) {
         $body.Add("vstoreId", $vStoreId)
     }
-    
+
     $response = invoke-DeviceManager -WebSession $session -Method "POST" -Resource "NFS_SHARE_AUTH_CLIENT" -BodyData $body
 
     if ($response.error.Code -eq 0) {

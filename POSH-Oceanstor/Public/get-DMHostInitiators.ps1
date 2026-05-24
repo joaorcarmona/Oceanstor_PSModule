@@ -86,14 +86,24 @@ function get-DMHostInitiators {
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
     switch ($initatorType) {
-        FibreChannel { $resourceQuery = "fc_initiator" }
-        ISCSI { $resourceQuery = "iscsi_initiator" }
+        FibreChannel {
+            $resourceQuery = "fc_initiator"
+        }
+        ISCSI {
+            $resourceQuery = "iscsi_initiator"
+        }
     }
 
     switch ($PSCmdlet.ParameterSetName) {
-        HostInitiators { $resource = $resourceQuery + "?PARENTID=" + $hostId }
-        FreeInitiators { $resource = $resourceQuery + "?ISFREE=true" }
-        default { $resource = "$resourceQuery" }
+        HostInitiators {
+            $resource = $resourceQuery + "?PARENTID=" + $hostId
+        }
+        FreeInitiators {
+            $resource = $resourceQuery + "?ISFREE=true"
+        }
+        default {
+            $resource = "$resourceQuery"
+        }
     }
 
     $queryResult = invoke-DeviceManager -WebSession $session -Method "GET" -Resource $resource
@@ -107,8 +117,12 @@ function get-DMHostInitiators {
 
     foreach ($initator in $response) {
         switch ($initatorType) {
-            FibreChannel { $HostInitiator = [OceanstorHostinitiatorFC]::new($initator, $session) }
-            ISCSI { $HostInitiator = [OceanstorHostinitiatorISCSI]::new($initator, $session) }
+            FibreChannel {
+                $HostInitiator = [OceanstorHostinitiatorFC]::new($initator, $session)
+            }
+            ISCSI {
+                $HostInitiator = [OceanstorHostinitiatorISCSI]::new($initator, $session)
+            }
         }
 
         [void]$HostInitiators.Add($HostInitiator)

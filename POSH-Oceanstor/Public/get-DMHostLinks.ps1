@@ -64,9 +64,15 @@ function get-DMHostLinks {
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
     switch ($InitiatorType) {
-        ISCSI { $LinkType = 222 }
-        FC { $LinkType = 223 }
-        Infiniband { $LinkType = 16499 }
+        ISCSI {
+            $LinkType = 222
+        }
+        FC {
+            $LinkType = 223
+        }
+        Infiniband {
+            $LinkType = 16499
+        }
     }
 
     $response = invoke-DeviceManager -WebSession $session -Method "GET" -Resource "host_link?INITIATOR_TYPE=$LinkType&PARENTID=$HostId" | Select-Object -ExpandProperty data

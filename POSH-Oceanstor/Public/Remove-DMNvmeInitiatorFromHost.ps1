@@ -7,16 +7,30 @@ function Remove-DMNvmeInitiatorFromHost {
         [Parameter(Mandatory = $true, Position = 1)]
         [ValidateScript({
                 $candidate = $_
-                $session = if ($WebSession) { $WebSession } else { $deviceManager }
+                $session = if ($WebSession) {
+                    $WebSession
+                }
+                else {
+                    $deviceManager
+                }
                 $hosts = @(get-DMhosts -WebSession $session)
                 $matchingItems = @($hosts | Where-Object Name -EQ $candidate)
-                if ($matchingItems.Count -eq 1) { return $true }
-                if ($matchingItems.Count -gt 1) { throw "HostName is ambiguous because more than one host is named '$candidate'." }
+                if ($matchingItems.Count -eq 1) {
+                    return $true
+                }
+                if ($matchingItems.Count -gt 1) {
+                    throw "HostName is ambiguous because more than one host is named '$candidate'."
+                }
                 throw "Invalid HostName. Valid values are: $($hosts.Name -join ', ')"
             })]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
-                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) { $fakeBoundParameters.WebSession } else { $deviceManager }
+                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
+                    $fakeBoundParameters.WebSession
+                }
+                else {
+                    $deviceManager
+                }
                 (get-DMhosts -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$HostName,
@@ -24,18 +38,32 @@ function Remove-DMNvmeInitiatorFromHost {
         [Parameter(Mandatory = $true, Position = 2)]
         [ValidateScript({
                 $candidate = $_
-                $session = if ($WebSession) { $WebSession } else { $deviceManager }
+                $session = if ($WebSession) {
+                    $WebSession
+                }
+                else {
+                    $deviceManager
+                }
                 $selectedHostName = [string]$HostName
                 $hostObject = @(get-DMhosts -WebSession $session | Where-Object Name -EQ $selectedHostName)[0]
                 $resource = "NVMe_over_RoCE_initiator/associate?ASSOCIATEOBJTYPE=21&ASSOCIATEOBJID=$($hostObject.Id)"
                 $initiators = @((invoke-DeviceManager -WebSession $session -Method 'GET' -Resource $resource).data)
-                if ($initiators.ID -contains $candidate) { return $true }
+                if ($initiators.ID -contains $candidate) {
+                    return $true
+                }
                 throw "Invalid NVMe over RoCE initiator NQN for host '$selectedHostName'. Valid values are: $($initiators.ID -join ', ')"
             })]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
-                if (-not $fakeBoundParameters.ContainsKey('HostName')) { return }
-                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) { $fakeBoundParameters.WebSession } else { $deviceManager }
+                if (-not $fakeBoundParameters.ContainsKey('HostName')) {
+                    return
+                }
+                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
+                    $fakeBoundParameters.WebSession
+                }
+                else {
+                    $deviceManager
+                }
                 (Get-DMNvmeInitiator -WebSession $session -HostName $fakeBoundParameters.HostName).Id | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$Nqn,
@@ -43,14 +71,21 @@ function Remove-DMNvmeInitiatorFromHost {
         [string]$VstoreId
     )
 
-    $session = if ($WebSession) { $WebSession } else { $deviceManager }
+    $session = if ($WebSession) {
+        $WebSession
+    }
+    else {
+        $deviceManager
+    }
     $hostObject = @(get-DMhosts -WebSession $session | Where-Object Name -EQ $HostName)[0]
     $body = @{
         ID               = $hostObject.Id
         ASSOCIATEOBJTYPE = 57870
         ASSOCIATEOBJID   = $Nqn
     }
-    if ($VstoreId) { $body.vstoreId = $VstoreId }
+    if ($VstoreId) {
+        $body.vstoreId = $VstoreId
+    }
     if ($PSCmdlet.ShouldProcess("$HostName/$Nqn", 'Remove NVMe over RoCE initiator from host')) {
         return (invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'host/remove_associate' -BodyData $body).error
     }

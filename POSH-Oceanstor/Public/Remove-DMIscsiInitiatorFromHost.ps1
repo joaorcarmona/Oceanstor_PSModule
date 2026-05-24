@@ -7,16 +7,30 @@ function Remove-DMIscsiInitiatorFromHost {
         [Parameter(Mandatory = $true, Position = 1)]
         [ValidateScript({
                 $candidate = $_
-                $session = if ($WebSession) { $WebSession } else { $deviceManager }
+                $session = if ($WebSession) {
+                    $WebSession
+                }
+                else {
+                    $deviceManager
+                }
                 $hosts = @(get-DMhosts -WebSession $session)
                 $matchingItems = @($hosts | Where-Object Name -EQ $candidate)
-                if ($matchingItems.Count -eq 1) { return $true }
-                if ($matchingItems.Count -gt 1) { throw "HostName is ambiguous because more than one host is named '$candidate'." }
+                if ($matchingItems.Count -eq 1) {
+                    return $true
+                }
+                if ($matchingItems.Count -gt 1) {
+                    throw "HostName is ambiguous because more than one host is named '$candidate'."
+                }
                 throw "Invalid HostName. Valid values are: $($hosts.Name -join ', ')"
             })]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
-                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) { $fakeBoundParameters.WebSession } else { $deviceManager }
+                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
+                    $fakeBoundParameters.WebSession
+                }
+                else {
+                    $deviceManager
+                }
                 (get-DMhosts -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$HostName,
@@ -24,17 +38,31 @@ function Remove-DMIscsiInitiatorFromHost {
         [Parameter(Mandatory = $true, Position = 2)]
         [ValidateScript({
                 $candidate = $_
-                $session = if ($WebSession) { $WebSession } else { $deviceManager }
+                $session = if ($WebSession) {
+                    $WebSession
+                }
+                else {
+                    $deviceManager
+                }
                 $selectedHostName = [string]$HostName
                 $hostObject = @(get-DMhosts -WebSession $session | Where-Object Name -EQ $selectedHostName)[0]
                 $initiators = @(get-DMHostInitiators -WebSession $session -InitatorType ISCSI -HostId $hostObject.Id)
-                if ($initiators.Id -contains $candidate) { return $true }
+                if ($initiators.Id -contains $candidate) {
+                    return $true
+                }
                 throw "Invalid iSCSI initiator for host '$selectedHostName'. Valid values are: $($initiators.Id -join ', ')"
             })]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
-                if (-not $fakeBoundParameters.ContainsKey('HostName')) { return }
-                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) { $fakeBoundParameters.WebSession } else { $deviceManager }
+                if (-not $fakeBoundParameters.ContainsKey('HostName')) {
+                    return
+                }
+                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
+                    $fakeBoundParameters.WebSession
+                }
+                else {
+                    $deviceManager
+                }
                 (Get-DMIscsiInitiator -WebSession $session -HostName $fakeBoundParameters.HostName).Id | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$Identifier,
@@ -42,9 +70,16 @@ function Remove-DMIscsiInitiatorFromHost {
         [string]$VstoreId
     )
 
-    $session = if ($WebSession) { $WebSession } else { $deviceManager }
+    $session = if ($WebSession) {
+        $WebSession
+    }
+    else {
+        $deviceManager
+    }
     $body = @{ ID = $Identifier }
-    if ($VstoreId) { $body.vstoreId = $VstoreId }
+    if ($VstoreId) {
+        $body.vstoreId = $VstoreId
+    }
     if ($PSCmdlet.ShouldProcess("$HostName/$Identifier", 'Remove iSCSI initiator from host')) {
         return (invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'iscsi_initiator/remove_iscsi_from_host' -BodyData $body).error
     }
