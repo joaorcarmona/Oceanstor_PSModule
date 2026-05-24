@@ -63,6 +63,7 @@ PowerShellVersion = "7.5"
 # Format files (.ps1xml) to be loaded when importing this module
 FormatsToProcess = @(
     "Format\OceanstorLunSnapshot.format.ps1xml"
+    "Format\OceanstorFileSystemSnapshot.format.ps1xml"
     "Format\OceanstorProtectionGroup.format.ps1xml"
     "Format\OceanstorSnapshotConsistencyGroup.format.ps1xml"
     "Format\OceanstorLun.format.ps1xml"

@@ -7,6 +7,10 @@ BeforeAll {
     function global:Restart-DMLunSnapshot {}
     function global:Resize-DMLunSnapshot {}
     function global:Restore-DMLunSnapshot {}
+    function global:New-DMFileSystemSnapshot {}
+    function global:Get-DMFileSystemSnapshots {}
+    function global:Remove-DMFileSystemSnapshot {}
+    function global:Restore-DMFileSystemSnapshot {}
 
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorCIFSShare.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorFileSystem.ps1"
@@ -14,6 +18,7 @@ BeforeAll {
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorLunv3.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorLunv6.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorLunSnapshot.ps1"
+    . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorFileSystemSnapshot.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorNFSclient.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorNFSShare.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorLIF.ps1"
@@ -28,11 +33,18 @@ AfterAll {
     Remove-Item -LiteralPath 'Function:\global:Restart-DMLunSnapshot' -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath 'Function:\global:Resize-DMLunSnapshot' -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath 'Function:\global:Restore-DMLunSnapshot' -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:New-DMFileSystemSnapshot' -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:Get-DMFileSystemSnapshots' -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:Remove-DMFileSystemSnapshot' -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:Restore-DMFileSystemSnapshot' -ErrorAction SilentlyContinue
     Remove-Variable -Name LunSnapshotInvocation -Scope Global -ErrorAction SilentlyContinue
     Remove-Variable -Name LunSnapshotQuery -Scope Global -ErrorAction SilentlyContinue
     Remove-Variable -Name LunSnapshotRemoval -Scope Global -ErrorAction SilentlyContinue
     Remove-Variable -Name LunSnapshotAction -Scope Global -ErrorAction SilentlyContinue
     Remove-Variable -Name LunSnapshotCopyInvocation -Scope Global -ErrorAction SilentlyContinue
+    Remove-Variable -Name FileSystemSnapshotInvocation -Scope Global -ErrorAction SilentlyContinue
+    Remove-Variable -Name FileSystemSnapshotQuery -Scope Global -ErrorAction SilentlyContinue
+    Remove-Variable -Name FileSystemSnapshotAction -Scope Global -ErrorAction SilentlyContinue
 }
 
 Describe 'Storage and share model classes' {
@@ -62,6 +74,57 @@ Describe 'Storage and share model classes' {
         $result.Id | Should -Be 'fs-01'
         $result.'Capacity (GB)' | Should -Be 1
         $result.'Running Status' | Should -Be 'Online'
+    }
+
+    It 'creates and retrieves snapshots from a file-system object' {
+        function global:New-DMFileSystemSnapshot {
+            param([pscustomobject]$WebSession, [string]$SnapshotName, [string]$FileSystemName)
+            $global:FileSystemSnapshotInvocation = [pscustomobject]@{
+                WebSession = $WebSession; SnapshotName = $SnapshotName; FileSystemName = $FileSystemName
+            }
+            [pscustomobject]@{ Id = 'fs-snap-01' }
+        }
+        function global:Get-DMFileSystemSnapshots {
+            param([pscustomobject]$WebSession, [string]$FileSystemName)
+            $global:FileSystemSnapshotQuery = [pscustomobject]@{
+                WebSession = $WebSession; FileSystemName = $FileSystemName
+            }
+            @([pscustomobject]@{ Id = 'fs-snap-01' })
+        }
+        $source = [pscustomobject]@{ ID = 'fs-01'; NAME = 'documents'; SECTORSIZE = 512; CAPACITY = 2097152; ALLOCCAPACITY = '0' }
+        $fileSystem = New-Object -TypeName OceanstorFileSystem -ArgumentList @($source, $script:session)
+
+        $fileSystem.NewSnapshot('checkpoint').Id | Should -Be 'fs-snap-01'
+        $fileSystem.GetSnapshots().Id | Should -Be 'fs-snap-01'
+        $global:FileSystemSnapshotInvocation.FileSystemName | Should -Be 'documents'
+        $global:FileSystemSnapshotInvocation.SnapshotName | Should -Be 'checkpoint'
+        $global:FileSystemSnapshotQuery.WebSession | Should -Be $script:session
+    }
+
+    It 'deletes and rolls back a file-system snapshot object' {
+        function global:Remove-DMFileSystemSnapshot {
+            param([pscustomobject]$WebSession, [string]$FileSystemName, [string]$SnapshotName)
+            $global:FileSystemSnapshotAction = [pscustomobject]@{
+                Action = 'Delete'; WebSession = $WebSession; FileSystemName = $FileSystemName; SnapshotName = $SnapshotName
+            }
+            [pscustomobject]@{ Code = 0 }
+        }
+        function global:Restore-DMFileSystemSnapshot {
+            param([pscustomobject]$WebSession, [string]$FileSystemName, [string]$SnapshotName)
+            $global:FileSystemSnapshotAction = [pscustomobject]@{
+                Action = 'Rollback'; WebSession = $WebSession; FileSystemName = $FileSystemName; SnapshotName = $SnapshotName
+            }
+            [pscustomobject]@{ Code = 0 }
+        }
+        $source = [pscustomobject]@{ ID = '5@checkpoint'; NAME = 'checkpoint'; PARENTID = '5'; PARENTNAME = 'documents' }
+        $snapshot = New-Object -TypeName OceanstorFileSystemSnapshot -ArgumentList @($source, $script:session)
+
+        $snapshot.Delete().Code | Should -Be 0
+        $global:FileSystemSnapshotAction.Action | Should -Be 'Delete'
+        $snapshot.Rollback().Code | Should -Be 0
+        $global:FileSystemSnapshotAction.Action | Should -Be 'Rollback'
+        $global:FileSystemSnapshotAction.FileSystemName | Should -Be 'documents'
+        $global:FileSystemSnapshotAction.SnapshotName | Should -Be 'checkpoint'
     }
 
     It 'maps a LUN group' {

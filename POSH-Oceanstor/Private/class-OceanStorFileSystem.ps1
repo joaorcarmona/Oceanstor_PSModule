@@ -506,4 +506,16 @@ class OceanstorFileSystem{
             $this.{Write Check} = $false
         }
     }
+
+    [psobject] NewSnapshot() {
+        return (New-DMFileSystemSnapshot -WebSession $this.Session -FileSystemName $this.Name)
+    }
+
+    [psobject] NewSnapshot([string]$SnapshotName) {
+        return (New-DMFileSystemSnapshot -WebSession $this.Session -SnapshotName $SnapshotName -FileSystemName $this.Name)
+    }
+
+    [array] GetSnapshots() {
+        return @(Get-DMFileSystemSnapshots -WebSession $this.Session -FileSystemName $this.Name)
+    }
 }
