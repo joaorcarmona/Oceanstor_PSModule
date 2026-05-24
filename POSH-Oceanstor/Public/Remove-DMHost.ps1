@@ -12,9 +12,9 @@ function Remove-DMHost {
         [ValidateScript({
             $session = if ($WebSession) { $WebSession } else { $deviceManager }
             $hosts = @(get-DMhosts -WebSession $session)
-            $matches = @($hosts | Where-Object Name -EQ $_)
-            if ($matches.Count -eq 1) { return $true }
-            if ($matches.Count -gt 1) { throw "HostName is ambiguous because more than one host is named '$_'." }
+            $matchingItems = @($hosts | Where-Object Name -EQ $_)
+            if ($matchingItems.Count -eq 1) { return $true }
+            if ($matchingItems.Count -gt 1) { throw "HostName is ambiguous because more than one host is named '$_'." }
             throw "Invalid HostName. Valid values are: $($hosts.Name -join ', ')"
         })]
         [ArgumentCompleter({

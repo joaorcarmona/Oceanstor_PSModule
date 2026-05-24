@@ -12,9 +12,9 @@ function Remove-DMHostGroup {
         [ValidateScript({
             $session = if ($WebSession) { $WebSession } else { $deviceManager }
             $groups = @(get-DMhostGroups -WebSession $session)
-            $matches = @($groups | Where-Object Name -EQ $_)
-            if ($matches.Count -eq 1) { return $true }
-            if ($matches.Count -gt 1) { throw "HostGroupName is ambiguous because more than one host group is named '$_'." }
+            $matchingItems = @($groups | Where-Object Name -EQ $_)
+            if ($matchingItems.Count -eq 1) { return $true }
+            if ($matchingItems.Count -gt 1) { throw "HostGroupName is ambiguous because more than one host group is named '$_'." }
             throw "Invalid HostGroupName. Valid values are: $($groups.Name -join ', ')"
         })]
         [ArgumentCompleter({

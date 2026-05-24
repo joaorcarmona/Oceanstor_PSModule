@@ -16,9 +16,9 @@ function New-DMSnapshotConsistencyGroup {
         [ValidateScript({
             $session = if ($WebSession) { $WebSession } else { $deviceManager }
             $groups = @(Get-DMProtectionGroup -WebSession $session)
-            $matches = @($groups | Where-Object Name -EQ $_)
-            if ($matches.Count -eq 1) { return $true }
-            if ($matches.Count -gt 1) { throw "ProtectionGroupName is ambiguous because more than one protection group is named '$_'." }
+            $matchingItems = @($groups | Where-Object Name -EQ $_)
+            if ($matchingItems.Count -eq 1) { return $true }
+            if ($matchingItems.Count -gt 1) { throw "ProtectionGroupName is ambiguous because more than one protection group is named '$_'." }
             throw "Invalid ProtectionGroupName. Valid values are: $($groups.Name -join ', ')"
         })]
         [ArgumentCompleter({

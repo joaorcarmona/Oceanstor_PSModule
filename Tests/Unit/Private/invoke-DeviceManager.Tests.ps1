@@ -23,6 +23,8 @@ Describe 'invoke-DeviceManager' {
 
     AfterEach {
         Remove-Variable -Name deviceManager -Scope Global -ErrorAction SilentlyContinue
+        Remove-Variable -Name DeviceManagerTraceAction -Scope Script -ErrorAction SilentlyContinue
+        Remove-Variable -Name DeviceManagerTraceContext -Scope Script -ErrorAction SilentlyContinue
     }
 
     It 'builds the REST request using the supplied session' {
@@ -88,5 +90,21 @@ Describe 'invoke-DeviceManager' {
 
         $result.error.code | Should -Be 1077948996
         $result.error.description | Should -Be 'request rejected'
+    }
+
+    It 'emits opt-in REST trace records and redacts sensitive request values' {
+        $script:traceRecords = [System.Collections.Generic.List[object]]::new()
+        $script:DeviceManagerTraceContext = [pscustomobject]@{ Name = 'New-DMIscsiInitiator'; Category = 'Mutation' }
+        $script:DeviceManagerTraceAction = { param($entry) $script:traceRecords.Add($entry) }
+
+        $null = invoke-DeviceManager -WebSession $script:session -Method POST -Resource 'iscsi_initiator' `
+            -BodyData @{ ID = 'iqn.test'; CHAPPASSWORD = 'super-secret' }
+
+        $script:traceRecords.Count | Should -Be 1
+        $script:traceRecords[0].Step | Should -Be 'New-DMIscsiInitiator'
+        $script:traceRecords[0].Method | Should -Be 'POST'
+        $script:traceRecords[0].Resource | Should -Be 'iscsi_initiator'
+        $script:traceRecords[0].Request.CHAPPASSWORD | Should -Be '[REDACTED]'
+        $script:traceRecords[0].Response.data.ID | Should -Be 'lun-01'
     }
 }

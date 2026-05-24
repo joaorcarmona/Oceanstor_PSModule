@@ -13,9 +13,9 @@ function Remove-DMPortFromPortGroup {
             $candidate = $_
             $session = if ($WebSession) { $WebSession } else { $deviceManager }
             $groups = @(Get-DMPortGroup -WebSession $session)
-            $matches = @($groups | Where-Object Name -EQ $candidate)
-            if ($matches.Count -eq 1) { return $true }
-            if ($matches.Count -gt 1) { throw "PortGroupName is ambiguous because more than one port group is named '$candidate'." }
+            $matchingItems = @($groups | Where-Object Name -EQ $candidate)
+            if ($matchingItems.Count -eq 1) { return $true }
+            if ($matchingItems.Count -gt 1) { throw "PortGroupName is ambiguous because more than one port group is named '$candidate'." }
             throw "Invalid PortGroupName. Valid values are: $($groups.Name -join ', ')"
         })]
         [ArgumentCompleter({
@@ -34,9 +34,9 @@ function Remove-DMPortFromPortGroup {
             $candidate = $_
             $session = if ($WebSession) { $WebSession } else { $deviceManager }
             $ports = @(get-DMPortGroupCandidates -WebSession $session -PortType $PortType)
-            $matches = @($ports | Where-Object Name -EQ $candidate)
-            if ($matches.Count -eq 1) { return $true }
-            if ($matches.Count -gt 1) { throw "PortName is ambiguous because more than one $PortType port is named '$candidate'." }
+            $matchingItems = @($ports | Where-Object Name -EQ $candidate)
+            if ($matchingItems.Count -eq 1) { return $true }
+            if ($matchingItems.Count -gt 1) { throw "PortName is ambiguous because more than one $PortType port is named '$candidate'." }
             throw "Invalid PortName for $PortType. Valid values are: $($ports.Name -join ', ')"
         })]
         [ArgumentCompleter({

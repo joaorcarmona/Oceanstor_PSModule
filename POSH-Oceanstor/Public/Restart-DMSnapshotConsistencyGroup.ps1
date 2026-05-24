@@ -12,9 +12,9 @@ function Restart-DMSnapshotConsistencyGroup {
         [ValidateScript({
             $session = if ($WebSession) { $WebSession } else { $deviceManager }
             $groups = @(Get-DMSnapshotConsistencyGroup -WebSession $session)
-            $matches = @($groups | Where-Object Name -EQ $_)
-            if ($matches.Count -eq 1) { return $true }
-            if ($matches.Count -gt 1) { throw "Name is ambiguous because more than one snapshot consistency group is named '$_'." }
+            $matchingItems = @($groups | Where-Object Name -EQ $_)
+            if ($matchingItems.Count -eq 1) { return $true }
+            if ($matchingItems.Count -gt 1) { throw "Name is ambiguous because more than one snapshot consistency group is named '$_'." }
             throw "Invalid snapshot consistency group Name. Valid values are: $($groups.Name -join ', ')"
         })]
         [ArgumentCompleter({

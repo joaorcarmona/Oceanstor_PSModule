@@ -20,9 +20,9 @@ function New-DMProtectionGroup {
         [ValidateScript({
             $session = if ($WebSession) { $WebSession } else { $deviceManager }
             $lunGroups = @(get-DMlunGroups -WebSession $session)
-            $matches = @($lunGroups | Where-Object Name -EQ $_)
-            if ($matches.Count -eq 1) { return $true }
-            if ($matches.Count -gt 1) { throw "LunGroupName is ambiguous because more than one LUN group is named '$_'." }
+            $matchingItems = @($lunGroups | Where-Object Name -EQ $_)
+            if ($matchingItems.Count -eq 1) { return $true }
+            if ($matchingItems.Count -gt 1) { throw "LunGroupName is ambiguous because more than one LUN group is named '$_'." }
             throw "Invalid LunGroupName. Valid values are: $($lunGroups.Name -join ', ')"
         })]
         [ArgumentCompleter({
@@ -36,9 +36,9 @@ function New-DMProtectionGroup {
         [ValidateScript({
             $session = if ($WebSession) { $WebSession } else { $deviceManager }
             $vstores = @(get-DMvStore -WebSession $session)
-            $matches = @($vstores | Where-Object Name -EQ $_)
-            if ($matches.Count -eq 1) { return $true }
-            if ($matches.Count -gt 1) { throw "Vstore is ambiguous because more than one vStore is named '$_'." }
+            $matchingItems = @($vstores | Where-Object Name -EQ $_)
+            if ($matchingItems.Count -eq 1) { return $true }
+            if ($matchingItems.Count -gt 1) { throw "Vstore is ambiguous because more than one vStore is named '$_'." }
             throw "Invalid Vstore. Valid values are: $($vstores.Name -join ', ')"
         })]
         [ArgumentCompleter({

@@ -19,6 +19,7 @@ BeforeDiscovery {
         }
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorCIFSShare.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorDtree.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Remove-DMLun.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Remove-DMLunGroup.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Remove-DMHost.ps1"
@@ -28,8 +29,10 @@ BeforeDiscovery {
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Remove-DMNfsShare.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Remove-DMNfsClient.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\New-DMCifsShare.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Public\Remove-DMCifsShare.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Public\new-DMdTree.ps1"
 
-        Export-ModuleMember -Function 'Remove-DM*', 'New-DMCifsShare'
+        Export-ModuleMember -Function 'Remove-DM*', 'New-DMCifsShare', 'new-DMdTree'
     }
 
     Import-Module $script:storageMutationModule -Force
@@ -48,7 +51,10 @@ Describe 'Storage and NAS removal commands' {
         Mock get-DMhosts { @([pscustomobject]@{ Id = 'host-01'; Name = 'esx01' }) }
         Mock get-DMhostGroups { @([pscustomobject]@{ Id = 'hg-01'; Name = 'cluster' }) }
         Mock get-DMFileSystem { @([pscustomobject]@{ Id = 'fs-01'; Name = 'documents' }) }
-        Mock get-DMShares { @([pscustomobject]@{ Id = 'nfs-01'; 'Share Path' = '/documents/' }) }
+        Mock get-DMShares {
+            if ($ShareType -eq 'CIFS') { return @([pscustomobject]@{ Id = 'cifs-01'; Name = 'docs' }) }
+            return @([pscustomobject]@{ Id = 'nfs-01'; 'Share Path' = '/documents/' })
+        }
         Mock get-DMnfsFileClient { @([pscustomobject]@{ Id = 'client-01'; Name = '10.0.0.0/24' }) }
         Mock invoke-DeviceManager {
             $script:method = $Method
@@ -65,6 +71,7 @@ Describe 'Storage and NAS removal commands' {
         @{ Command = 'Remove-DMFileSystem'; Parameters = @{ FileSystemName = 'documents'; Force = $true; Worm = $true; VstoreId = '7' }; Resource = 'filesystem/fs-01?forceDeleteFs=true&SUBTYPE=1&vstoreId=7' }
         @{ Command = 'Remove-DMNfsShare'; Parameters = @{ SharePath = '/documents/'; PrivateShare = $true; VstoreId = '7' }; Resource = 'NFSSHARE/nfs-01?sharePrivate=1&vstoreId=7' }
         @{ Command = 'Remove-DMNfsClient'; Parameters = @{ ClientName = '10.0.0.0/24'; VstoreId = '7' }; Resource = 'NFS_SHARE_AUTH_CLIENT/client-01?vstoreId=7' }
+        @{ Command = 'Remove-DMCifsShare'; Parameters = @{ ShareName = 'docs'; VstoreId = '7' }; Resource = 'CIFSSHARE/cifs-01?vstoreId=7' }
     ) {
         param($Command, $Parameters, $Resource)
 
@@ -144,6 +151,43 @@ Describe 'New-DMCifsShare' {
             Should -Throw '*ShareName is reserved*'
 
         Should -Invoke invoke-DeviceManager -Times 0 -Exactly
+    }
+}
+
+Describe 'new-DMdTree' {
+    BeforeEach {
+        $script:session = [pscustomobject]@{ version = 'V600R001' }
+        Mock invoke-DeviceManager {
+            $script:method = $Method
+            $script:resource = $Resource
+            $script:request = $BodyData
+            [pscustomobject]@{
+                error = [pscustomobject]@{ Code = 0 }
+                data = [pscustomobject]@{ ID = 'fs-01@4'; NAME = $BodyData.NAME; PARENTID = $BodyData.PARENTID }
+            }
+        }
+    }
+
+    It 'creates a dTree using a minimal parent-ID payload' {
+        $result = new-DMdTree -WebSession $script:session -FileSystemId 'fs-01' -DTreeName 'archive'
+
+        $result.GetType().Name | Should -Be 'OceanStorDtree'
+        $result.Name | Should -Be 'archive'
+        $script:method | Should -Be 'POST'
+        $script:resource | Should -Be 'QUOTATREE'
+        $script:request.PARENTID | Should -Be 'fs-01'
+        $script:request.ContainsKey('path') | Should -BeFalse
+        $script:request.ContainsKey('QUOTASWITCH') | Should -BeFalse
+        $script:request.ContainsKey('nasLockingPolicy') | Should -BeFalse
+    }
+
+    It 'translates explicitly selected dTree settings to API values' {
+        $null = new-DMdTree -WebSession $script:session -FileSystemId 'fs-01' -DTreeName 'archive' `
+            -QuotaSwitch enabled -LockingPolicy Advisory -Path '/archive'
+
+        $script:request.QUOTASWITCH | Should -BeTrue
+        $script:request.nasLockingPolicy | Should -Be 1
+        $script:request.path | Should -Be '/archive'
     }
 }
 }

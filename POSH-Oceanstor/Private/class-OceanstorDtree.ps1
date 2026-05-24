@@ -19,7 +19,20 @@ class OceanStorDtree {
     OceanStorDtree ([array]$dtree, [pscustomobject]$Session)
     {
         $this.Session = $Session
-
+        $this.Id = $dtree.ID
+        $this.Name = $dtree.NAME
+        $this.parentId = $dtree.PARENTID
+        $this.{Quota Switch} = $dtree.QUOTASWITCH
+        $this.{Quota Switch Status} = $dtree.QUOTASWITCHSTATUS
+        $this.{Share Type} = $dtree.SHARETYPE
+        $this.{Quota Configured} = [string]$dtree.ISQUOTACONFIGURED -match '^(?i:true|1)$'
+        $this.{vStore Id} = $dtree.vstoreId
+        $this.{vStore Name} = $dtree.vstoreName
+        $this.{Security Style} = $dtree.securityStyle
+        $this.{Quota Count} = $dtree.quotaCfgCount
+        $this.{Replication Count} = $dtree.replicationCount
+        $this.{Snapshot Count} = $dtree.snapCount
+        $this.{Locking Policy} = $dtree.nasLockingPolicy
     }
 
 }
