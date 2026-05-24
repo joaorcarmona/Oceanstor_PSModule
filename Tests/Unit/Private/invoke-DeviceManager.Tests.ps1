@@ -68,4 +68,13 @@ Describe 'invoke-DeviceManager' {
             ($Body | ConvertFrom-Json).CAPACITY -eq 1024
         }
     }
+
+    It 'builds API v2 requests for protection group resources' {
+        $null = invoke-DeviceManager -WebSession $script:session -Method GET -Resource 'protectgroup' -ApiV2
+
+        Should -Invoke Invoke-RestMethod -Times 1 -Exactly -ParameterFilter {
+            $Method -eq 'GET' -and
+            $Uri -eq 'https://oceanstor.test:8088/api/v2/protectgroup'
+        }
+    }
 }
