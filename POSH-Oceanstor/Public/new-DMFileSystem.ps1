@@ -91,6 +91,29 @@ function new-DMFileSystem {
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $true)]
         [string]$FileSystemName,
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $true)]
+        [ValidateScript({
+                $session = if ($WebSession) {
+                    $WebSession
+                }
+                else {
+                    $deviceManager
+                }
+                $storagePools = @(get-DMstoragePools -WebSession $session)
+                if ($storagePools.Id -contains $_) {
+                    return $true
+                }
+                throw "Invalid StoragePoolID. Valid values are: $($storagePools.Id -join ', ')"
+            })]
+        [ArgumentCompleter({
+                param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
+                    $fakeBoundParameters.WebSession
+                }
+                else {
+                    $deviceManager
+                }
+                (get-DMstoragePools -WebSession $session).Id | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+            })]
         [Int16]$StoragePoolID,
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
         [string]$description,

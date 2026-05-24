@@ -1,5 +1,5 @@
 # Huawei Oceanstor_PSModule
-Oceanstor PowerShell Module, is a module to operate with Huawei Oceanstor devices (v3 & v5) - v6 not fully tested. Please report bugs on v6.
+Oceanstor PowerShell Module, is a module to operate with Huawei Oceanstor devices (v6) - Previous versions should work in limited way. Please report any bugs.
 
 Currently only get functions are developed, but in the future more operations could be added.
 
@@ -26,13 +26,21 @@ Currently only get functions are developed, but in the future more operations co
 
 The Module is a powershell module to interact with Huawei Oceanstor Devices, via the REST API. All module was developed to allow a user to use all commands without having to pass arguments (unless for query filtering). The websession is optional parameters in all commands, if you are querying multiple storage at same time, if not, you just need to connect and start using the get commands.
 
-To start, is necessary to connect to a Storage (single).
+To start, it is necessary to connect to a storage system.
 ```powershell
-#Connect to a storage (System will request to input your username and password)
-$storage = connect-deviceManager -hostname "10.0.0.1" -Secure
+# Connect to a storage. By default, PowerShell securely prompts for your credentials.
+$storage = connect-deviceManager -Hostname "10.0.0.1" -Return $true
 
-#For unattended connection, pass the credentials in plain text (not recommended)
-$storage = connect-deviceManager -hostname "10.0.0.1" -Unsecure -LoginUser "username" -LoginPwd "password"
+# The -Secure switch remains available for the interactive prompt form.
+$storage = connect-deviceManager -Hostname "10.0.0.1" -Return $true -Secure
+
+# For unattended operation, provide a PSCredential obtained from a secure source.
+# For example, import an encrypted credential exported for the same user and machine.
+$credential = Import-Clixml -Path "$HOME\.oceanstor\device-manager.credential.xml"
+$storage = connect-deviceManager -Hostname "10.0.0.1" -Return $true -Credential $credential
+
+# A SecureString password may also be paired with a user name.
+$storage = connect-deviceManager -Hostname "10.0.0.1" -Return $true -LoginUser "username" -LoginPwd $securePassword
 ```
 Next the user can Query any command without requiring the input the username again.
 ```powershell
@@ -42,9 +50,9 @@ $luns = get-DMLuns
 
 For multiple storage is advised to work with the parameter websession:
 ```powershell
-#Connect to 2 storages and save your session in different variables
-$storage1 = connect-deviceManager -hostname "10.0.0.1" -Secure
-$storage2 = connect-deviceManager -hostname "10.0.0.2" -Secure
+# Connect to two storages and save each session in a different variable.
+$storage1 = connect-deviceManager -Hostname "10.0.0.1" -Return $true
+$storage2 = connect-deviceManager -Hostname "10.0.0.2" -Return $true
 ```
 Next the user can Query any command without requiring the input the username again, but you will need to input the webSession parameter
 ```powershell
@@ -55,8 +63,8 @@ $storage2luns = get-DMLuns -webSession $storage2
 
 #### Export Storage Configuration to Excel
 ```powershell
-#Connect to a storage (System will request to input your username and password)
-$storage = connect-deviceManager -hostname "10.0.0.1" -Secure
+# Connect to a storage (PowerShell securely prompts for credentials).
+$storage = connect-deviceManager -Hostname "10.0.0.1" -Return $true
 
 #export all storage data to excel
 export-DMStorageToExcel -OceanStor $storage -ReportFile "c:\temp\MyStorage.xlsx" -IncludeObject full
@@ -67,8 +75,8 @@ export-DMStorageToExcel -OceanStor $storage -ReportFile "c:\temp\MyStorage.xlsx"
 
 #### Search one lun by WWN
 ```powershell
-#Connect to a storage (System will request to input your username and password)
-$storage = connect-deviceManager -hostname "10.0.0.1" -Secure
+# Connect to a storage (PowerShell securely prompts for credentials).
+$storage = connect-deviceManager -Hostname "10.0.0.1" -Return $true
 
 #Search for a lun by Lun WWN
  $luns = get-DMlunsByWWN -webSession $storage -wwn "6a08cf810075766e1efc050700000005"

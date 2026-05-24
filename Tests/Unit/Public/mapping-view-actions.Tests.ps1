@@ -119,6 +119,16 @@ Describe 'Mapping view commands' {
         $script:method | Should -Be 'DELETE'
         $script:resource | Should -Be 'mappingview/mv-01?vstoreId=7'
     }
+
+    It 'exposes completion metadata for mapping view group filters' {
+        $command = Get-Command Get-DMMappingView
+
+        foreach ($parameterName in @('HostGroupName', 'LunGroupName', 'PortGroupName')) {
+            @($command.Parameters[$parameterName].Attributes |
+                Where-Object { $_ -is [System.Management.Automation.ArgumentCompleterAttribute] }).Count |
+                Should -BeGreaterThan 0 -Because "Get-DMMappingView -$parameterName should support tab completion"
+        }
+    }
 }
 
 Describe 'Mapping view association commands' {
@@ -187,6 +197,36 @@ Describe 'Mapping view association commands' {
         $null = Add-DMLunGroupToMappingView -WebSession $script:session -MappingViewName 'application' -LunGroupName 'production' -WhatIf
 
         Should -Invoke invoke-DeviceManager -Times 0 -Exactly
+    }
+
+    It 'rejects unknown mapping association targets before sending a request' {
+        { Add-DMLunGroupToMappingView -WebSession $script:session -MappingViewName 'application' -LunGroupName 'missing' -Confirm:$false } |
+            Should -Throw '*Invalid LunGroupName*'
+
+        { Add-DMPortGroupToMappingView -WebSession $script:session -MappingViewName 'application' -PortGroupName 'missing' -Confirm:$false } |
+            Should -Throw '*Invalid PortGroupName*'
+
+        Should -Invoke invoke-DeviceManager -Times 0 -Exactly
+    }
+
+    It 'exposes completion metadata for mapping association references' {
+        $referenceParameters = @{
+            'Add-DMHostGroupToMappingView'      = @('MappingViewName', 'HostGroupName')
+            'Add-DMLunGroupToMappingView'       = @('MappingViewName', 'LunGroupName')
+            'Add-DMPortGroupToMappingView'      = @('MappingViewName', 'PortGroupName')
+            'Remove-DMHostGroupFromMappingView' = @('MappingViewName', 'HostGroupName')
+            'Remove-DMLunGroupFromMappingView'  = @('MappingViewName', 'LunGroupName')
+            'Remove-DMPortGroupFromMappingView' = @('MappingViewName', 'PortGroupName')
+        }
+
+        foreach ($commandName in $referenceParameters.Keys) {
+            $command = Get-Command $commandName
+            foreach ($parameterName in $referenceParameters[$commandName]) {
+                @($command.Parameters[$parameterName].Attributes |
+                    Where-Object { $_ -is [System.Management.Automation.ArgumentCompleterAttribute] }).Count |
+                    Should -BeGreaterThan 0 -Because "$commandName -$parameterName should support tab completion"
+            }
+        }
     }
 }
 }

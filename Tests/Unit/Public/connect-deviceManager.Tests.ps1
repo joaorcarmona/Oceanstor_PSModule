@@ -36,17 +36,21 @@ Describe 'connect-deviceManager' {
             return $script:logonResponse
         }
 
+        Mock Get-Credential {
+            throw 'Unexpected credential prompt.'
+        }
+
         Mock get-DMSystem {
             return [pscustomobject]@{ version = 'V600R001' }
         }
     }
 
-    It 'creates and returns a connection using secure credentials' {
+    It 'creates and returns a connection by prompting for credentials by default' {
         $securePassword = ConvertTo-SecureString -String 'secure-pass' -AsPlainText -Force
         $script:credential = [pscredential]::new('secure-user', $securePassword)
         Mock Get-Credential { return $script:credential }
 
-        $result = connect-deviceManager -Hostname 'oceanstor.test' -Return $true -Secure
+        $result = connect-deviceManager -Hostname 'oceanstor.test' -Return $true
 
         $result.GetType().Name | Should -Be 'OceanstorSession'
         $result.Hostname | Should -Be 'oceanstor.test'
@@ -63,11 +67,24 @@ Describe 'connect-deviceManager' {
         }
     }
 
-    It 'creates a connection using unsecure credential parameters' {
-        $result = connect-deviceManager -Hostname 'oceanstor.test' -Return $true -Unsecure -LoginUser 'api-user' -LoginPwd 'api-pass'
+    It 'keeps the Secure switch as a credential-prompt compatibility path' {
+        $securePassword = ConvertTo-SecureString -String 'secure-pass' -AsPlainText -Force
+        Mock Get-Credential { return [pscredential]::new('secure-user', $securePassword) }
+
+        $null = connect-deviceManager -Hostname 'oceanstor.test' -Return $true -Secure
+
+        Should -Invoke Get-Credential -Times 1 -Exactly
+    }
+
+    It 'creates a connection using a PSCredential for unattended operation' {
+        $securePassword = ConvertTo-SecureString -String 'api-pass' -AsPlainText -Force
+        $credential = [pscredential]::new('api-user', $securePassword)
+
+        $result = connect-deviceManager -Hostname 'oceanstor.test' -Return $true -Credential $credential
 
         $result.GetType().Name | Should -Be 'OceanstorSession'
         $result.Headers.Authorization | Should -Be 'Basic YXBpLXVzZXI6YXBpLXBhc3M='
+        Should -Invoke Get-Credential -Times 0 -Exactly
         Should -Invoke Invoke-RestMethod -Times 1 -Exactly -ParameterFilter {
             ($Body | ConvertFrom-Json).username -eq 'api-user' -and
             ($Body | ConvertFrom-Json).password -eq 'api-pass' -and
@@ -75,8 +92,21 @@ Describe 'connect-deviceManager' {
         }
     }
 
+    It 'creates a connection using a SecureString password' {
+        $securePassword = ConvertTo-SecureString -String 'api-pass' -AsPlainText -Force
+
+        $result = connect-deviceManager -Hostname 'oceanstor.test' -Return $true -LoginUser 'api-user' -LoginPwd $securePassword
+
+        $result.GetType().Name | Should -Be 'OceanstorSession'
+        $result.Headers.Authorization | Should -Be 'Basic YXBpLXVzZXI6YXBpLXBhc3M='
+        Should -Invoke Get-Credential -Times 0 -Exactly
+    }
+
     It 'stores the connection in the global deviceManager variable by default' {
-        $null = connect-deviceManager -Hostname 'oceanstor.test' -Unsecure -LoginUser 'api-user' -LoginPwd 'api-pass'
+        $securePassword = ConvertTo-SecureString -String 'api-pass' -AsPlainText -Force
+        $credential = [pscredential]::new('api-user', $securePassword)
+
+        $null = connect-deviceManager -Hostname 'oceanstor.test' -Credential $credential
 
         $global:deviceManager.GetType().Name | Should -Be 'OceanstorSession'
         $global:deviceManager.DeviceId | Should -Be 'device-01'
