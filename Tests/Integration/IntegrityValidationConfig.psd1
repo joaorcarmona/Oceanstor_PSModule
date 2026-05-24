@@ -25,8 +25,8 @@
         CapacityMB = 1024
         AllocationType = 'Thin'
 
-        # Set to 0 to skip Resize-DMLunSnapshot. To test resizing, set a sector
-        # value larger than the capacity returned for the generated snapshot.
+        # Leave as 0 to automatically expand the generated snapshot by 2048
+        # sectors, or set a larger explicit sector capacity for that test.
         ExpandedSnapshotCapacitySectors = 0
     }
 
