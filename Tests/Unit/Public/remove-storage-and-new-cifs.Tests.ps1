@@ -157,6 +157,7 @@ Describe 'New-DMCifsShare' {
 Describe 'new-DMdTree' {
     BeforeEach {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
+        Mock get-DMFileSystem { @([pscustomobject]@{ Id = 'fs-01'; Name = 'documents' }) }
         Mock invoke-DeviceManager {
             $script:method = $Method
             $script:resource = $Resource
@@ -188,6 +189,13 @@ Describe 'new-DMdTree' {
         $script:request.QUOTASWITCH | Should -BeTrue
         $script:request.nasLockingPolicy | Should -Be 1
         $script:request.path | Should -Be '/archive'
+    }
+
+    It 'rejects an unknown parent file system before creating a dTree' {
+        { new-DMdTree -WebSession $script:session -FileSystemId 'missing' -DTreeName 'archive' } |
+            Should -Throw '*Invalid FileSystemId*'
+
+        Should -Invoke invoke-DeviceManager -Times 0 -Exactly
     }
 }
 }

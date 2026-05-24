@@ -13,13 +13,14 @@ function connect-deviceManager {
 		by default is false.
 		If true, the connection object will be returned. If false $deviceManager Global Variable will be set. by default
 	.PARAMETER Secure
-		is optional switch, to connect using secure credentials. If set, the function will request credentials in a more secure way
-	.PARAMETER Unsecure
-		is optional switch, to connect using unsecure credentials. If set, the LoginUser and LoginPWD are mandatory. Both will be pass in plain text
+		is an optional compatibility switch. When supplied, the function prompts for credentials securely.
+		If neither Credential nor LoginUser/LoginPwd is supplied, a secure credential prompt is also used by default.
+	.PARAMETER Credential
+		is an optional PSCredential for unattended connections without storing a plain text password in a script.
 	.PARAMETER LoginUser
-		is a mandatory string if unsecure switch is set. Is the login username to be used in the connection
+		is a mandatory string when LoginPwd is provided. Is the login username to be used in the connection.
 	.PARAMETER LoginPWD
-		is a mandatory string if unsecure switch is set. Is the login password to be used in the connection (clear text)
+		is a mandatory SecureString when LoginUser is provided.
 	.INPUTS
 
 	.OUTPUTS
@@ -27,10 +28,10 @@ function connect-deviceManager {
 
 	.EXAMPLE
 		Example syntax for running that sets $deviceManager global Variable Session
-		PS C:\> connect-deviceManager -$hostname storage.domain.tld -Secure
+		PS C:\> connect-deviceManager -Hostname storage.domain.tld
 
 		Example syntax for runnign that returns a session object connection
-		PS C:\> $storage = connect-deviceManager -$hostname storage.domain.tld -return $true -Secure
+		PS C:\> $storage = connect-deviceManager -Hostname storage.domain.tld -Return $true -Credential $credential
 
 	.NOTES
 		Filename: connect-deviceManager.ps1
@@ -40,28 +41,32 @@ function connect-deviceManager {
 
 	.LINK
 	#>
-    [Cmdletbinding()]
+    [Cmdletbinding(DefaultParameterSetName = 'Prompt')]
     param(
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $true)]
         [String]$Hostname,
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 1, Mandatory = $false)]
         [boolean]$Return = $false,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 2, Mandatory = $true, ParameterSetName = "secure")]
+        [Parameter(ParameterSetName = 'Prompt')]
         [switch]$Secure = $false,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 3, Mandatory = $false, ParameterSetName = "unsecure")]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Credential')]
+        [pscredential]$Credential,
+        [Parameter(Mandatory = $true, ParameterSetName = 'SecurePassword')]
         [String]$LoginUser,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 4, Mandatory = $true, ParameterSetName = "unsecure")]
-        [String]$LoginPwd,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 5, Mandatory = $true, ParameterSetName = "unsecure")]
-        [switch]$Unsecure = $false
+        [Parameter(Mandatory = $true, ParameterSetName = 'SecurePassword')]
+        [securestring]$LoginPwd
     )
 
-    if ($Secure -eq $true) {
-        [pscredential]$credentials = Get-Credential
-    }
-    else {
-        [securestring]$SecPassword = ConvertTo-SecureString -String	$LoginPwd -AsPlainText -Force
-        [pscredential]$credentials = New-Object System.Management.Automation.PSCredential ($LoginUser, $SecPassword)
+    switch ($PSCmdlet.ParameterSetName) {
+        'Credential' {
+            $credentials = $Credential
+        }
+        'SecurePassword' {
+            $credentials = [pscredential]::new($LoginUser, $LoginPwd)
+        }
+        default {
+            $credentials = Get-Credential
+        }
     }
 
     $username = $credentials.GetNetworkCredential().UserName

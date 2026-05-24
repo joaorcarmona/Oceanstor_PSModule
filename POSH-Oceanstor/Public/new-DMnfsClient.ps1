@@ -67,6 +67,29 @@ function new-DMnfsClient {
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $true)]
         [string]$clientName,
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $true)]
+        [ValidateScript({
+                $session = if ($WebSession) {
+                    $WebSession
+                }
+                else {
+                    $deviceManager
+                }
+                $shares = @(get-DMShares -WebSession $session -ShareType NFS)
+                if ($shares.Id -contains $_) {
+                    return $true
+                }
+                throw "Invalid ShareId. Valid values are: $($shares.Id -join ', ')"
+            })]
+        [ArgumentCompleter({
+                param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
+                    $fakeBoundParameters.WebSession
+                }
+                else {
+                    $deviceManager
+                }
+                (get-DMShares -WebSession $session -ShareType NFS).Id | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+            })]
         [string]$shareId,
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [ValidateSet("read-only", "read-write", "no-permission")]

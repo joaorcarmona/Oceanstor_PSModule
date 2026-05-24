@@ -21,6 +21,16 @@ function Add-DMHostGroupToMappingView {
                 }
                 throw "Invalid MappingViewName. Valid values are: $((Get-DMMappingView -WebSession $session).Name -join ', ')"
             })]
+        [ArgumentCompleter({
+                param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
+                    $fakeBoundParameters.WebSession
+                }
+                else {
+                    $deviceManager
+                }
+                (Get-DMMappingView -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+            })]
         [string]$MappingViewName,
 
         [Parameter(Mandatory = $true, Position = 2)]
@@ -35,6 +45,16 @@ function Add-DMHostGroupToMappingView {
                     return $true
                 }
                 throw "Invalid HostGroupName. Valid values are: $((get-DMhostGroups -WebSession $session).Name -join ', ')"
+            })]
+        [ArgumentCompleter({
+                param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
+                    $fakeBoundParameters.WebSession
+                }
+                else {
+                    $deviceManager
+                }
+                (get-DMhostGroups -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$HostGroupName,
 

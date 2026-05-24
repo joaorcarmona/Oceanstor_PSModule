@@ -61,8 +61,58 @@ function new-DMdTree {
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 1, Mandatory = $true)]
         [string]$dTreeName,
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 2, Mandatory = $true, ParameterSetName = "byName")]
+        [ValidateScript({
+                $session = if ($WebSession) {
+                    $WebSession
+                }
+                else {
+                    $deviceManager
+                }
+                $fileSystems = @(get-DMFileSystem -WebSession $session)
+                $matchingItems = @($fileSystems | Where-Object Name -EQ $_)
+                if ($matchingItems.Count -eq 1) {
+                    return $true
+                }
+                if ($matchingItems.Count -gt 1) {
+                    throw "FileSystemName is ambiguous because more than one file system is named '$_'."
+                }
+                throw "Invalid FileSystemName. Valid values are: $($fileSystems.Name -join ', ')"
+            })]
+        [ArgumentCompleter({
+                param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
+                    $fakeBoundParameters.WebSession
+                }
+                else {
+                    $deviceManager
+                }
+                (get-DMFileSystem -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+            })]
         [string]$fileSystemName,
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $true, ParameterSetName = "byId")]
+        [ValidateScript({
+                $session = if ($WebSession) {
+                    $WebSession
+                }
+                else {
+                    $deviceManager
+                }
+                $fileSystems = @(get-DMFileSystem -WebSession $session)
+                if ($fileSystems.Id -contains $_) {
+                    return $true
+                }
+                throw "Invalid FileSystemId. Valid values are: $($fileSystems.Id -join ', ')"
+            })]
+        [ArgumentCompleter({
+                param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
+                    $fakeBoundParameters.WebSession
+                }
+                else {
+                    $deviceManager
+                }
+                (get-DMFileSystem -WebSession $session).Id | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+            })]
         [string]$fileSystemId,
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
         [ValidateSet("enabled", "disabled")]

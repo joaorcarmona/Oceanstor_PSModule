@@ -52,6 +52,29 @@ function new-DMnfsShare {
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $true)]
         [string]$sharepath,
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $true)]
+        [ValidateScript({
+                $session = if ($WebSession) {
+                    $WebSession
+                }
+                else {
+                    $deviceManager
+                }
+                $fileSystems = @(get-DMFileSystem -WebSession $session)
+                if ($fileSystems.Id -contains $_) {
+                    return $true
+                }
+                throw "Invalid FileSystemId. Valid values are: $($fileSystems.Id -join ', ')"
+            })]
+        [ArgumentCompleter({
+                param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
+                    $fakeBoundParameters.WebSession
+                }
+                else {
+                    $deviceManager
+                }
+                (get-DMFileSystem -WebSession $session).Id | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+            })]
         [string]$FileSystemId,
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [ValidateSet("UTF-8")]

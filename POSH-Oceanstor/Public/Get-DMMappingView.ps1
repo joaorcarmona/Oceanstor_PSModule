@@ -12,12 +12,93 @@ function Get-DMMappingView {
         [string]$Name,
 
         [Parameter(Mandatory = $true, ParameterSetName = 'HostGroup')]
+        [ValidateScript({
+                $session = if ($WebSession) {
+                    $WebSession
+                }
+                else {
+                    $deviceManager
+                }
+                $groups = @(get-DMhostGroups -WebSession $session)
+                $matchingItems = @($groups | Where-Object Name -EQ $_)
+                if ($matchingItems.Count -eq 1) {
+                    return $true
+                }
+                if ($matchingItems.Count -gt 1) {
+                    throw "HostGroupName is ambiguous because more than one host group is named '$_'."
+                }
+                throw "Invalid HostGroupName. Valid values are: $($groups.Name -join ', ')"
+            })]
+        [ArgumentCompleter({
+                param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
+                    $fakeBoundParameters.WebSession
+                }
+                else {
+                    $deviceManager
+                }
+                (get-DMhostGroups -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+            })]
         [string]$HostGroupName,
 
         [Parameter(Mandatory = $true, ParameterSetName = 'LunGroup')]
+        [ValidateScript({
+                $session = if ($WebSession) {
+                    $WebSession
+                }
+                else {
+                    $deviceManager
+                }
+                $groups = @(get-DMlunGroups -WebSession $session)
+                $matchingItems = @($groups | Where-Object Name -EQ $_)
+                if ($matchingItems.Count -eq 1) {
+                    return $true
+                }
+                if ($matchingItems.Count -gt 1) {
+                    throw "LunGroupName is ambiguous because more than one LUN group is named '$_'."
+                }
+                throw "Invalid LunGroupName. Valid values are: $($groups.Name -join ', ')"
+            })]
+        [ArgumentCompleter({
+                param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
+                    $fakeBoundParameters.WebSession
+                }
+                else {
+                    $deviceManager
+                }
+                (get-DMlunGroups -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+            })]
         [string]$LunGroupName,
 
         [Parameter(Mandatory = $true, ParameterSetName = 'PortGroup')]
+        [ValidateScript({
+                $session = if ($WebSession) {
+                    $WebSession
+                }
+                else {
+                    $deviceManager
+                }
+                $groups = @(Get-DMPortGroup -WebSession $session)
+                $matchingItems = @($groups | Where-Object Name -EQ $_)
+                if ($matchingItems.Count -eq 1) {
+                    return $true
+                }
+                if ($matchingItems.Count -gt 1) {
+                    throw "PortGroupName is ambiguous because more than one port group is named '$_'."
+                }
+                throw "Invalid PortGroupName. Valid values are: $($groups.Name -join ', ')"
+            })]
+        [ArgumentCompleter({
+                param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
+                    $fakeBoundParameters.WebSession
+                }
+                else {
+                    $deviceManager
+                }
+                (Get-DMPortGroup -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+            })]
         [string]$PortGroupName,
 
         [string]$VstoreId
