@@ -1,3 +1,47 @@
+# Release Notes - v0.9.1
+
+Date: 2026-05-25
+Branch: `v0.9.1`
+
+## Summary
+
+This release improves code readability and formatting across the public
+commands, hardens connection credential handling, adds validation and
+completion for selected storage-object parameters, updates connection
+documentation, and introduces PSDepend dependency declarations.
+
+## Changes
+
+- `bd43c31` - code read improvement
+- `d3d4f02` - Improve code formating
+- `3a14054` - Improve security accordingly with PSScriptAnalyzer
+  - Added parameter validation and autocomplete to some functions.
+  - Correct README.md to reflect the new connection method.
+- `5fb7751` - Added Dependencies
+  - Fix Manifest to reflect PowerShell version requirement.
+
+## Highlights
+
+- Reformatted public commands using the shared `CodeFormatting.psd1` rules,
+  including multiline formatting for statement block contents.
+- Updated `connect-deviceManager` to accept secure credential paths for
+  interactive and unattended operation.
+- Added parameter validation and argument completion for selected mapping,
+  file-system, dTree, and NFS operations.
+- Updated README connection examples to use secure credentials rather than a
+  plaintext password.
+- Added `requirements.psd1` for `ImportExcel`, `Pester`, and
+  `PSScriptAnalyzer` dependencies through PSDepend.
+- Updated the module manifest to require PowerShell 6.0 or higher.
+- Ignored generated mutation trace output from integration validation.
+
+## Validation
+
+- Unit tests: 239 passed, 0 failed.
+- PSScriptAnalyzer: no findings in changed public scripts.
+
+---
+
 # Release Notes - Unit Tests and Display Improvements
 
 Date: 2026-05-24
