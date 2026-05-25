@@ -31,7 +31,7 @@ Copyright = "(c) 2025 Joao Carmona All rights reserved."
 Description = "PowerShell module to interact with Huawei Oceanstor Devices"
 
 # Minimum version of the Windows PowerShell engine required by this module
-PowerShellVersion = "7.5"
+PowerShellVersion = "6.0"
 
 # Name of the Windows PowerShell host required by this module
 # PowerShellHostName = ""
