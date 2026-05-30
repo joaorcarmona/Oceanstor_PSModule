@@ -14,7 +14,7 @@ Any change to templates included have impact on the default reports. If you want
 ```
 
 The default templates are loaded in the module variables, when the module is initialize by calling the file:
-import-ReportTemplates.ps1 inside the private folder. This files have currently 6 global variables. It is expected that more could be added in the future.
+Import-ReportTemplates.ps1 inside the private folder. This files have currently 6 global variables. It is expected that more could be added in the future.
 
 ```powershell
 #Location for Lun Report Template

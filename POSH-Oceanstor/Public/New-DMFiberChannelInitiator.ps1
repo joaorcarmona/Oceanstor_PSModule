@@ -6,7 +6,7 @@ function New-DMFiberChannelInitiator {
 
         [Parameter(Mandatory = $true, Position = 1)]
         [ValidateScript({
-                if (validate-WWNAddress -WWN $_) {
+                if (Validate-WWNAddress -WWN $_) {
                     return $true
                 }
                 throw 'WWN must contain 16 hexadecimal characters and cannot be all zeros or all Fs.'
@@ -24,7 +24,7 @@ function New-DMFiberChannelInitiator {
                 else {
                     $deviceManager
                 }
-                $hosts = @(get-DMhosts -WebSession $session)
+                $hosts = @(Get-DMhosts -WebSession $session)
                 $matchingItems = @($hosts | Where-Object Name -EQ $candidate)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -42,7 +42,7 @@ function New-DMFiberChannelInitiator {
                 else {
                     $deviceManager
                 }
-                (get-DMhosts -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMhosts -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$HostName,
 
@@ -75,7 +75,7 @@ function New-DMFiberChannelInitiator {
         $body.NAME = $Name
     }
     if ($HostName) {
-        $hostObject = @(get-DMhosts -WebSession $session | Where-Object Name -EQ $HostName)[0]
+        $hostObject = @(Get-DMhosts -WebSession $session | Where-Object Name -EQ $HostName)[0]
         $body.PARENTTYPE = 21
         $body.PARENTID = $hostObject.Id
     }
@@ -90,7 +90,7 @@ function New-DMFiberChannelInitiator {
         $body.vstoreId = $VstoreId
     }
 
-    $response = invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'fc_initiator' -BodyData $body
+    $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'fc_initiator' -BodyData $body
     if ($response.error.Code -eq 0) {
         return [OceanstorHostinitiatorFC]::new($response.data, $session)
     }

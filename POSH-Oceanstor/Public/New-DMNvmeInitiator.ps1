@@ -28,7 +28,7 @@ function New-DMNvmeInitiator {
         $body.vstoreId = $VstoreId
     }
 
-    $response = invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'NVMe_over_RoCE_initiator' -BodyData $body
+    $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'NVMe_over_RoCE_initiator' -BodyData $body
     if ($response.error.Code -eq 0) {
         return [OceanstorHostinitiatorNVMe]::new($response.data, $session)
     }

@@ -19,7 +19,7 @@ function Get-DMMappingView {
                 else {
                     $deviceManager
                 }
-                $groups = @(get-DMhostGroups -WebSession $session)
+                $groups = @(Get-DMhostGroups -WebSession $session)
                 $matchingItems = @($groups | Where-Object Name -EQ $_)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -37,7 +37,7 @@ function Get-DMMappingView {
                 else {
                     $deviceManager
                 }
-                (get-DMhostGroups -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMhostGroups -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$HostGroupName,
 
@@ -49,7 +49,7 @@ function Get-DMMappingView {
                 else {
                     $deviceManager
                 }
-                $groups = @(get-DMlunGroups -WebSession $session)
+                $groups = @(Get-DMlunGroups -WebSession $session)
                 $matchingItems = @($groups | Where-Object Name -EQ $_)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -67,7 +67,7 @@ function Get-DMMappingView {
                 else {
                     $deviceManager
                 }
-                (get-DMlunGroups -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMlunGroups -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$LunGroupName,
 
@@ -114,14 +114,14 @@ function Get-DMMappingView {
 
     switch ($PSCmdlet.ParameterSetName) {
         'HostGroup' {
-            $group = @(get-DMhostGroups -WebSession $session | Where-Object Name -EQ $HostGroupName)[0]
+            $group = @(Get-DMhostGroups -WebSession $session | Where-Object Name -EQ $HostGroupName)[0]
             if (-not $group) {
                 throw "Host group '$HostGroupName' was not found."
             }
             $resource = "mappingview/associate?TYPE=245&ASSOCIATEOBJTYPE=14&ASSOCIATEOBJID=$($group.Id)"
         }
         'LunGroup' {
-            $group = @(get-DMlunGroups -WebSession $session | Where-Object Name -EQ $LunGroupName)[0]
+            $group = @(Get-DMlunGroups -WebSession $session | Where-Object Name -EQ $LunGroupName)[0]
             if (-not $group) {
                 throw "LUN group '$LunGroupName' was not found."
             }
@@ -146,7 +146,7 @@ function Get-DMMappingView {
         $resource += "${separator}vstoreId=$VstoreId"
     }
 
-    $queryResult = invoke-DeviceManager -WebSession $session -Method 'GET' -Resource $resource
+    $queryResult = Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource $resource
     $response = @()
     if ($null -ne $queryResult -and $null -ne $queryResult.PSObject.Properties['data']) {
         $response = @($queryResult.data)

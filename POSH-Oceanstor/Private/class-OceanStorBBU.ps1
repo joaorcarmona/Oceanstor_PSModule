@@ -40,7 +40,7 @@ class OceanStorBBU
         $this.{Charge Times} = $bbu.CHARGETIMES
 
         # Need to parse the elabel to get the description and part number, as the API does not return part number and description separately for BBU, but they are included in elabel. The format of elabel is "partnumber_description", so we can split it by "_" to get the part number and description.
-        $labels =  get-DMparsedElabel -eLabelString $bbu.ELABEL
+        $labels =  Get-DMparsedElabel -eLabelString $bbu.ELABEL
 
         $this.{ESN} = $labels.BarCode
         $this.{Description} = $labels.Description

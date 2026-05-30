@@ -169,7 +169,7 @@ class OceanStorDisks{
 			8 {$this.{Disk Format} = "1.8-inch"}
 		}
 
-		$labels =  get-DMparsedElabel -eLabelString $disks.ELABEL
+		$labels =  Get-DMparsedElabel -eLabelString $disks.ELABEL
         $this.{Board Type} = $labels.BoardType
         $this.{Bar Code} = $labels.BarCode
         $this.{Part Number} = $labels.Item

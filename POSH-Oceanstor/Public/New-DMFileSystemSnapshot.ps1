@@ -24,7 +24,7 @@ function New-DMFileSystemSnapshot {
                 else {
                     $deviceManager
                 }
-                $fileSystems = @(get-DMFileSystem -WebSession $session)
+                $fileSystems = @(Get-DMFileSystem -WebSession $session)
                 $matchingItems = @($fileSystems | Where-Object Name -EQ $_)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -42,7 +42,7 @@ function New-DMFileSystemSnapshot {
                 else {
                     $deviceManager
                 }
-                (get-DMFileSystem -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMFileSystem -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$FileSystemName,
 
@@ -61,7 +61,7 @@ function New-DMFileSystemSnapshot {
     else {
         $deviceManager
     }
-    $fileSystem = @(get-DMFileSystem -WebSession $session | Where-Object Name -EQ $FileSystemName)[0]
+    $fileSystem = @(Get-DMFileSystem -WebSession $session | Where-Object Name -EQ $FileSystemName)[0]
     $body = @{
         NAME       = if ($SnapshotName) {
             $SnapshotName
@@ -80,7 +80,7 @@ function New-DMFileSystemSnapshot {
         $body.snapTag = $SnapTag
     }
 
-    $response = invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'fssnapshot' -BodyData $body
+    $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'fssnapshot' -BodyData $body
     if ($response.error.Code -eq 0) {
         return [OceanstorFileSystemSnapshot]::new($response.data, $session)
     }

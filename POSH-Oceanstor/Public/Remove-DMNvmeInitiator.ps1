@@ -45,6 +45,6 @@ function Remove-DMNvmeInitiator {
         $body.vstoreId = $VstoreId
     }
     if ($PSCmdlet.ShouldProcess($Nqn, 'Remove free NVMe over RoCE initiator')) {
-        return (invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource 'NVMe_over_RoCE_initiator' -BodyData $body).error
+        return (Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource 'NVMe_over_RoCE_initiator' -BodyData $body).error
     }
 }

@@ -24,7 +24,7 @@ function New-DMProtectionGroup {
                 else {
                     $deviceManager
                 }
-                $lunGroups = @(get-DMlunGroups -WebSession $session)
+                $lunGroups = @(Get-DMlunGroups -WebSession $session)
                 $matchingItems = @($lunGroups | Where-Object Name -EQ $_)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -42,7 +42,7 @@ function New-DMProtectionGroup {
                 else {
                     $deviceManager
                 }
-                (get-DMlunGroups -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMlunGroups -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$LunGroupName,
 
@@ -54,7 +54,7 @@ function New-DMProtectionGroup {
                 else {
                     $deviceManager
                 }
-                $vstores = @(get-DMvStore -WebSession $session)
+                $vstores = @(Get-DMvStore -WebSession $session)
                 $matchingItems = @($vstores | Where-Object Name -EQ $_)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -72,7 +72,7 @@ function New-DMProtectionGroup {
                 else {
                     $deviceManager
                 }
-                (get-DMvStore -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMvStore -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$Vstore,
 
@@ -87,21 +87,21 @@ function New-DMProtectionGroup {
     else {
         $deviceManager
     }
-    $lunGroup = @(get-DMlunGroups -WebSession $session | Where-Object Name -EQ $LunGroupName)[0]
+    $lunGroup = @(Get-DMlunGroups -WebSession $session | Where-Object Name -EQ $LunGroupName)[0]
     $body = @{
         protectGroupName = $Name
         lunGroupId       = $lunGroup.Id
     }
 
     if ($Vstore) {
-        $vstoreObject = @(get-DMvStore -WebSession $session | Where-Object Name -EQ $Vstore)[0]
+        $vstoreObject = @(Get-DMvStore -WebSession $session | Where-Object Name -EQ $Vstore)[0]
         $body.vstoreId = $vstoreObject.Id
     }
     if ($Description) {
         $body.description = $Description
     }
 
-    $response = invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'protectgroup' -BodyData $body -ApiV2
+    $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'protectgroup' -BodyData $body -ApiV2
     if ($response.error.Code -eq 0) {
         return [OceanstorProtectionGroup]::new($response.data, $session)
     }

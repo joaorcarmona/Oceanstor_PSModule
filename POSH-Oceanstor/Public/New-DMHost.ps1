@@ -58,7 +58,7 @@ function New-DMHost {
         $body.vstoreId = $VstoreId
     }
 
-    $response = invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'host' -BodyData $body
+    $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'host' -BodyData $body
     if ($response.error.Code -eq 0) {
         return [OceanStorHost]::new($response.data, $session)
     }

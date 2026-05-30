@@ -50,7 +50,7 @@ function New-DMLunGroup {
         $body.vstoreId = $VstoreId
     }
 
-    $response = invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'lungroup' -BodyData $body
+    $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'lungroup' -BodyData $body
     if ($response.error.Code -eq 0) {
         return [OceanStorLunGroup]::new($response.data, $session)
     }

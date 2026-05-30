@@ -13,7 +13,7 @@ function Get-DMFiberChannelInitiator {
                 else {
                     $deviceManager
                 }
-                $hosts = @(get-DMhosts -WebSession $session)
+                $hosts = @(Get-DMhosts -WebSession $session)
                 $matchingItems = @($hosts | Where-Object Name -EQ $candidate)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -31,7 +31,7 @@ function Get-DMFiberChannelInitiator {
                 else {
                     $deviceManager
                 }
-                (get-DMhosts -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMhosts -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$HostName,
 
@@ -46,11 +46,11 @@ function Get-DMFiberChannelInitiator {
         $deviceManager
     }
     if ($HostName) {
-        $hostObject = @(get-DMhosts -WebSession $session | Where-Object Name -EQ $HostName)[0]
-        return @(get-DMHostInitiators -WebSession $session -InitatorType FibreChannel -HostId $hostObject.Id)
+        $hostObject = @(Get-DMhosts -WebSession $session | Where-Object Name -EQ $HostName)[0]
+        return @(Get-DMHostInitiators -WebSession $session -InitatorType FibreChannel -HostId $hostObject.Id)
     }
     if ($FreeInitiators) {
-        return @(get-DMHostInitiators -WebSession $session -InitatorType FibreChannel -FreeInitiators)
+        return @(Get-DMHostInitiators -WebSession $session -InitatorType FibreChannel -FreeInitiators)
     }
-    return @(get-DMHostInitiators -WebSession $session -InitatorType FibreChannel -All)
+    return @(Get-DMHostInitiators -WebSession $session -InitatorType FibreChannel -All)
 }

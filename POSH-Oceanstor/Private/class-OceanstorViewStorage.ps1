@@ -61,25 +61,25 @@ class OceanstorViewStorage{
     # Constructor
     OceanstorViewStorage ([String] $Hostname)
     {
-		$storageConnection = connect-deviceManager -Hostname $Hostname -Return $true -Secure
+		$storageConnection = Connect-deviceManager -Hostname $Hostname -Return $true -Secure
 
 		$this.Session = $storageConnection
 		$this.Hostname = $Hostname
-		$this.System = get-DMSystem -WebSession $storageConnection
-		$this.Luns = get-DMluns -WebSession $storageConnection
-		$this.LunGroups = get-DMlunGroups -WebSession $storageConnection
-		$this.disks = get-DMdisks -WebSession $storageConnection
-		$this.Hosts = get-DMhosts -WebSession $storageConnection
-		$this.HostGroups = get-DMhostGroups -WebSession $storageConnection
-		$this.StoragePools = get-DMstoragePools -WebSession $storageConnection
+		$this.System = Get-DMSystem -WebSession $storageConnection
+		$this.Luns = Get-DMluns -WebSession $storageConnection
+		$this.LunGroups = Get-DMlunGroups -WebSession $storageConnection
+		$this.disks = Get-DMdisks -WebSession $storageConnection
+		$this.Hosts = Get-DMhosts -WebSession $storageConnection
+		$this.HostGroups = Get-DMhostGroups -WebSession $storageConnection
+		$this.StoragePools = Get-DMstoragePools -WebSession $storageConnection
 		$this.DeviceId = $this.System.sn
-		$this.vStores = get-DMvStore -WebSession $storageConnection
-		$this.{FileSystems} = get-DMFileSystem -WebSession $storageConnection
-		$this.{CIFS Shares} = get-DMShares -WebSession $storageConnection -shareType CIFS
-		$this.{NFS Shares} = get-DMShares -WebSession $storageConnection -shareType NFS
-		$this.{Active Alarms} = get-DMAlarms -webSession $storageConnection -AlarmStatus "Unrecovered"
-		$this.Enclosures = get-DMEnclosures -WebSession $storageConnection
-		$this.Controllers = get-DMControllers -WebSession $storageConnection
-		$this.InterfaceModules = get-DMInterfaceModules -WebSession $storageConnection
+		$this.vStores = Get-DMvStore -WebSession $storageConnection
+		$this.{FileSystems} = Get-DMFileSystem -WebSession $storageConnection
+		$this.{CIFS Shares} = Get-DMShares -WebSession $storageConnection -shareType CIFS
+		$this.{NFS Shares} = Get-DMShares -WebSession $storageConnection -shareType NFS
+		$this.{Active Alarms} = Get-DMAlarms -webSession $storageConnection -AlarmStatus "Unrecovered"
+		$this.Enclosures = Get-DMEnclosures -WebSession $storageConnection
+		$this.Controllers = Get-DMControllers -WebSession $storageConnection
+		$this.InterfaceModules = Get-DMInterfaceModules -WebSession $storageConnection
     }
 }

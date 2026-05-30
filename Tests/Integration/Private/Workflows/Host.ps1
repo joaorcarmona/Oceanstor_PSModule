@@ -1,7 +1,7 @@
 $script:HostMutationWorkflow = {
         if ($configuration.Host.Enabled) {
             $hostGroup = @(Invoke-MutationStep -Name 'New-DMHostGroup' -ExpectedType 'OceanStorHostGroup' -Action {
-                if (@(get-DMhostGroups -WebSession $session | Where-Object Name -EQ $hostGroupName).Count -gt 0) {
+                if (@(Get-DMhostGroups -WebSession $session | Where-Object Name -EQ $hostGroupName).Count -gt 0) {
                     throw "A host group named '$hostGroupName' already exists; refusing to claim it as test-owned."
                 }
                 New-DMHostGroup -WebSession $session -Name $hostGroupName -Description "Integrity validation run $runId"
@@ -15,7 +15,7 @@ $script:HostMutationWorkflow = {
                 }
             }
             $createdHost = @(Invoke-MutationStep -Name 'New-DMHost' -ExpectedType 'OceanStorHost' -Action {
-                if (@(get-DMhosts -WebSession $session | Where-Object Name -EQ $testHostName).Count -gt 0) {
+                if (@(Get-DMhosts -WebSession $session | Where-Object Name -EQ $testHostName).Count -gt 0) {
                     throw "A host named '$testHostName' already exists; refusing to claim it as test-owned."
                 }
                 New-DMHost -WebSession $session -Name $testHostName -OperatingSystem $configuration.Host.OperatingSystem `

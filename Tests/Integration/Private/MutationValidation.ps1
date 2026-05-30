@@ -12,19 +12,19 @@ function Invoke-MutationValidation {
         'Add-DMPortToPortGroup',
         'Remove-DMPortFromPortGroup',
         'Remove-DMNvmeInitiatorFromHost',
-        'set-DMdnsServer',
-        'export-DeviceManager',
-        'export-DMInventory',
-        'export-DMStorageToExcel'
+        'Set-DMdnsServer',
+        'Export-DeviceManager',
+        'Export-DMInventory',
+        'Export-DMStorageToExcel'
     )
 
     if (-not $RunMutatingTests) {
         Add-SkippedResult -Name @(
-            'new-DMLun', 'new-DMLunSnapshot', 'new-DMLunSnapshotCopy', 'Enable-DMLunSnapshot',
-            'Restart-DMLunSnapshot', 'Resize-DMLunSnapshot', 'Restore-DMLunSnapshot', 'remove-DMLunSnapShot',
-            'Remove-DMLun', 'new-DMFileSystem', 'new-DMdTree', 'Remove-DMDTree',
+            'New-DMLun', 'New-DMLunSnapshot', 'New-DMLunSnapshotCopy', 'Enable-DMLunSnapshot',
+            'Restart-DMLunSnapshot', 'Resize-DMLunSnapshot', 'Restore-DMLunSnapshot', 'Remove-DMLunSnapShot',
+            'Remove-DMLun', 'New-DMFileSystem', 'New-DMdTree', 'Remove-DMDTree',
             'New-DMFileSystemSnapshot', 'Restore-DMFileSystemSnapshot', 'Remove-DMFileSystemSnapshot',
-            'new-DMnfsShare', 'new-DMnfsClient', 'Remove-DMNfsClient', 'Remove-DMNfsShare',
+            'New-DMnfsShare', 'New-DMnfsClient', 'Remove-DMNfsClient', 'Remove-DMNfsShare',
             'New-DMCifsShare', 'Remove-DMCifsShare', 'Remove-DMFileSystem', 'New-DMPortGroup', 'New-DMMappingView',
             'Add-DMPortGroupToMappingView', 'Remove-DMPortGroupFromMappingView',
             'Remove-DMMappingView', 'Remove-DMPortGroup', 'New-DMFiberChannelInitiator',
@@ -42,7 +42,7 @@ function Invoke-MutationValidation {
         ) -Status 'NotRequested' -Reason 'Call the runner with -RunMutatingTests and enable the desired section in IntegrityValidationConfig.psd1.'
     }
     elseif (-not $configuration.AllowMutatingTests) {
-        Add-SkippedResult -Name @('Test-owned mutation workflows') -Status 'NotConfigured' -Reason 'Set AllowMutatingTests = $true in IntegrityValidationConfig.psd1 to acknowledge creation and cleanup of test resources.'
+        Add-SkippedResult -Name @('test-owned mutation workflows') -Status 'NotConfigured' -Reason 'Set AllowMutatingTests = $true in IntegrityValidationConfig.psd1 to acknowledge creation and cleanup of test resources.'
     }
     else {
         Test-MutatingConfiguration

@@ -52,7 +52,7 @@ function Remove-DMPortFromPortGroup {
                 else {
                     $deviceManager
                 }
-                $ports = @(get-DMPortGroupCandidates -WebSession $session -PortType $PortType)
+                $ports = @(Get-DMPortGroupCandidates -WebSession $session -PortType $PortType)
                 $matchingItems = @($ports | Where-Object Name -EQ $candidate)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -73,7 +73,7 @@ function Remove-DMPortFromPortGroup {
                 else {
                     $deviceManager
                 }
-                (get-DMPortGroupCandidates -WebSession $session -PortType $fakeBoundParameters.PortType).Name |
+                (Get-DMPortGroupCandidates -WebSession $session -PortType $fakeBoundParameters.PortType).Name |
                     Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$PortName,
@@ -88,13 +88,13 @@ function Remove-DMPortFromPortGroup {
         $deviceManager
     }
     $group = @(Get-DMPortGroup -WebSession $session | Where-Object Name -EQ $PortGroupName)[0]
-    $port = @(get-DMPortGroupCandidates -WebSession $session -PortType $PortType | Where-Object Name -EQ $PortName)[0]
+    $port = @(Get-DMPortGroupCandidates -WebSession $session -PortType $PortType | Where-Object Name -EQ $PortName)[0]
     $associationResource = "portgroup/associate?ASSOCIATEOBJTYPE=$($port.ObjectType)&ASSOCIATEOBJID=$($port.Id)"
     if ($VstoreId) {
         $associationResource += "&vstoreId=$VstoreId"
     }
 
-    $associations = @(invoke-DeviceManager -WebSession $session -Method 'GET' -Resource $associationResource |
+    $associations = @(Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource $associationResource |
             Select-Object -ExpandProperty data)
     if (-not @($associations | Where-Object ID -EQ $group.Id)) {
         throw "Port '$PortName' is not a member of port group '$PortGroupName'."
@@ -110,6 +110,6 @@ function Remove-DMPortFromPortGroup {
     }
 
     if ($PSCmdlet.ShouldProcess("$PortName <- $PortGroupName", 'Remove port from port group')) {
-        return (invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource 'port/associate/portgroup' -BodyData $body).error
+        return (Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource 'port/associate/portgroup' -BodyData $body).error
     }
 }

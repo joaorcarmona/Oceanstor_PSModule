@@ -16,7 +16,7 @@ function Remove-DMNfsClient {
                 else {
                     $deviceManager
                 }
-                $clients = @(get-DMnfsFileClient -WebSession $session)
+                $clients = @(Get-DMnfsFileClient -WebSession $session)
                 $matchingItems = @($clients | Where-Object Name -EQ $_)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -34,7 +34,7 @@ function Remove-DMNfsClient {
                 else {
                     $deviceManager
                 }
-                (get-DMnfsFileClient -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMnfsFileClient -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$ClientName,
 
@@ -47,14 +47,14 @@ function Remove-DMNfsClient {
     else {
         $deviceManager
     }
-    $client = @(get-DMnfsFileClient -WebSession $session | Where-Object Name -EQ $ClientName)[0]
+    $client = @(Get-DMnfsFileClient -WebSession $session | Where-Object Name -EQ $ClientName)[0]
     $resource = "NFS_SHARE_AUTH_CLIENT/$($client.Id)"
     if ($VstoreId) {
         $resource += "?vstoreId=$VstoreId"
     }
 
     if ($PSCmdlet.ShouldProcess($ClientName, 'Remove NFS share client')) {
-        $response = invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
+        $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
         return $response.error
     }
 }

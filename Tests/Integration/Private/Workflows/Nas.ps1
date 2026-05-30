@@ -1,10 +1,10 @@
 $script:NasMutationWorkflow = {
         if ($configuration.Nas.Enabled) {
-            $fileSystem = @(Invoke-MutationStep -Name 'new-DMFileSystem' -ExpectedType 'OceanstorFileSystem' -Action {
-                if (@(get-DMFileSystem -WebSession $session | Where-Object Name -EQ $fileSystemName).Count -gt 0) {
+            $fileSystem = @(Invoke-MutationStep -Name 'New-DMFileSystem' -ExpectedType 'OceanstorFileSystem' -Action {
+                if (@(Get-DMFileSystem -WebSession $session | Where-Object Name -EQ $fileSystemName).Count -gt 0) {
                     throw "A file system named '$fileSystemName' already exists; refusing to claim it as test-owned."
                 }
-                new-DMFileSystem -WebSession $session -FileSystemName $fileSystemName `
+                New-DMFileSystem -WebSession $session -FileSystemName $fileSystemName `
                     -StoragePoolID $configuration.StoragePoolId -Capacity $configuration.Nas.FileSystemCapacityGB `
                     -Description "Integrity validation run $runId"
             })
@@ -45,9 +45,9 @@ $script:NasMutationWorkflow = {
             }
 
             if ($owned.FileSystem.Contains($fileSystemName) -and $configuration.Nas.EnableDTree) {
-                $dTree = @(Invoke-MutationStep -Name 'new-DMdTree' -ExpectedType 'OceanStorDtree' -Action {
+                $dTree = @(Invoke-MutationStep -Name 'New-DMdTree' -ExpectedType 'OceanStorDtree' -Action {
                     Assert-TestOwnedResource -Kind FileSystem -Identity $fileSystemName
-                    new-DMdTree -WebSession $session -FileSystemId $fileSystem[0].Id -DTreeName $dTreeName
+                    New-DMdTree -WebSession $session -FileSystemId $fileSystem[0].Id -DTreeName $dTreeName
                 })
                 if ($dTree.Count -gt 0) {
                     Register-TestOwnedResource -Kind DTree -Identity $dTreeName
@@ -59,16 +59,16 @@ $script:NasMutationWorkflow = {
                 }
             }
             elseif (-not $configuration.Nas.EnableDTree) {
-                Add-SkippedResult -Name @('new-DMdTree', 'Remove-DMDTree') -Status 'NotConfigured' -Reason 'Set Nas.EnableDTree = $true to run the dTree workflow.'
+                Add-SkippedResult -Name @('New-DMdTree', 'Remove-DMDTree') -Status 'NotConfigured' -Reason 'Set Nas.EnableDTree = $true to run the dTree workflow.'
             }
 
             if ($owned.FileSystem.Contains($fileSystemName) -and $configuration.Nas.EnableNfs) {
-                $nfsShare = @(Invoke-MutationStep -Name 'new-DMnfsShare' -ExpectedType 'OceanStorNFSShare' -Action {
+                $nfsShare = @(Invoke-MutationStep -Name 'New-DMnfsShare' -ExpectedType 'OceanStorNFSShare' -Action {
                     Assert-TestOwnedResource -Kind FileSystem -Identity $fileSystemName
-                    if (@(get-DMShares -WebSession $session -ShareType NFS | Where-Object 'Share Path' -EQ $nfsSharePath).Count -gt 0) {
+                    if (@(Get-DMShares -WebSession $session -ShareType NFS | Where-Object 'Share Path' -EQ $nfsSharePath).Count -gt 0) {
                         throw "An NFS share using '$nfsSharePath' already exists; refusing to claim it as test-owned."
                     }
-                    new-DMnfsShare -WebSession $session -SharePath $nfsSharePath -FileSystemId $fileSystem[0].Id
+                    New-DMnfsShare -WebSession $session -SharePath $nfsSharePath -FileSystemId $fileSystem[0].Id
                 })
                 if ($nfsShare.Count -gt 0 -and $nfsShare[0].'Share Path' -eq $nfsSharePath) {
                     Register-TestOwnedResource -Kind NfsShare -Identity $nfsSharePath
@@ -77,12 +77,12 @@ $script:NasMutationWorkflow = {
                             Remove-DMNfsShare -WebSession $session -SharePath $nfsSharePath -Confirm:$false
                         }
                     }
-                    $nfsClient = @(Invoke-MutationStep -Name 'new-DMnfsClient' -Action {
+                    $nfsClient = @(Invoke-MutationStep -Name 'New-DMnfsClient' -Action {
                         Assert-TestOwnedResource -Kind NfsShare -Identity $nfsSharePath
-                        if (@(get-DMnfsFileClient -WebSession $session | Where-Object Name -EQ $configuration.Nas.NfsClientName).Count -gt 0) {
+                        if (@(Get-DMnfsFileClient -WebSession $session | Where-Object Name -EQ $configuration.Nas.NfsClientName).Count -gt 0) {
                             throw "An NFS client named '$($configuration.Nas.NfsClientName)' already exists; its removal could not be safely disambiguated."
                         }
-                        new-DMnfsClient -WebSession $session -ClientName $configuration.Nas.NfsClientName `
+                        New-DMnfsClient -WebSession $session -ClientName $configuration.Nas.NfsClientName `
                             -ShareId $nfsShare[0].Id
                     })
                     if ($nfsClient.Count -gt 0) {
@@ -96,14 +96,14 @@ $script:NasMutationWorkflow = {
                 }
             }
             elseif (-not $configuration.Nas.EnableNfs) {
-                Add-SkippedResult -Name @('new-DMnfsShare', 'new-DMnfsClient', 'Remove-DMNfsClient', 'Remove-DMNfsShare') `
+                Add-SkippedResult -Name @('New-DMnfsShare', 'New-DMnfsClient', 'Remove-DMNfsClient', 'Remove-DMNfsShare') `
                     -Status 'NotConfigured' -Reason 'Set Nas.EnableNfs = $true and provide Nas.NfsClientName to run NFS validation.'
             }
 
             if ($owned.FileSystem.Contains($fileSystemName) -and $configuration.Nas.EnableCifs) {
                 $cifsShare = @(Invoke-MutationStep -Name 'New-DMCifsShare' -ExpectedType 'OceanStorCIFSShare' -Action {
                     Assert-TestOwnedResource -Kind FileSystem -Identity $fileSystemName
-                    if (@(get-DMShares -WebSession $session -ShareType CIFS | Where-Object Name -EQ $cifsShareName).Count -gt 0) {
+                    if (@(Get-DMShares -WebSession $session -ShareType CIFS | Where-Object Name -EQ $cifsShareName).Count -gt 0) {
                         throw "A CIFS share named '$cifsShareName' already exists; refusing to claim it as test-owned."
                     }
                     New-DMCifsShare -WebSession $session -ShareName $cifsShareName -FileSystemName $fileSystemName `
@@ -124,9 +124,9 @@ $script:NasMutationWorkflow = {
         }
         else {
             Add-SkippedResult -Name @(
-                'new-DMFileSystem', 'new-DMdTree', 'Remove-DMDTree', 'New-DMFileSystemSnapshot',
-                'Restore-DMFileSystemSnapshot', 'Remove-DMFileSystemSnapshot', 'new-DMnfsShare',
-                'new-DMnfsClient', 'Remove-DMNfsClient', 'Remove-DMNfsShare', 'New-DMCifsShare',
+                'New-DMFileSystem', 'New-DMdTree', 'Remove-DMDTree', 'New-DMFileSystemSnapshot',
+                'Restore-DMFileSystemSnapshot', 'Remove-DMFileSystemSnapshot', 'New-DMnfsShare',
+                'New-DMnfsClient', 'Remove-DMNfsClient', 'Remove-DMNfsShare', 'New-DMCifsShare',
                 'Remove-DMCifsShare', 'Remove-DMFileSystem'
             ) -Status 'NotConfigured' -Reason 'Set Nas.Enabled = $true and provide StoragePoolId to run the test-owned NAS workflow.'
         }

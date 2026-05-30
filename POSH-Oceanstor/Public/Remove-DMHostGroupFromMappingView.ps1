@@ -46,7 +46,7 @@ function Remove-DMHostGroupFromMappingView {
                 else {
                     $deviceManager
                 }
-                $groups = @(get-DMhostGroups -WebSession $session)
+                $groups = @(Get-DMhostGroups -WebSession $session)
                 $matchingItems = @($groups | Where-Object Name -EQ $_)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -64,7 +64,7 @@ function Remove-DMHostGroupFromMappingView {
                 else {
                     $deviceManager
                 }
-                (get-DMhostGroups -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMhostGroups -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$HostGroupName,
 
@@ -81,7 +81,7 @@ function Remove-DMHostGroupFromMappingView {
     if (-not $view) {
         throw "Mapping view '$MappingViewName' was not found."
     }
-    $group = @(get-DMhostGroups -WebSession $session | Where-Object Name -EQ $HostGroupName)[0]
+    $group = @(Get-DMhostGroups -WebSession $session | Where-Object Name -EQ $HostGroupName)[0]
     if (-not $group) {
         throw "Host group '$HostGroupName' was not found."
     }
@@ -96,6 +96,6 @@ function Remove-DMHostGroupFromMappingView {
     }
 
     if ($PSCmdlet.ShouldProcess("$HostGroupName <- $MappingViewName", 'Remove host group from mapping view')) {
-        return (invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'mappingview/REMOVE_ASSOCIATE' -BodyData $body).error
+        return (Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'mappingview/REMOVE_ASSOCIATE' -BodyData $body).error
     }
 }

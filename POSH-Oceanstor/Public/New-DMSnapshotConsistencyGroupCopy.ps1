@@ -70,7 +70,7 @@ function New-DMSnapshotConsistencyGroupCopy {
         $body.vstoreId = $source.'vStore ID'
     }
 
-    $response = invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'CONSISTENCY_GROUP/createcopy' -BodyData $body
+    $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'CONSISTENCY_GROUP/createcopy' -BodyData $body
     if ($response.error.Code -eq 0) {
         return [OceanstorSnapshotConsistencyGroup]::new($response.data, $session)
     }

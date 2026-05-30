@@ -13,7 +13,7 @@ function Get-DMNvmeInitiator {
                 else {
                     $deviceManager
                 }
-                $hosts = @(get-DMhosts -WebSession $session)
+                $hosts = @(Get-DMhosts -WebSession $session)
                 $matchingItems = @($hosts | Where-Object Name -EQ $candidate)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -31,7 +31,7 @@ function Get-DMNvmeInitiator {
                 else {
                     $deviceManager
                 }
-                (get-DMhosts -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMhosts -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$HostName,
 
@@ -54,7 +54,7 @@ function Get-DMNvmeInitiator {
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
     if ($HostName) {
-        $hostObject = @(get-DMhosts -WebSession $session | Where-Object Name -EQ $HostName)[0]
+        $hostObject = @(Get-DMhosts -WebSession $session | Where-Object Name -EQ $HostName)[0]
         $parameters = @('ASSOCIATEOBJTYPE=21', "ASSOCIATEOBJID=$($hostObject.Id)")
         if ($VstoreId) {
             $parameters += "vstoreId=$VstoreId"
@@ -75,7 +75,7 @@ function Get-DMNvmeInitiator {
         }
     }
 
-    $queryResult = invoke-DeviceManager -WebSession $session -Method 'GET' -Resource $resource
+    $queryResult = Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource $resource
     $response = @()
     if ($null -ne $queryResult -and $null -ne $queryResult.PSObject.Properties['data']) {
         $response = @($queryResult.data)

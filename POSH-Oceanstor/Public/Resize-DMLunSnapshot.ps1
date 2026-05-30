@@ -13,7 +13,7 @@ function Resize-DMLunSnapshot {
 
     .PARAMETER SnapShotName
         Name of the snapshot to expand. Valid values are checked against
-        get-DMLunSnapshots and support tab completion.
+        Get-DMLunSnapshots and support tab completion.
 
     .PARAMETER UserCapacity
         New snapshot user capacity in sectors, as required by the REST API.
@@ -35,7 +35,7 @@ function Resize-DMLunSnapshot {
                     $session = $deviceManager
                 }
 
-                $snapshots = @(get-DMLunSnapshots -WebSession $session)
+                $snapshots = @(Get-DMLunSnapshots -WebSession $session)
                 $matchingSnapshots = @($snapshots | Where-Object Name -EQ $_)
 
                 if ($matchingSnapshots.Count -eq 1) {
@@ -58,7 +58,7 @@ function Resize-DMLunSnapshot {
                     $session = $deviceManager
                 }
 
-                (get-DMLunSnapshots -WebSession $session).Name |
+                (Get-DMLunSnapshots -WebSession $session).Name |
                     Sort-Object -Unique |
                     Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -76,7 +76,7 @@ function Resize-DMLunSnapshot {
         $session = $deviceManager
     }
 
-    $snapshot = @(get-DMLunSnapshots -WebSession $session | Where-Object Name -EQ $SnapShotName)[0]
+    $snapshot = @(Get-DMLunSnapshots -WebSession $session | Where-Object Name -EQ $SnapShotName)[0]
 
     if ($null -ne $snapshot.'User Capacity' -and $UserCapacity -le [uint64]$snapshot.'User Capacity') {
         throw "UserCapacity must be greater than the current snapshot capacity of $($snapshot.'User Capacity') sectors."
@@ -87,7 +87,7 @@ function Resize-DMLunSnapshot {
             ID           = $snapshot.Id
             USERCAPACITY = $UserCapacity
         }
-        $response = invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'snapshot/expand' -BodyData $body
+        $response = Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'snapshot/expand' -BodyData $body
         return $response.error
     }
 }

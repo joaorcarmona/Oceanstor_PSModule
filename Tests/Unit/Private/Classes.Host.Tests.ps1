@@ -1,5 +1,5 @@
 BeforeAll {
-    function global:get-DMHostLinks {}
+    function global:Get-DMHostLinks {}
 
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorHost.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorHostGroup.ps1"
@@ -9,13 +9,13 @@ BeforeAll {
 }
 
 AfterAll {
-    Remove-Item function:global:get-DMHostLinks -ErrorAction SilentlyContinue
+    Remove-Item function:global:Get-DMHostLinks -ErrorAction SilentlyContinue
     Remove-Variable -Name HostPathsCall -Scope Global -ErrorAction SilentlyContinue
 }
 
 Describe 'Host model classes' {
     BeforeAll {
-        $script:session = [pscustomobject]@{ Name = 'test-session' }
+        $script:session = [pscustomobject]@{ Name = 'Test-session' }
     }
 
     It 'maps a host and its operating system' {
@@ -32,7 +32,7 @@ Describe 'Host model classes' {
     }
 
     It 'retrieves all supported path types from a host object' {
-        function global:get-DMHostLinks {
+        function global:Get-DMHostLinks {
             param($WebSession, $HostId, $InitiatorType)
             $global:HostPathsCall += [pscustomobject]@{
                 Session = $WebSession

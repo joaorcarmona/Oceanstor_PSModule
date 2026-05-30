@@ -16,7 +16,7 @@ function Remove-DMFileSystem {
                 else {
                     $deviceManager
                 }
-                $fileSystems = @(get-DMFileSystem -WebSession $session)
+                $fileSystems = @(Get-DMFileSystem -WebSession $session)
                 $matchingItems = @($fileSystems | Where-Object Name -EQ $_)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -34,7 +34,7 @@ function Remove-DMFileSystem {
                 else {
                     $deviceManager
                 }
-                (get-DMFileSystem -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMFileSystem -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$FileSystemName,
 
@@ -51,7 +51,7 @@ function Remove-DMFileSystem {
     else {
         $deviceManager
     }
-    $fileSystem = @(get-DMFileSystem -WebSession $session | Where-Object Name -EQ $FileSystemName)[0]
+    $fileSystem = @(Get-DMFileSystem -WebSession $session | Where-Object Name -EQ $FileSystemName)[0]
     $parameters = @()
     if ($Force) {
         $parameters += 'forceDeleteFs=true'
@@ -68,7 +68,7 @@ function Remove-DMFileSystem {
     }
 
     if ($PSCmdlet.ShouldProcess($FileSystemName, 'Remove file system and its data')) {
-        $response = invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
+        $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
         return $response.error
     }
 }

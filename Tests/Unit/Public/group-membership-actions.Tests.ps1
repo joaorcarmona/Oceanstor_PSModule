@@ -2,13 +2,13 @@ BeforeDiscovery {
     $script:groupMembershipModule = New-Module -Name GroupMembershipTestModule -ArgumentList $PSScriptRoot -ScriptBlock {
         param($testRoot)
 
-        function get-DMhosts { param([pscustomobject]$WebSession) }
-        function get-DMhostGroups { param([pscustomobject]$WebSession) }
-        function get-DMhostsbyHostGroupId { param([pscustomobject]$WebSession, [string]$HostGroupId) }
-        function get-DMluns { param([pscustomobject]$WebSession) }
-        function get-DMlunGroups { param([pscustomobject]$WebSession) }
-        function get-DMlunsbyLunGroup { param([pscustomobject]$WebSession, [psobject]$LunGroup) }
-        function invoke-DeviceManager {
+        function Get-DMhosts { param([pscustomobject]$WebSession) }
+        function Get-DMhostGroups { param([pscustomobject]$WebSession) }
+        function Get-DMhostsbyHostGroupId { param([pscustomobject]$WebSession, [string]$HostGroupId) }
+        function Get-DMluns { param([pscustomobject]$WebSession) }
+        function Get-DMlunGroups { param([pscustomobject]$WebSession) }
+        function Get-DMlunsbyLunGroup { param([pscustomobject]$WebSession, [psobject]$LunGroup) }
+        function Invoke-DeviceManager {
             param(
                 [pscustomobject]$WebSession,
                 [string]$Method,
@@ -36,10 +36,10 @@ InModuleScope GroupMembershipTestModule {
 Describe 'Host group membership commands' {
     BeforeEach {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
-        Mock get-DMhosts { @([pscustomobject]@{ Id = 'host-01'; Name = 'server01' }) }
-        Mock get-DMhostGroups { @([pscustomobject]@{ Id = 'hg-01'; Name = 'cluster01' }) }
-        Mock get-DMhostsbyHostGroupId { @([pscustomobject]@{ Id = 'host-01'; Name = 'server01' }) }
-        Mock invoke-DeviceManager {
+        Mock Get-DMhosts { @([pscustomobject]@{ Id = 'host-01'; Name = 'server01' }) }
+        Mock Get-DMhostGroups { @([pscustomobject]@{ Id = 'hg-01'; Name = 'cluster01' }) }
+        Mock Get-DMhostsbyHostGroupId { @([pscustomobject]@{ Id = 'host-01'; Name = 'server01' }) }
+        Mock Invoke-DeviceManager {
             $script:method = $Method
             $script:resource = $Resource
             $script:request = $BodyData
@@ -70,22 +70,22 @@ Describe 'Host group membership commands' {
     }
 
     It 'rejects removal when the host is not a group member' {
-        Mock get-DMhostsbyHostGroupId { @() }
+        Mock Get-DMhostsbyHostGroupId { @() }
 
         { Remove-DMHostFromHostGroup -WebSession $script:session -HostName 'server01' -HostGroupName 'cluster01' -Confirm:$false } |
             Should -Throw '*not a member*'
 
-        Should -Invoke invoke-DeviceManager -Times 0 -Exactly
+        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 }
 
 Describe 'LUN group membership commands' {
     BeforeEach {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
-        Mock get-DMluns { @([pscustomobject]@{ Id = 'lun-01'; Name = 'database' }) }
-        Mock get-DMlunGroups { @([pscustomobject]@{ Id = 'lg-01'; Name = 'production' }) }
-        Mock get-DMlunsbyLunGroup { @([pscustomobject]@{ Id = 'lun-01'; Name = 'database' }) }
-        Mock invoke-DeviceManager {
+        Mock Get-DMluns { @([pscustomobject]@{ Id = 'lun-01'; Name = 'database' }) }
+        Mock Get-DMlunGroups { @([pscustomobject]@{ Id = 'lg-01'; Name = 'production' }) }
+        Mock Get-DMlunsbyLunGroup { @([pscustomobject]@{ Id = 'lun-01'; Name = 'database' }) }
+        Mock Invoke-DeviceManager {
             $script:method = $Method
             $script:resource = $Resource
             $script:request = $BodyData
@@ -111,7 +111,7 @@ Describe 'LUN group membership commands' {
         { Add-DMLunToLunGroup -WebSession $script:session -LunName 'database' -LunGroupName 'production' -HostLunId 5 -StartHostLunId 10 -Confirm:$false } |
             Should -Throw '*cannot be specified together*'
 
-        Should -Invoke invoke-DeviceManager -Times 0 -Exactly
+        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 
     It 'removes a verified LUN membership through query parameters' {
@@ -125,7 +125,7 @@ Describe 'LUN group membership commands' {
     It 'honors WhatIf for association changes' {
         $null = Remove-DMLunFromLunGroup -WebSession $script:session -LunName 'database' -LunGroupName 'production' -WhatIf
 
-        Should -Invoke invoke-DeviceManager -Times 0 -Exactly
+        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 }
 }

@@ -37,7 +37,7 @@ function New-DMHostGroup {
         $body.vstoreId = $VstoreId
     }
 
-    $response = invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'hostgroup' -BodyData $body
+    $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'hostgroup' -BodyData $body
     if ($response.error.Code -eq 0) {
         return [OceanStorHostGroup]::new($response.data, $session)
     }

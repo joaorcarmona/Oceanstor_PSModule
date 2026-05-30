@@ -98,7 +98,7 @@ class OceanStorHost{
 		$paths = @()
 		foreach ($initiatorType in @('FC', 'ISCSI', 'Infiniband'))
 		{
-			$paths += @(get-DMHostLinks -WebSession $this.Session -HostId $this.id -InitiatorType $initiatorType)
+			$paths += @(Get-DMHostLinks -WebSession $this.Session -HostId $this.id -InitiatorType $initiatorType)
 		}
 
 		return $paths

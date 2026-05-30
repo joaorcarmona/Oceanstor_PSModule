@@ -1,7 +1,7 @@
 $script:LunGroupMutationWorkflow = {
         if ($configuration.LunGroup.Enabled) {
             $lunGroup = @(Invoke-MutationStep -Name 'New-DMLunGroup' -ExpectedType 'OceanStorLunGroup' -Action {
-                if (@(get-DMlunGroups -WebSession $session | Where-Object Name -EQ $lunGroupName).Count -gt 0) {
+                if (@(Get-DMlunGroups -WebSession $session | Where-Object Name -EQ $lunGroupName).Count -gt 0) {
                     throw "A LUN group named '$lunGroupName' already exists; refusing to claim it as test-owned."
                 }
                 New-DMLunGroup -WebSession $session -Name $lunGroupName `

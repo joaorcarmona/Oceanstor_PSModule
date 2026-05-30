@@ -129,7 +129,7 @@ class OceanStorEnclosure
 
         #$this.{elabel} = $encReceived.ELABEL
 
-        $labels =  get-DMparsedElabel -eLabelString $encReceived.ELABEL
+        $labels =  Get-DMparsedElabel -eLabelString $encReceived.ELABEL
         $this.{Board Type} = $labels.BoardType
         $this.{Bar Code} = $labels.BarCode
         $this.{Part Number} = $labels.Item

@@ -2,8 +2,8 @@ BeforeDiscovery {
     $script:fileSystemSnapshotModule = New-Module -Name FileSystemSnapshotTestModule -ArgumentList $PSScriptRoot -ScriptBlock {
         param($testRoot)
 
-        function get-DMFileSystem { param([pscustomobject]$WebSession) }
-        function invoke-DeviceManager {
+        function Get-DMFileSystem { param([pscustomobject]$WebSession) }
+        function Invoke-DeviceManager {
             param(
                 [pscustomobject]$WebSession,
                 [string]$Method,
@@ -32,8 +32,8 @@ InModuleScope FileSystemSnapshotTestModule {
 Describe 'File-system snapshot commands' {
     BeforeEach {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
-        Mock get-DMFileSystem { @([pscustomobject]@{ Id = '5'; Name = 'documents' }) }
-        Mock invoke-DeviceManager {
+        Mock Get-DMFileSystem { @([pscustomobject]@{ Id = '5'; Name = 'documents' }) }
+        Mock Invoke-DeviceManager {
             $script:method = $Method
             $script:resource = $Resource
             $script:request = $BodyData
@@ -67,11 +67,11 @@ Describe 'File-system snapshot commands' {
         { New-DMFileSystemSnapshot -WebSession $script:session -FileSystemName 'missing' } |
             Should -Throw '*Invalid FileSystemName*'
 
-        Should -Invoke invoke-DeviceManager -Times 0 -Exactly
+        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 
     It 'gets file-system snapshots under the resolved parent ID' {
-        Mock invoke-DeviceManager {
+        Mock Invoke-DeviceManager {
             $script:method = $Method
             $script:resource = $Resource
             [pscustomobject]@{ data = @([pscustomobject]@{
@@ -92,13 +92,13 @@ Describe 'File-system snapshot commands' {
     }
 
     It 'returns no file-system snapshots when the API contains no data property' {
-        Mock invoke-DeviceManager { [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 } } }
+        Mock Invoke-DeviceManager { [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 } } }
 
         @(Get-DMFileSystemSnapshots -WebSession $script:session -FileSystemName 'documents') | Should -BeNullOrEmpty
     }
 
     It 'parses file-system snapshots returned as JSON text' {
-        Mock invoke-DeviceManager {
+        Mock Invoke-DeviceManager {
             '{"data":[{"ID":"5@checkpoint","NAME":"checkpoint","PARENTID":"5","PARENTNAME":"documents","HEALTHSTATUS":"1","snapType":"0","SNAPTYPE":"1","TIMESTAMP":"1594990822"}],"error":{"code":0}}'
         }
 
@@ -146,7 +146,7 @@ Describe 'File-system snapshot commands' {
 
         $null = & $Command -WebSession $script:session -FileSystemName 'documents' -SnapshotName 'checkpoint' -WhatIf
 
-        Should -Invoke invoke-DeviceManager -Times 0 -Exactly
+        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 }
 }

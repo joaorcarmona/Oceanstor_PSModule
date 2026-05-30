@@ -62,7 +62,7 @@ function New-DMSnapshotConsistencyGroup {
         $body.vstoreId = $protectionGroup.'vStore ID'
     }
 
-    $response = invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'SNAPSHOT_CONSISTENCY_GROUP' -BodyData $body
+    $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'SNAPSHOT_CONSISTENCY_GROUP' -BodyData $body
     if ($response.error.Code -eq 0) {
         return [OceanstorSnapshotConsistencyGroup]::new($response.data, $session)
     }

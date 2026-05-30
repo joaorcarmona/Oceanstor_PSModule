@@ -16,7 +16,7 @@ function Remove-DMLunGroup {
                 else {
                     $deviceManager
                 }
-                $groups = @(get-DMlunGroups -WebSession $session)
+                $groups = @(Get-DMlunGroups -WebSession $session)
                 $matchingItems = @($groups | Where-Object Name -EQ $_)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -34,7 +34,7 @@ function Remove-DMLunGroup {
                 else {
                     $deviceManager
                 }
-                (get-DMlunGroups -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMlunGroups -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$LunGroupName,
 
@@ -47,14 +47,14 @@ function Remove-DMLunGroup {
     else {
         $deviceManager
     }
-    $group = @(get-DMlunGroups -WebSession $session | Where-Object Name -EQ $LunGroupName)[0]
+    $group = @(Get-DMlunGroups -WebSession $session | Where-Object Name -EQ $LunGroupName)[0]
     $resource = "lungroup/$($group.Id)"
     if ($VstoreId) {
         $resource += "?vstoreId=$VstoreId"
     }
 
     if ($PSCmdlet.ShouldProcess($LunGroupName, 'Remove LUN group')) {
-        $response = invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
+        $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
         return $response.error
     }
 }

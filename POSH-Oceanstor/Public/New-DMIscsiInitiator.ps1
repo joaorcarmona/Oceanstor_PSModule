@@ -19,7 +19,7 @@ function New-DMIscsiInitiator {
                 else {
                     $deviceManager
                 }
-                $hosts = @(get-DMhosts -WebSession $session)
+                $hosts = @(Get-DMhosts -WebSession $session)
                 $matchingItems = @($hosts | Where-Object Name -EQ $candidate)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -37,7 +37,7 @@ function New-DMIscsiInitiator {
                 else {
                     $deviceManager
                 }
-                (get-DMhosts -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMhosts -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$HostName,
 
@@ -83,7 +83,7 @@ function New-DMIscsiInitiator {
         $body.NAME = $Name
     }
     if ($HostName) {
-        $hostObject = @(get-DMhosts -WebSession $session | Where-Object Name -EQ $HostName)[0]
+        $hostObject = @(Get-DMhosts -WebSession $session | Where-Object Name -EQ $HostName)[0]
         $body.PARENTTYPE = 21
         $body.PARENTID = $hostObject.Id
     }
@@ -102,7 +102,7 @@ function New-DMIscsiInitiator {
         $body.vstoreId = $VstoreId
     }
 
-    $response = invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'iscsi_initiator' -BodyData $body
+    $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'iscsi_initiator' -BodyData $body
     if ($response.error.Code -eq 0) {
         return [OceanstorHostinitiatorISCSI]::new($response.data, $session)
     }

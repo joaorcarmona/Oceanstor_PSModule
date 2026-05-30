@@ -46,7 +46,7 @@ function Add-DMLunGroupToMappingView {
                 else {
                     $deviceManager
                 }
-                $groups = @(get-DMlunGroups -WebSession $session)
+                $groups = @(Get-DMlunGroups -WebSession $session)
                 $matchingItems = @($groups | Where-Object Name -EQ $_)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -64,7 +64,7 @@ function Add-DMLunGroupToMappingView {
                 else {
                     $deviceManager
                 }
-                (get-DMlunGroups -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMlunGroups -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$LunGroupName,
 
@@ -81,7 +81,7 @@ function Add-DMLunGroupToMappingView {
     if (-not $view) {
         throw "Mapping view '$MappingViewName' was not found."
     }
-    $group = @(get-DMlunGroups -WebSession $session | Where-Object Name -EQ $LunGroupName)[0]
+    $group = @(Get-DMlunGroups -WebSession $session | Where-Object Name -EQ $LunGroupName)[0]
     if (-not $group) {
         throw "LUN group '$LunGroupName' was not found."
     }
@@ -91,6 +91,6 @@ function Add-DMLunGroupToMappingView {
     }
 
     if ($PSCmdlet.ShouldProcess("$LunGroupName -> $MappingViewName", 'Associate LUN group with mapping view')) {
-        return (invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'mappingview/CREATE_ASSOCIATE' -BodyData $body).error
+        return (Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'mappingview/CREATE_ASSOCIATE' -BodyData $body).error
     }
 }

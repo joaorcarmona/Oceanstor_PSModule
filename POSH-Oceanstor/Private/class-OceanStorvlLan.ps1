@@ -32,7 +32,7 @@ class OceanStorvLan
 
         $this.{Port Id} = $vlanReceived.PORTID
         #TODO - create function to retrieve port Name by ID
-        #$this.{Port Name} = get-DMPortName -WebSession $webSession
+        #$this.{Port Name} = Get-DMPortName -WebSession $webSession
 
         switch($vlanReceived.RUNNINGSTATUS)
 		{

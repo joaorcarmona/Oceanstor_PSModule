@@ -41,10 +41,10 @@ function Add-DMHostGroupToMappingView {
                 else {
                     $deviceManager
                 }
-                if (@(get-DMhostGroups -WebSession $session | Where-Object Name -EQ $_).Count -eq 1) {
+                if (@(Get-DMhostGroups -WebSession $session | Where-Object Name -EQ $_).Count -eq 1) {
                     return $true
                 }
-                throw "Invalid HostGroupName. Valid values are: $((get-DMhostGroups -WebSession $session).Name -join ', ')"
+                throw "Invalid HostGroupName. Valid values are: $((Get-DMhostGroups -WebSession $session).Name -join ', ')"
             })]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
@@ -54,7 +54,7 @@ function Add-DMHostGroupToMappingView {
                 else {
                     $deviceManager
                 }
-                (get-DMhostGroups -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMhostGroups -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$HostGroupName,
 
@@ -68,13 +68,13 @@ function Add-DMHostGroupToMappingView {
         $deviceManager
     }
     $view = @(Get-DMMappingView -WebSession $session | Where-Object Name -EQ $MappingViewName)[0]
-    $group = @(get-DMhostGroups -WebSession $session | Where-Object Name -EQ $HostGroupName)[0]
+    $group = @(Get-DMhostGroups -WebSession $session | Where-Object Name -EQ $HostGroupName)[0]
     $body = @{ TYPE = 245; ID = $view.Id; ASSOCIATEOBJTYPE = 14; ASSOCIATEOBJID = $group.Id }
     if ($VstoreId) {
         $body.vstoreId = $VstoreId
     }
 
     if ($PSCmdlet.ShouldProcess("$HostGroupName -> $MappingViewName", 'Associate host group with mapping view')) {
-        return (invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'mappingview/CREATE_ASSOCIATE' -BodyData $body).error
+        return (Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'mappingview/CREATE_ASSOCIATE' -BodyData $body).error
     }
 }

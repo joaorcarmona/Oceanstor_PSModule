@@ -71,6 +71,6 @@ class OceanStorLunGroup{
 
 	[array] GetLuns()
 	{
-		return @(get-DMlunsbyLunGroup -WebSession $this.Session -LunGroup $this)
+		return @(Get-DMlunsbyLunGroup -WebSession $this.Session -LunGroup $this)
 	}
 }

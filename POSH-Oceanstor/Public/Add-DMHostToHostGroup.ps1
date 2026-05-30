@@ -17,7 +17,7 @@ function Add-DMHostToHostGroup {
                 else {
                     $deviceManager
                 }
-                $hosts = @(get-DMhosts -WebSession $session)
+                $hosts = @(Get-DMhosts -WebSession $session)
                 $matchingItems = @($hosts | Where-Object Name -EQ $candidate)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -35,7 +35,7 @@ function Add-DMHostToHostGroup {
                 else {
                     $deviceManager
                 }
-                (get-DMhosts -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMhosts -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$HostName,
 
@@ -48,7 +48,7 @@ function Add-DMHostToHostGroup {
                 else {
                     $deviceManager
                 }
-                $groups = @(get-DMhostGroups -WebSession $session)
+                $groups = @(Get-DMhostGroups -WebSession $session)
                 $matchingItems = @($groups | Where-Object Name -EQ $candidate)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -66,7 +66,7 @@ function Add-DMHostToHostGroup {
                 else {
                     $deviceManager
                 }
-                (get-DMhostGroups -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMhostGroups -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$HostGroupName,
 
@@ -79,8 +79,8 @@ function Add-DMHostToHostGroup {
     else {
         $deviceManager
     }
-    $hostObject = @(get-DMhosts -WebSession $session | Where-Object Name -EQ $HostName)[0]
-    $group = @(get-DMhostGroups -WebSession $session | Where-Object Name -EQ $HostGroupName)[0]
+    $hostObject = @(Get-DMhosts -WebSession $session | Where-Object Name -EQ $HostName)[0]
+    $group = @(Get-DMhostGroups -WebSession $session | Where-Object Name -EQ $HostGroupName)[0]
     $body = @{
         ID               = $group.Id
         ASSOCIATEOBJTYPE = 21
@@ -91,6 +91,6 @@ function Add-DMHostToHostGroup {
     }
 
     if ($PSCmdlet.ShouldProcess("$HostName -> $HostGroupName", 'Associate host with host group')) {
-        return (invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'hostgroup/associate' -BodyData $body).error
+        return (Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'hostgroup/associate' -BodyData $body).error
     }
 }

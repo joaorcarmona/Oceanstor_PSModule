@@ -16,7 +16,7 @@ function Remove-DMCifsShare {
                 else {
                     $deviceManager
                 }
-                $shares = @(get-DMShares -WebSession $session -ShareType CIFS)
+                $shares = @(Get-DMShares -WebSession $session -ShareType CIFS)
                 $matchingItems = @($shares | Where-Object Name -EQ $_)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -34,7 +34,7 @@ function Remove-DMCifsShare {
                 else {
                     $deviceManager
                 }
-                (get-DMShares -WebSession $session -ShareType CIFS).Name |
+                (Get-DMShares -WebSession $session -ShareType CIFS).Name |
                     Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$ShareName,
@@ -48,14 +48,14 @@ function Remove-DMCifsShare {
     else {
         $deviceManager
     }
-    $share = @(get-DMShares -WebSession $session -ShareType CIFS | Where-Object Name -EQ $ShareName)[0]
+    $share = @(Get-DMShares -WebSession $session -ShareType CIFS | Where-Object Name -EQ $ShareName)[0]
     $resource = "CIFSSHARE/$($share.Id)"
     if ($VstoreId) {
         $resource += "?vstoreId=$VstoreId"
     }
 
     if ($PSCmdlet.ShouldProcess($ShareName, 'Remove CIFS share')) {
-        $response = invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
+        $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
         return $response.error
     }
 }

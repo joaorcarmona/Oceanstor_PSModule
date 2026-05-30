@@ -13,7 +13,7 @@ function Restore-DMLunSnapshot {
 
     .PARAMETER SnapShotName
         Name of the snapshot to roll back. Valid values are checked against
-        get-DMLunSnapshots and support tab completion.
+        Get-DMLunSnapshots and support tab completion.
 
     .PARAMETER RollbackSpeed
         Rate for the rollback operation. The REST API default is Medium.
@@ -35,7 +35,7 @@ function Restore-DMLunSnapshot {
                     $session = $deviceManager
                 }
 
-                $snapshots = @(get-DMLunSnapshots -WebSession $session)
+                $snapshots = @(Get-DMLunSnapshots -WebSession $session)
                 $matchingSnapshots = @($snapshots | Where-Object Name -EQ $_)
 
                 if ($matchingSnapshots.Count -eq 1) {
@@ -58,7 +58,7 @@ function Restore-DMLunSnapshot {
                     $session = $deviceManager
                 }
 
-                (get-DMLunSnapshots -WebSession $session).Name |
+                (Get-DMLunSnapshots -WebSession $session).Name |
                     Sort-Object -Unique |
                     Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -76,7 +76,7 @@ function Restore-DMLunSnapshot {
         $session = $deviceManager
     }
 
-    $snapshot = @(get-DMLunSnapshots -WebSession $session | Where-Object Name -EQ $SnapShotName)[0]
+    $snapshot = @(Get-DMLunSnapshots -WebSession $session | Where-Object Name -EQ $SnapShotName)[0]
     $speedValue = @{
         Low     = 1
         Medium  = 2
@@ -89,7 +89,7 @@ function Restore-DMLunSnapshot {
             ID            = $snapshot.Id
             ROLLBACKSPEED = $speedValue
         }
-        $response = invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'snapshot/rollback' -BodyData $body
+        $response = Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'snapshot/rollback' -BodyData $body
         return $response.error
     }
 }

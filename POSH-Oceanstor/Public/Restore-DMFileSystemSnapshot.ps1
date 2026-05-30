@@ -20,7 +20,7 @@ function Restore-DMFileSystemSnapshot {
                 else {
                     $deviceManager
                 }
-                $fileSystems = @(get-DMFileSystem -WebSession $session)
+                $fileSystems = @(Get-DMFileSystem -WebSession $session)
                 $matchingItems = @($fileSystems | Where-Object Name -EQ $_)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -38,7 +38,7 @@ function Restore-DMFileSystemSnapshot {
                 else {
                     $deviceManager
                 }
-                (get-DMFileSystem -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMFileSystem -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$FileSystemName,
 
@@ -90,7 +90,7 @@ function Restore-DMFileSystemSnapshot {
         if ($snapshot.'vStore ID') {
             $body.vstoreId = $snapshot.'vStore ID'
         }
-        $response = invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'fssnapshot/rollback_fssnapshot' -BodyData $body
+        $response = Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'fssnapshot/rollback_fssnapshot' -BodyData $body
         return $response.error
     }
 }

@@ -1,8 +1,8 @@
 BeforeAll {
-    function global:new-DMLunSnapshot {}
-    function global:new-DMLunSnapshotCopy {}
-    function global:get-DMLunSnapshots {}
-    function global:remove-DMLunSnapShot {}
+    function global:New-DMLunSnapshot {}
+    function global:New-DMLunSnapshotCopy {}
+    function global:Get-DMLunSnapshots {}
+    function global:Remove-DMLunSnapShot {}
     function global:Enable-DMLunSnapshot {}
     function global:Restart-DMLunSnapshot {}
     function global:Resize-DMLunSnapshot {}
@@ -25,10 +25,10 @@ BeforeAll {
 }
 
 AfterAll {
-    Remove-Item -LiteralPath 'Function:\global:new-DMLunSnapshot' -ErrorAction SilentlyContinue
-    Remove-Item -LiteralPath 'Function:\global:new-DMLunSnapshotCopy' -ErrorAction SilentlyContinue
-    Remove-Item -LiteralPath 'Function:\global:get-DMLunSnapshots' -ErrorAction SilentlyContinue
-    Remove-Item -LiteralPath 'Function:\global:remove-DMLunSnapShot' -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:New-DMLunSnapshot' -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:New-DMLunSnapshotCopy' -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:Get-DMLunSnapshots' -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:Remove-DMLunSnapShot' -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath 'Function:\global:Enable-DMLunSnapshot' -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath 'Function:\global:Restart-DMLunSnapshot' -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath 'Function:\global:Resize-DMLunSnapshot' -ErrorAction SilentlyContinue
@@ -49,7 +49,7 @@ AfterAll {
 
 Describe 'Storage and share model classes' {
     BeforeAll {
-        $script:session = [pscustomobject]@{ Name = 'test-session' }
+        $script:session = [pscustomobject]@{ Name = 'Test-session' }
     }
 
     It 'maps CIFS share policy flags' {
@@ -158,7 +158,7 @@ Describe 'Storage and share model classes' {
     }
 
     It 'creates a snapshot from a version 6 LUN object' {
-        function global:new-DMLunSnapshot {
+        function global:New-DMLunSnapshot {
             param(
                 [pscustomobject]$WebSession,
                 [string]$SnapshotName,
@@ -191,7 +191,7 @@ Describe 'Storage and share model classes' {
     }
 
     It 'creates a snapshot with an automatically generated name from a version 6 LUN object' {
-        function global:new-DMLunSnapshot {
+        function global:New-DMLunSnapshot {
             param(
                 [pscustomobject]$WebSession,
                 [string]$SnapshotName,
@@ -218,7 +218,7 @@ Describe 'Storage and share model classes' {
     }
 
     It 'retrieves snapshots for a version 6 LUN object' {
-        function global:get-DMLunSnapshots {
+        function global:Get-DMLunSnapshots {
             param(
                 [pscustomobject]$WebSession,
                 [string]$LunName
@@ -245,7 +245,7 @@ Describe 'Storage and share model classes' {
     }
 
     It 'deletes a LUN snapshot object and invalidates it after success' {
-        function global:remove-DMLunSnapShot {
+        function global:Remove-DMLunSnapShot {
             param(
                 [pscustomobject]$WebSession,
                 [string]$SnapShotName
@@ -277,7 +277,7 @@ Describe 'Storage and share model classes' {
     }
 
     It 'keeps a LUN snapshot object when deletion does not succeed' {
-        function global:remove-DMLunSnapShot {
+        function global:Remove-DMLunSnapShot {
             param(
                 [pscustomobject]$WebSession,
                 [string]$SnapShotName
@@ -377,7 +377,7 @@ Describe 'Storage and share model classes' {
     }
 
     It 'creates a copy from a LUN snapshot object with the default name behavior' {
-        function global:new-DMLunSnapshotCopy {
+        function global:New-DMLunSnapshotCopy {
             param(
                 [pscustomobject]$WebSession,
                 [string]$SourceSnapShotName,
@@ -402,7 +402,7 @@ Describe 'Storage and share model classes' {
     }
 
     It 'creates a named copy from a LUN snapshot object with a description' {
-        function global:new-DMLunSnapshotCopy {
+        function global:New-DMLunSnapshotCopy {
             param(
                 [pscustomobject]$WebSession,
                 [string]$SourceSnapShotName,

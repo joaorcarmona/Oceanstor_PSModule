@@ -57,7 +57,7 @@ function Restore-DMSnapshotConsistencyGroup {
     }
 
     if ($PSCmdlet.ShouldProcess($Name, 'Roll back snapshot consistency group')) {
-        $response = invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'SNAPSHOT_CONSISTENCY_GROUP/rollback' -BodyData $body
+        $response = Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'SNAPSHOT_CONSISTENCY_GROUP/rollback' -BodyData $body
         return $response.error
     }
 }

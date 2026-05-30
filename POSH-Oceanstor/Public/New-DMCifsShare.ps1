@@ -29,7 +29,7 @@ function New-DMCifsShare {
                 else {
                     $deviceManager
                 }
-                $fileSystems = @(get-DMFileSystem -WebSession $session)
+                $fileSystems = @(Get-DMFileSystem -WebSession $session)
                 $matchingItems = @($fileSystems | Where-Object Name -EQ $_)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -47,7 +47,7 @@ function New-DMCifsShare {
                 else {
                     $deviceManager
                 }
-                (get-DMFileSystem -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMFileSystem -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$FileSystemName,
 
@@ -90,7 +90,7 @@ function New-DMCifsShare {
     else {
         $deviceManager
     }
-    $fileSystem = @(get-DMFileSystem -WebSession $session | Where-Object Name -EQ $FileSystemName)[0]
+    $fileSystem = @(Get-DMFileSystem -WebSession $session | Where-Object Name -EQ $FileSystemName)[0]
     $subTypeValue = @{ Normal = 0; HomeDir = 1; All = 2 }[$SubType]
     $offlineFileModeValue = @{ None = 0; Manual = 1; Documents = 2; Programs = 3 }[$OfflineFileMode]
     $body = @{
@@ -122,7 +122,7 @@ function New-DMCifsShare {
         $body.DTREEID = $DTreeId
     }
 
-    $response = invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'CIFSSHARE' -BodyData $body
+    $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'CIFSSHARE' -BodyData $body
     if ($response.error.Code -eq 0) {
         return [OceanStorCIFSShare]::new($response.data, $session)
     }

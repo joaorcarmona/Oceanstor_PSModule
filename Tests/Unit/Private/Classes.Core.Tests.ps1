@@ -9,7 +9,7 @@ BeforeAll {
 
 Describe 'Core model classes' {
     BeforeAll {
-        $script:session = [pscustomobject]@{ Name = 'test-session' }
+        $script:session = [pscustomobject]@{ Name = 'Test-session' }
     }
 
     It 'maps alarm state and severity' {

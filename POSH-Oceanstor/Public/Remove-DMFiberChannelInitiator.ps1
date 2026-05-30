@@ -45,6 +45,6 @@ function Remove-DMFiberChannelInitiator {
         $resource += "?vstoreId=$VstoreId"
     }
     if ($PSCmdlet.ShouldProcess($WWN, 'Remove free Fibre Channel initiator')) {
-        return (invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource).error
+        return (Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource).error
     }
 }

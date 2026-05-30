@@ -17,7 +17,7 @@ function Remove-DMHostFromHostGroup {
                 else {
                     $deviceManager
                 }
-                $hosts = @(get-DMhosts -WebSession $session)
+                $hosts = @(Get-DMhosts -WebSession $session)
                 $matchingItems = @($hosts | Where-Object Name -EQ $candidate)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -35,7 +35,7 @@ function Remove-DMHostFromHostGroup {
                 else {
                     $deviceManager
                 }
-                (get-DMhosts -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMhosts -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$HostName,
 
@@ -48,7 +48,7 @@ function Remove-DMHostFromHostGroup {
                 else {
                     $deviceManager
                 }
-                $groups = @(get-DMhostGroups -WebSession $session)
+                $groups = @(Get-DMhostGroups -WebSession $session)
                 $matchingItems = @($groups | Where-Object Name -EQ $candidate)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -66,7 +66,7 @@ function Remove-DMHostFromHostGroup {
                 else {
                     $deviceManager
                 }
-                (get-DMhostGroups -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMhostGroups -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$HostGroupName,
 
@@ -79,9 +79,9 @@ function Remove-DMHostFromHostGroup {
     else {
         $deviceManager
     }
-    $hostObject = @(get-DMhosts -WebSession $session | Where-Object Name -EQ $HostName)[0]
-    $group = @(get-DMhostGroups -WebSession $session | Where-Object Name -EQ $HostGroupName)[0]
-    $members = @(get-DMhostsbyHostGroupId -WebSession $session -HostGroupId $group.Id)
+    $hostObject = @(Get-DMhosts -WebSession $session | Where-Object Name -EQ $HostName)[0]
+    $group = @(Get-DMhostGroups -WebSession $session | Where-Object Name -EQ $HostGroupName)[0]
+    $members = @(Get-DMhostsbyHostGroupId -WebSession $session -HostGroupId $group.Id)
     if ($members.Id -notcontains $hostObject.Id) {
         throw "Host '$HostName' is not a member of host group '$HostGroupName'."
     }
@@ -96,6 +96,6 @@ function Remove-DMHostFromHostGroup {
     }
 
     if ($PSCmdlet.ShouldProcess("$HostName <- $HostGroupName", 'Remove host from host group')) {
-        return (invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource 'host/associate' -BodyData $body).error
+        return (Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource 'host/associate' -BodyData $body).error
     }
 }

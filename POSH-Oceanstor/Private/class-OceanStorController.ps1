@@ -119,7 +119,7 @@ class OceanStorController
 		}
         $this.{Voltage} = $ctrlReceived.VOLTAGE
 
-        $labels =  get-DMparsedElabel -eLabelString $ctrlReceived.ELABEL
+        $labels =  Get-DMparsedElabel -eLabelString $ctrlReceived.ELABEL
         $this.{Board Type} = $labels.BoardType
         $this.{Serial Number} = $labels.BarCode
         $this.{Part Number} = $labels.Item

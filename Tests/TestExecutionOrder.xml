@@ -12,30 +12,30 @@
     <Test Name="Classes.Host.Tests.ps1" Function="Host model classes" Order="30" Priority="Foundation" DependsOn="None" />
     <Test Name="Classes.Storage.Tests.ps1" Function="Storage and share model classes" Order="40" Priority="Foundation" DependsOn="None" />
     <Test Name="Classes.Views.Tests.ps1" Function="Session and view classes" Order="50" Priority="Foundation" DependsOn="None" />
-    <Test Name="get-DMparsedElabel.Tests.ps1" Function="get-DMparsedElabel" Order="60" Priority="Foundation" DependsOn="None" />
-    <Test Name="validate-Ipv4Address.Tests.ps1" Function="test-IPv4Address" Order="70" Priority="Foundation" DependsOn="None" />
-    <Test Name="validate-WWNAddress.Tests.ps1" Function="validate-WWNAddress" Order="80" Priority="Foundation" DependsOn="None" />
-    <Test Name="write-DMError.Tests.ps1" Function="write-DMError" Order="90" Priority="Foundation" DependsOn="None" />
-    <Test Name="test-ModuleRequirements.Tests.ps1" Function="test-ModuleRequirements" Order="100" Priority="Helper" DependsOn="None" />
-    <Test Name="import-ReportTemplates.Tests.ps1" Function="import-ReportTemplates" Order="110" Priority="Helper" DependsOn="None" />
-    <Test Name="new-DMObjectReport.Tests.ps1" Function="new-DMObjectReport" Order="120" Priority="Helper" DependsOn="None" />
-    <Test Name="invoke-DeviceManager.Tests.ps1" Function="invoke-DeviceManager" Order="130" Priority="Transport" DependsOn="None" />
-    <Test Name="connect-deviceManager.Tests.ps1" Function="connect-deviceManager" Order="140" Priority="Session" DependsOn="None" />
-    <Test Name="get-Disks.Tests.ps1" Function="Disk getter commands" Order="150" Priority="Read" DependsOn="None" />
-    <Test Name="get-Hardware.Tests.ps1" Function="Hardware getter commands" Order="160" Priority="Read" DependsOn="None" />
-    <Test Name="get-Hosts.Tests.ps1" Function="Host getter commands" Order="170" Priority="Read" DependsOn="None" />
-    <Test Name="get-Network.Tests.ps1" Function="Network getter commands" Order="180" Priority="Read" DependsOn="None" />
-    <Test Name="get-Storage.Tests.ps1" Function="Storage getter commands" Order="190" Priority="Read" DependsOn="None" />
-    <Test Name="export-functions.Tests.ps1" Function="Public export functions" Order="200" Priority="Read" DependsOn="None" />
-    <Test Name="new-DMLun.Tests.ps1" Function="new-DMLun" Order="210" Priority="Mutation" DependsOn="None" />
-    <Test Name="new-DMLunSnapshot.Tests.ps1" Function="new-DMLunSnapshot" Order="220" Priority="Mutation" DependsOn="None" />
-    <Test Name="new-DMLunSnapshotCopy.Tests.ps1" Function="new-DMLunSnapshotCopy" Order="230" Priority="Mutation" DependsOn="None" />
+    <Test Name="Get-DMparsedElabel.Tests.ps1" Function="Get-DMparsedElabel" Order="60" Priority="Foundation" DependsOn="None" />
+    <Test Name="Validate-Ipv4Address.Tests.ps1" Function="Test-IPv4Address" Order="70" Priority="Foundation" DependsOn="None" />
+    <Test Name="Validate-WWNAddress.Tests.ps1" Function="Validate-WWNAddress" Order="80" Priority="Foundation" DependsOn="None" />
+    <Test Name="Write-DMError.Tests.ps1" Function="Write-DMError" Order="90" Priority="Foundation" DependsOn="None" />
+    <Test Name="Test-ModuleRequirements.Tests.ps1" Function="Test-ModuleRequirements" Order="100" Priority="Helper" DependsOn="None" />
+    <Test Name="Import-ReportTemplates.Tests.ps1" Function="Import-ReportTemplates" Order="110" Priority="Helper" DependsOn="None" />
+    <Test Name="New-DMObjectReport.Tests.ps1" Function="New-DMObjectReport" Order="120" Priority="Helper" DependsOn="None" />
+    <Test Name="Invoke-DeviceManager.Tests.ps1" Function="Invoke-DeviceManager" Order="130" Priority="Transport" DependsOn="None" />
+    <Test Name="Connect-deviceManager.Tests.ps1" Function="Connect-deviceManager" Order="140" Priority="Session" DependsOn="None" />
+    <Test Name="Get-Disks.Tests.ps1" Function="Disk getter commands" Order="150" Priority="Read" DependsOn="None" />
+    <Test Name="Get-Hardware.Tests.ps1" Function="Hardware getter commands" Order="160" Priority="Read" DependsOn="None" />
+    <Test Name="Get-Hosts.Tests.ps1" Function="Host getter commands" Order="170" Priority="Read" DependsOn="None" />
+    <Test Name="Get-Network.Tests.ps1" Function="Network getter commands" Order="180" Priority="Read" DependsOn="None" />
+    <Test Name="Get-Storage.Tests.ps1" Function="Storage getter commands" Order="190" Priority="Read" DependsOn="None" />
+    <Test Name="Export-functions.Tests.ps1" Function="Public export functions" Order="200" Priority="Read" DependsOn="None" />
+    <Test Name="New-DMLun.Tests.ps1" Function="New-DMLun" Order="210" Priority="Mutation" DependsOn="None" />
+    <Test Name="New-DMLunSnapshot.Tests.ps1" Function="New-DMLunSnapshot" Order="220" Priority="Mutation" DependsOn="None" />
+    <Test Name="New-DMLunSnapshotCopy.Tests.ps1" Function="New-DMLunSnapshotCopy" Order="230" Priority="Mutation" DependsOn="None" />
     <Test Name="snapshot-actions.Tests.ps1" Function="Enable, Restart, Resize and Restore LUN snapshots" Order="240" Priority="Mutation" DependsOn="None" />
-    <Test Name="remove-DMLunSnapShot.Tests.ps1" Function="remove-DMLunSnapShot" Order="250" Priority="Mutation" DependsOn="None" />
-    <Test Name="new-host-and-groups.Tests.ps1" Function="Create host, host group and LUN group commands" Order="260" Priority="Mutation" DependsOn="None" />
+    <Test Name="Remove-DMLunSnapShot.Tests.ps1" Function="Remove-DMLunSnapShot" Order="250" Priority="Mutation" DependsOn="None" />
+    <Test Name="New-host-and-groups.Tests.ps1" Function="Create host, host group and LUN group commands" Order="260" Priority="Mutation" DependsOn="None" />
     <Test Name="group-membership-actions.Tests.ps1" Function="Host-group and LUN-group membership commands" Order="270" Priority="Mutation" DependsOn="None" />
     <Test Name="filesystem-snapshots.Tests.ps1" Function="File-system snapshot commands" Order="280" Priority="Mutation" DependsOn="None" />
-    <Test Name="remove-storage-and-new-cifs.Tests.ps1" Function="Storage and NAS removal, CIFS share and dTree commands" Order="290" Priority="Mutation" DependsOn="None" />
+    <Test Name="Remove-storage-and-new-cifs.Tests.ps1" Function="Storage and NAS removal, CIFS share and dTree commands" Order="290" Priority="Mutation" DependsOn="None" />
     <Test Name="port-group-actions.Tests.ps1" Function="Port-group and port-group membership commands" Order="300" Priority="Mutation" DependsOn="None" />
     <Test Name="mapping-view-actions.Tests.ps1" Function="Mapping-view and mapping-view association commands" Order="310" Priority="Mutation" DependsOn="None" />
     <Test Name="protection-and-consistency-groups.Tests.ps1" Function="Protection-group and snapshot-consistency-group commands" Order="320" Priority="Mutation" DependsOn="None" />
@@ -44,85 +44,85 @@
 
   <LiveIntegrationTests Runner="Tests/Integration/Invoke-GetterIntegrityValidation.ps1">
     <Phase Name="Session" Priority="1">
-      <Test Name="connect-deviceManager" Function="Create authenticated OceanStor session" Order="1000" DependsOn="None" />
+      <Test Name="Connect-deviceManager" Function="Create authenticated OceanStor session" Order="1000" DependsOn="None" />
     </Phase>
 
     <Phase Name="ReadValidation" Priority="2">
-      <Test Name="get-DMSystem" Function="Read system information" Order="1100" DependsOn="connect-deviceManager" />
-      <Test Name="get-DMdisks" Function="Read disks and seed disk-dependent checks" Order="1110" DependsOn="connect-deviceManager" />
-      <Test Name="get-DMhosts" Function="Read hosts and seed host-dependent checks" Order="1120" DependsOn="connect-deviceManager" />
-      <Test Name="get-DMluns" Function="Read LUNs and seed LUN-dependent checks" Order="1130" DependsOn="connect-deviceManager" />
-      <Test Name="get-DMLunSnapshots" Function="Read LUN snapshots" Order="1140" DependsOn="connect-deviceManager" />
-      <Test Name="Get-DMProtectionGroup" Function="Read protection groups" Order="1150" DependsOn="connect-deviceManager" />
-      <Test Name="Get-DMSnapshotConsistencyGroup" Function="Read snapshot consistency groups" Order="1160" DependsOn="connect-deviceManager" />
-      <Test Name="get-DMWorkLoadTypes" Function="Read workloads and seed workload filter checks" Order="1170" DependsOn="connect-deviceManager" />
-      <Test Name="get-DMAlarms" Function="Read alarms" Order="1180" DependsOn="connect-deviceManager" />
-      <Test Name="get-DMbbus" Function="Read battery backup units" Order="1190" DependsOn="connect-deviceManager" />
-      <Test Name="get-DMControllers" Function="Read controllers" Order="1200" DependsOn="connect-deviceManager" />
-      <Test Name="get-DMEnclosures" Function="Read enclosures" Order="1210" DependsOn="connect-deviceManager" />
-      <Test Name="get-DMInterfaceModules" Function="Read interface modules" Order="1220" DependsOn="connect-deviceManager" />
-      <Test Name="get-DMcofferDisks" Function="Read coffer disks" Order="1230" DependsOn="connect-deviceManager" />
-      <Test Name="get-DMfreeDisks" Function="Read free disks" Order="1240" DependsOn="connect-deviceManager" />
-      <Test Name="get-DMdnsServer" Function="Read DNS server configuration" Order="1250" DependsOn="connect-deviceManager" />
-      <Test Name="get-DMFileSystem" Function="Read file systems and seed file-system-dependent checks" Order="1260" DependsOn="connect-deviceManager" />
-      <Test Name="Get-DMFileSystemSnapshots" Function="Read file-system snapshots" Order="1270" DependsOn="get-DMFileSystem" Condition="At least one file system exists" />
-      <Test Name="get-DMhostGroups" Function="Read host groups" Order="1280" DependsOn="connect-deviceManager" />
-      <Test Name="Get-DMPortGroup" Function="Read port groups" Order="1290" DependsOn="connect-deviceManager" />
-      <Test Name="Get-DMMappingView" Function="Read mapping views" Order="1300" DependsOn="connect-deviceManager" />
-      <Test Name="get-DMLifs" Function="Read logical interfaces" Order="1310" DependsOn="connect-deviceManager" />
-      <Test Name="get-DMlunGroups" Function="Read LUN groups and seed LUN-group-dependent checks" Order="1320" DependsOn="connect-deviceManager" />
-      <Test Name="get-DMnfsFileClient" Function="Read NFS clients" Order="1330" DependsOn="connect-deviceManager" />
-      <Test Name="get-DMPortBond" Function="Read bonded ports" Order="1340" DependsOn="connect-deviceManager" />
-      <Test Name="get-DMPortETH" Function="Read Ethernet ports" Order="1350" DependsOn="connect-deviceManager" />
-      <Test Name="get-DMPortFc" Function="Read Fibre Channel ports" Order="1360" DependsOn="connect-deviceManager" />
-      <Test Name="get-DMPortSAS" Function="Read SAS ports" Order="1370" DependsOn="connect-deviceManager" />
-      <Test Name="get-DMShares:CIFS" Function="Read CIFS shares" Order="1380" DependsOn="connect-deviceManager" />
-      <Test Name="get-DMShares:NFS" Function="Read NFS shares" Order="1390" DependsOn="connect-deviceManager" />
-      <Test Name="get-DMstoragePools" Function="Read storage pools" Order="1400" DependsOn="connect-deviceManager" />
-      <Test Name="get-DMvLans" Function="Read VLANs" Order="1410" DependsOn="connect-deviceManager" />
-      <Test Name="get-DMvStore" Function="Read vStores" Order="1420" DependsOn="connect-deviceManager" />
-      <Test Name="get-DMHostInitiators:FibreChannel" Function="Read Fibre Channel host initiators" Order="1430" DependsOn="connect-deviceManager" />
-      <Test Name="Get-DMFiberChannelInitiator" Function="Read free Fibre Channel initiators" Order="1440" DependsOn="connect-deviceManager" />
-      <Test Name="get-DMHostInitiators:ISCSI" Function="Read iSCSI host initiators" Order="1450" DependsOn="connect-deviceManager" />
-      <Test Name="Get-DMIscsiInitiator" Function="Read free iSCSI initiators" Order="1460" DependsOn="connect-deviceManager" />
-      <Test Name="Get-DMNvmeInitiator" Function="Read NVMe initiators" Order="1470" DependsOn="connect-deviceManager" />
-      <Test Name="get-DMDiskbyLocation" Function="Read disk by sampled location" Order="1480" DependsOn="get-DMdisks" Condition="At least one disk exists" />
-      <Test Name="get-DMdisksbyPoolId" Function="Read disks by sampled pool ID" Order="1490" DependsOn="get-DMdisks" Condition="Sampled disk has a pool ID" />
-      <Test Name="get-DMdisksbyPoolName" Function="Read disks by sampled pool name" Order="1500" DependsOn="get-DMdisks" Condition="Sampled disk has a pool name" />
-      <Test Name="get-DMhostsbyId" Function="Read host by sampled ID" Order="1510" DependsOn="get-DMhosts" Condition="At least one host exists" />
-      <Test Name="get-DMhostsbyName" Function="Read host by sampled name" Order="1520" DependsOn="get-DMhosts" Condition="At least one host exists" />
-      <Test Name="get-DMhostsbyHostGroupId" Function="Read hosts by sampled host-group ID" Order="1530" DependsOn="get-DMhosts,get-DMhostGroups" Condition="Sampled host belongs to a host group" />
-      <Test Name="get-DMhostsbyHostGroupName" Function="Read hosts by sampled host-group name" Order="1540" DependsOn="get-DMhosts,get-DMhostGroups" Condition="Sampled host belongs to a host group" />
-      <Test Name="get-DMHostLinks:FC" Function="Read sampled host Fibre Channel links" Order="1550" DependsOn="get-DMhosts" Condition="At least one host exists" />
-      <Test Name="get-DMHostLinks:ISCSI" Function="Read sampled host iSCSI links" Order="1560" DependsOn="get-DMhosts,get-DMHostInitiators:ISCSI" Condition="At least one host and iSCSI initiator exist" />
-      <Test Name="get-DMlunsByWWN" Function="Read LUN by sampled WWN" Order="1570" DependsOn="get-DMluns" Condition="At least one LUN exists" />
-      <Test Name="get-DMLunsbyFilter" Function="Filter LUNs using sampled data" Order="1580" DependsOn="get-DMluns" Condition="At least one LUN exists" />
-      <Test Name="get-DMWorkLoadTypesbyFilter" Function="Filter workloads using sampled data" Order="1590" DependsOn="get-DMWorkLoadTypes" Condition="At least one workload exists" />
-      <Test Name="get-DMlunsbyLunGroup" Function="Read LUNs in sampled LUN group" Order="1600" DependsOn="get-DMlunGroups" Condition="At least one LUN group exists" />
+      <Test Name="Get-DMSystem" Function="Read system information" Order="1100" DependsOn="Connect-deviceManager" />
+      <Test Name="Get-DMdisks" Function="Read disks and seed disk-dependent checks" Order="1110" DependsOn="Connect-deviceManager" />
+      <Test Name="Get-DMhosts" Function="Read hosts and seed host-dependent checks" Order="1120" DependsOn="Connect-deviceManager" />
+      <Test Name="Get-DMluns" Function="Read LUNs and seed LUN-dependent checks" Order="1130" DependsOn="Connect-deviceManager" />
+      <Test Name="Get-DMLunSnapshots" Function="Read LUN snapshots" Order="1140" DependsOn="Connect-deviceManager" />
+      <Test Name="Get-DMProtectionGroup" Function="Read protection groups" Order="1150" DependsOn="Connect-deviceManager" />
+      <Test Name="Get-DMSnapshotConsistencyGroup" Function="Read snapshot consistency groups" Order="1160" DependsOn="Connect-deviceManager" />
+      <Test Name="Get-DMWorkLoadTypes" Function="Read workloads and seed workload filter checks" Order="1170" DependsOn="Connect-deviceManager" />
+      <Test Name="Get-DMAlarms" Function="Read alarms" Order="1180" DependsOn="Connect-deviceManager" />
+      <Test Name="Get-DMbbus" Function="Read battery backup units" Order="1190" DependsOn="Connect-deviceManager" />
+      <Test Name="Get-DMControllers" Function="Read controllers" Order="1200" DependsOn="Connect-deviceManager" />
+      <Test Name="Get-DMEnclosures" Function="Read enclosures" Order="1210" DependsOn="Connect-deviceManager" />
+      <Test Name="Get-DMInterfaceModules" Function="Read interface modules" Order="1220" DependsOn="Connect-deviceManager" />
+      <Test Name="Get-DMcofferDisks" Function="Read coffer disks" Order="1230" DependsOn="Connect-deviceManager" />
+      <Test Name="Get-DMfreeDisks" Function="Read free disks" Order="1240" DependsOn="Connect-deviceManager" />
+      <Test Name="Get-DMdnsServer" Function="Read DNS server configuration" Order="1250" DependsOn="Connect-deviceManager" />
+      <Test Name="Get-DMFileSystem" Function="Read file systems and seed file-system-dependent checks" Order="1260" DependsOn="Connect-deviceManager" />
+      <Test Name="Get-DMFileSystemSnapshots" Function="Read file-system snapshots" Order="1270" DependsOn="Get-DMFileSystem" Condition="At least one file system exists" />
+      <Test Name="Get-DMhostGroups" Function="Read host groups" Order="1280" DependsOn="Connect-deviceManager" />
+      <Test Name="Get-DMPortGroup" Function="Read port groups" Order="1290" DependsOn="Connect-deviceManager" />
+      <Test Name="Get-DMMappingView" Function="Read mapping views" Order="1300" DependsOn="Connect-deviceManager" />
+      <Test Name="Get-DMLifs" Function="Read logical interfaces" Order="1310" DependsOn="Connect-deviceManager" />
+      <Test Name="Get-DMlunGroups" Function="Read LUN groups and seed LUN-group-dependent checks" Order="1320" DependsOn="Connect-deviceManager" />
+      <Test Name="Get-DMnfsFileClient" Function="Read NFS clients" Order="1330" DependsOn="Connect-deviceManager" />
+      <Test Name="Get-DMPortBond" Function="Read bonded ports" Order="1340" DependsOn="Connect-deviceManager" />
+      <Test Name="Get-DMPortETH" Function="Read Ethernet ports" Order="1350" DependsOn="Connect-deviceManager" />
+      <Test Name="Get-DMPortFc" Function="Read Fibre Channel ports" Order="1360" DependsOn="Connect-deviceManager" />
+      <Test Name="Get-DMPortSAS" Function="Read SAS ports" Order="1370" DependsOn="Connect-deviceManager" />
+      <Test Name="Get-DMShares:CIFS" Function="Read CIFS shares" Order="1380" DependsOn="Connect-deviceManager" />
+      <Test Name="Get-DMShares:NFS" Function="Read NFS shares" Order="1390" DependsOn="Connect-deviceManager" />
+      <Test Name="Get-DMstoragePools" Function="Read storage pools" Order="1400" DependsOn="Connect-deviceManager" />
+      <Test Name="Get-DMvLans" Function="Read VLANs" Order="1410" DependsOn="Connect-deviceManager" />
+      <Test Name="Get-DMvStore" Function="Read vStores" Order="1420" DependsOn="Connect-deviceManager" />
+      <Test Name="Get-DMHostInitiators:FibreChannel" Function="Read Fibre Channel host initiators" Order="1430" DependsOn="Connect-deviceManager" />
+      <Test Name="Get-DMFiberChannelInitiator" Function="Read free Fibre Channel initiators" Order="1440" DependsOn="Connect-deviceManager" />
+      <Test Name="Get-DMHostInitiators:ISCSI" Function="Read iSCSI host initiators" Order="1450" DependsOn="Connect-deviceManager" />
+      <Test Name="Get-DMIscsiInitiator" Function="Read free iSCSI initiators" Order="1460" DependsOn="Connect-deviceManager" />
+      <Test Name="Get-DMNvmeInitiator" Function="Read NVMe initiators" Order="1470" DependsOn="Connect-deviceManager" />
+      <Test Name="Get-DMDiskbyLocation" Function="Read disk by sampled location" Order="1480" DependsOn="Get-DMdisks" Condition="At least one disk exists" />
+      <Test Name="Get-DMdisksbyPoolId" Function="Read disks by sampled pool ID" Order="1490" DependsOn="Get-DMdisks" Condition="Sampled disk has a pool ID" />
+      <Test Name="Get-DMdisksbyPoolName" Function="Read disks by sampled pool name" Order="1500" DependsOn="Get-DMdisks" Condition="Sampled disk has a pool name" />
+      <Test Name="Get-DMhostsbyId" Function="Read host by sampled ID" Order="1510" DependsOn="Get-DMhosts" Condition="At least one host exists" />
+      <Test Name="Get-DMhostsbyName" Function="Read host by sampled name" Order="1520" DependsOn="Get-DMhosts" Condition="At least one host exists" />
+      <Test Name="Get-DMhostsbyHostGroupId" Function="Read hosts by sampled host-group ID" Order="1530" DependsOn="Get-DMhosts,Get-DMhostGroups" Condition="Sampled host belongs to a host group" />
+      <Test Name="Get-DMhostsbyHostGroupName" Function="Read hosts by sampled host-group name" Order="1540" DependsOn="Get-DMhosts,Get-DMhostGroups" Condition="Sampled host belongs to a host group" />
+      <Test Name="Get-DMHostLinks:FC" Function="Read sampled host Fibre Channel links" Order="1550" DependsOn="Get-DMhosts" Condition="At least one host exists" />
+      <Test Name="Get-DMHostLinks:ISCSI" Function="Read sampled host iSCSI links" Order="1560" DependsOn="Get-DMhosts,Get-DMHostInitiators:ISCSI" Condition="At least one host and iSCSI initiator exist" />
+      <Test Name="Get-DMlunsByWWN" Function="Read LUN by sampled WWN" Order="1570" DependsOn="Get-DMluns" Condition="At least one LUN exists" />
+      <Test Name="Get-DMLunsbyFilter" Function="Filter LUNs using sampled data" Order="1580" DependsOn="Get-DMluns" Condition="At least one LUN exists" />
+      <Test Name="Get-DMWorkLoadTypesbyFilter" Function="Filter workloads using sampled data" Order="1590" DependsOn="Get-DMWorkLoadTypes" Condition="At least one workload exists" />
+      <Test Name="Get-DMlunsbyLunGroup" Function="Read LUNs in sampled LUN group" Order="1600" DependsOn="Get-DMlunGroups" Condition="At least one LUN group exists" />
     </Phase>
 
     <Phase Name="MutationCreation" Priority="3" Condition="-RunMutatingTests and AllowMutatingTests">
-      <Test Name="new-DMLun" Function="Create test-owned LUN" Order="2000" DependsOn="connect-deviceManager,Configuration.StoragePoolId" />
-      <Test Name="new-DMLunSnapshot" Function="Create snapshot of test-owned LUN" Order="2010" DependsOn="new-DMLun" />
-      <Test Name="new-DMLunSnapshotCopy" Function="Create copy of test-owned LUN snapshot" Order="2020" DependsOn="new-DMLunSnapshot" />
-      <Test Name="Enable-DMLunSnapshot" Function="Activate test-owned LUN snapshot" Order="2030" DependsOn="new-DMLunSnapshot" />
-      <Test Name="Restart-DMLunSnapshot" Function="Reactivate test-owned LUN snapshot" Order="2040" DependsOn="new-DMLunSnapshot" />
-      <Test Name="Restore-DMLunSnapshot" Function="Rollback test-owned LUN snapshot" Order="2050" DependsOn="new-DMLunSnapshot" />
-      <Test Name="Resize-DMLunSnapshot" Function="Expand test-owned LUN snapshot" Order="2060" DependsOn="new-DMLunSnapshot" />
-      <Test Name="New-DMLunGroup" Function="Create test-owned LUN group" Order="2070" DependsOn="connect-deviceManager" />
-      <Test Name="Add-DMLunToLunGroup" Function="Associate test-owned LUN with test-owned LUN group" Order="2080" DependsOn="new-DMLun,New-DMLunGroup" />
-      <Test Name="New-DMHostGroup" Function="Create test-owned host group" Order="2090" DependsOn="connect-deviceManager" />
-      <Test Name="New-DMHost" Function="Create test-owned host" Order="2100" DependsOn="connect-deviceManager" />
+      <Test Name="New-DMLun" Function="Create test-owned LUN" Order="2000" DependsOn="Connect-deviceManager,Configuration.StoragePoolId" />
+      <Test Name="New-DMLunSnapshot" Function="Create snapshot of test-owned LUN" Order="2010" DependsOn="New-DMLun" />
+      <Test Name="New-DMLunSnapshotCopy" Function="Create copy of test-owned LUN snapshot" Order="2020" DependsOn="New-DMLunSnapshot" />
+      <Test Name="Enable-DMLunSnapshot" Function="Activate test-owned LUN snapshot" Order="2030" DependsOn="New-DMLunSnapshot" />
+      <Test Name="Restart-DMLunSnapshot" Function="Reactivate test-owned LUN snapshot" Order="2040" DependsOn="New-DMLunSnapshot" />
+      <Test Name="Restore-DMLunSnapshot" Function="Rollback test-owned LUN snapshot" Order="2050" DependsOn="New-DMLunSnapshot" />
+      <Test Name="Resize-DMLunSnapshot" Function="Expand test-owned LUN snapshot" Order="2060" DependsOn="New-DMLunSnapshot" />
+      <Test Name="New-DMLunGroup" Function="Create test-owned LUN group" Order="2070" DependsOn="Connect-deviceManager" />
+      <Test Name="Add-DMLunToLunGroup" Function="Associate test-owned LUN with test-owned LUN group" Order="2080" DependsOn="New-DMLun,New-DMLunGroup" />
+      <Test Name="New-DMHostGroup" Function="Create test-owned host group" Order="2090" DependsOn="Connect-deviceManager" />
+      <Test Name="New-DMHost" Function="Create test-owned host" Order="2100" DependsOn="Connect-deviceManager" />
       <Test Name="Add-DMHostToHostGroup" Function="Associate test-owned host with test-owned host group" Order="2110" DependsOn="New-DMHost,New-DMHostGroup" />
-      <Test Name="new-DMFileSystem" Function="Create test-owned file system" Order="2120" DependsOn="connect-deviceManager,Configuration.StoragePoolId" />
-      <Test Name="New-DMFileSystemSnapshot" Function="Create test-owned file-system snapshot" Order="2130" DependsOn="new-DMFileSystem" />
+      <Test Name="New-DMFileSystem" Function="Create test-owned file system" Order="2120" DependsOn="Connect-deviceManager,Configuration.StoragePoolId" />
+      <Test Name="New-DMFileSystemSnapshot" Function="Create test-owned file-system snapshot" Order="2130" DependsOn="New-DMFileSystem" />
       <Test Name="Restore-DMFileSystemSnapshot" Function="Rollback test-owned file-system snapshot" Order="2140" DependsOn="New-DMFileSystemSnapshot" />
-      <Test Name="new-DMdTree" Function="Create test-owned dTree" Order="2150" DependsOn="new-DMFileSystem" />
-      <Test Name="new-DMnfsShare" Function="Create test-owned NFS share" Order="2160" DependsOn="new-DMFileSystem" />
-      <Test Name="new-DMnfsClient" Function="Create test-owned NFS client grant" Order="2170" DependsOn="new-DMnfsShare" />
-      <Test Name="New-DMCifsShare" Function="Create test-owned CIFS share" Order="2180" DependsOn="new-DMFileSystem" />
-      <Test Name="New-DMPortGroup" Function="Create test-owned port group" Order="2190" DependsOn="connect-deviceManager" />
-      <Test Name="New-DMMappingView" Function="Create test-owned mapping view" Order="2200" DependsOn="connect-deviceManager" />
+      <Test Name="New-DMdTree" Function="Create test-owned dTree" Order="2150" DependsOn="New-DMFileSystem" />
+      <Test Name="New-DMnfsShare" Function="Create test-owned NFS share" Order="2160" DependsOn="New-DMFileSystem" />
+      <Test Name="New-DMnfsClient" Function="Create test-owned NFS client grant" Order="2170" DependsOn="New-DMnfsShare" />
+      <Test Name="New-DMCifsShare" Function="Create test-owned CIFS share" Order="2180" DependsOn="New-DMFileSystem" />
+      <Test Name="New-DMPortGroup" Function="Create test-owned port group" Order="2190" DependsOn="Connect-deviceManager" />
+      <Test Name="New-DMMappingView" Function="Create test-owned mapping view" Order="2200" DependsOn="Connect-deviceManager" />
       <Test Name="Add-DMHostGroupToMappingView" Function="Associate test-owned host group with mapping view" Order="2210" DependsOn="New-DMHostGroup,New-DMMappingView" />
       <Test Name="Add-DMLunGroupToMappingView" Function="Associate test-owned LUN group with mapping view" Order="2220" DependsOn="New-DMLunGroup,New-DMMappingView" />
       <Test Name="Add-DMPortGroupToMappingView" Function="Associate test-owned port group with mapping view" Order="2230" DependsOn="New-DMPortGroup,New-DMMappingView" />
@@ -132,23 +132,23 @@
       <Test Name="Enable-DMSnapshotConsistencyGroup" Function="Activate snapshot consistency group when required" Order="2270" DependsOn="New-DMSnapshotConsistencyGroup" />
       <Test Name="Restart-DMSnapshotConsistencyGroup" Function="Reactivate snapshot consistency group" Order="2280" DependsOn="New-DMSnapshotConsistencyGroup" />
       <Test Name="Restore-DMSnapshotConsistencyGroup" Function="Rollback snapshot consistency group" Order="2290" DependsOn="New-DMSnapshotConsistencyGroup" />
-      <Test Name="New-DMFiberChannelInitiator" Function="Create optional test-owned FC initiator" Order="2300" DependsOn="connect-deviceManager,Configuration.Initiators.FibreChannelWWN" />
-      <Test Name="New-DMIscsiInitiator" Function="Create optional test-owned iSCSI initiator" Order="2310" DependsOn="connect-deviceManager,Configuration.Initiators.IscsiIdentifier" />
-      <Test Name="New-DMNvmeInitiator" Function="Create optional test-owned NVMe initiator" Order="2320" DependsOn="connect-deviceManager,Configuration.Initiators.NvmeNqn" />
+      <Test Name="New-DMFiberChannelInitiator" Function="Create optional test-owned FC initiator" Order="2300" DependsOn="Connect-deviceManager,Configuration.Initiators.FibreChannelWWN" />
+      <Test Name="New-DMIscsiInitiator" Function="Create optional test-owned iSCSI initiator" Order="2310" DependsOn="Connect-deviceManager,Configuration.Initiators.IscsiIdentifier" />
+      <Test Name="New-DMNvmeInitiator" Function="Create optional test-owned NVMe initiator" Order="2320" DependsOn="Connect-deviceManager,Configuration.Initiators.NvmeNqn" />
     </Phase>
 
     <Phase Name="MutationReadBack" Priority="4" Condition="Corresponding test-owned resource was created">
-      <Test Name="Verify:get-DMluns:Created" Function="Confirm created LUN is readable" Order="3000" DependsOn="new-DMLun" />
-      <Test Name="Verify:get-DMLunSnapshots:Created" Function="Confirm created LUN snapshot is readable" Order="3010" DependsOn="new-DMLunSnapshot" />
-      <Test Name="Verify:get-DMlunGroups:Created" Function="Confirm created LUN group is readable" Order="3020" DependsOn="New-DMLunGroup" />
-      <Test Name="Verify:get-DMlunsbyLunGroup:Association" Function="Confirm LUN-group membership" Order="3030" DependsOn="Add-DMLunToLunGroup" />
-      <Test Name="Verify:get-DMhosts:Created" Function="Confirm created host is readable" Order="3040" DependsOn="New-DMHost" />
-      <Test Name="Verify:get-DMhostsbyHostGroupId:Association" Function="Confirm host-group membership by ID" Order="3050" DependsOn="Add-DMHostToHostGroup" />
-      <Test Name="Verify:get-DMhostsbyHostGroupName:Association" Function="Confirm host-group membership by name" Order="3060" DependsOn="Add-DMHostToHostGroup" />
-      <Test Name="Verify:get-DMFileSystem:Created" Function="Confirm created file system is readable" Order="3070" DependsOn="new-DMFileSystem" />
+      <Test Name="Verify:Get-DMluns:Created" Function="Confirm created LUN is readable" Order="3000" DependsOn="New-DMLun" />
+      <Test Name="Verify:Get-DMLunSnapshots:Created" Function="Confirm created LUN snapshot is readable" Order="3010" DependsOn="New-DMLunSnapshot" />
+      <Test Name="Verify:Get-DMlunGroups:Created" Function="Confirm created LUN group is readable" Order="3020" DependsOn="New-DMLunGroup" />
+      <Test Name="Verify:Get-DMlunsbyLunGroup:Association" Function="Confirm LUN-group membership" Order="3030" DependsOn="Add-DMLunToLunGroup" />
+      <Test Name="Verify:Get-DMhosts:Created" Function="Confirm created host is readable" Order="3040" DependsOn="New-DMHost" />
+      <Test Name="Verify:Get-DMhostsbyHostGroupId:Association" Function="Confirm host-group membership by ID" Order="3050" DependsOn="Add-DMHostToHostGroup" />
+      <Test Name="Verify:Get-DMhostsbyHostGroupName:Association" Function="Confirm host-group membership by name" Order="3060" DependsOn="Add-DMHostToHostGroup" />
+      <Test Name="Verify:Get-DMFileSystem:Created" Function="Confirm created file system is readable" Order="3070" DependsOn="New-DMFileSystem" />
       <Test Name="Verify:Get-DMFileSystemSnapshots:Created" Function="Confirm created file-system snapshot is readable" Order="3080" DependsOn="New-DMFileSystemSnapshot" />
-      <Test Name="Verify:get-DMShares:NFS:Created" Function="Confirm created NFS share is readable" Order="3090" DependsOn="new-DMnfsShare" />
-      <Test Name="Verify:get-DMShares:CIFS:Created" Function="Confirm created CIFS share is readable" Order="3100" DependsOn="New-DMCifsShare" />
+      <Test Name="Verify:Get-DMShares:NFS:Created" Function="Confirm created NFS share is readable" Order="3090" DependsOn="New-DMnfsShare" />
+      <Test Name="Verify:Get-DMShares:CIFS:Created" Function="Confirm created CIFS share is readable" Order="3100" DependsOn="New-DMCifsShare" />
       <Test Name="Verify:Get-DMMappingView:Created" Function="Confirm created mapping view is readable" Order="3110" DependsOn="New-DMMappingView" />
       <Test Name="Verify:Get-DMMappingView:HostGroupAssociation" Function="Confirm mapping-view host-group association" Order="3120" DependsOn="Add-DMHostGroupToMappingView" />
       <Test Name="Verify:Get-DMMappingView:LunGroupAssociation" Function="Confirm mapping-view LUN-group association" Order="3130" DependsOn="Add-DMLunGroupToMappingView" />
@@ -172,9 +172,9 @@
       <Test Name="Remove-DMMappingView" Function="Remove test-owned mapping view" Order="4110" DependsOn="Remove-DMPortGroupFromMappingView,Remove-DMLunGroupFromMappingView,Remove-DMHostGroupFromMappingView" />
       <Test Name="Remove-DMPortGroup" Function="Remove test-owned port group" Order="4120" DependsOn="Remove-DMPortGroupFromMappingView" />
       <Test Name="Remove-DMCifsShare" Function="Remove test-owned CIFS share" Order="4130" DependsOn="New-DMCifsShare" />
-      <Test Name="Remove-DMNfsClient" Function="Remove test-owned NFS client grant" Order="4140" DependsOn="new-DMnfsClient" />
+      <Test Name="Remove-DMNfsClient" Function="Remove test-owned NFS client grant" Order="4140" DependsOn="New-DMnfsClient" />
       <Test Name="Remove-DMNfsShare" Function="Remove test-owned NFS share" Order="4150" DependsOn="Remove-DMNfsClient" />
-      <Test Name="Remove-DMDTree" Function="Remove test-owned dTree" Order="4160" DependsOn="new-DMdTree" />
+      <Test Name="Remove-DMDTree" Function="Remove test-owned dTree" Order="4160" DependsOn="New-DMdTree" />
       <Test Name="Remove-DMFileSystemSnapshot" Function="Remove test-owned file-system snapshot" Order="4170" DependsOn="New-DMFileSystemSnapshot" />
       <Test Name="Remove-DMFileSystem" Function="Remove test-owned file system" Order="4180" DependsOn="Remove-DMCifsShare,Remove-DMNfsShare,Remove-DMDTree,Remove-DMFileSystemSnapshot" />
       <Test Name="Remove-DMHostFromHostGroup" Function="Detach host from host group" Order="4190" DependsOn="Add-DMHostToHostGroup" />
@@ -182,9 +182,9 @@
       <Test Name="Remove-DMHostGroup" Function="Remove test-owned host group" Order="4210" DependsOn="Remove-DMHost,Remove-DMHostGroupFromMappingView" />
       <Test Name="Remove-DMLunFromLunGroup" Function="Detach LUN from LUN group" Order="4220" DependsOn="Add-DMLunToLunGroup" />
       <Test Name="Remove-DMLunGroup" Function="Remove test-owned LUN group" Order="4230" DependsOn="Remove-DMLunFromLunGroup,Remove-DMLunGroupFromMappingView,Remove-DMProtectionGroup" />
-      <Test Name="remove-DMLunSnapShot:Copy" Function="Remove test-owned LUN snapshot copy" Order="4240" DependsOn="new-DMLunSnapshotCopy" />
-      <Test Name="remove-DMLunSnapShot" Function="Remove test-owned LUN snapshot" Order="4250" DependsOn="remove-DMLunSnapShot:Copy" />
-      <Test Name="Remove-DMLun" Function="Remove test-owned LUN" Order="4260" DependsOn="remove-DMLunSnapShot,Remove-DMLunFromLunGroup" />
+      <Test Name="Remove-DMLunSnapShot:Copy" Function="Remove test-owned LUN snapshot copy" Order="4240" DependsOn="New-DMLunSnapshotCopy" />
+      <Test Name="Remove-DMLunSnapShot" Function="Remove test-owned LUN snapshot" Order="4250" DependsOn="Remove-DMLunSnapShot:Copy" />
+      <Test Name="Remove-DMLun" Function="Remove test-owned LUN" Order="4260" DependsOn="Remove-DMLunSnapShot,Remove-DMLunFromLunGroup" />
     </Phase>
   </LiveIntegrationTests>
 </TestExecutionPlan>

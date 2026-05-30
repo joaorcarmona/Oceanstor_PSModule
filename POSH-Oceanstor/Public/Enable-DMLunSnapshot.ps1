@@ -13,7 +13,7 @@ function Enable-DMLunSnapshot {
 
     .PARAMETER SnapShotName
         Name of the snapshot to activate. Valid values are checked against
-        get-DMLunSnapshots and support tab completion.
+        Get-DMLunSnapshots and support tab completion.
 
     .OUTPUTS
         REST error status returned by the storage system.
@@ -32,7 +32,7 @@ function Enable-DMLunSnapshot {
                     $session = $deviceManager
                 }
 
-                $snapshots = @(get-DMLunSnapshots -WebSession $session)
+                $snapshots = @(Get-DMLunSnapshots -WebSession $session)
                 $matchingSnapshots = @($snapshots | Where-Object Name -EQ $_)
 
                 if ($matchingSnapshots.Count -eq 1) {
@@ -55,7 +55,7 @@ function Enable-DMLunSnapshot {
                     $session = $deviceManager
                 }
 
-                (get-DMLunSnapshots -WebSession $session).Name |
+                (Get-DMLunSnapshots -WebSession $session).Name |
                     Sort-Object -Unique |
                     Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -69,11 +69,11 @@ function Enable-DMLunSnapshot {
         $session = $deviceManager
     }
 
-    $snapshot = @(get-DMLunSnapshots -WebSession $session | Where-Object Name -EQ $SnapShotName)[0]
+    $snapshot = @(Get-DMLunSnapshots -WebSession $session | Where-Object Name -EQ $SnapShotName)[0]
 
     if ($PSCmdlet.ShouldProcess($SnapShotName, 'Activate LUN snapshot')) {
         $body = @{ SNAPSHOTLIST = @($snapshot.Id) }
-        $response = invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'snapshot/activate' -BodyData $body
+        $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'snapshot/activate' -BodyData $body
         return $response.error
     }
 }
