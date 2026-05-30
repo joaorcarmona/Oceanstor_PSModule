@@ -16,7 +16,7 @@ function Remove-DMLun {
                 else {
                     $deviceManager
                 }
-                $luns = @(get-DMluns -WebSession $session)
+                $luns = @(Get-DMluns -WebSession $session)
                 $matchingItems = @($luns | Where-Object Name -EQ $_)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -34,7 +34,7 @@ function Remove-DMLun {
                 else {
                     $deviceManager
                 }
-                (get-DMluns -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMluns -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$LunName,
 
@@ -49,7 +49,7 @@ function Remove-DMLun {
     else {
         $deviceManager
     }
-    $lun = @(get-DMluns -WebSession $session | Where-Object Name -EQ $LunName)[0]
+    $lun = @(Get-DMluns -WebSession $session | Where-Object Name -EQ $LunName)[0]
     $parameters = @()
     if ($ImmediateDelete) {
         $parameters += 'isDelayDelete=false'
@@ -63,7 +63,7 @@ function Remove-DMLun {
     }
 
     if ($PSCmdlet.ShouldProcess($LunName, 'Remove LUN and its data')) {
-        $response = invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
+        $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
         return $response.error
     }
 }

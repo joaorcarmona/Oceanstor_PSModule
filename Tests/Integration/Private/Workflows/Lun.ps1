@@ -1,10 +1,10 @@
 $script:LunMutationWorkflow = {
         if ($configuration.Lun.Enabled) {
-            $lun = @(Invoke-MutationStep -Name 'new-DMLun' -Action {
-                if (@(get-DMluns -WebSession $session | Where-Object Name -EQ $lunName).Count -gt 0) {
+            $lun = @(Invoke-MutationStep -Name 'New-DMLun' -Action {
+                if (@(Get-DMluns -WebSession $session | Where-Object Name -EQ $lunName).Count -gt 0) {
                     throw "A LUN named '$lunName' already exists; refusing to claim it as test-owned."
                 }
-                new-DMLun -WebSession $session -LunName $lunName -Capacity $configuration.Lun.CapacityMB `
+                New-DMLun -WebSession $session -LunName $lunName -Capacity $configuration.Lun.CapacityMB `
                     -StoragePoolID $configuration.StoragePoolId -AllocType $configuration.Lun.AllocationType `
                     -Description "Integrity validation run $runId"
             })
@@ -18,38 +18,38 @@ $script:LunMutationWorkflow = {
             }
 
             if ($owned.Lun.Contains($lunName)) {
-                $snapshot = @(Invoke-MutationStep -Name 'new-DMLunSnapshot' -ExpectedType 'OceanstorLunSnapshot' -Action {
+                $snapshot = @(Invoke-MutationStep -Name 'New-DMLunSnapshot' -ExpectedType 'OceanstorLunSnapshot' -Action {
                     Assert-TestOwnedResource -Kind Lun -Identity $lunName
-                    if (@(get-DMLunSnapshots -WebSession $session | Where-Object Name -EQ $snapshotName).Count -gt 0) {
+                    if (@(Get-DMLunSnapshots -WebSession $session | Where-Object Name -EQ $snapshotName).Count -gt 0) {
                         throw "A LUN snapshot named '$snapshotName' already exists; refusing to claim it as test-owned."
                     }
-                    new-DMLunSnapshot -WebSession $session -SnapshotName $snapshotName -SourceLunName $lunName `
+                    New-DMLunSnapshot -WebSession $session -SnapshotName $snapshotName -SourceLunName $lunName `
                         -Description "Integrity validation run $runId"
                 })
                 if ($snapshot.Count -gt 0 -and $snapshot[0].Name -eq $snapshotName) {
                     Register-TestOwnedResource -Kind LunSnapshot -Identity $snapshotName
-                    Register-CleanupAction -Name 'remove-DMLunSnapShot' -Action {
-                        Invoke-OwnedRemoval -Name 'remove-DMLunSnapShot' -Kind LunSnapshot -Identity $snapshotName -Action {
-                            remove-DMLunSnapShot -WebSession $session -SnapShotName $snapshotName -Confirm:$false
+                    Register-CleanupAction -Name 'Remove-DMLunSnapShot' -Action {
+                        Invoke-OwnedRemoval -Name 'Remove-DMLunSnapShot' -Kind LunSnapshot -Identity $snapshotName -Action {
+                            Remove-DMLunSnapShot -WebSession $session -SnapShotName $snapshotName -Confirm:$false
                         }
                     }
                 }
             }
 
             if ($owned.LunSnapshot.Contains($snapshotName)) {
-                $copy = @(Invoke-MutationStep -Name 'new-DMLunSnapshotCopy' -ExpectedType 'OceanstorLunSnapshot' -Action {
+                $copy = @(Invoke-MutationStep -Name 'New-DMLunSnapshotCopy' -ExpectedType 'OceanstorLunSnapshot' -Action {
                     Assert-TestOwnedResource -Kind LunSnapshot -Identity $snapshotName
-                    if (@(get-DMLunSnapshots -WebSession $session | Where-Object Name -EQ $snapshotCopyName).Count -gt 0) {
+                    if (@(Get-DMLunSnapshots -WebSession $session | Where-Object Name -EQ $snapshotCopyName).Count -gt 0) {
                         throw "A LUN snapshot named '$snapshotCopyName' already exists; refusing to claim it as test-owned."
                     }
-                    new-DMLunSnapshotCopy -WebSession $session -SourceSnapShotName $snapshotName `
+                    New-DMLunSnapshotCopy -WebSession $session -SourceSnapShotName $snapshotName `
                         -SnapshotCopyName $snapshotCopyName -Description "Integrity validation run $runId"
                 })
                 if ($copy.Count -gt 0 -and $copy[0].Name -eq $snapshotCopyName) {
                     Register-TestOwnedResource -Kind LunSnapshot -Identity $snapshotCopyName
-                    Register-CleanupAction -Name 'remove-DMLunSnapShot:Copy' -Action {
-                        Invoke-OwnedRemoval -Name 'remove-DMLunSnapShot:Copy' -Kind LunSnapshot -Identity $snapshotCopyName -Action {
-                            remove-DMLunSnapShot -WebSession $session -SnapShotName $snapshotCopyName -Confirm:$false
+                    Register-CleanupAction -Name 'Remove-DMLunSnapShot:Copy' -Action {
+                        Invoke-OwnedRemoval -Name 'Remove-DMLunSnapShot:Copy' -Kind LunSnapshot -Identity $snapshotCopyName -Action {
+                            Remove-DMLunSnapShot -WebSession $session -SnapShotName $snapshotCopyName -Confirm:$false
                         }
                     }
                 }
@@ -84,9 +84,9 @@ $script:LunMutationWorkflow = {
         }
         else {
             Add-SkippedResult -Name @(
-                'new-DMLun', 'new-DMLunSnapshot', 'new-DMLunSnapshotCopy', 'Enable-DMLunSnapshot',
+                'New-DMLun', 'New-DMLunSnapshot', 'New-DMLunSnapshotCopy', 'Enable-DMLunSnapshot',
                 'Restart-DMLunSnapshot', 'Resize-DMLunSnapshot', 'Restore-DMLunSnapshot',
-                'remove-DMLunSnapShot', 'Remove-DMLun'
+                'Remove-DMLunSnapShot', 'Remove-DMLun'
             ) -Status 'NotConfigured' -Reason 'Set Lun.Enabled = $true and provide StoragePoolId to run the test-owned LUN workflow.'
         }
 

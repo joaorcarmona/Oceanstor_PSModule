@@ -16,7 +16,7 @@ function Remove-DMFileSystemSnapshot {
                 else {
                     $deviceManager
                 }
-                $fileSystems = @(get-DMFileSystem -WebSession $session)
+                $fileSystems = @(Get-DMFileSystem -WebSession $session)
                 $matchingItems = @($fileSystems | Where-Object Name -EQ $_)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -34,7 +34,7 @@ function Remove-DMFileSystemSnapshot {
                 else {
                     $deviceManager
                 }
-                (get-DMFileSystem -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMFileSystem -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$FileSystemName,
 
@@ -82,7 +82,7 @@ function Remove-DMFileSystemSnapshot {
     $snapshot = @(Get-DMFileSystemSnapshots -WebSession $session -FileSystemName $FileSystemName | Where-Object Name -EQ $SnapshotName)[0]
 
     if ($PSCmdlet.ShouldProcess("$FileSystemName/$SnapshotName", 'Remove file-system snapshot')) {
-        $response = invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource "fssnapshot/$($snapshot.Id)"
+        $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource "fssnapshot/$($snapshot.Id)"
         return $response.error
     }
 }

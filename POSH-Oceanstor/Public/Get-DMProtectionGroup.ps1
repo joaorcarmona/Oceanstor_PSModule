@@ -18,7 +18,7 @@ function Get-DMProtectionGroup {
     else {
         $deviceManager
     }
-    $response = invoke-DeviceManager -WebSession $session -Method 'GET' -Resource 'protectgroup' -ApiV2 |
+    $response = Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource 'protectgroup' -ApiV2 |
         Select-Object -ExpandProperty data
     $defaultDisplaySet = 'Id', 'Name', 'Lun Group Name', 'Lun Count', 'Snapshot Group Count', 'vStore Name'
     $displayPropertySet = New-Object System.Management.Automation.PSPropertySet('DefaultDisplayPropertySet', [string[]]$defaultDisplaySet)

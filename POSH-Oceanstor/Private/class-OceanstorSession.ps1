@@ -31,7 +31,7 @@ class OceanstorSession{
         #$this.Credentials = $credentials
         $this.Hostname = $hostname
 
-		$getDeviceManager = get-DMSystem -WebSession $this
+		$getDeviceManager = Get-DMSystem -WebSession $this
 
 		$this.Version = $getDeviceManager.version
     }

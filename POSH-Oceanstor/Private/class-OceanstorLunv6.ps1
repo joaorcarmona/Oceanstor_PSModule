@@ -328,39 +328,39 @@ class OceanstorLunv6{
 
 	[psobject] NewSnapShot()
 	{
-		return (new-DMLunSnapshot -WebSession $this.Session -SourceLunName $this.Name)
+		return (New-DMLunSnapshot -WebSession $this.Session -SourceLunName $this.Name)
 	}
 
 	[psobject] NewSnapShot([string]$SnapshotName)
 	{
-		return (new-DMLunSnapshot -WebSession $this.Session -SnapshotName $SnapshotName -SourceLunName $this.Name)
+		return (New-DMLunSnapshot -WebSession $this.Session -SnapshotName $SnapshotName -SourceLunName $this.Name)
 	}
 
 	[psobject] NewSnapShot([string]$SnapshotName, [string]$Description)
 	{
-		return (new-DMLunSnapshot -WebSession $this.Session -SnapshotName $SnapshotName -SourceLunName $this.Name -Description $Description)
+		return (New-DMLunSnapshot -WebSession $this.Session -SnapshotName $SnapshotName -SourceLunName $this.Name -Description $Description)
 	}
 
 	[psobject] NewSnapShot([string]$SnapshotName, [bool]$ReadOnly)
 	{
 		if ($ReadOnly) {
-			return (new-DMLunSnapshot -WebSession $this.Session -SnapshotName $SnapshotName -SourceLunName $this.Name -ReadOnly)
+			return (New-DMLunSnapshot -WebSession $this.Session -SnapshotName $SnapshotName -SourceLunName $this.Name -ReadOnly)
 		}
 
-		return (new-DMLunSnapshot -WebSession $this.Session -SnapshotName $SnapshotName -SourceLunName $this.Name)
+		return (New-DMLunSnapshot -WebSession $this.Session -SnapshotName $SnapshotName -SourceLunName $this.Name)
 	}
 
 	[psobject] NewSnapShot([string]$SnapshotName, [string]$Description, [bool]$ReadOnly)
 	{
 		if ($ReadOnly) {
-			return (new-DMLunSnapshot -WebSession $this.Session -SnapshotName $SnapshotName -SourceLunName $this.Name -Description $Description -ReadOnly)
+			return (New-DMLunSnapshot -WebSession $this.Session -SnapshotName $SnapshotName -SourceLunName $this.Name -Description $Description -ReadOnly)
 		}
 
-		return (new-DMLunSnapshot -WebSession $this.Session -SnapshotName $SnapshotName -SourceLunName $this.Name -Description $Description)
+		return (New-DMLunSnapshot -WebSession $this.Session -SnapshotName $SnapshotName -SourceLunName $this.Name -Description $Description)
 	}
 
 	[array] GetSnapShots()
 	{
-		return @(get-DMLunSnapshots -WebSession $this.Session -LunName $this.Name)
+		return @(Get-DMLunSnapshots -WebSession $this.Session -LunName $this.Name)
 	}
 }

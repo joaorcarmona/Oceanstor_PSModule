@@ -2,10 +2,10 @@ BeforeDiscovery {
     $script:mappingViewModule = New-Module -Name MappingViewTestModule -ArgumentList $PSScriptRoot -ScriptBlock {
         param($testRoot)
 
-        function get-DMhostGroups { param([pscustomobject]$WebSession) }
-        function get-DMlunGroups { param([pscustomobject]$WebSession) }
+        function Get-DMhostGroups { param([pscustomobject]$WebSession) }
+        function Get-DMlunGroups { param([pscustomobject]$WebSession) }
         function Get-DMPortGroup { param([pscustomobject]$WebSession) }
-        function invoke-DeviceManager {
+        function Invoke-DeviceManager {
             param(
                 [pscustomobject]$WebSession,
                 [string]$Method,
@@ -47,13 +47,13 @@ Describe 'Mapping view commands' {
             LUNGROUPID = 'lg-01'; PORTGROUPID = 'pg-01'; vstoreId = '7'; vstoreName = 'tenant-a'
         }
         $script:view = [OceanStorMappingView]::new($script:viewData, $script:session)
-        Mock get-DMhostGroups { @([pscustomobject]@{ Id = 'hg-01'; Name = 'cluster01' }) }
-        Mock get-DMlunGroups { @([pscustomobject]@{ Id = 'lg-01'; Name = 'production' }) }
+        Mock Get-DMhostGroups { @([pscustomobject]@{ Id = 'hg-01'; Name = 'cluster01' }) }
+        Mock Get-DMlunGroups { @([pscustomobject]@{ Id = 'lg-01'; Name = 'production' }) }
         Mock Get-DMPortGroup { @([pscustomobject]@{ Id = 'pg-01'; Name = 'front-end' }) }
     }
 
     It 'creates a mapping view and returns a typed object' {
-        Mock invoke-DeviceManager {
+        Mock Invoke-DeviceManager {
             $script:method = $Method
             $script:resource = $Resource
             $script:request = $BodyData
@@ -72,7 +72,7 @@ Describe 'Mapping view commands' {
     }
 
     It 'queries associated mapping views for a host group' {
-        Mock invoke-DeviceManager {
+        Mock Invoke-DeviceManager {
             $script:method = $Method
             $script:resource = $Resource
             [pscustomobject]@{ data = @($script:viewData) }
@@ -86,7 +86,7 @@ Describe 'Mapping view commands' {
     }
 
     It 'queries associated mapping views for LUN and port groups with their REST object types' {
-        Mock invoke-DeviceManager {
+        Mock Invoke-DeviceManager {
             $script:resources += $Resource
             [pscustomobject]@{ data = @($script:viewData) }
         }
@@ -100,14 +100,14 @@ Describe 'Mapping view commands' {
     }
 
     It 'returns no mapping views when the API contains no data property' {
-        Mock invoke-DeviceManager { [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 } } }
+        Mock Invoke-DeviceManager { [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 } } }
 
         @(Get-DMMappingView -WebSession $script:session -PortGroupName 'front-end') | Should -BeNullOrEmpty
     }
 
     It 'removes a resolved mapping view by ID' {
         Mock Get-DMMappingView { @($script:view) }
-        Mock invoke-DeviceManager {
+        Mock Invoke-DeviceManager {
             $script:method = $Method
             $script:resource = $Resource
             [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 } }
@@ -136,10 +136,10 @@ Describe 'Mapping view association commands' {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
         $script:view = [OceanStorMappingView]::new([pscustomobject]@{ ID = 'mv-01'; NAME = 'application' }, $script:session)
         Mock Get-DMMappingView { @($script:view) }
-        Mock get-DMhostGroups { @([pscustomobject]@{ Id = 'hg-01'; Name = 'cluster01' }) }
-        Mock get-DMlunGroups { @([pscustomobject]@{ Id = 'lg-01'; Name = 'production' }) }
+        Mock Get-DMhostGroups { @([pscustomobject]@{ Id = 'hg-01'; Name = 'cluster01' }) }
+        Mock Get-DMlunGroups { @([pscustomobject]@{ Id = 'lg-01'; Name = 'production' }) }
         Mock Get-DMPortGroup { @([pscustomobject]@{ Id = 'pg-01'; Name = 'front-end' }) }
-        Mock invoke-DeviceManager {
+        Mock Invoke-DeviceManager {
             $script:method = $Method
             $script:resource = $Resource
             $script:request = $BodyData
@@ -190,13 +190,13 @@ Describe 'Mapping view association commands' {
         { Remove-DMPortGroupFromMappingView -WebSession $script:session -MappingViewName 'application' -PortGroupName 'front-end' -Confirm:$false } |
             Should -Throw '*not associated*'
 
-        Should -Invoke invoke-DeviceManager -Times 0 -Exactly
+        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 
     It 'honors WhatIf for association creation' {
         $null = Add-DMLunGroupToMappingView -WebSession $script:session -MappingViewName 'application' -LunGroupName 'production' -WhatIf
 
-        Should -Invoke invoke-DeviceManager -Times 0 -Exactly
+        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 
     It 'rejects unknown mapping association targets before sending a request' {
@@ -206,7 +206,7 @@ Describe 'Mapping view association commands' {
         { Add-DMPortGroupToMappingView -WebSession $script:session -MappingViewName 'application' -PortGroupName 'missing' -Confirm:$false } |
             Should -Throw '*Invalid PortGroupName*'
 
-        Should -Invoke invoke-DeviceManager -Times 0 -Exactly
+        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 
     It 'exposes completion metadata for mapping association references' {

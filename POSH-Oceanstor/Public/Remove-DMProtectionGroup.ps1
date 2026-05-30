@@ -48,7 +48,7 @@ function Remove-DMProtectionGroup {
     $group = @(Get-DMProtectionGroup -WebSession $session | Where-Object Name -EQ $Name)[0]
 
     if ($PSCmdlet.ShouldProcess($Name, 'Remove protection group')) {
-        $response = invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource "protectgroup/$($group.Id)" -ApiV2
+        $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource "protectgroup/$($group.Id)" -ApiV2
         return $response.error
     }
 }

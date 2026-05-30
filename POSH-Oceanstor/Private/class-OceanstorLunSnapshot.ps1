@@ -45,7 +45,7 @@ class OceanstorLunSnapshot {
     }
 
     [psobject] DeleteSnapShot() {
-        $response = remove-DMLunSnapShot -WebSession $this.Session -SnapShotName $this.Name
+        $response = Remove-DMLunSnapShot -WebSession $this.Session -SnapShotName $this.Name
 
         if ($null -ne $response -and $response.Code -eq 0) {
             $this.Deleted = $true
@@ -93,14 +93,14 @@ class OceanstorLunSnapshot {
     }
 
     [psobject] CreateCopy() {
-        return (new-DMLunSnapshotCopy -WebSession $this.Session -SourceSnapShotName $this.Name)
+        return (New-DMLunSnapshotCopy -WebSession $this.Session -SourceSnapShotName $this.Name)
     }
 
     [psobject] CreateCopy([string]$SnapshotCopyName) {
-        return (new-DMLunSnapshotCopy -WebSession $this.Session -SourceSnapShotName $this.Name -SnapshotCopyName $SnapshotCopyName)
+        return (New-DMLunSnapshotCopy -WebSession $this.Session -SourceSnapShotName $this.Name -SnapshotCopyName $SnapshotCopyName)
     }
 
     [psobject] CreateCopy([string]$SnapshotCopyName, [string]$Description) {
-        return (new-DMLunSnapshotCopy -WebSession $this.Session -SourceSnapShotName $this.Name -SnapshotCopyName $SnapshotCopyName -Description $Description)
+        return (New-DMLunSnapshotCopy -WebSession $this.Session -SourceSnapShotName $this.Name -SnapshotCopyName $SnapshotCopyName -Description $Description)
     }
 }

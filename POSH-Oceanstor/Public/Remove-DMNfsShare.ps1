@@ -16,7 +16,7 @@ function Remove-DMNfsShare {
                 else {
                     $deviceManager
                 }
-                $shares = @(get-DMShares -WebSession $session -ShareType NFS)
+                $shares = @(Get-DMShares -WebSession $session -ShareType NFS)
                 $matchingItems = @($shares | Where-Object 'Share Path' -EQ $_)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -34,7 +34,7 @@ function Remove-DMNfsShare {
                 else {
                     $deviceManager
                 }
-                (get-DMShares -WebSession $session -ShareType NFS).'Share Path' |
+                (Get-DMShares -WebSession $session -ShareType NFS).'Share Path' |
                     Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$SharePath,
@@ -50,7 +50,7 @@ function Remove-DMNfsShare {
     else {
         $deviceManager
     }
-    $share = @(get-DMShares -WebSession $session -ShareType NFS | Where-Object 'Share Path' -EQ $SharePath)[0]
+    $share = @(Get-DMShares -WebSession $session -ShareType NFS | Where-Object 'Share Path' -EQ $SharePath)[0]
     $parameters = @()
     if ($PrivateShare) {
         $parameters += 'sharePrivate=1'
@@ -64,7 +64,7 @@ function Remove-DMNfsShare {
     }
 
     if ($PSCmdlet.ShouldProcess($SharePath, 'Remove NFS share')) {
-        $response = invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
+        $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
         return $response.error
     }
 }

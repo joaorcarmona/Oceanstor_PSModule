@@ -16,7 +16,7 @@ function Get-DMFileSystemSnapshots {
                 else {
                     $deviceManager
                 }
-                $fileSystems = @(get-DMFileSystem -WebSession $session)
+                $fileSystems = @(Get-DMFileSystem -WebSession $session)
                 $matchingItems = @($fileSystems | Where-Object Name -EQ $_)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -34,7 +34,7 @@ function Get-DMFileSystemSnapshots {
                 else {
                     $deviceManager
                 }
-                (get-DMFileSystem -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMFileSystem -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$FileSystemName,
 
@@ -48,9 +48,9 @@ function Get-DMFileSystemSnapshots {
     else {
         $deviceManager
     }
-    $fileSystem = @(get-DMFileSystem -WebSession $session | Where-Object Name -EQ $FileSystemName)[0]
+    $fileSystem = @(Get-DMFileSystem -WebSession $session | Where-Object Name -EQ $FileSystemName)[0]
     $resource = "fssnapshot?PARENTID=$($fileSystem.Id)"
-    $queryResult = invoke-DeviceManager -WebSession $session -Method 'GET' -Resource $resource
+    $queryResult = Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource $resource
     $response = @()
     if ($queryResult -is [string] -and -not [string]::IsNullOrWhiteSpace($queryResult)) {
         $parsedResult = $queryResult | ConvertFrom-Json -AsHashtable -ErrorAction Stop

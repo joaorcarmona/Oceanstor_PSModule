@@ -10,8 +10,8 @@ function Set-DMHostInitiators {
 
     foreach ($hostObject in $InputObject) {
         $hostObject.initiators = @(
-            get-DMHostInitiators -WebSession $WebSession -HostId $hostObject.id -InitatorType FibreChannel
-            get-DMHostInitiators -WebSession $WebSession -HostId $hostObject.id -InitatorType ISCSI
+            Get-DMHostInitiators -WebSession $WebSession -HostId $hostObject.id -InitatorType FibreChannel
+            Get-DMHostInitiators -WebSession $WebSession -HostId $hostObject.id -InitatorType ISCSI
         )
 
         $hostObject

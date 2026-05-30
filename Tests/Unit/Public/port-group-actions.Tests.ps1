@@ -2,10 +2,10 @@ BeforeDiscovery {
     $script:portGroupModule = New-Module -Name PortGroupTestModule -ArgumentList $PSScriptRoot -ScriptBlock {
         param($testRoot)
 
-        function get-DMPortFc { param([pscustomobject]$WebSession) }
-        function get-DMPortETH { param([pscustomobject]$WebSession) }
-        function get-DMLifs { param([pscustomobject]$WebSession) }
-        function invoke-DeviceManager {
+        function Get-DMPortFc { param([pscustomobject]$WebSession) }
+        function Get-DMPortETH { param([pscustomobject]$WebSession) }
+        function Get-DMLifs { param([pscustomobject]$WebSession) }
+        function Invoke-DeviceManager {
             param(
                 [pscustomobject]$WebSession,
                 [string]$Method,
@@ -15,7 +15,7 @@ BeforeDiscovery {
         }
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorPortGroup.ps1"
-        . "$testRoot\..\..\..\POSH-Oceanstor\Private\get-DMPortGroupCandidates.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Get-DMPortGroupCandidates.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\New-DMPortGroup.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMPortGroup.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Remove-DMPortGroup.ps1"
@@ -41,13 +41,13 @@ Describe 'Port group commands' {
             isAddToMappingView = 'false'; portNum = '1'; portType = '0'; vstoreId = '7'; vstoreName = 'tenant-a'
         }
         $script:group = [OceanstorPortGroup]::new($script:groupData, $script:session)
-        Mock get-DMPortFc { @([pscustomobject]@{ Id = 'fc-01'; Name = 'CTE0.A.IOM0.P0' }) }
-        Mock get-DMPortETH { @([pscustomobject]@{ Id = 'eth-01'; Name = 'CTE0.A.IOM1.P0' }) }
-        Mock get-DMLifs { @([pscustomobject]@{ Id = 'lif-01'; 'LIF Name' = 'service01' }) }
+        Mock Get-DMPortFc { @([pscustomobject]@{ Id = 'fc-01'; Name = 'CTE0.A.IOM0.P0' }) }
+        Mock Get-DMPortETH { @([pscustomobject]@{ Id = 'eth-01'; Name = 'CTE0.A.IOM1.P0' }) }
+        Mock Get-DMLifs { @([pscustomobject]@{ Id = 'lif-01'; 'LIF Name' = 'service01' }) }
     }
 
     It 'creates a port group and returns a typed object' {
-        Mock invoke-DeviceManager {
+        Mock Invoke-DeviceManager {
             $script:method = $Method
             $script:resource = $Resource
             $script:request = $BodyData
@@ -66,7 +66,7 @@ Describe 'Port group commands' {
     }
 
     It 'queries port groups into typed objects for a vStore' {
-        Mock invoke-DeviceManager {
+        Mock Invoke-DeviceManager {
             $script:method = $Method
             $script:resource = $Resource
             [pscustomobject]@{ data = @($script:groupData) }
@@ -82,7 +82,7 @@ Describe 'Port group commands' {
 
     It 'removes a resolved port group by ID' {
         Mock Get-DMPortGroup { @($script:group) }
-        Mock invoke-DeviceManager {
+        Mock Invoke-DeviceManager {
             $script:method = $Method
             $script:resource = $Resource
             [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 } }
@@ -103,10 +103,10 @@ Describe 'Port group membership commands' {
             ID = 'pg-01'; NAME = 'front-end'; isAddToMappingView = 'false'; portNum = '1'; portType = '0'
         }, $script:session)
         Mock Get-DMPortGroup { @($script:group) }
-        Mock get-DMPortFc { @([pscustomobject]@{ Id = 'fc-01'; Name = 'CTE0.A.IOM0.P0' }) }
-        Mock get-DMPortETH { @([pscustomobject]@{ Id = 'eth-01'; Name = 'CTE0.A.IOM1.P0' }) }
-        Mock get-DMLifs { @([pscustomobject]@{ Id = 'lif-01'; 'LIF Name' = 'service01' }) }
-        Mock invoke-DeviceManager {
+        Mock Get-DMPortFc { @([pscustomobject]@{ Id = 'fc-01'; Name = 'CTE0.A.IOM0.P0' }) }
+        Mock Get-DMPortETH { @([pscustomobject]@{ Id = 'eth-01'; Name = 'CTE0.A.IOM1.P0' }) }
+        Mock Get-DMLifs { @([pscustomobject]@{ Id = 'lif-01'; 'LIF Name' = 'service01' }) }
+        Mock Invoke-DeviceManager {
             $script:method = $Method
             $script:resource = $Resource
             $script:request = $BodyData
@@ -134,7 +134,7 @@ Describe 'Port group membership commands' {
     }
 
     It 'removes a port only after confirming its port-group association' {
-        Mock invoke-DeviceManager {
+        Mock Invoke-DeviceManager {
             if ($Method -eq 'GET') {
                 $script:associationResource = $Resource
                 return [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'pg-01'; NAME = 'front-end' }) }
@@ -157,18 +157,18 @@ Describe 'Port group membership commands' {
     }
 
     It 'rejects removal if the port is not associated with the requested group' {
-        Mock invoke-DeviceManager { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'other' }) } }
+        Mock Invoke-DeviceManager { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'other' }) } }
 
         { Remove-DMPortFromPortGroup -WebSession $script:session -PortGroupName 'front-end' -PortType FibreChannel -PortName 'CTE0.A.IOM0.P0' -Confirm:$false } |
             Should -Throw '*not a member*'
 
-        Should -Invoke invoke-DeviceManager -ParameterFilter { $Method -eq 'DELETE' } -Times 0 -Exactly
+        Should -Invoke Invoke-DeviceManager -ParameterFilter { $Method -eq 'DELETE' } -Times 0 -Exactly
     }
 
     It 'honors WhatIf for association creation' {
         $null = Add-DMPortToPortGroup -WebSession $script:session -PortGroupName 'front-end' -PortType FibreChannel -PortName 'CTE0.A.IOM0.P0' -WhatIf
 
-        Should -Invoke invoke-DeviceManager -Times 0 -Exactly
+        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 }
 }

@@ -25,7 +25,7 @@ function Get-DMPortGroup {
         $resource += "?vstoreId=$VstoreId"
     }
 
-    $response = invoke-DeviceManager -WebSession $session -Method 'GET' -Resource $resource |
+    $response = Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource $resource |
         Select-Object -ExpandProperty data
     $defaultDisplaySet = 'Id', 'Name', 'Port Type', 'Port Count', 'Is Mapped', 'vStore Name'
     $displayPropertySet = New-Object System.Management.Automation.PSPropertySet('DefaultDisplayPropertySet', [string[]]$defaultDisplaySet)

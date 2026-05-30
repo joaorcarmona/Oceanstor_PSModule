@@ -179,7 +179,7 @@ class OceanstorInterfaceModule
 			209 {$this.{Type} = "Interface Module"}
 		}
 
-        $labels =  get-DMparsedElabel -eLabelString $moduleReceived.ELABEL
+        $labels =  Get-DMparsedElabel -eLabelString $moduleReceived.ELABEL
         $this.{Board Type} = $labels.BoardType
         $this.{Bar Code} = $labels.BarCode
         $this.{Part Number} = $labels.Item

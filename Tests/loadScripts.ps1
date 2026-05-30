@@ -1,5 +1,5 @@
 #Get Script RootPath
-$workDir = $(get-item $PSScriptRoot).Parent.FullName
+$workDir = $(Get-item $PSScriptRoot).Parent.FullName
 
 #Get public and private function definition files.
 $Public  = @( Get-ChildItem -Path $workDir\POSH-Oceanstor\Public\*.ps1 -ErrorAction SilentlyContinue )

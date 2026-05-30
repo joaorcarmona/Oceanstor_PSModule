@@ -18,7 +18,7 @@ function Get-DMSnapshotConsistencyGroup {
     else {
         $deviceManager
     }
-    $response = invoke-DeviceManager -WebSession $session -Method 'GET' -Resource 'SNAPSHOT_CONSISTENCY_GROUP' |
+    $response = Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource 'SNAPSHOT_CONSISTENCY_GROUP' |
         Select-Object -ExpandProperty data
     $defaultDisplaySet = 'Id', 'Name', 'Protection Group Name', 'Running Status', 'Restore Speed', 'vStore Name'
     $displayPropertySet = New-Object System.Management.Automation.PSPropertySet('DefaultDisplayPropertySet', [string[]]$defaultDisplaySet)

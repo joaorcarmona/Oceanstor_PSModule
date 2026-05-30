@@ -52,7 +52,7 @@ function Enable-DMSnapshotConsistencyGroup {
     }
 
     if ($PSCmdlet.ShouldProcess($Name, 'Activate snapshot consistency group')) {
-        $response = invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'snapshot_consistency_group/activate' -BodyData $body
+        $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'snapshot_consistency_group/activate' -BodyData $body
         return $response.error
     }
 }

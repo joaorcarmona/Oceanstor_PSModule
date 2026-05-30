@@ -1,5 +1,5 @@
 BeforeAll {
-    . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\get-DMparsedElabel.ps1"
+    . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\Get-DMparsedElabel.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorBBU.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorController.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorDisks.ps1"
@@ -14,7 +14,7 @@ BeforeAll {
 
 Describe 'Hardware model classes' {
     BeforeAll {
-        $script:session = [pscustomobject]@{ Name = 'test-session' }
+        $script:session = [pscustomobject]@{ Name = 'Test-session' }
         $script:eLabel = @(
             'BoardType=board-01'
             'BarCode=serial-01'

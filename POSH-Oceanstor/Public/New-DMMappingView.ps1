@@ -36,7 +36,7 @@ function New-DMMappingView {
         $body.vstoreId = $VstoreId
     }
 
-    $response = invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'mappingview' -BodyData $body
+    $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'mappingview' -BodyData $body
     if ($response.error.Code -eq 0) {
         return [OceanStorMappingView]::new($response.data, $session)
     }

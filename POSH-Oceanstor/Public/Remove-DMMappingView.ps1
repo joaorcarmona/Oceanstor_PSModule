@@ -55,6 +55,6 @@ function Remove-DMMappingView {
     }
 
     if ($PSCmdlet.ShouldProcess($MappingViewName, 'Remove mapping view')) {
-        return (invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource).error
+        return (Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource).error
     }
 }

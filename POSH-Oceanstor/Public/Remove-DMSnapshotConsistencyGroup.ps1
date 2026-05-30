@@ -55,7 +55,7 @@ function Remove-DMSnapshotConsistencyGroup {
     }
 
     if ($PSCmdlet.ShouldProcess($Name, 'Remove snapshot consistency group')) {
-        $response = invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
+        $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
         return $response.error
     }
 }

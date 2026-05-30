@@ -13,7 +13,7 @@ function Remove-DMFiberChannelInitiatorFromHost {
                 else {
                     $deviceManager
                 }
-                $hosts = @(get-DMhosts -WebSession $session)
+                $hosts = @(Get-DMhosts -WebSession $session)
                 $matchingItems = @($hosts | Where-Object Name -EQ $candidate)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -31,7 +31,7 @@ function Remove-DMFiberChannelInitiatorFromHost {
                 else {
                     $deviceManager
                 }
-                (get-DMhosts -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMhosts -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$HostName,
 
@@ -45,8 +45,8 @@ function Remove-DMFiberChannelInitiatorFromHost {
                     $deviceManager
                 }
                 $selectedHostName = [string]$HostName
-                $hostObject = @(get-DMhosts -WebSession $session | Where-Object Name -EQ $selectedHostName)[0]
-                $initiators = @(get-DMHostInitiators -WebSession $session -InitatorType FibreChannel -HostId $hostObject.Id)
+                $hostObject = @(Get-DMhosts -WebSession $session | Where-Object Name -EQ $selectedHostName)[0]
+                $initiators = @(Get-DMHostInitiators -WebSession $session -InitatorType FibreChannel -HostId $hostObject.Id)
                 if ($initiators.Id -contains $candidate) {
                     return $true
                 }
@@ -81,6 +81,6 @@ function Remove-DMFiberChannelInitiatorFromHost {
         $body.vstoreId = $VstoreId
     }
     if ($PSCmdlet.ShouldProcess("$HostName/$WWN", 'Remove Fibre Channel initiator from host')) {
-        return (invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'fc_initiator/remove_fc_from_host' -BodyData $body).error
+        return (Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'fc_initiator/remove_fc_from_host' -BodyData $body).error
     }
 }

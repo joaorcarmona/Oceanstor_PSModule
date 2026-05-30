@@ -16,7 +16,7 @@ function Remove-DMHostGroup {
                 else {
                     $deviceManager
                 }
-                $groups = @(get-DMhostGroups -WebSession $session)
+                $groups = @(Get-DMhostGroups -WebSession $session)
                 $matchingItems = @($groups | Where-Object Name -EQ $_)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -34,7 +34,7 @@ function Remove-DMHostGroup {
                 else {
                     $deviceManager
                 }
-                (get-DMhostGroups -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMhostGroups -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$HostGroupName,
 
@@ -47,14 +47,14 @@ function Remove-DMHostGroup {
     else {
         $deviceManager
     }
-    $group = @(get-DMhostGroups -WebSession $session | Where-Object Name -EQ $HostGroupName)[0]
+    $group = @(Get-DMhostGroups -WebSession $session | Where-Object Name -EQ $HostGroupName)[0]
     $resource = "hostgroup/$($group.Id)"
     if ($VstoreId) {
         $resource += "?vstoreId=$VstoreId"
     }
 
     if ($PSCmdlet.ShouldProcess($HostGroupName, 'Remove host group')) {
-        $response = invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
+        $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
         return $response.error
     }
 }

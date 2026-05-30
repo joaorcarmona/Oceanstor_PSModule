@@ -16,7 +16,7 @@ function Remove-DMDTree {
                 else {
                     $deviceManager
                 }
-                $fileSystems = @(get-DMFileSystem -WebSession $session)
+                $fileSystems = @(Get-DMFileSystem -WebSession $session)
                 $matchingItems = @($fileSystems | Where-Object Name -EQ $_)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -34,7 +34,7 @@ function Remove-DMDTree {
                 else {
                     $deviceManager
                 }
-                (get-DMFileSystem -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMFileSystem -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$FileSystemName,
 
@@ -46,8 +46,8 @@ function Remove-DMDTree {
                 else {
                     $deviceManager
                 }
-                $fileSystem = @(get-DMFileSystem -WebSession $session | Where-Object Name -EQ $FileSystemName)[0]
-                $dtrees = @((invoke-DeviceManager -WebSession $session -Method 'GET' -Resource "QUOTATREE?PARENTID=$($fileSystem.Id)").data)
+                $fileSystem = @(Get-DMFileSystem -WebSession $session | Where-Object Name -EQ $FileSystemName)[0]
+                $dtrees = @((Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource "QUOTATREE?PARENTID=$($fileSystem.Id)").data)
                 $matchingItems = @($dtrees | Where-Object NAME -EQ $_)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -68,11 +68,11 @@ function Remove-DMDTree {
                 else {
                     $deviceManager
                 }
-                $fileSystem = @(get-DMFileSystem -WebSession $session | Where-Object Name -EQ $fakeBoundParameters.FileSystemName)[0]
+                $fileSystem = @(Get-DMFileSystem -WebSession $session | Where-Object Name -EQ $fakeBoundParameters.FileSystemName)[0]
                 if (-not $fileSystem) {
                     return
                 }
-                @((invoke-DeviceManager -WebSession $session -Method 'GET' -Resource "QUOTATREE?PARENTID=$($fileSystem.Id)").data).NAME |
+                @((Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource "QUOTATREE?PARENTID=$($fileSystem.Id)").data).NAME |
                     Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$DTreeName,
@@ -86,8 +86,8 @@ function Remove-DMDTree {
     else {
         $deviceManager
     }
-    $fileSystem = @(get-DMFileSystem -WebSession $session | Where-Object Name -EQ $FileSystemName)[0]
-    $dtrees = @((invoke-DeviceManager -WebSession $session -Method 'GET' -Resource "QUOTATREE?PARENTID=$($fileSystem.Id)").data)
+    $fileSystem = @(Get-DMFileSystem -WebSession $session | Where-Object Name -EQ $FileSystemName)[0]
+    $dtrees = @((Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource "QUOTATREE?PARENTID=$($fileSystem.Id)").data)
     $dtree = @($dtrees | Where-Object NAME -EQ $DTreeName)[0]
     $resource = "QUOTATREE/$($dtree.ID)"
     if ($VstoreId) {
@@ -95,7 +95,7 @@ function Remove-DMDTree {
     }
 
     if ($PSCmdlet.ShouldProcess("$FileSystemName/$DTreeName", 'Remove dTree and its data')) {
-        $response = invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
+        $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
         return $response.error
     }
 }

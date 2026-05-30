@@ -2,11 +2,11 @@ BeforeDiscovery {
     $script:snapshotActionsModule = New-Module -Name SnapshotActionsTestModule -ArgumentList $PSScriptRoot -ScriptBlock {
         param($testRoot)
 
-        function get-DMLunSnapshots {
+        function Get-DMLunSnapshots {
             param([pscustomobject]$WebSession)
         }
 
-        function invoke-DeviceManager {
+        function Invoke-DeviceManager {
             param(
                 [pscustomobject]$WebSession,
                 [string]$Method,
@@ -34,10 +34,10 @@ InModuleScope SnapshotActionsTestModule {
 Describe 'Snapshot action functions' {
     BeforeEach {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
-        Mock get-DMLunSnapshots {
+        Mock Get-DMLunSnapshots {
             @([pscustomobject]@{ Id = 'snap-01'; Name = 'before-patch' })
         }
-        Mock invoke-DeviceManager {
+        Mock Invoke-DeviceManager {
             $script:actionMethod = $Method
             $script:actionResource = $Resource
             $script:actionBody = $BodyData
@@ -95,7 +95,7 @@ Describe 'Snapshot action functions' {
 
         $null = & $Command -WebSession $script:session -SnapShotName 'before-patch' -WhatIf @Parameters
 
-        Should -Invoke invoke-DeviceManager -Times 0 -Exactly
+        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 
     It '<Command> rejects a snapshot name that does not exist' -TestCases @(
@@ -109,25 +109,25 @@ Describe 'Snapshot action functions' {
         { & $Command -WebSession $script:session -SnapShotName 'missing' -Confirm:$false @Parameters } |
             Should -Throw '*Invalid SnapShotName*'
 
-        Should -Invoke invoke-DeviceManager -Times 0 -Exactly
+        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 
     It 'rejects a zero snapshot expansion capacity' {
         { Resize-DMLunSnapshot -WebSession $script:session -SnapShotName 'before-patch' -UserCapacity 0 -Confirm:$false } |
             Should -Throw
 
-        Should -Invoke invoke-DeviceManager -Times 0 -Exactly
+        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 
     It 'rejects an expansion capacity that is not greater than the existing snapshot capacity' {
-        Mock get-DMLunSnapshots {
+        Mock Get-DMLunSnapshots {
             @([pscustomobject]@{ Id = 'snap-01'; Name = 'before-patch'; 'User Capacity' = [uint64]10485760 })
         }
 
         { Resize-DMLunSnapshot -WebSession $script:session -SnapShotName 'before-patch' -UserCapacity 10485760 -Confirm:$false } |
             Should -Throw '*greater than the current snapshot capacity*'
 
-        Should -Invoke invoke-DeviceManager -Times 0 -Exactly
+        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 }
 }

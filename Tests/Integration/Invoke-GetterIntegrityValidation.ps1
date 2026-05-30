@@ -30,12 +30,12 @@ $validationModule = New-Module -Name OceanstorLiveGetterValidation -ArgumentList
         ForEach-Object { . $_.FullName }
 
     foreach ($privateHelper in @(
-        'get-DMparsedElabel.ps1',
-        'get-DMPortGroupCandidates.ps1',
-        'invoke-DeviceManager.ps1',
+        'Get-DMparsedElabel.ps1',
+        'Get-DMPortGroupCandidates.ps1',
+        'Invoke-DeviceManager.ps1',
         'Set-DMHostInitiators.ps1',
-        'validate-WWNAddress.ps1',
-        'write-DMError.ps1'
+        'Validate-WWNAddress.ps1',
+        'Write-DMError.ps1'
     )) {
         . (Join-Path $root "Private\$privateHelper")
     }
@@ -89,12 +89,12 @@ foreach ($kind in @('Lun', 'LunSnapshot', 'LunGroup', 'ProtectionGroup', 'Snapsh
 
 try {
     Write-Host "A credential prompt will open for validation of $Hostname. No credentials are read from or written to the configuration file."
-    Write-ValidationProgress -Name 'connect-deviceManager' -Category 'Session'
+    Write-ValidationProgress -Name 'Connect-deviceManager' -Category 'Session'
     $connectionStartedAt = Get-Date
-    $session = connect-deviceManager -Hostname $Hostname -Return $true -Secure
+    $session = Connect-deviceManager -Hostname $Hostname -Return $true -Secure
     $connectionDurationMs = [math]::Round(((Get-Date) - $connectionStartedAt).TotalMilliseconds, 2)
     $checks.Add([pscustomobject]@{
-        Name         = 'connect-deviceManager'
+        Name         = 'Connect-deviceManager'
         Category     = 'Session'
         Status       = 'Passed'
         DurationMs   = $connectionDurationMs
@@ -103,7 +103,7 @@ try {
         ActualTypes  = @($session.GetType().Name)
         Error        = $null
     })
-    Write-ValidationProgress -Name 'connect-deviceManager' -Category 'Session' -Status 'Passed' -DurationMs $connectionDurationMs
+    Write-ValidationProgress -Name 'Connect-deviceManager' -Category 'Session' -Status 'Passed' -DurationMs $connectionDurationMs
 
     Invoke-ReadValidation
     Invoke-MutationValidation

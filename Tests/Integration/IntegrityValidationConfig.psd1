@@ -14,7 +14,7 @@
 # Override the output location with -MutationLogPath when retaining multiple runs.
 @{
     # This file contains no login details. Hostname is supplied to the runner and
-    # credentials are requested interactively by connect-deviceManager -Secure.
+    # credentials are requested interactively by Connect-deviceManager -Secure.
     #
     # Mutating validation runs only when this is true AND the runner is called
     # with -RunMutatingTests. Every changed or removed storage object must first

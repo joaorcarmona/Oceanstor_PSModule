@@ -8,7 +8,8 @@ Branch: `v0.9.2`
 This release reorganizes the live OceanStor integration validator into focused
 workflow scripts, documents the complete test methodology, and adds an XML test
 execution plan with priorities and dependencies. It also fixes integration
-coverage reporting discovered during a full create, verify, and cleanup run.
+coverage reporting discovered during a full create, verify, and cleanup run,
+and normalizes PowerShell verb capitalization throughout the project.
 
 ## Highlights
 
@@ -22,6 +23,11 @@ coverage reporting discovered during a full create, verify, and cleanup run.
 - Fixed coverage reporting for `Verify:` mutation read-back checks.
 - Added host-group association read-back validation by both ID and name.
 - Ignored generated `mutation-trace-last-result.json` output.
+- Normalized PowerShell verb capitalization in public commands, private
+  helpers, tests, documentation, and XML execution metadata.
+- Renamed command and test files so standard verbs consistently use their
+  canonical capitalization, including `Get-*`, `New-*`, and `Remove-*`.
+- Corrected the exported `Get-DMbbus` function declaration capitalization.
 - Updated the module manifest version to `0.9.2`.
 
 ## Validation
@@ -33,7 +39,9 @@ coverage reporting discovered during a full create, verify, and cleanup run.
   0 blocked, 0 failed.
 - Mutation trace: 670 requests recorded.
 - Cleanup verification: 0 remaining test-owned resources.
-- PowerShell parser validation: all 13 integration scripts parsed successfully.
+- PowerShell parser validation: all 214 PowerShell files parsed successfully.
+- Export validation: all 114 module commands use canonical verb
+  capitalization.
 - XML execution plan validation: 162 tests listed with no duplicate orders.
 
 ---
@@ -64,7 +72,7 @@ documentation, and introduces PSDepend dependency declarations.
 
 - Reformatted public commands using the shared `CodeFormatting.psd1` rules,
   including multiline formatting for statement block contents.
-- Updated `connect-deviceManager` to accept secure credential paths for
+- Updated `Connect-deviceManager` to accept secure credential paths for
   interactive and unattended operation.
 - Added parameter validation and argument completion for selected mapping,
   file-system, dTree, and NFS operations.
@@ -107,30 +115,30 @@ public getter commands.
 
 ## Defect Fixes
 
-- Corrected CRLF parsing in `get-DMparsedElabel`.
-- Corrected explicit XML template handling in `new-DMObjectReport`.
+- Corrected CRLF parsing in `Get-DMparsedElabel`.
+- Corrected explicit XML template handling in `New-DMObjectReport`.
 - Corrected mapped class property assignments for vStores, workloads, host
   groups, and port models.
 - Corrected host group filtering to use the mapped parent properties.
 - Changed FC and iSCSI initiator `vStore ID` to `Int64` so the API value
   `4294967295` is accepted without overflow.
-- Removed stray console debug output from `export-DMStorageToExcel`.
+- Removed stray console debug output from `Export-DMStorageToExcel`.
 
 ## LUN Creation Enhancements
 
-- Added `new-DMLun` for REST-based LUN creation with configurable allocation,
+- Added `New-DMLun` for REST-based LUN creation with configurable allocation,
   caching, compression, deduplication, SmartTier, and workload options.
 - Added storage pool validation and interactive argument completion based on
   currently available storage pools.
 
 ## Output Improvements
 
-- Added compact default property displays to object-producing `get-*`
+- Added compact default property displays to object-producing `Get-*`
   commands so interactive output shows the most operationally relevant
   fields while complete object properties remain available.
 - Updated array construction in the affected getters to use
   `ArrayList.Add()` instead of repeated array concatenation.
-- Kept `get-DMdnsServer` unchanged because it already returns a compact
+- Kept `Get-DMdnsServer` unchanged because it already returns a compact
   key/value map rather than model objects.
 
 ## Validation

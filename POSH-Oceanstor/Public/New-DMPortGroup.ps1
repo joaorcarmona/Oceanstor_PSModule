@@ -29,7 +29,7 @@ function New-DMPortGroup {
         $body.DESCRIPTION = $Description
     }
 
-    $response = invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'portgroup' -BodyData $body
+    $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'portgroup' -BodyData $body
     if ($response.error.Code -eq 0) {
         return [OceanstorPortGroup]::new($response.data, $session)
     }

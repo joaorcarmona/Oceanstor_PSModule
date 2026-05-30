@@ -2,9 +2,9 @@ BeforeDiscovery {
     $script:protectionModule = New-Module -Name ProtectionGroupTestModule -ArgumentList $PSScriptRoot -ScriptBlock {
         param($testRoot)
 
-        function get-DMlunGroups { param([pscustomobject]$WebSession) }
-        function get-DMvStore { param([pscustomobject]$WebSession) }
-        function invoke-DeviceManager {
+        function Get-DMlunGroups { param([pscustomobject]$WebSession) }
+        function Get-DMvStore { param([pscustomobject]$WebSession) }
+        function Invoke-DeviceManager {
             param(
                 [pscustomobject]$WebSession,
                 [string]$Method,
@@ -41,12 +41,12 @@ InModuleScope ProtectionGroupTestModule {
 Describe 'Protection group commands and class' {
     BeforeEach {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
-        Mock get-DMlunGroups { @([pscustomobject]@{ Id = '12'; Name = 'production-luns' }) }
-        Mock get-DMvStore { @([pscustomobject]@{ Id = '7'; Name = 'tenant-a' }) }
+        Mock Get-DMlunGroups { @([pscustomobject]@{ Id = '12'; Name = 'production-luns' }) }
+        Mock Get-DMvStore { @([pscustomobject]@{ Id = '7'; Name = 'tenant-a' }) }
     }
 
     It 'creates a protection group from resolved LUN group and vStore names' {
-        Mock invoke-DeviceManager {
+        Mock Invoke-DeviceManager {
             $script:request = $BodyData
             $script:method = $Method
             $script:resource = $Resource
@@ -76,7 +76,7 @@ Describe 'Protection group commands and class' {
     }
 
     It 'retrieves protection groups as objects through API v2' {
-        Mock invoke-DeviceManager {
+        Mock Invoke-DeviceManager {
             $script:apiV2 = $ApiV2.IsPresent
             [pscustomobject]@{ data = @([pscustomobject]@{ protectGroupId = '3'; protectGroupName = 'pg-db'; lunGroupId = '12' }) }
         }
@@ -90,7 +90,7 @@ Describe 'Protection group commands and class' {
 
     It 'removes a protection group using its resolved ID' {
         Mock Get-DMProtectionGroup { @([OceanstorProtectionGroup]::new([pscustomobject]@{ protectGroupId = '3'; protectGroupName = 'pg-db' }, $script:session)) }
-        Mock invoke-DeviceManager {
+        Mock Invoke-DeviceManager {
             $script:method = $Method
             $script:resource = $Resource
             $script:apiV2 = $ApiV2.IsPresent
@@ -107,7 +107,7 @@ Describe 'Protection group commands and class' {
 
     It 'gets the associated LUN group and dispatches deletion from the model' {
         $ConfirmPreference = 'None'
-        Mock invoke-DeviceManager {
+        Mock Invoke-DeviceManager {
             if ($Method -eq 'GET') {
                 return [pscustomobject]@{ data = @([pscustomobject]@{ protectGroupId = '3'; protectGroupName = 'pg-db'; lunGroupId = '12' }) }
             }
@@ -136,7 +136,7 @@ Describe 'Snapshot consistency group commands' {
         }, $script:session)
         Mock Get-DMProtectionGroup { @($script:protection) }
         Mock Get-DMSnapshotConsistencyGroup { @($script:snapshotGroup) }
-        Mock invoke-DeviceManager {
+        Mock Invoke-DeviceManager {
             $script:method = $Method
             $script:resource = $Resource
             $script:request = $BodyData
