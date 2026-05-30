@@ -1,3 +1,43 @@
+# Release Notes - v0.9.2
+
+Date: 2026-05-30
+Branch: `v0.9.2`
+
+## Summary
+
+This release reorganizes the live OceanStor integration validator into focused
+workflow scripts, documents the complete test methodology, and adds an XML test
+execution plan with priorities and dependencies. It also fixes integration
+coverage reporting discovered during a full create, verify, and cleanup run.
+
+## Highlights
+
+- Split the live integration validator into reusable helper, read-validation,
+  mutation-orchestration, reporting, and workflow scripts.
+- Kept `Invoke-GetterIntegrityValidation.ps1` as the small public entry point.
+- Added `Tests/TestExecutionOrder.xml` with unit-suite priorities and live
+  integration dependencies.
+- Added `Tests/README.md` with unit, read-only integration, mutation integration,
+  custom configuration, and report-retention examples.
+- Fixed coverage reporting for `Verify:` mutation read-back checks.
+- Added host-group association read-back validation by both ID and name.
+- Ignored generated `mutation-trace-last-result.json` output.
+- Updated the module manifest version to `0.9.2`.
+
+## Validation
+
+- Unit tests: 239 passed, 0 failed.
+- Read-only integration validation: 34 passed, 14 valid no-data results,
+  0 failed.
+- Full mutation integration validation: 110 passed, 14 valid no-data results,
+  0 blocked, 0 failed.
+- Mutation trace: 670 requests recorded.
+- Cleanup verification: 0 remaining test-owned resources.
+- PowerShell parser validation: all 13 integration scripts parsed successfully.
+- XML execution plan validation: 162 tests listed with no duplicate orders.
+
+---
+
 # Release Notes - v0.9.1
 
 Date: 2026-05-25
