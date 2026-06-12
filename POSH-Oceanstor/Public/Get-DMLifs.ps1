@@ -1,18 +1,23 @@
 function Get-DMLifs {
     <#
 	.SYNOPSIS
-		To Get Huawei Oceanstor Storage existent LIFs
+		To Get Huawei OceanStor Storage LIFs
 
 	.DESCRIPTION
-		Function to request Huawei Oceanstor Storage existent Logical Interfaces
+		Function to request configured Huawei OceanStor logical interfaces.
 
 	.PARAMETER webSession
 		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
 
 	.INPUTS
+		System.Management.Automation.PSCustomObject
+
+		You can pipe an OceanStor session object to WebSession.
 
 	.OUTPUTS
-		returns the Huawei Oceanstor Storage existent LIFs
+		OceanStorLIF
+
+		Returns logical interface objects.
 
 	.EXAMPLE
 

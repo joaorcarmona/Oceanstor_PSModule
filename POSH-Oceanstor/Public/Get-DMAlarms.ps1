@@ -9,10 +9,18 @@ function Get-DMAlarms {
 	.PARAMETER webSession
 		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
 
+	.PARAMETER AlarmStatus
+		Optional alarm status filter. Valid values are Unrecovered, Cleared, and Recovered. If omitted, Unrecovered alarms are returned.
+
 	.INPUTS
+		System.Management.Automation.PSCustomObject
+
+		You can pipe an OceanStor session object to WebSession.
 
 	.OUTPUTS
-		returns the Huawei Oceanstor Storage active alarms by default
+		OceanStorAlarm
+
+		Returns OceanStor alarm objects. Unrecovered alarms are returned by default.
 
 	.EXAMPLE
 

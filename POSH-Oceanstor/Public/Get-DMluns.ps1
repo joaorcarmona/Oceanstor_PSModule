@@ -10,9 +10,15 @@ function Get-DMluns {
 		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
 
 	.INPUTS
+		System.Management.Automation.PSCustomObject
+
+		You can pipe an OceanStor session object to WebSession.
 
 	.OUTPUTS
-		returns the Huawei Oceanstor Storage luns in the system. Return an Array object.
+		OceanstorLunv3
+		OceanstorLunv6
+
+		Returns LUN objects. The class depends on the connected OceanStor version.
 
 	.EXAMPLE
 

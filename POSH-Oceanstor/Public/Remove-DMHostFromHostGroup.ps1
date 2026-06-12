@@ -1,8 +1,39 @@
+<#
+.SYNOPSIS
+    Removes an OceanStor host from a host group.
+
+.DESCRIPTION
+    Removes an existing host association from an existing host group by resolving both objects by name.
+    The cmdlet validates that the host is currently a member of the group before calling the OceanStor API and supports -WhatIf and -Confirm.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER HostName
+    Name of the host to remove from the host group. The name is validated against existing OceanStor hosts.
+
+.PARAMETER HostGroupName
+    Name of the host group from which the host will be removed. The name is validated against existing OceanStor host groups.
+
+.PARAMETER VstoreId
+    Optional vStore ID used to scope the association operation.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    System.Management.Automation.PSCustomObject
+    Returns the OceanStor API error object.
+
+.EXAMPLE
+    PS> Remove-DMHostFromHostGroup -HostName 'host01' -HostGroupName 'production-hosts' -WhatIf
+
+    Shows what would happen if host01 were removed from the production-hosts host group.
+
+.NOTES
+    Filename: Remove-DMHostFromHostGroup.ps1
+#>
 function Remove-DMHostFromHostGroup {
-    <#
-    .SYNOPSIS
-        Removes a host association from a Huawei OceanStor host group.
-    #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

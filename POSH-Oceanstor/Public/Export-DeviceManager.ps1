@@ -6,19 +6,24 @@ function Export-DeviceManager {
 	.DESCRIPTION
 		Function that returns an OceanStor Storage Device with all the properties currently in the module.
 		This object can be used to report or exported for documentation.
-		Is an export all storage configuration
+		Exports all storage configuration collected by the module.
 
 	.PARAMETER Hostname
-		is mandatory [string] parameter, that can be a hostname or an IP Address of the Huawei Oceanstor Device
+		Mandatory hostname or IP address of the Huawei OceanStor array.
 
 	.INPUTS
+		System.String
+
+		You can pipe a storage hostname or IP address to Hostname.
 
 	.OUTPUTS
-		returns the Huawei Oceanstor Device object with all the configuration. Return a Custom object
+		OceanstorViewStorage
+
+		Returns an OceanStor storage view object with the configuration data collected by the module.
 
 	.EXAMPLE
 
-		PS C:\> $storageExport = Export-OceanstorStorage -hostname storage.domain.tld
+		PS C:\> $storageExport = Export-DeviceManager -Hostname storage.domain.tld
 
 	.NOTES
 		Filename: Export-DeviceManager.ps1

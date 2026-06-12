@@ -1,8 +1,37 @@
+<#
+.SYNOPSIS
+    Retrieves OceanStor snapshot consistency groups.
+
+.DESCRIPTION
+    Gets snapshot consistency groups from OceanStor and optionally filters the returned groups by name.
+    Returned objects use the OceanstorSnapshotConsistencyGroup class and include a default display set for common consistency group properties.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER Name
+    Optional snapshot consistency group name to return. When omitted, all visible snapshot consistency groups are returned.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    OceanstorSnapshotConsistencyGroup
+
+.EXAMPLE
+    PS> Get-DMSnapshotConsistencyGroup
+
+    Returns all visible snapshot consistency groups.
+
+.EXAMPLE
+    PS> Get-DMSnapshotConsistencyGroup -Name 'scg-production'
+
+    Returns the snapshot consistency group named scg-production.
+
+.NOTES
+    Filename: Get-DMSnapshotConsistencyGroup.ps1
+#>
 function Get-DMSnapshotConsistencyGroup {
-    <#
-    .SYNOPSIS
-        Retrieves Huawei OceanStor snapshot consistency groups.
-    #>
     [CmdletBinding()]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

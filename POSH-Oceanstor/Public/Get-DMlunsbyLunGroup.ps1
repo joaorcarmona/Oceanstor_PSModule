@@ -13,10 +13,29 @@ function Get-DMlunsbyLunGroup {
 	.PARAMETER LunGroup
 		The OceanStorLunGroup object whose member LUNs are requested.
 
+	.INPUTS
+		System.Management.Automation.PSCustomObject
+
+		You can pipe an OceanStor session object to WebSession.
+
+	.INPUTS
+		OceanStorLunGroup
+
+		You can pipe a LUN group object to LunGroup.
+
+	.OUTPUTS
+		OceanstorLun
+
+		Returns the LUN objects associated with the specified LUN group. Returns an empty array when the group has no associated LUNs.
+
 	.EXAMPLE
 
 		PS C:\> $group = (Get-DMlunGroups -WebSession $session)[0]
 		PS C:\> Get-DMlunsbyLunGroup -WebSession $session -LunGroup $group
+
+	.NOTES
+		The command reads the LUN group's ASSOCIATELUNIDLIST value and resolves the identifiers through Get-DMluns.
+		If WebSession is omitted, the command uses the module-level deviceManager session.
 	#>
     [CmdletBinding()]
     param(

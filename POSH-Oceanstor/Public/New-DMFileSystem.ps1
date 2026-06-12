@@ -31,7 +31,7 @@ function New-DMFileSystem {
         If the Snapshots will be automatically deleted  (default false)
 
     .PARAMETER AlarmThresold
-        Alarm Thresold for the FileSystem capacity  (default 90%)
+        Alarm threshold for the file system capacity. The parameter name is kept as AlarmThresold for compatibility. Default is 90%.
 
     .PARAMETER usage
         Usage of the FileSystem (database, VM, user-defined)  (default user-defined)
@@ -64,9 +64,18 @@ function New-DMFileSystem {
         If the FileSystem is Autogrow  (default false)
 
 	.INPUTS
+		System.Management.Automation.PSCustomObject
+		System.String
+		System.Int64
+		System.Boolean
+
+		You can pipe an OceanStor session object to WebSession and provide file system creation values by property name.
 
 	.OUTPUTS
-		returns the Huawei Oceanstor Storage FileSystem created
+		OceanstorFileSystem
+		System.Management.Automation.PSCustomObject
+
+		Returns the created file system object on success, or the OceanStor API error object on failure.
 
 	.EXAMPLE
 

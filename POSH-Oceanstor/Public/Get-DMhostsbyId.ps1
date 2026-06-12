@@ -13,9 +13,14 @@ function Get-DMhostsbyId {
 		Mandatory parameter [string], to set the Host ID to look for.
 
 .INPUTS
+    System.Management.Automation.PSCustomObject
+
+    You can pipe an OceanStor session object to WebSession and provide hostId by property name.
 
 .OUTPUTS
-    returns the Huawei Oceanstor Storage configured Hosts in the system. Return an Array object.
+    OceanStorHost
+
+    Returns host objects whose ID matches the supplied hostId value.
 
 .EXAMPLE
 

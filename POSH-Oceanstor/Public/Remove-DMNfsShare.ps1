@@ -1,8 +1,44 @@
+<#
+.SYNOPSIS
+    Removes an OceanStor NFS share.
+
+.DESCRIPTION
+    Deletes an existing NFS share by share path, optionally scoped to a vStore.
+    The share path is validated against existing OceanStor NFS shares before the delete request is sent. The cmdlet supports -WhatIf and -Confirm.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER SharePath
+    Path of the NFS share to remove. The path is validated against existing OceanStor NFS shares.
+
+.PARAMETER PrivateShare
+    Sends sharePrivate=1 with the delete request for private NFS shares.
+
+.PARAMETER VstoreId
+    Optional vStore ID used to scope the NFS share removal operation.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    System.Management.Automation.PSCustomObject
+    Returns the OceanStor API error object.
+
+.EXAMPLE
+    PS> Remove-DMNfsShare -SharePath '/fs01/' -WhatIf
+
+    Shows what would happen if the /fs01/ NFS share were removed.
+
+.EXAMPLE
+    PS> Remove-DMNfsShare -SharePath '/fs01/private/' -PrivateShare -Confirm
+
+    Prompts for confirmation and sends the private share delete flag.
+
+.NOTES
+    Filename: Remove-DMNfsShare.ps1
+#>
 function Remove-DMNfsShare {
-    <#
-    .SYNOPSIS
-        Removes a Huawei OceanStor NFS share.
-    #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

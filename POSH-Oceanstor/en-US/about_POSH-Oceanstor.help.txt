@@ -1,14 +1,141 @@
-PSTOPIC
+TOPIC
     about_POSH-Oceanstor
 
 SHORT DESCRIPTION
-    Oceanstor PowerShell Module, is a module to operate with Huawei Oceanstor devices (v3)
+    Describes the POSH-Oceanstor PowerShell module for Huawei OceanStor
+    DeviceManager REST operations.
 
 LONG DESCRIPTION
-    Oceanstor PowerShell Module, is a module to operate with Huawei Oceanstor devices (v3), via the Huawei Oceanstor REST API
+    POSH-Oceanstor is a PowerShell module for working with Huawei OceanStor
+    storage arrays through the DeviceManager REST API.
 
+    The module includes commands for connecting to arrays, reading inventory
+    and configuration data, exporting reports, managing hosts and initiators,
+    creating storage resources, managing mapping views and groups, and working
+    with LUN and file-system snapshots.
 
-DETAILED DESCRIPTION
-    Oceanstor PowerShell Module, is a module to operate with Huawei Oceanstor devices (v3) - v5/v6 should work (not fully tested)
+    The module was originally focused on OceanStor V3 arrays. Current commands
+    also include support for V6 object shapes where the module can detect the
+    connected array version. Some features are available only on specific
+    OceanStor versions, licenses, or array configurations.
 
-    Currently only get functions are developed, but in the future more operations could be added.
+GETTING STARTED
+    Import the module and connect to an array:
+
+        Import-Module POSH-Oceanstor
+        Connect-deviceManager -Hostname 10.0.0.1
+
+    By default, Connect-deviceManager stores the session in the global
+    $deviceManager variable. Most commands use that session automatically when
+    WebSession is not specified.
+
+    To work with more than one array, return the session object and pass it to
+    commands with WebSession:
+
+        $arrayA = Connect-deviceManager -Hostname 10.0.0.1 -Return $true
+        $arrayB = Connect-deviceManager -Hostname 10.0.0.2 -Return $true
+
+        Get-DMSystem -WebSession $arrayA
+        Get-DMSystem -WebSession $arrayB
+
+AUTHENTICATION
+    Connect-deviceManager supports an interactive credential prompt, a
+    PSCredential object, or a username with a SecureString password:
+
+        $credential = Get-Credential
+        $session = Connect-deviceManager -Hostname 10.0.0.1 -Return $true -Credential $credential
+
+        $securePassword = Read-Host -AsSecureString
+        $session = Connect-deviceManager -Hostname 10.0.0.1 -Return $true -LoginUser admin -LoginPwd $securePassword
+
+    Avoid storing plain-text passwords in scripts.
+
+COMMAND AREAS
+    Discovery and inventory:
+
+        Get-DMSystem
+        Get-DMstoragePools
+        Get-DMluns
+        Get-DMFileSystem
+        Get-DMhosts
+        Get-DMdisks
+        Get-DMAlarms
+
+    Connectivity and host access:
+
+        Get-DMFiberChannelInitiator
+        Get-DMIscsiInitiator
+        Get-DMNvmeInitiator
+        Get-DMHostLinks
+        Add-DMLunToLunGroup
+        Add-DMHostGroupToMappingView
+        Add-DMPortGroupToMappingView
+
+    Resource creation:
+
+        New-DMLun
+        New-DMFileSystem
+        New-DMdTree
+        New-DMCifsShare
+        New-DMnfsShare
+        New-DMHost
+        New-DMMappingView
+
+    Snapshot operations:
+
+        Get-DMLunSnapshots
+        New-DMLunSnapshot
+        Enable-DMLunSnapshot
+        Restore-DMLunSnapshot
+        Get-DMFileSystemSnapshots
+        New-DMFileSystemSnapshot
+        Restore-DMFileSystemSnapshot
+        Get-DMSnapshotConsistencyGroup
+
+    Reporting and export:
+
+        Export-DeviceManager
+        Export-DMInventory
+        Export-DMStorageToExcel
+
+REPORTING
+    Export-DMInventory and Export-DMStorageToExcel write Excel workbooks.
+    These commands require the ImportExcel module.
+
+        Install-Module -Name ImportExcel
+
+    Export-DeviceManager returns an OceanStor storage view object that can be
+    reused by report commands or inspected directly:
+
+        $storage = Export-DeviceManager -Hostname 10.0.0.1
+        Export-DMStorageToExcel -OceanStor $storage -ReportFile C:\Temp\OceanStor.xlsx -IncludeObject full
+
+SAFETY AND CONFIRMATION
+    Many create, association, remove, restore, and snapshot commands support
+    ShouldProcess. Use -WhatIf to preview changes when available:
+
+        Remove-DMLun -LunName lun01 -WhatIf
+        Restore-DMLunSnapshot -SnapshotName snap_lun01 -WhatIf
+
+    Destructive operations can delete data or roll back newer data. Review the
+    command-specific help before running remove or restore commands.
+
+    To view full help for any command:
+
+        Get-Help New-DMLun -Full
+        Get-Help Restore-DMFileSystemSnapshot -Full
+
+NOTES
+    Module version: 0.9.2
+    Minimum PowerShell version: 6.0
+
+    Command help is available for all public commands. Use Get-Command
+    -Module POSH-Oceanstor to list exported commands.
+
+RELATED LINKS
+    Get-Command
+    Get-Help
+    Connect-deviceManager
+    Export-DeviceManager
+    https://support.huawei.com/enterprise/en/doc/EDOC1100136666
+    https://support.huawei.com/enterprise/en/doc/EDOC1100324309

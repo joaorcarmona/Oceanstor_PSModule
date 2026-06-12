@@ -1,8 +1,80 @@
+<#
+.SYNOPSIS
+    Creates an OceanStor CIFS share.
+
+.DESCRIPTION
+    Creates a CIFS share for an existing file system, optionally using a custom share path, description, subtype, offline file mode, SMB behavior flags, vStore scope, or dTree ID.
+    The share name and file system name are validated before the create request is sent.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER ShareName
+    Name of the CIFS share to create. The value must be 1 to 80 characters and cannot contain characters rejected by the CIFS share interface.
+
+.PARAMETER FileSystemName
+    Name of the file system that backs the CIFS share. The name is validated against existing OceanStor file systems.
+
+.PARAMETER SharePath
+    Optional share path. When omitted, the cmdlet uses /<FileSystemName>/.
+
+.PARAMETER Description
+    Optional description for the CIFS share. The value can be up to 255 characters.
+
+.PARAMETER SubType
+    CIFS share subtype. Valid values are Normal, HomeDir, and All.
+
+.PARAMETER OfflineFileMode
+    Offline file mode for the CIFS share. Valid values are None, Manual, Documents, and Programs.
+
+.PARAMETER EnableOplock
+    Enables or disables opportunistic locking for the CIFS share. Defaults to true.
+
+.PARAMETER EnableNotify
+    Enables or disables change notification for the CIFS share. Defaults to true.
+
+.PARAMETER EnableContinuousAvailability
+    Enables or disables continuous availability for the CIFS share. Defaults to false.
+
+.PARAMETER EnablePreviousVersions
+    Enables or disables previous version visibility for the CIFS share. Defaults to true.
+
+.PARAMETER EnableSnapshotVisible
+    Enables or disables snapshot visibility for the CIFS share. Defaults to true.
+
+.PARAMETER EnableSmb3Encryption
+    Enables or disables SMB3 encryption for the CIFS share. Defaults to false.
+
+.PARAMETER AllowUnencryptedAccess
+    Allows or denies unencrypted access when SMB3 encryption is configured. Defaults to false.
+
+.PARAMETER VstoreId
+    Optional vStore ID used to scope the CIFS share creation operation.
+
+.PARAMETER DTreeId
+    Optional dTree ID used when the CIFS share targets a dTree.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    OceanStorCIFSShare
+    Returns the created CIFS share object on success, or the API error object on failure.
+
+.EXAMPLE
+    PS> New-DMCifsShare -ShareName 'share01' -FileSystemName 'fs01'
+
+    Creates a CIFS share named share01 using the default /fs01/ share path.
+
+.EXAMPLE
+    PS> New-DMCifsShare -ShareName 'apps' -FileSystemName 'fs01' -SharePath '/fs01/apps/' -OfflineFileMode Programs -EnableSmb3Encryption $true
+
+    Creates an encrypted CIFS share for the apps path and sets the offline file mode to Programs.
+
+.NOTES
+    Filename: New-DMCifsShare.ps1
+#>
 function New-DMCifsShare {
-    <#
-    .SYNOPSIS
-        Creates a Huawei OceanStor CIFS share.
-    #>
     [CmdletBinding()]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

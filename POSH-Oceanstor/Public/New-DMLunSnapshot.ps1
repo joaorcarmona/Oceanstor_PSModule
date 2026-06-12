@@ -1,37 +1,47 @@
+<#
+.SYNOPSIS
+    Creates an OceanStor LUN snapshot.
+
+.DESCRIPTION
+    Creates a LUN snapshot through the OceanStor snapshot REST resource.
+    When SnapshotName is omitted, the cmdlet generates a name from the source LUN name and current timestamp.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER SnapshotName
+    Optional name of the snapshot to create.
+
+.PARAMETER SourceLunName
+    Name of the source LUN. Valid values are checked against Get-DMluns and support tab completion. The selected LUN ID is sent to the API.
+
+.PARAMETER Description
+    Optional description of the snapshot.
+
+.PARAMETER ReadOnly
+    Optional switch to request a read-only snapshot.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    OceanstorLunSnapshot
+    Returns the created LUN snapshot object on success, or the API error object on failure.
+
+.EXAMPLE
+    PS> New-DMLunSnapshot -SnapshotName 'db-before-patch' -SourceLunName 'production-db'
+
+    Creates a named snapshot of the production-db LUN.
+
+.EXAMPLE
+    PS> New-DMLunSnapshot -WebSession $session -SnapshotName 'db-readonly' -SourceLunName 'production-db' -ReadOnly
+
+    Creates a read-only snapshot using the supplied session.
+
+.NOTES
+    Filename: New-DMLunSnapshot.ps1
+#>
 function New-DMLunSnapshot {
-    <#
-    .SYNOPSIS
-        Creates a snapshot of a Huawei OceanStor LUN.
-
-    .DESCRIPTION
-        Creates a LUN snapshot through the OceanStor snapshot REST resource.
-
-    .PARAMETER WebSession
-        Optional session for the REST call. If omitted, the deviceManager
-        global variable is used.
-
-    .PARAMETER SnapshotName
-        Name of the snapshot to create.
-
-    .PARAMETER SourceLunName
-        Name of the source LUN. Valid values are checked against Get-DMluns
-        and support tab completion. The selected LUN ID is sent to the API.
-
-    .PARAMETER Description
-        Optional description of the snapshot.
-
-    .PARAMETER ReadOnly
-        Optional switch to request a read-only snapshot.
-
-    .OUTPUTS
-        OceanstorLunSnapshot when creation succeeds, otherwise the REST error.
-
-    .EXAMPLE
-        PS C:\> New-DMLunSnapshot -SnapshotName 'db-before-patch' -SourceLunName 'production-db'
-
-    .EXAMPLE
-        PS C:\> New-DMLunSnapshot -WebSession $session -SnapshotName 'db-readonly' -SourceLunName 'production-db' -ReadOnly
-    #>
     [CmdletBinding()]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

@@ -1,3 +1,35 @@
+<#
+.SYNOPSIS
+    Removes a free iSCSI initiator from the OceanStor system.
+
+.DESCRIPTION
+    Deletes an existing free iSCSI initiator by identifier, optionally scoped to a vStore.
+    Associated initiators must be removed from their host before deletion. The cmdlet supports -WhatIf and -Confirm.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER Identifier
+    Identifier of the free iSCSI initiator to remove.
+
+.PARAMETER VstoreId
+    Optional vStore ID used to scope the initiator operation.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    System.Management.Automation.PSCustomObject
+    Returns the OceanStor API error object.
+
+.EXAMPLE
+    PS> Remove-DMIscsiInitiator -Identifier 'iqn.2026-06.test:host01' -WhatIf
+
+    Shows what would happen if the free iSCSI initiator were removed.
+
+.NOTES
+    Filename: Remove-DMIscsiInitiator.ps1
+#>
 function Remove-DMIscsiInitiator {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(

@@ -40,9 +40,17 @@ function New-DMnfsClient {
         The ID of the vStore to be used by the client
 
 	.INPUTS
+		System.Management.Automation.PSCustomObject
+		System.String
+		System.Boolean
+
+		You can pipe an OceanStor session object to WebSession and provide NFS client permission values by property name.
 
 	.OUTPUTS
-		returns the Huawei Oceanstor Storage NFS Export (requires the NAS License)
+		OceanstorNFSclient
+		System.Management.Automation.PSCustomObject
+
+		Returns the created NFS share authorization client object on success, or the OceanStor API error object on failure.
 
 	.EXAMPLE
 

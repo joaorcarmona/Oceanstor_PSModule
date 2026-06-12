@@ -1,32 +1,42 @@
+<#
+.SYNOPSIS
+    Retrieves OceanStor LUN snapshots.
+
+.DESCRIPTION
+    Uses the OceanStor snapshot interface to retrieve LUN snapshots and maps each record to an OceanstorLunSnapshot object.
+    Results can be filtered to snapshots for a specific source LUN.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER LunName
+    Optional name of the source LUN whose snapshots should be returned. Valid values are checked against Get-DMluns and support tab completion.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    OceanstorLunSnapshot
+
+.EXAMPLE
+    PS> Get-DMLunSnapshots -WebSession $session
+
+    Returns all visible LUN snapshots using the supplied session.
+
+.EXAMPLE
+    PS> $snapshots = Get-DMLunSnapshots
+
+    Stores all visible LUN snapshots using the global deviceManager session.
+
+.EXAMPLE
+    PS> Get-DMLunSnapshots -LunName 'production-db'
+
+    Returns snapshots whose source LUN is production-db.
+
+.NOTES
+    Filename: Get-DMLunSnapshots.ps1
+#>
 function Get-DMLunSnapshots {
-    <#
-	.SYNOPSIS
-		Retrieves Huawei OceanStor LUN snapshots.
-
-	.DESCRIPTION
-		Uses the OceanStor batch snapshot information interface to retrieve
-		LUN snapshots and maps each record to an OceanstorLunSnapshot object.
-
-	.PARAMETER WebSession
-		Optional session for the REST call. If omitted, the deviceManager
-		global variable is used.
-
-	.PARAMETER LunName
-		Optional name of the source LUN whose snapshots should be returned.
-		Valid values are checked against Get-DMluns and support tab completion.
-
-	.OUTPUTS
-		OceanstorLunSnapshot objects returned by the storage system.
-
-	.EXAMPLE
-		PS C:\> Get-DMLunSnapshots -WebSession $session
-
-	.EXAMPLE
-		PS C:\> $snapshots = Get-DMLunSnapshots
-
-	.EXAMPLE
-		PS C:\> Get-DMLunSnapshots -WebSession $session -LunName 'production-db'
-	#>
     [CmdletBinding()]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

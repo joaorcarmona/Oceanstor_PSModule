@@ -1,8 +1,47 @@
+<#
+.SYNOPSIS
+    Removes an OceanStor file system.
+
+.DESCRIPTION
+    Deletes an existing file system by name, optionally scoped to a vStore.
+    Force and WORM flags are passed through to the OceanStor API when specified. The cmdlet supports -WhatIf and -Confirm.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER FileSystemName
+    Name of the file system to remove. The name is validated against existing OceanStor file systems.
+
+.PARAMETER Force
+    Sends forceDeleteFs=true with the delete request.
+
+.PARAMETER Worm
+    Sends SUBTYPE=1 with the delete request for WORM file-system removal.
+
+.PARAMETER VstoreId
+    Optional vStore ID used to scope the file-system removal operation.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    System.Management.Automation.PSCustomObject
+    Returns the OceanStor API error object.
+
+.EXAMPLE
+    PS> Remove-DMFileSystem -FileSystemName 'fs01' -WhatIf
+
+    Shows what would happen if fs01 were removed.
+
+.EXAMPLE
+    PS> Remove-DMFileSystem -FileSystemName 'fs01' -Force -Confirm
+
+    Prompts for confirmation and sends the force delete flag for fs01.
+
+.NOTES
+    Filename: Remove-DMFileSystem.ps1
+#>
 function Remove-DMFileSystem {
-    <#
-    .SYNOPSIS
-        Removes a Huawei OceanStor file system.
-    #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

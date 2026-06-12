@@ -1,3 +1,67 @@
+<#
+.SYNOPSIS
+    Creates an iSCSI initiator in the OceanStor system.
+
+.DESCRIPTION
+    Adds an iSCSI initiator identifier to the storage system and can optionally associate the initiator with an existing host.
+    CHAP and third-party multipath settings can be supplied when the host configuration requires them.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER Identifier
+    iSCSI initiator identifier to create, such as an IQN.
+
+.PARAMETER Name
+    Optional friendly name for the initiator. The value must be 1 to 31 characters and may contain letters, numbers, underscores, periods, or hyphens.
+
+.PARAMETER HostName
+    Optional host name to associate the initiator with. The name is validated against existing OceanStor hosts.
+
+.PARAMETER UseChap
+    Enables CHAP authentication for the initiator. When specified, ChapName and ChapPassword are required.
+
+.PARAMETER ChapName
+    CHAP user name for the initiator. Required when UseChap is specified.
+
+.PARAMETER ChapPassword
+    CHAP password for the initiator. Required when UseChap is specified and must be 12 to 16 characters.
+
+.PARAMETER Multipath
+    Multipath type for the initiator. Use Default for OceanStor default multipathing or ThirdParty to send explicit path and failover options.
+
+.PARAMETER PathType
+    Path preference used when Multipath is ThirdParty. Valid values are Preferred and NonPreferred.
+
+.PARAMETER FailoverMode
+    ALUA failover mode used when Multipath is ThirdParty. Valid values are EarlyALUA, CommonALUA, NoALUA, and SpecialALUA.
+
+.PARAMETER SpecialModeType
+    Special ALUA mode type used when FailoverMode is SpecialALUA. Valid values are 0 through 3.
+
+.PARAMETER VstoreId
+    Optional vStore ID used to scope the initiator operation.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    OceanstorHostinitiatorISCSI
+    Returns the created iSCSI initiator object on success, or the API error object on failure.
+
+.EXAMPLE
+    PS> New-DMIscsiInitiator -Identifier 'iqn.2026-06.test:host01' -Name 'iscsi-01'
+
+    Creates an iSCSI initiator with a friendly name.
+
+.EXAMPLE
+    PS> New-DMIscsiInitiator -Identifier 'iqn.2026-06.test:host02' -HostName 'host02' -UseChap -ChapName 'host02chap' -ChapPassword 'Secret123456'
+
+    Creates an iSCSI initiator, associates it with host02, and enables CHAP authentication.
+
+.NOTES
+    Filename: New-DMIscsiInitiator.ps1
+#>
 function New-DMIscsiInitiator {
     [CmdletBinding()]
     param(

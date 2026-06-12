@@ -1,8 +1,33 @@
+<#
+.SYNOPSIS
+    Removes an OceanStor protection group.
+
+.DESCRIPTION
+    Deletes an existing protection group by name through the API v2 protection group interface.
+    The protection group name is validated before the delete request is sent. The cmdlet supports -WhatIf and -Confirm.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER Name
+    Name of the protection group to remove. The name is validated against existing OceanStor protection groups.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    System.Management.Automation.PSCustomObject
+    Returns the OceanStor API error object.
+
+.EXAMPLE
+    PS> Remove-DMProtectionGroup -Name 'pg-production' -WhatIf
+
+    Shows what would happen if the pg-production protection group were removed.
+
+.NOTES
+    Filename: Remove-DMProtectionGroup.ps1
+#>
 function Remove-DMProtectionGroup {
-    <#
-    .SYNOPSIS
-        Removes a Huawei OceanStor protection group.
-    #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

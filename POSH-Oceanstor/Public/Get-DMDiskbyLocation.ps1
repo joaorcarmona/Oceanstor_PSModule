@@ -13,9 +13,14 @@ function Get-DMDiskbyLocation {
 		Mandatory parameter Location Enclosure/Slot (String), to search for a disk
 
 	.INPUTS
+		System.Management.Automation.PSCustomObject
+
+		You can pipe an OceanStor session object to WebSession and provide Location by property name.
 
 	.OUTPUTS
-		returns the Huawei Oceanstor Storage disks object
+		OceanStorDisks
+
+		Returns disk objects whose location matches the supplied Location value.
 	.EXAMPLE
 
 		PS C:\> Get-DMDiskbyLocation -webSession $session -Location DAE000.24

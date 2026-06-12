@@ -12,9 +12,15 @@ function Get-DMlunsByWWN {
 		Mandatory parameter [string], to set the WWN to look for.
 
 	.INPUTS
+		System.Management.Automation.PSCustomObject
+
+		You can pipe an OceanStor session object to WebSession and provide wwn by property name.
 
 	.OUTPUTS
-		returns the Huawei Oceanstor Storage lun, my searching lun WWN. Return lun Object
+		OceanstorLunv3
+		OceanstorLunv6
+
+		Returns LUN objects whose WWN matches the supplied wwn value. The class depends on the connected OceanStor version.
 
 	.EXAMPLE
 

@@ -1,19 +1,28 @@
 function Set-DMdnsServer {
     <#
     .SYNOPSIS
-        To Configure the Oceanstor DNS Server
+        Configures OceanStor DNS servers.
 
     .DESCRIPTION
-        To Configure the Oceanstor DNS Server. It will overwrite the current config
+        Configures OceanStor DNS servers. The submitted address list replaces the current DNS configuration.
 
     .PARAMETER WebSession
         Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
 
     .PARAMETER DnsServer
-        Mandatory paramater (array) to define the DNS Server configuration. Should be One or more IPv4 Address, coma separated. The order of the array, will be kept regarding DNS Server Priority
+        DNS server address list. Provide one or more IPv4 addresses separated by commas. The array order is preserved as DNS server priority.
+
+    .INPUTS
+        System.Management.Automation.PSCustomObject
+        System.Array
+
+        You can pipe an OceanStor session object to WebSession and provide DNS server addresses by property name.
 
     .OUTPUTS
-		returns the configured DNS if success, returns error if fails
+		System.Collections.Hashtable
+		System.String
+
+		Returns the configured DNS server table on success. Returns an error string when the update fails.
 
     .EXAMPLE
         PS C:\> Set-DMdnsServer -webSession $session -DNSserver 8.8.8.8,1.1.1.1
@@ -45,7 +54,7 @@ function Set-DMdnsServer {
     foreach ($dns in $DNSserver) {
         $IPResult = Test-IPv4Address -IPv4 $dns
         if ($IPResult -eq $false) {
-            Write-Host $dns " isnt a valid IP Address"
+            Write-Host $dns "is not a valid IP address"
             exit
         }
     }

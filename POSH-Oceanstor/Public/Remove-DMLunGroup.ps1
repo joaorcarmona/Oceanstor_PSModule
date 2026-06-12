@@ -1,8 +1,36 @@
+<#
+.SYNOPSIS
+    Removes an OceanStor LUN group.
+
+.DESCRIPTION
+    Deletes an existing LUN group by name, optionally scoped to a vStore.
+    The LUN group name is validated against existing OceanStor LUN groups before the delete request is sent. The cmdlet supports -WhatIf and -Confirm.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER LunGroupName
+    Name of the LUN group to remove. The name is validated against existing OceanStor LUN groups.
+
+.PARAMETER VstoreId
+    Optional vStore ID used to scope the LUN group removal operation.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    System.Management.Automation.PSCustomObject
+    Returns the OceanStor API error object.
+
+.EXAMPLE
+    PS> Remove-DMLunGroup -LunGroupName 'production-luns' -WhatIf
+
+    Shows what would happen if the production-luns LUN group were removed.
+
+.NOTES
+    Filename: Remove-DMLunGroup.ps1
+#>
 function Remove-DMLunGroup {
-    <#
-    .SYNOPSIS
-        Removes a Huawei OceanStor LUN group.
-    #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

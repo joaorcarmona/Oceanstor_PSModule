@@ -1,8 +1,39 @@
+<#
+.SYNOPSIS
+    Associates an OceanStor host group with a mapping view.
+
+.DESCRIPTION
+    Adds an existing host group to an existing mapping view by resolving both objects by name.
+    The cmdlet validates the mapping view and host group before calling the OceanStor API and supports -WhatIf and -Confirm.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER MappingViewName
+    Name of the mapping view that will receive the host group.
+
+.PARAMETER HostGroupName
+    Name of the host group to associate with the mapping view.
+
+.PARAMETER VstoreId
+    Optional vStore ID used to scope the association operation.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    System.Management.Automation.PSCustomObject
+    Returns the OceanStor API error object.
+
+.EXAMPLE
+    PS> Add-DMHostGroupToMappingView -MappingViewName 'mv-prod' -HostGroupName 'production-hosts' -WhatIf
+
+    Shows what would happen if the production-hosts host group were associated with mv-prod.
+
+.NOTES
+    Filename: Add-DMHostGroupToMappingView.ps1
+#>
 function Add-DMHostGroupToMappingView {
-    <#
-    .SYNOPSIS
-        Associates a Huawei OceanStor host group with a mapping view.
-    #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

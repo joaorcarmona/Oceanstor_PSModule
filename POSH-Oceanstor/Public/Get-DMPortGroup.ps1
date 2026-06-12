@@ -1,8 +1,40 @@
+<#
+.SYNOPSIS
+    Retrieves OceanStor port groups.
+
+.DESCRIPTION
+    Gets port groups from OceanStor, optionally filtered by name and optionally scoped to a vStore.
+    Returned objects use the OceanstorPortGroup class and include a default display set for common port group properties.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER Name
+    Optional port group name to return. When omitted, all visible port groups are returned.
+
+.PARAMETER VstoreId
+    Optional vStore ID used to scope the port group query.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    OceanstorPortGroup
+
+.EXAMPLE
+    PS> Get-DMPortGroup -Name 'fc-front-end'
+
+    Returns the port group named fc-front-end.
+
+.EXAMPLE
+    PS> Get-DMPortGroup -VstoreId '1'
+
+    Returns port groups scoped to vStore ID 1.
+
+.NOTES
+    Filename: Get-DMPortGroup.ps1
+#>
 function Get-DMPortGroup {
-    <#
-    .SYNOPSIS
-        Retrieves Huawei OceanStor port groups.
-    #>
     [CmdletBinding()]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

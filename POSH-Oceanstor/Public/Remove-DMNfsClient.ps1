@@ -1,8 +1,36 @@
+<#
+.SYNOPSIS
+    Removes an OceanStor NFS share client.
+
+.DESCRIPTION
+    Deletes an existing NFS share authorization client by name, optionally scoped to a vStore.
+    The client name is validated against existing OceanStor NFS file clients before the delete request is sent. The cmdlet supports -WhatIf and -Confirm.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER ClientName
+    Name of the NFS share client to remove. The name is validated against existing OceanStor NFS file clients.
+
+.PARAMETER VstoreId
+    Optional vStore ID used to scope the NFS client removal operation.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    System.Management.Automation.PSCustomObject
+    Returns the OceanStor API error object.
+
+.EXAMPLE
+    PS> Remove-DMNfsClient -ClientName 'client01' -WhatIf
+
+    Shows what would happen if client01 were removed.
+
+.NOTES
+    Filename: Remove-DMNfsClient.ps1
+#>
 function Remove-DMNfsClient {
-    <#
-    .SYNOPSIS
-        Removes a Huawei OceanStor NFS share client.
-    #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

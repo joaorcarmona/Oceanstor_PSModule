@@ -1,26 +1,36 @@
+<#
+.SYNOPSIS
+    Rolls back data using an OceanStor LUN snapshot.
+
+.DESCRIPTION
+    Resolves a snapshot name to its ID and starts a rollback operation through the OceanStor snapshot REST resource.
+    This operation overwrites newer LUN data. Use -WhatIf first when testing automation.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER SnapShotName
+    Name of the snapshot to roll back. Valid values are checked against Get-DMLunSnapshots and support tab completion.
+
+.PARAMETER RollbackSpeed
+    Rate for the rollback operation. Valid values are Low, Medium, High, and Highest. The default is Medium.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    System.Management.Automation.PSCustomObject
+    Returns the OceanStor API error object.
+
+.EXAMPLE
+    PS> Restore-DMLunSnapshot -SnapShotName 'snap_lun01_before_patch' -RollbackSpeed High -WhatIf
+
+    Shows what would happen if the LUN were rolled back from the selected snapshot at high speed.
+
+.NOTES
+    Filename: Restore-DMLunSnapshot.ps1
+#>
 function Restore-DMLunSnapshot {
-    <#
-    .SYNOPSIS
-        Rolls back data using a Huawei OceanStor LUN snapshot.
-
-    .DESCRIPTION
-        Resolves a snapshot name to its ID and starts a rollback operation
-        through the OceanStor snapshot REST resource.
-
-    .PARAMETER WebSession
-        Optional session for the REST call. If omitted, the deviceManager
-        global variable is used.
-
-    .PARAMETER SnapShotName
-        Name of the snapshot to roll back. Valid values are checked against
-        Get-DMLunSnapshots and support tab completion.
-
-    .PARAMETER RollbackSpeed
-        Rate for the rollback operation. The REST API default is Medium.
-
-    .OUTPUTS
-        REST error status returned by the storage system.
-    #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

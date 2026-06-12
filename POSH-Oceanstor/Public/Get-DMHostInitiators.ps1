@@ -12,15 +12,22 @@ function Get-DMHostInitiators {
 		Optional parameter to Query the Initiators for a specific Host Id
 	.PARAMETER FreeInitiators
 		Optional switch parameter to Query the Initiators that are free
-	.PARAMETER initiatorType
-		Mandator paramater to define the initiatorType (FibreChannel|ISCSI).
+	.PARAMETER initatorType
+		Mandatory parameter to define the initiator type. Valid values are FibreChannel and ISCSI.
+		The correctly spelled -InitiatorType name is available as an alias.
 	.PARAMETER All
 		(Default) Optional switch parameter to Query the All Initiators. If no other parameter is passed, function assume all
 
 	.INPUTS
+		System.Management.Automation.PSCustomObject
+
+		You can pipe an OceanStor session object to WebSession.
 
 	.OUTPUTS
-		returns the Huawei Huawei Oceanstor Storage Host Initiators
+		OceanstorHostinitiatorFC
+		OceanstorHostinitiatorISCSI
+
+		Returns Fibre Channel or iSCSI host initiator objects, depending on InitatorType.
 
 	.EXAMPLE
 
@@ -60,6 +67,7 @@ function Get-DMHostInitiators {
         [pscustomobject]$WebSession,
         [Parameter(Position = 1, Mandatory = $true)]
         [ValidateSet("FibreChannel", "ISCSI")]
+        [Alias("InitiatorType")]
         [string]$initatorType,
         [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $false, Position = 1, Mandatory = $false, ParameterSetName = "HostInitiators")]
         [string]$hostId,

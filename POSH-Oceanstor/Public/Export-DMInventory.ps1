@@ -5,19 +5,25 @@ function Export-DMInventory {
 
 	.DESCRIPTION
 		Function that exports to Excel a Huawei Storage Device Inventory.
-		The Configuration to be exported can be by given an OceanstorStorage Object, or by inputing a hostname, and the function will retrive all information.
+		The configuration to export can be supplied as an OceanStor object or collected by hostname.
 
 	.PARAMETER Hostname
-		is mandatory/optional [string] parameter, that can be a hostname or an IP Address of the Huawei Oceanstor Device
+		Hostname or IP address of the Huawei OceanStor array when collecting a fresh export.
 	.PARAMETER OceanStor
-		is mandatory/optional [pscustomObject] parameter. Is Huawei Oceanstor Device Object
+		Existing OceanStor storage object to use instead of collecting a fresh export.
 	.PARAMETER ReportFile
-		is a mandatory parameter, that sets the filepath to save the Excel File Report.
+		File path where the Excel inventory report is written.
 
 	.INPUTS
+		System.String
+		System.Management.Automation.PSCustomObject
+
+		You can pipe a hostname to Hostname or an exported OceanStor object to OceanStor.
 
 	.OUTPUTS
-		returns the Huawei Oceanstor Device object with all the configuration. Return a Custom object
+		None
+
+		Writes an Excel inventory workbook to ReportFile.
 
 	.EXAMPLE
 

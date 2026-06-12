@@ -1,8 +1,42 @@
+<#
+.SYNOPSIS
+    Associates an OceanStor port with a port group.
+
+.DESCRIPTION
+    Adds an existing front-end port or logical port to an existing port group.
+    The cmdlet resolves candidate ports by PortType, validates the selected port and group, then calls the OceanStor API. It supports -WhatIf and -Confirm.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER PortGroupName
+    Name of the port group that will receive the port.
+
+.PARAMETER PortType
+    Type of port to add to the port group. Valid values are FibreChannel, Ethernet, and LogicalPort.
+
+.PARAMETER PortName
+    Name of the port to add to the port group. Valid values are resolved from the selected PortType.
+
+.PARAMETER VstoreId
+    Optional vStore ID used to scope the association operation.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    System.Management.Automation.PSCustomObject
+    Returns the OceanStor API error object.
+
+.EXAMPLE
+    PS> Add-DMPortToPortGroup -PortGroupName 'fc-front-end' -PortType FibreChannel -PortName 'CTE0.A.IOM0.P0' -WhatIf
+
+    Shows what would happen if the Fibre Channel port were added to the fc-front-end port group.
+
+.NOTES
+    Filename: Add-DMPortToPortGroup.ps1
+#>
 function Add-DMPortToPortGroup {
-    <#
-    .SYNOPSIS
-        Associates a Huawei OceanStor port with a port group.
-    #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

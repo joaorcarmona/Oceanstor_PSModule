@@ -1,17 +1,16 @@
 function Connect-deviceManager {
     <#
 	.SYNOPSIS
-		Connects to a Huawei Storage by rest.
+		Connects to a Huawei OceanStor array by REST.
 
 	.DESCRIPTION
-		Function to start a connection to a Huawei Storage Device
+		Starts a REST session to a Huawei OceanStor DeviceManager endpoint.
 
 	.PARAMETER Hostname
-		is mandatory [string] parameter, that can be a hostname or an IP Address of the Huawei Oceanstor Device
+		Mandatory hostname or IP address of the Huawei OceanStor array.
 	.PARAMETER Return
-		is optional [bollean] parameter, for the function to return the the connection object or create a Global Variable $deviceManager.
-		by default is false.
-		If true, the connection object will be returned. If false $deviceManager Global Variable will be set. by default
+		Optional Boolean that controls whether the connection object is returned or assigned to the global $deviceManager variable.
+		By default, this value is false and the global $deviceManager variable is set.
 	.PARAMETER Secure
 		is an optional compatibility switch. When supplied, the function prompts for credentials securely.
 		If neither Credential nor LoginUser/LoginPwd is supplied, a secure credential prompt is also used by default.
@@ -22,9 +21,15 @@ function Connect-deviceManager {
 	.PARAMETER LoginPWD
 		is a mandatory SecureString when LoginUser is provided.
 	.INPUTS
+		System.String
+		System.Management.Automation.PSCredential
+
+		You can pipe a hostname to Hostname. Credentials can be supplied with Credential or with LoginUser and LoginPwd.
 
 	.OUTPUTS
-		Creates a object connection to a Huawei Storage Device
+		OceanstorSession
+
+		Returns an OceanStor session object when Return is true. Otherwise, assigns the session to the global deviceManager variable.
 
 	.EXAMPLE
 		Example syntax for running that sets the $deviceManager global WebSession object.

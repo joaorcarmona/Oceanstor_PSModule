@@ -1,8 +1,40 @@
+<#
+.SYNOPSIS
+    Retrieves OceanStor file-system snapshots.
+
+.DESCRIPTION
+    Gets snapshots for a specific OceanStor file system and optionally filters the returned snapshots by name.
+    Returned objects use the OceanstorFileSystemSnapshot class and include a default display set for common snapshot properties.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER FileSystemName
+    Name of the source file system. The name is validated against existing OceanStor file systems.
+
+.PARAMETER SnapshotName
+    Optional snapshot name to return. When omitted, all snapshots for the selected file system are returned.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    OceanstorFileSystemSnapshot
+
+.EXAMPLE
+    PS> Get-DMFileSystemSnapshots -FileSystemName 'fs01'
+
+    Returns all snapshots for fs01.
+
+.EXAMPLE
+    PS> Get-DMFileSystemSnapshots -FileSystemName 'fs01' -SnapshotName 'snap_fs01'
+
+    Returns the snap_fs01 snapshot from fs01.
+
+.NOTES
+    Filename: Get-DMFileSystemSnapshots.ps1
+#>
 function Get-DMFileSystemSnapshots {
-    <#
-    .SYNOPSIS
-        Retrieves snapshots of a Huawei OceanStor file system.
-    #>
     [CmdletBinding()]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

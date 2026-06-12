@@ -1,8 +1,44 @@
+<#
+.SYNOPSIS
+    Creates an OceanStor snapshot consistency group.
+
+.DESCRIPTION
+    Creates a snapshot consistency group from an existing protection group.
+    The protection group is resolved by name and its vStore ID is passed through when available.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER Name
+    Name of the snapshot consistency group to create. The value may contain letters, numbers, underscores, periods, or hyphens.
+
+.PARAMETER ProtectionGroupName
+    Name of the protection group that will be used as the snapshot consistency group parent.
+
+.PARAMETER Description
+    Optional description for the snapshot consistency group. The value must be 1 to 255 characters when supplied.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    OceanstorSnapshotConsistencyGroup
+    Returns the created snapshot consistency group object on success, or the API error object on failure.
+
+.EXAMPLE
+    PS> New-DMSnapshotConsistencyGroup -Name 'scg-production' -ProtectionGroupName 'pg-production'
+
+    Creates a snapshot consistency group from the pg-production protection group.
+
+.EXAMPLE
+    PS> New-DMSnapshotConsistencyGroup -Name 'scg-production' -ProtectionGroupName 'pg-production' -Description 'Pre-maintenance consistency point'
+
+    Creates a snapshot consistency group with a description.
+
+.NOTES
+    Filename: New-DMSnapshotConsistencyGroup.ps1
+#>
 function New-DMSnapshotConsistencyGroup {
-    <#
-    .SYNOPSIS
-        Creates a snapshot consistency group from a protection group.
-    #>
     [CmdletBinding()]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

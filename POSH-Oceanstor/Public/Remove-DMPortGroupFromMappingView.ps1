@@ -1,8 +1,39 @@
+<#
+.SYNOPSIS
+    Removes an OceanStor port group from a mapping view.
+
+.DESCRIPTION
+    Removes an existing port group association from an existing mapping view by resolving both objects by name.
+    The cmdlet validates the mapping view, port group, and current association before calling the OceanStor API. It supports -WhatIf and -Confirm.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER MappingViewName
+    Name of the mapping view from which the port group will be removed.
+
+.PARAMETER PortGroupName
+    Name of the port group to remove from the mapping view.
+
+.PARAMETER VstoreId
+    Optional vStore ID used to scope the association operation.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    System.Management.Automation.PSCustomObject
+    Returns the OceanStor API error object.
+
+.EXAMPLE
+    PS> Remove-DMPortGroupFromMappingView -MappingViewName 'mv-prod' -PortGroupName 'fc-front-end' -WhatIf
+
+    Shows what would happen if the fc-front-end port group were removed from mv-prod.
+
+.NOTES
+    Filename: Remove-DMPortGroupFromMappingView.ps1
+#>
 function Remove-DMPortGroupFromMappingView {
-    <#
-    .SYNOPSIS
-        Removes a port group association from a Huawei OceanStor mapping view.
-    #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

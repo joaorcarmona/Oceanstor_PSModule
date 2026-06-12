@@ -4,15 +4,20 @@ function Get-DMSystem {
 		To Get Huawei Oceanstor DeviceManager basic properties
 
 	.DESCRIPTION
-		Function to request Huawei Oceanstor Storage DeviceManager basic proterties
+		Requests basic Huawei OceanStor DeviceManager properties.
 
 	.PARAMETER webSession
 		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
 
 	.INPUTS
+		System.Management.Automation.PSCustomObject
+
+		You can pipe an OceanStor session object to WebSession.
 
 	.OUTPUTS
-		returns the Huawei Oceanstor DeviceManager basic properties
+		OceanStorSystem
+
+		Returns the OceanStor system object.
 
 	.EXAMPLE
 

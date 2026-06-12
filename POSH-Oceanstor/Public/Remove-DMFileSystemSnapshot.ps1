@@ -1,8 +1,36 @@
+<#
+.SYNOPSIS
+    Removes an OceanStor file-system snapshot.
+
+.DESCRIPTION
+    Deletes an existing file-system snapshot by resolving the source file system and snapshot names before calling the OceanStor API.
+    The cmdlet validates both names and supports -WhatIf and -Confirm.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER FileSystemName
+    Name of the source file system that contains the snapshot.
+
+.PARAMETER SnapshotName
+    Name of the file-system snapshot to remove. Valid values are resolved from the selected file system.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    System.Management.Automation.PSCustomObject
+    Returns the OceanStor API error object.
+
+.EXAMPLE
+    PS> Remove-DMFileSystemSnapshot -FileSystemName 'fs01' -SnapshotName 'snap_fs01_before_patch' -WhatIf
+
+    Shows what would happen if the snapshot were removed from fs01.
+
+.NOTES
+    Filename: Remove-DMFileSystemSnapshot.ps1
+#>
 function Remove-DMFileSystemSnapshot {
-    <#
-    .SYNOPSIS
-        Deletes a Huawei OceanStor file-system snapshot.
-    #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

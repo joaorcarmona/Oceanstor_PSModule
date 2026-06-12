@@ -1,8 +1,44 @@
+<#
+.SYNOPSIS
+    Creates a copy of an OceanStor snapshot consistency group.
+
+.DESCRIPTION
+    Creates a copy of an existing snapshot consistency group.
+    The source group is resolved by name and its vStore ID is passed through when available. When Name is omitted, copy_<source name> is used.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER SourceName
+    Name of the source snapshot consistency group to copy.
+
+.PARAMETER Name
+    Optional name for the copy. The value may contain letters, numbers, underscores, periods, or hyphens.
+
+.PARAMETER Description
+    Optional description for the snapshot consistency group copy. The value must be 1 to 255 characters when supplied.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    OceanstorSnapshotConsistencyGroup
+    Returns the created snapshot consistency group copy object on success, or the API error object on failure.
+
+.EXAMPLE
+    PS> New-DMSnapshotConsistencyGroupCopy -SourceName 'scg-production'
+
+    Creates a copy named copy_scg-production.
+
+.EXAMPLE
+    PS> New-DMSnapshotConsistencyGroupCopy -SourceName 'scg-production' -Name 'scg-production-copy'
+
+    Creates a snapshot consistency group copy with an explicit name.
+
+.NOTES
+    Filename: New-DMSnapshotConsistencyGroupCopy.ps1
+#>
 function New-DMSnapshotConsistencyGroupCopy {
-    <#
-    .SYNOPSIS
-        Creates a copy of a snapshot consistency group.
-    #>
     [CmdletBinding()]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
