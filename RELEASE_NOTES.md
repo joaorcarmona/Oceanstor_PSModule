@@ -1,4 +1,63 @@
-# Release Notes - v0.9.2
+# Release Notes
+
+---
+
+# v0.9.3
+
+Date: 2026-06-12
+Branch: `v0.9.3`
+
+## Summary
+
+This release builds on `v0.9.2` with documentation and usability cleanup for
+the public command surface. It completes public command help coverage,
+standardizes initiator parameter spelling, clarifies report-template usage,
+updates WebSession wording, and removes stale per-command metadata from
+comment-based help.
+
+## Commit History
+
+- `1d8f7e6` - Update WebSession naming and docs
+- `223deb3` - Complete public command help coverage
+- `bd405ed` - Clarify report template customization
+- `0af4963` - Standardize `InitiatorType` parameter spelling
+- `96a6504` - Simplify public command notes metadata
+
+## Highlights
+
+- Completed required help sections for public commands, including descriptions,
+  parameter help, inputs, outputs, examples, and notes.
+- Standardized `Get-DMHostInitiators` on the correctly spelled
+  `InitiatorType` parameter and removed the compatibility alias for the old
+  `InitatorType` spelling.
+- Updated FC and iSCSI initiator wrapper commands, removal commands,
+  integration validation, and unit tests to use the corrected parameter name.
+- Clarified how report templates are discovered and customized in
+  `POSH-Oceanstor/Templates/README.md`.
+- Renamed `REport-Lunsv6.xml` to `Report-Lunsv6.xml`.
+- Improved `about_POSH-Oceanstor` with module overview, usage, authentication,
+  command areas, reporting, safety guidance, and related links.
+- Updated WebSession documentation and examples for consistent casing and
+  wording.
+- Removed stale `Author`, `Modified Date` / `Modfied Date`, and `Version`
+  entries from public command `.NOTES` sections, keeping only `Filename`
+  metadata.
+- Updated the module manifest version to `0.9.3`.
+
+## Validation
+
+- Unit tests: 240 passed, 0 failed.
+- Public command metadata validation: `Get-DMHostInitiators` exposes
+  `InitiatorType` only, with no typo alias.
+- Typo scan: no `InitatorType` or `initatorType` references remain.
+- Public help metadata scan: no stale `.NOTES` fields remain in public command
+  files.
+- Parser validation: changed PowerShell scripts parsed successfully.
+- Diff validation: staged whitespace checks passed before commit.
+
+---
+
+# v0.9.2
 
 Date: 2026-05-30
 Branch: `v0.9.2`
@@ -10,6 +69,11 @@ workflow scripts, documents the complete test methodology, and adds an XML test
 execution plan with priorities and dependencies. It also fixes integration
 coverage reporting discovered during a full create, verify, and cleanup run,
 and normalizes PowerShell verb capitalization throughout the project.
+
+## Commit History
+
+- `23686a0` - Prepare v0.9.2 integration test workflows and documentation
+- `cde6aaa` - Normalize PowerShell verb capitalization for v0.9.2
 
 ## Highlights
 

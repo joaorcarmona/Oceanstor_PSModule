@@ -1,7 +1,11 @@
 # Huawei Oceanstor_PSModule
 Oceanstor PowerShell Module, is a module to operate with Huawei Oceanstor devices (v6) - Previous versions should work in limited way. Please report any bugs.
 
-Currently only get functions are developed, but in the future more operations could be added.
+Current module version: 0.9.3
+
+The module includes commands for inventory, reporting, host and initiator
+management, storage-resource creation, mapping-view operations, and snapshot
+management.
 
 ## How to Install
 
