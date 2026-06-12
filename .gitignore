@@ -7,3 +7,8 @@ OceanStor Dorado 6.1.6 REST Interface Reference.pdf
 Tests/Integration/getter-integrity-last-result.json
 Tests/Integration/mutation-trace.json
 Tests/Integration/mutation-trace-last-result.json
+pipeline-check.ps1
+pipeline-report.csv
+pipeline-report.json
+Reports/
+temp-doc-*
