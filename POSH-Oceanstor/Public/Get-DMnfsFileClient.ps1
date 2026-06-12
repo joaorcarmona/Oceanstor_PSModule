@@ -10,9 +10,14 @@ function Get-DMnfsFileClient {
 		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
 
 	.INPUTS
+		System.Management.Automation.PSCustomObject
+
+		You can pipe an OceanStor session object to WebSession.
 
 	.OUTPUTS
-		returns the Huawei Oceanstor Storage NFS File Clients in the system. Return an Array object.
+		OceanstorNFSclient
+
+		Returns NFS share authorization client objects.
 
 	.EXAMPLE
 

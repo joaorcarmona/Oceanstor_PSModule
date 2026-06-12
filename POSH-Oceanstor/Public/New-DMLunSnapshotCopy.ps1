@@ -1,36 +1,44 @@
+<#
+.SYNOPSIS
+    Creates a copy of an OceanStor LUN snapshot.
+
+.DESCRIPTION
+    Resolves a source snapshot name to its ID and creates a snapshot copy through the OceanStor snapshot REST resource.
+    When SnapshotCopyName is omitted, copy_<source snapshot name> is used.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER SourceSnapShotName
+    Name of the source snapshot. Valid values are checked against Get-DMLunSnapshots and support tab completion.
+
+.PARAMETER SnapshotCopyName
+    Optional name of the copy. The value must be 1 to 255 characters and may contain letters, numbers, underscores, periods, or hyphens.
+
+.PARAMETER Description
+    Optional description for the snapshot copy.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    OceanstorLunSnapshot
+    Returns the created snapshot copy object on success, or the API error object on failure.
+
+.EXAMPLE
+    PS> New-DMLunSnapshotCopy -SourceSnapShotName 'db-before-patch'
+
+    Creates a copy named copy_db-before-patch.
+
+.EXAMPLE
+    PS> New-DMLunSnapshotCopy -SourceSnapShotName 'db-before-patch' -SnapshotCopyName 'db-before-patch-copy'
+
+    Creates a snapshot copy with an explicit name.
+
+.NOTES
+    Filename: New-DMLunSnapshotCopy.ps1
+#>
 function New-DMLunSnapshotCopy {
-    <#
-    .SYNOPSIS
-        Creates a copy of a Huawei OceanStor LUN snapshot.
-
-    .DESCRIPTION
-        Resolves a source snapshot name to its ID and creates a snapshot copy
-        through the OceanStor snapshot REST resource.
-
-    .PARAMETER WebSession
-        Optional session for the REST call. If omitted, the deviceManager
-        global variable is used.
-
-    .PARAMETER SourceSnapShotName
-        Name of the source snapshot. Valid values are checked against
-        Get-DMLunSnapshots and support tab completion.
-
-    .PARAMETER SnapshotCopyName
-        Optional name of the copy. If omitted, copy_<source snapshot name> is
-        used.
-
-    .PARAMETER Description
-        Optional description for the snapshot copy.
-
-    .OUTPUTS
-        OceanstorLunSnapshot when creation succeeds, otherwise the REST error.
-
-    .EXAMPLE
-        PS C:\> New-DMLunSnapshotCopy -SourceSnapShotName 'db-before-patch'
-
-    .EXAMPLE
-        PS C:\> New-DMLunSnapshotCopy -SourceSnapShotName 'db-before-patch' -SnapshotCopyName 'db-before-patch-copy'
-    #>
     [CmdletBinding()]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

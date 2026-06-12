@@ -9,8 +9,15 @@ function Get-DMdnsServer {
     .PARAMETER WebSession
         Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
 
+    .INPUTS
+        System.Management.Automation.PSCustomObject
+
+        You can pipe an OceanStor session object to WebSession.
+
     .OUTPUTS
-		returns the Huawei Oceanstor Storage array disks (array format)
+		System.Collections.Hashtable
+
+        Returns the configured DNS server addresses keyed by DNS server position.
 
     .EXAMPLE
         PS C:\> Get-DMdnsServer -webSession $session

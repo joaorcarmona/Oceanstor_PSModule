@@ -13,9 +13,14 @@ function Get-DMhostsbyName {
 		Mandatory parameter [string], to set the Host Name to look for.
 
 .INPUTS
+    System.Management.Automation.PSCustomObject
+
+    You can pipe an OceanStor session object to WebSession and provide Name by property name.
 
 .OUTPUTS
-    returns the Huawei Oceanstor Storage configured Hosts in the system. Return an Array object.
+    OceanStorHost
+
+    Returns host objects whose name matches the supplied Name value.
 
 .EXAMPLE
 

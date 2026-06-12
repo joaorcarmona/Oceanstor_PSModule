@@ -10,9 +10,14 @@ function Get-DMWorkLoadTypes {
 		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
 
 	.INPUTS
+		System.Management.Automation.PSCustomObject
+
+		You can pipe an OceanStor session object to WebSession.
 
 	.OUTPUTS
-		returns the Huawei Oceanstor Storage workload Type configured (only works for v6)
+		OceanStorWorkload
+
+		Returns workload type objects. This command only works for V6 arrays.
 
 	.EXAMPLE
 

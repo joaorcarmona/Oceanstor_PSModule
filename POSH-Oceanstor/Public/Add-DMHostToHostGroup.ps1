@@ -1,8 +1,39 @@
+<#
+.SYNOPSIS
+    Associates an OceanStor host with a host group.
+
+.DESCRIPTION
+    Adds an existing host to an existing host group by resolving both objects by name.
+    The cmdlet validates the host and host group before calling the OceanStor API and supports -WhatIf and -Confirm.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER HostName
+    Name of the host to add to the host group. The name is validated against existing OceanStor hosts.
+
+.PARAMETER HostGroupName
+    Name of the host group that will receive the host. The name is validated against existing OceanStor host groups.
+
+.PARAMETER VstoreId
+    Optional vStore ID used to scope the association operation.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    System.Management.Automation.PSCustomObject
+    Returns the OceanStor API error object.
+
+.EXAMPLE
+    PS> Add-DMHostToHostGroup -HostName 'host01' -HostGroupName 'production-hosts' -WhatIf
+
+    Shows what would happen if host01 were added to the production-hosts host group.
+
+.NOTES
+    Filename: Add-DMHostToHostGroup.ps1
+#>
 function Add-DMHostToHostGroup {
-    <#
-    .SYNOPSIS
-        Associates a Huawei OceanStor host with a host group.
-    #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

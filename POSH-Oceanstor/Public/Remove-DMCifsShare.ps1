@@ -1,8 +1,36 @@
+<#
+.SYNOPSIS
+    Removes an OceanStor CIFS share.
+
+.DESCRIPTION
+    Deletes an existing CIFS share by name, optionally scoped to a vStore.
+    The share name is validated against existing OceanStor CIFS shares before the delete request is sent. The cmdlet supports -WhatIf and -Confirm.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER ShareName
+    Name of the CIFS share to remove. The name is validated against existing OceanStor CIFS shares.
+
+.PARAMETER VstoreId
+    Optional vStore ID used to scope the CIFS share removal operation.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    System.Management.Automation.PSCustomObject
+    Returns the OceanStor API error object.
+
+.EXAMPLE
+    PS> Remove-DMCifsShare -ShareName 'share01' -WhatIf
+
+    Shows what would happen if share01 were removed.
+
+.NOTES
+    Filename: Remove-DMCifsShare.ps1
+#>
 function Remove-DMCifsShare {
-    <#
-    .SYNOPSIS
-        Removes a Huawei OceanStor CIFS share.
-    #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

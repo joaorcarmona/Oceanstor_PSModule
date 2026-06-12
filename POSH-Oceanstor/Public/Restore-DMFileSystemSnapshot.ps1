@@ -1,12 +1,37 @@
-function Restore-DMFileSystemSnapshot {
-    <#
-    .SYNOPSIS
-        Rolls back a file system to a Huawei OceanStor file-system snapshot.
+<#
+.SYNOPSIS
+    Rolls back an OceanStor file system snapshot.
 
-    .DESCRIPTION
-        This operation overwrites newer file-system data and may delete newer
-        read-only snapshots, as described by the OceanStor REST interface.
-    #>
+.DESCRIPTION
+    Rolls back a file system to an existing snapshot by resolving the source file system and snapshot names before calling the OceanStor API.
+    This operation overwrites newer file-system data and may delete newer read-only snapshots, as described by the OceanStor REST interface.
+    Use -WhatIf first when testing automation.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER FileSystemName
+    Name of the source file system that will be rolled back.
+
+.PARAMETER SnapshotName
+    Name of the file-system snapshot to roll back from. Valid values are resolved from the selected file system.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    System.Management.Automation.PSCustomObject
+    Returns the OceanStor API error object.
+
+.EXAMPLE
+    PS> Restore-DMFileSystemSnapshot -FileSystemName 'fs01' -SnapshotName 'snap_fs01_before_patch' -WhatIf
+
+    Shows what would happen if fs01 were rolled back to the selected snapshot.
+
+.NOTES
+    Filename: Restore-DMFileSystemSnapshot.ps1
+#>
+function Restore-DMFileSystemSnapshot {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

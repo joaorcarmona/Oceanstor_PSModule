@@ -1,8 +1,39 @@
+<#
+.SYNOPSIS
+    Associates an OceanStor port group with a mapping view.
+
+.DESCRIPTION
+    Adds an existing port group to an existing mapping view by resolving both objects by name.
+    The cmdlet validates the mapping view and port group before calling the OceanStor API and supports -WhatIf and -Confirm.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER MappingViewName
+    Name of the mapping view that will receive the port group.
+
+.PARAMETER PortGroupName
+    Name of the port group to associate with the mapping view.
+
+.PARAMETER VstoreId
+    Optional vStore ID used to scope the association operation.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    System.Management.Automation.PSCustomObject
+    Returns the OceanStor API error object.
+
+.EXAMPLE
+    PS> Add-DMPortGroupToMappingView -MappingViewName 'mv-prod' -PortGroupName 'fc-front-end' -WhatIf
+
+    Shows what would happen if the fc-front-end port group were associated with mv-prod.
+
+.NOTES
+    Filename: Add-DMPortGroupToMappingView.ps1
+#>
 function Add-DMPortGroupToMappingView {
-    <#
-    .SYNOPSIS
-        Associates a Huawei OceanStor port group with a mapping view.
-    #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

@@ -25,9 +25,17 @@ function New-DMnfsShare {
         The ID of the DTree to be used by the share
 
 	.INPUTS
+		System.Management.Automation.PSCustomObject
+		System.String
+		System.Boolean
+
+		You can pipe an OceanStor session object to WebSession and provide NFS share creation values by property name.
 
 	.OUTPUTS
-		returns the Huawei Oceanstor Storage NFS Share (requires the NAS License)
+		OceanStorNFSShare
+		System.Management.Automation.PSCustomObject
+
+		Returns the created NFS share object on success, or the OceanStor API error object on failure.
 
 	.EXAMPLE
 

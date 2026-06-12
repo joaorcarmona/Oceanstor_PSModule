@@ -1,12 +1,47 @@
-function New-DMProtectionGroup {
-    <#
-    .SYNOPSIS
-        Creates a Huawei OceanStor protection group.
+<#
+.SYNOPSIS
+    Creates an OceanStor protection group.
 
-    .DESCRIPTION
-        Uses the API v2 protection group interface. LunGroupName and optional
-        Vstore names are resolved to the IDs sent to the storage system.
-    #>
+.DESCRIPTION
+    Creates a protection group through the API v2 protection group interface.
+    LunGroupName and optional Vstore names are resolved to the IDs sent to the storage system.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER Name
+    Name of the protection group to create. The value must be 1 to 255 characters.
+
+.PARAMETER LunGroupName
+    Name of the LUN group that backs the protection group. The name is validated against existing OceanStor LUN groups.
+
+.PARAMETER Vstore
+    Optional vStore name used to scope the protection group. The name is validated against existing OceanStor vStores.
+
+.PARAMETER Description
+    Optional description for the protection group. The value must be 1 to 255 characters when supplied.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    OceanstorProtectionGroup
+    Returns the created protection group object on success, or the API error object on failure.
+
+.EXAMPLE
+    PS> New-DMProtectionGroup -Name 'pg-production' -LunGroupName 'production-luns' -Description 'Production workload protection'
+
+    Creates a protection group for the production-luns LUN group.
+
+.EXAMPLE
+    PS> New-DMProtectionGroup -Name 'pg-vstore-a' -LunGroupName 'tenant-a-luns' -Vstore 'vstore-a'
+
+    Creates a protection group scoped to vstore-a.
+
+.NOTES
+    Filename: New-DMProtectionGroup.ps1
+#>
+function New-DMProtectionGroup {
     [CmdletBinding()]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

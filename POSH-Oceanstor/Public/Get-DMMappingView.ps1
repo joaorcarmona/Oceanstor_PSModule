@@ -1,7 +1,40 @@
 function Get-DMMappingView {
     <#
     .SYNOPSIS
-        Retrieves Huawei OceanStor mapping views, optionally associated with a group.
+        Retrieves Huawei OceanStor mapping views.
+
+    .DESCRIPTION
+        Returns mapping views for the whole system or filtered by host group, LUN group, port group, name, or vStore.
+
+    .PARAMETER WebSession
+        Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+    .PARAMETER Name
+        Optional mapping view name filter.
+
+    .PARAMETER HostGroupName
+        Optional host group name used to filter related mapping views.
+
+    .PARAMETER LunGroupName
+        Optional LUN group name used to filter related mapping views.
+
+    .PARAMETER PortGroupName
+        Optional port group name used to filter related mapping views.
+
+    .PARAMETER VstoreId
+        Optional vStore identifier to scope the request.
+
+    .INPUTS
+        System.Management.Automation.PSCustomObject
+
+    .OUTPUTS
+        Returns one or more OceanStorMappingView objects.
+
+    .EXAMPLE
+        PS> Get-DMMappingView -Name 'mv-prod'
+
+    .NOTES
+        Filename: Get-DMMappingView.ps1
     #>
     [CmdletBinding(DefaultParameterSetName = 'All')]
     param(

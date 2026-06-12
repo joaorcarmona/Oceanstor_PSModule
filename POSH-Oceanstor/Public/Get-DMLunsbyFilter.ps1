@@ -9,14 +9,21 @@ function Get-DMLunsbyFilter {
 	.PARAMETER webSession
 		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
 	.PARAMETER filter
-		Mandatory parameter [string], to be used as filter in the query. Needs to be a valid property name for the lun Object.
-    .PARAMETER filter
-        Mandatory parameter [string], to be used as keyword to search for luns. No need explicit wildcard (*), because it's implicit
+		Mandatory property name to filter against. The value must be a valid LUN object property.
+
+    .PARAMETER keyword
+        Mandatory keyword used to search for LUNs. Wildcards are not required because the match is implicit.
 
 	.INPUTS
+		System.Management.Automation.PSCustomObject
+
+		You can pipe an OceanStor session object to WebSession and provide filter values by property name.
 
 	.OUTPUTS
-		returns the Huawei Oceanstor Storage lun, by applying a input filter and a keyword
+		OceanstorLunv3
+		OceanstorLunv6
+
+		Returns LUN objects matching the requested property filter and keyword.
 
 	.EXAMPLE
 

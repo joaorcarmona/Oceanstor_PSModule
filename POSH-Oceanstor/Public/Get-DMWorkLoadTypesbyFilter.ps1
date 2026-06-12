@@ -1,7 +1,7 @@
 function Get-DMWorkLoadTypesbyFilter {
     <#
 	.SYNOPSIS
-		To Get Huawei Oceanstor Storage workload Type configured (only works for v6), by inputing a filter
+		To Get Huawei OceanStor workload types by filter. This command only works for V6 arrays.
 
 	.DESCRIPTION
 		Function to request Huawei Oceanstor Storage workload Type configured
@@ -10,14 +10,20 @@ function Get-DMWorkLoadTypesbyFilter {
 		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
 
 	.PARAMETER filter
-		Mandatory parameter [string], to be used as filter in the query. Needs to be a valid property name for the Workload Object.
-    .PARAMETER filter
-        Mandatory parameter [string], to be used as keyword to search for Workload. No need explicit wildcard (*), because it's implicit
+		Mandatory property name to filter against. The value must be a valid workload object property.
+
+    .PARAMETER keyword
+        Mandatory keyword used to search for workload types. Wildcards are not required because the match is implicit.
 
 	.INPUTS
+		System.Management.Automation.PSCustomObject
+
+		You can pipe an OceanStor session object to WebSession and provide filter values by property name.
 
 	.OUTPUTS
-		returns the Huawei Oceanstor Storage workload Type configured (only works for v6)
+		OceanStorWorkload
+
+		Returns workload type objects matching the requested property filter and keyword. This command only works for V6 arrays.
 
 	.EXAMPLE
 

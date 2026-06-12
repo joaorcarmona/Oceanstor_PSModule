@@ -1,29 +1,38 @@
+<#
+.SYNOPSIS
+    Removes an OceanStor LUN snapshot.
+
+.DESCRIPTION
+    Resolves a LUN snapshot name to its snapshot ID and removes the snapshot through the OceanStor snapshot REST resource.
+    The cmdlet validates the snapshot name and supports -WhatIf and -Confirm.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER SnapShotName
+    Name of the LUN snapshot to remove. Valid values are checked against Get-DMLunSnapshots and support tab completion.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    System.Management.Automation.PSCustomObject
+    Returns the OceanStor API error object.
+
+.EXAMPLE
+    PS> Remove-DMLunSnapShot -SnapShotName 'db-before-patch' -WhatIf
+
+    Shows what would happen if the LUN snapshot were removed.
+
+.EXAMPLE
+    PS> Remove-DMLunSnapShot -WebSession $session -SnapShotName 'db-before-patch' -Confirm:$false
+
+    Removes the LUN snapshot using the supplied session without prompting for confirmation.
+
+.NOTES
+    Filename: Remove-DMLunSnapShot.ps1
+#>
 function Remove-DMLunSnapShot {
-    <#
-    .SYNOPSIS
-        Removes a Huawei OceanStor LUN snapshot.
-
-    .DESCRIPTION
-        Resolves a LUN snapshot name to its snapshot ID and removes the
-        snapshot through the OceanStor snapshot REST resource.
-
-    .PARAMETER WebSession
-        Optional session for the REST call. If omitted, the deviceManager
-        global variable is used.
-
-    .PARAMETER SnapShotName
-        Name of the LUN snapshot to remove. Valid values are checked against
-        Get-DMLunSnapshots and support tab completion.
-
-    .OUTPUTS
-        REST error status returned by the storage system.
-
-    .EXAMPLE
-        PS C:\> Remove-DMLunSnapShot -SnapShotName 'db-before-patch'
-
-    .EXAMPLE
-        PS C:\> Remove-DMLunSnapShot -WebSession $session -SnapShotName 'db-before-patch' -Confirm:$false
-    #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

@@ -1,8 +1,43 @@
+<#
+.SYNOPSIS
+    Removes an OceanStor port from a port group.
+
+.DESCRIPTION
+    Removes an existing front-end port or logical port association from an existing port group.
+    The cmdlet resolves candidate ports by PortType, validates the selected port and group, checks current membership, then calls the OceanStor API.
+    It supports -WhatIf and -Confirm.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER PortGroupName
+    Name of the port group from which the port will be removed.
+
+.PARAMETER PortType
+    Type of port to remove from the port group. Valid values are FibreChannel, Ethernet, and LogicalPort.
+
+.PARAMETER PortName
+    Name of the port to remove from the port group. Valid values are resolved from the selected PortType.
+
+.PARAMETER VstoreId
+    Optional vStore ID used to scope the association operation.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    System.Management.Automation.PSCustomObject
+    Returns the OceanStor API error object.
+
+.EXAMPLE
+    PS> Remove-DMPortFromPortGroup -PortGroupName 'fc-front-end' -PortType FibreChannel -PortName 'CTE0.A.IOM0.P0' -WhatIf
+
+    Shows what would happen if the Fibre Channel port were removed from the fc-front-end port group.
+
+.NOTES
+    Filename: Remove-DMPortFromPortGroup.ps1
+#>
 function Remove-DMPortFromPortGroup {
-    <#
-    .SYNOPSIS
-        Removes a Huawei OceanStor port from a port group.
-    #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

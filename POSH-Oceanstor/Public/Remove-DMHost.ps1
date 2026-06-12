@@ -1,8 +1,36 @@
+<#
+.SYNOPSIS
+    Removes an OceanStor host.
+
+.DESCRIPTION
+    Deletes an existing host by name, optionally scoped to a vStore.
+    The host name is validated against existing OceanStor hosts before the delete request is sent. The cmdlet supports -WhatIf and -Confirm.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER HostName
+    Name of the host to remove. The name is validated against existing OceanStor hosts.
+
+.PARAMETER VstoreId
+    Optional vStore ID used to scope the host removal operation.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    System.Management.Automation.PSCustomObject
+    Returns the OceanStor API error object.
+
+.EXAMPLE
+    PS> Remove-DMHost -HostName 'host01' -WhatIf
+
+    Shows what would happen if host01 were removed.
+
+.NOTES
+    Filename: Remove-DMHost.ps1
+#>
 function Remove-DMHost {
-    <#
-    .SYNOPSIS
-        Removes a Huawei OceanStor host.
-    #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

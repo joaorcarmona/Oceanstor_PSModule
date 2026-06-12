@@ -1,3 +1,38 @@
+<#
+.SYNOPSIS
+    Retrieves iSCSI initiators from the OceanStor device manager.
+
+.DESCRIPTION
+    Returns iSCSI initiators for all hosts, for a specific host, or for free initiators that are not yet attached to a host.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER HostName
+    Name of the host whose iSCSI initiators should be returned.
+
+.PARAMETER FreeInitiators
+    Returns only free iSCSI initiators that are not assigned to a host.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    OceanstorHostinitiatorISCSI
+
+.EXAMPLE
+    PS> Get-DMIscsiInitiator -HostName 'host01'
+
+    Returns the iSCSI initiators associated with host01.
+
+.EXAMPLE
+    PS> Get-DMIscsiInitiator -FreeInitiators
+
+    Returns iSCSI initiators that are not associated with a host.
+
+.NOTES
+    Filename: Get-DMIscsiInitiator.ps1
+#>
 function Get-DMIscsiInitiator {
     [CmdletBinding(DefaultParameterSetName = 'All')]
     param(

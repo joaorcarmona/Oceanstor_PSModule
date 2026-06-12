@@ -16,9 +16,14 @@ function Get-DMHostLinks {
 		Host Initiator Type (ISCSI, FC, Infiniband)
 
 	.INPUTS
+		System.Management.Automation.PSCustomObject
+
+		You can pipe an OceanStor session object to WebSession and provide HostId or InitiatorType by property name.
 
 	.OUTPUTS
-		returns the Huawei Oceanstor Storage Host links
+		OceanStorHostLink
+
+		Returns host link objects for the requested host and initiator type.
 
 	.EXAMPLE
 

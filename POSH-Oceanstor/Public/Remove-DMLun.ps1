@@ -1,8 +1,44 @@
+<#
+.SYNOPSIS
+    Removes an OceanStor LUN.
+
+.DESCRIPTION
+    Deletes an existing LUN by name, optionally scoped to a vStore.
+    By default the storage system delete behavior is used; specify ImmediateDelete to request non-delayed deletion. The cmdlet supports -WhatIf and -Confirm.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER LunName
+    Name of the LUN to remove. The name is validated against existing OceanStor LUNs.
+
+.PARAMETER ImmediateDelete
+    Requests immediate deletion by sending isDelayDelete=false to the OceanStor API.
+
+.PARAMETER VstoreId
+    Optional vStore ID used to scope the LUN removal operation.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    System.Management.Automation.PSCustomObject
+    Returns the OceanStor API error object.
+
+.EXAMPLE
+    PS> Remove-DMLun -LunName 'lun01' -WhatIf
+
+    Shows what would happen if lun01 were removed.
+
+.EXAMPLE
+    PS> Remove-DMLun -LunName 'lun01' -ImmediateDelete -Confirm
+
+    Prompts for confirmation and requests immediate deletion of lun01.
+
+.NOTES
+    Filename: Remove-DMLun.ps1
+#>
 function Remove-DMLun {
-    <#
-    .SYNOPSIS
-        Removes a Huawei OceanStor LUN.
-    #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

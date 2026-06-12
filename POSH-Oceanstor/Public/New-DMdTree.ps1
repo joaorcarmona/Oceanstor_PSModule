@@ -34,9 +34,17 @@ function New-DMdTree {
         Locking Policy of the dTree (Mandatory, Advisory)  (default Mandatory)
 
 	.INPUTS
+		System.Management.Automation.PSCustomObject
+		System.String
+		System.Boolean
+
+		You can pipe an OceanStor session object to WebSession and provide DTree creation values by property name.
 
 	.OUTPUTS
-		returns the Huawei Oceanstor Storage FileSystem created
+		OceanStorDtree
+		System.Management.Automation.PSCustomObject
+
+		Returns the created DTree object on success, or the OceanStor API error object on failure.
 
 	.EXAMPLE
 

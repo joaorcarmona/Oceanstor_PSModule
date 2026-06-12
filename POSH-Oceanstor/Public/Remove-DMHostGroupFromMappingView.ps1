@@ -1,8 +1,39 @@
+<#
+.SYNOPSIS
+    Removes an OceanStor host group from a mapping view.
+
+.DESCRIPTION
+    Removes an existing host group association from an existing mapping view by resolving both objects by name.
+    The cmdlet validates the mapping view, host group, and current association before calling the OceanStor API. It supports -WhatIf and -Confirm.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER MappingViewName
+    Name of the mapping view from which the host group will be removed.
+
+.PARAMETER HostGroupName
+    Name of the host group to remove from the mapping view.
+
+.PARAMETER VstoreId
+    Optional vStore ID used to scope the association operation.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    System.Management.Automation.PSCustomObject
+    Returns the OceanStor API error object.
+
+.EXAMPLE
+    PS> Remove-DMHostGroupFromMappingView -MappingViewName 'mv-prod' -HostGroupName 'production-hosts' -WhatIf
+
+    Shows what would happen if the production-hosts host group were removed from mv-prod.
+
+.NOTES
+    Filename: Remove-DMHostGroupFromMappingView.ps1
+#>
 function Remove-DMHostGroupFromMappingView {
-    <#
-    .SYNOPSIS
-        Removes a host group association from a Huawei OceanStor mapping view.
-    #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

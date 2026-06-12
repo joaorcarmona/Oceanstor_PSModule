@@ -13,9 +13,15 @@ function Get-DMShares {
 		Mamdatory paramter to define the Share Type to Query ("NFS","CIFS")
 
 	.INPUTS
+		System.Management.Automation.PSCustomObject
+
+		You can pipe an OceanStor session object to WebSession and provide shareType by property name.
 
 	.OUTPUTS
-		returns the Huawei Oceanstor Storage Shares
+		OceanStorCIFSShare
+		OceanStorNFSShare
+
+		Returns CIFS or NFS share objects, depending on shareType.
 
 	.EXAMPLE
 

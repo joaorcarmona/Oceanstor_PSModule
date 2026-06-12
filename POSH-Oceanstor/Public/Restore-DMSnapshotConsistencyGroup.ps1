@@ -1,8 +1,36 @@
+<#
+.SYNOPSIS
+    Rolls back an OceanStor snapshot consistency group.
+
+.DESCRIPTION
+    Rolls back the LUNs in a snapshot consistency group by resolving the group name to the group ID before calling the OceanStor API.
+    This operation overwrites newer data for the protected LUNs. Use -WhatIf first when testing automation.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER Name
+    Name of the snapshot consistency group to roll back.
+
+.PARAMETER RestoreSpeed
+    Rate for the rollback operation. Valid values are Low, Medium, High, and Highest. The default is Medium.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    System.Management.Automation.PSCustomObject
+    Returns the OceanStor API error object.
+
+.EXAMPLE
+    PS> Restore-DMSnapshotConsistencyGroup -Name 'scg-production' -RestoreSpeed High -WhatIf
+
+    Shows what would happen if scg-production were rolled back at high speed.
+
+.NOTES
+    Filename: Restore-DMSnapshotConsistencyGroup.ps1
+#>
 function Restore-DMSnapshotConsistencyGroup {
-    <#
-    .SYNOPSIS
-        Rolls back a Huawei OceanStor snapshot consistency group.
-    #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

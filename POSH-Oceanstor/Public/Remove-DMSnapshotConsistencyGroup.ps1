@@ -1,8 +1,41 @@
+<#
+.SYNOPSIS
+    Removes an OceanStor snapshot consistency group.
+
+.DESCRIPTION
+    Deletes an existing snapshot consistency group by resolving its name to the group ID before calling the OceanStor API.
+    The cmdlet supports -WhatIf and -Confirm.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER Name
+    Name of the snapshot consistency group to remove.
+
+.PARAMETER DeleteDestinationLuns
+    Sends isDeleteDstLun=1 with the delete request to request deletion of destination LUNs associated with the consistency group.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    System.Management.Automation.PSCustomObject
+    Returns the OceanStor API error object.
+
+.EXAMPLE
+    PS> Remove-DMSnapshotConsistencyGroup -Name 'scg-production' -WhatIf
+
+    Shows what would happen if scg-production were removed.
+
+.EXAMPLE
+    PS> Remove-DMSnapshotConsistencyGroup -Name 'scg-production' -DeleteDestinationLuns -Confirm
+
+    Prompts for confirmation and requests deletion of associated destination LUNs.
+
+.NOTES
+    Filename: Remove-DMSnapshotConsistencyGroup.ps1
+#>
 function Remove-DMSnapshotConsistencyGroup {
-    <#
-    .SYNOPSIS
-        Removes a Huawei OceanStor snapshot consistency group.
-    #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

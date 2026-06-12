@@ -1,3 +1,42 @@
+<#
+.SYNOPSIS
+    Retrieves NVMe over RoCE initiators from the OceanStor device manager.
+
+.DESCRIPTION
+    Returns NVMe over RoCE initiators for all hosts, for a specific host, or filtered to free initiators.
+    The query can be scoped to a vStore when required by the target system.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER HostName
+    Name of the host whose NVMe over RoCE initiators should be returned.
+
+.PARAMETER FreeInitiators
+    Returns only free NVMe over RoCE initiators that are not assigned to a host.
+
+.PARAMETER VstoreId
+    Optional vStore ID used to scope the initiator query.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    OceanstorHostinitiatorNVMe
+
+.EXAMPLE
+    PS> Get-DMNvmeInitiator -HostName 'host01'
+
+    Returns the NVMe over RoCE initiators associated with host01.
+
+.EXAMPLE
+    PS> Get-DMNvmeInitiator -FreeInitiators
+
+    Returns NVMe over RoCE initiators that are not associated with a host.
+
+.NOTES
+    Filename: Get-DMNvmeInitiator.ps1
+#>
 function Get-DMNvmeInitiator {
     [CmdletBinding(DefaultParameterSetName = 'All')]
     param(

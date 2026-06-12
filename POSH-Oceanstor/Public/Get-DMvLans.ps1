@@ -1,18 +1,23 @@
 function Get-DMvLans {
     <#
 	.SYNOPSIS
-		To Get Huawei Oceanstor Storage existent vlans
+		To Get Huawei OceanStor Storage VLANs
 
 	.DESCRIPTION
-		Function to request Huawei Oceanstor Storage existent vlans
+		Function to request configured Huawei OceanStor VLANs.
 
 	.PARAMETER webSession
 		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
 
 	.INPUTS
+		System.Management.Automation.PSCustomObject
+
+		You can pipe an OceanStor session object to WebSession.
 
 	.OUTPUTS
-		returns the Huawei Oceanstor existent configured vlans
+		OceanStorvLan
+
+		Returns VLAN objects.
 
 	.EXAMPLE
 

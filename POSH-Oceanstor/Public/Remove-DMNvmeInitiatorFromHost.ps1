@@ -1,3 +1,38 @@
+<#
+.SYNOPSIS
+    Removes an NVMe over RoCE initiator association from an OceanStor host.
+
+.DESCRIPTION
+    Detaches an NVMe over RoCE initiator NQN from the specified host without deleting the initiator from the storage system.
+    The cmdlet validates the host name and initiator membership before calling the OceanStor API. It supports -WhatIf and -Confirm.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER HostName
+    Name of the host from which the NVMe over RoCE initiator should be removed.
+
+.PARAMETER Nqn
+    NVMe over RoCE initiator NQN to remove from the host.
+
+.PARAMETER VstoreId
+    Optional vStore ID used to scope the initiator operation.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    System.Management.Automation.PSCustomObject
+    Returns the OceanStor API error object.
+
+.EXAMPLE
+    PS> Remove-DMNvmeInitiatorFromHost -HostName 'host01' -Nqn 'nqn.2026-06.test:host01' -WhatIf
+
+    Shows what would happen if the NVMe over RoCE initiator were detached from host01.
+
+.NOTES
+    Filename: Remove-DMNvmeInitiatorFromHost.ps1
+#>
 function Remove-DMNvmeInitiatorFromHost {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(

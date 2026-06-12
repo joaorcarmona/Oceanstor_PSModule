@@ -1,8 +1,56 @@
+<#
+.SYNOPSIS
+    Associates an OceanStor LUN with a LUN group.
+
+.DESCRIPTION
+    Adds an existing LUN to an existing LUN group. The LUN can be supplied by name or by piping a LUN object with a Name property.
+    Optional host LUN ID settings can be supplied for the association. The cmdlet supports -WhatIf and -Confirm.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER Lun
+    LUN object to add to the LUN group. The object must expose a Name property and can be supplied from the pipeline.
+
+.PARAMETER LunName
+    Name of the LUN to add to the LUN group. This is required when a LUN object is not supplied through the pipeline.
+
+.PARAMETER LunGroupName
+    Name of the LUN group that will receive the LUN. The name is validated against existing OceanStor LUN groups.
+
+.PARAMETER HostLunId
+    Specific host LUN ID to assign to the LUN association. Cannot be used with StartHostLunId.
+
+.PARAMETER StartHostLunId
+    Starting host LUN ID to use when assigning host LUN IDs. Cannot be used with HostLunId.
+
+.PARAMETER Force
+    Adds the force flag to the OceanStor association request.
+
+.PARAMETER VstoreId
+    Optional vStore ID used to scope the association operation.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    System.Management.Automation.PSCustomObject
+    Returns the OceanStor API error object.
+
+.EXAMPLE
+    PS> Add-DMLunToLunGroup -LunName 'lun01' -LunGroupName 'production-luns' -WhatIf
+
+    Shows what would happen if lun01 were added to the production-luns LUN group.
+
+.EXAMPLE
+    PS> Get-DMluns | Where-Object Name -EQ 'lun02' | Add-DMLunToLunGroup -LunGroupName 'production-luns' -HostLunId 12
+
+    Adds lun02 to the production-luns LUN group and requests host LUN ID 12.
+
+.NOTES
+    Filename: Add-DMLunToLunGroup.ps1
+#>
 function Add-DMLunToLunGroup {
-    <#
-    .SYNOPSIS
-        Associates a Huawei OceanStor LUN with a LUN group.
-    #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param(
         [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $true, Position = 0)]

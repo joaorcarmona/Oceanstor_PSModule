@@ -1,12 +1,47 @@
-function New-DMFileSystemSnapshot {
-    <#
-    .SYNOPSIS
-        Creates a Huawei OceanStor file-system snapshot.
+<#
+.SYNOPSIS
+    Creates an OceanStor file-system snapshot.
 
-    .PARAMETER FileSystemName
-        Name of the source file system. Valid values support tab completion
-        and are resolved to the PARENTID sent to the REST interface.
-    #>
+.DESCRIPTION
+    Creates a snapshot for an existing OceanStor file system.
+    When SnapshotName is omitted, the cmdlet generates a name from the file-system name and current timestamp.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER SnapshotName
+    Optional snapshot name. The value must be 1 to 255 characters and may contain letters, numbers, underscores, or hyphens.
+
+.PARAMETER FileSystemName
+    Name of the source file system. The name is validated against existing OceanStor file systems and resolved to the parent ID sent to the REST interface.
+
+.PARAMETER Description
+    Optional description for the snapshot. The value can be up to 1023 characters.
+
+.PARAMETER SnapTag
+    Optional snapshot tag. The value must start with a letter or number and may contain letters, numbers, underscores, periods, or hyphens.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    OceanstorFileSystemSnapshot
+    Returns the created file-system snapshot object on success, or the API error object on failure.
+
+.EXAMPLE
+    PS> New-DMFileSystemSnapshot -FileSystemName 'fs01' -SnapshotName 'snap_fs01_before_patch'
+
+    Creates a named snapshot for fs01.
+
+.EXAMPLE
+    PS> New-DMFileSystemSnapshot -FileSystemName 'fs01' -Description 'Pre-maintenance snapshot' -SnapTag 'maintenance'
+
+    Creates a timestamp-named snapshot for fs01 with a description and tag.
+
+.NOTES
+    Filename: New-DMFileSystemSnapshot.ps1
+#>
+function New-DMFileSystemSnapshot {
     [CmdletBinding()]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

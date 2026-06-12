@@ -10,12 +10,17 @@ function Get-DMdisksbyPoolId {
 		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
 
 	.PARAMETER poolId
-		Mandatory parameter Storage Poll Id (int), to search for the disks configured
+		Mandatory storage pool ID used to search for configured disks.
 
 	.INPUTS
+		System.Management.Automation.PSCustomObject
+
+		You can pipe an OceanStor session object to WebSession and provide poolId by property name.
 
 	.OUTPUTS
-		returns the Huawei Oceanstor Storage disks configured in a given Storage Pool
+		OceanStorDisks
+
+		Returns disk objects whose poolId matches the supplied poolId value.
 
 	.EXAMPLE
 

@@ -1,8 +1,39 @@
+<#
+.SYNOPSIS
+    Removes an OceanStor dTree.
+
+.DESCRIPTION
+    Deletes an existing dTree from a file system by resolving the file system and dTree names before calling the OceanStor API.
+    The cmdlet validates both names and supports -WhatIf and -Confirm.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER FileSystemName
+    Name of the file system that contains the dTree. The name is validated against existing OceanStor file systems.
+
+.PARAMETER DTreeName
+    Name of the dTree to remove. Valid values are resolved from the selected file system.
+
+.PARAMETER VstoreId
+    Optional vStore ID used to scope the dTree removal operation.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    System.Management.Automation.PSCustomObject
+    Returns the OceanStor API error object.
+
+.EXAMPLE
+    PS> Remove-DMDTree -FileSystemName 'fs01' -DTreeName 'project-a' -WhatIf
+
+    Shows what would happen if the project-a dTree were removed from fs01.
+
+.NOTES
+    Filename: Remove-DMDTree.ps1
+#>
 function Remove-DMDTree {
-    <#
-    .SYNOPSIS
-        Removes a Huawei OceanStor dTree.
-    #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

@@ -1,26 +1,36 @@
+<#
+.SYNOPSIS
+    Expands an OceanStor LUN snapshot.
+
+.DESCRIPTION
+    Resolves a snapshot name to its ID and sets its user capacity through the OceanStor snapshot REST resource.
+    UserCapacity must be greater than the current snapshot capacity. The cmdlet supports -WhatIf and -Confirm.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER SnapShotName
+    Name of the snapshot to expand. Valid values are checked against Get-DMLunSnapshots and support tab completion.
+
+.PARAMETER UserCapacity
+    New snapshot user capacity in sectors, as required by the REST API.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    System.Management.Automation.PSCustomObject
+    Returns the OceanStor API error object.
+
+.EXAMPLE
+    PS> Resize-DMLunSnapshot -SnapShotName 'snap_lun01_before_patch' -UserCapacity 2147483648 -WhatIf
+
+    Shows what would happen if the LUN snapshot capacity were expanded.
+
+.NOTES
+    Filename: Resize-DMLunSnapshot.ps1
+#>
 function Resize-DMLunSnapshot {
-    <#
-    .SYNOPSIS
-        Expands a Huawei OceanStor LUN snapshot.
-
-    .DESCRIPTION
-        Resolves a snapshot name to its ID and sets its user capacity through
-        the OceanStor snapshot REST resource.
-
-    .PARAMETER WebSession
-        Optional session for the REST call. If omitted, the deviceManager
-        global variable is used.
-
-    .PARAMETER SnapShotName
-        Name of the snapshot to expand. Valid values are checked against
-        Get-DMLunSnapshots and support tab completion.
-
-    .PARAMETER UserCapacity
-        New snapshot user capacity in sectors, as required by the REST API.
-
-    .OUTPUTS
-        REST error status returned by the storage system.
-    #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

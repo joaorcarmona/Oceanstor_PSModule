@@ -58,9 +58,19 @@ function New-DMLun {
         Optional parameter. Mirror policy. Valid values: "Linear", "Mirror". Default is "Linear"
 
 	.INPUTS
+		System.Management.Automation.PSCustomObject
+		System.String
+		System.Int64
+		System.Boolean
+
+		You can pipe an OceanStor session object to WebSession and provide LUN creation values by property name.
 
 	.OUTPUTS
-		Returns the Huawei Oceanstor Storage LUN created
+		OceanstorLunv3
+		OceanstorLunv6
+		System.Management.Automation.PSCustomObject
+
+		Returns the created LUN object on success, or the OceanStor API error object on failure. The LUN class depends on the connected OceanStor version.
 
 	.EXAMPLE
 

@@ -1,8 +1,33 @@
+<#
+.SYNOPSIS
+    Reactivates an OceanStor snapshot consistency group.
+
+.DESCRIPTION
+    Reactivates an existing snapshot consistency group by resolving its name to the group ID before calling the OceanStor API.
+    Reactivation refreshes the consistency point. The group vStore ID is passed through when available. The cmdlet supports -WhatIf and -Confirm.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER Name
+    Name of the snapshot consistency group to reactivate.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    System.Management.Automation.PSCustomObject
+    Returns the OceanStor API error object.
+
+.EXAMPLE
+    PS> Restart-DMSnapshotConsistencyGroup -Name 'scg-production' -WhatIf
+
+    Shows what would happen if scg-production were reactivated.
+
+.NOTES
+    Filename: Restart-DMSnapshotConsistencyGroup.ps1
+#>
 function Restart-DMSnapshotConsistencyGroup {
-    <#
-    .SYNOPSIS
-        Reactivates a Huawei OceanStor snapshot consistency group.
-    #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

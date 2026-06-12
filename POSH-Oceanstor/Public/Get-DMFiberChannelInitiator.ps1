@@ -1,3 +1,38 @@
+<#
+.SYNOPSIS
+    Retrieves Fibre Channel initiators from the OceanStor device manager.
+
+.DESCRIPTION
+    Returns Fibre Channel initiators for all hosts, for a specific host, or for free initiators that are not yet attached to a host.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER HostName
+    Name of the host whose Fibre Channel initiators should be returned.
+
+.PARAMETER FreeInitiators
+    Returns only free Fibre Channel initiators that are not assigned to a host.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    OceanstorHostinitiatorFC
+
+.EXAMPLE
+    PS> Get-DMFiberChannelInitiator -HostName 'host01'
+
+    Returns the Fibre Channel initiators associated with host01.
+
+.EXAMPLE
+    PS> Get-DMFiberChannelInitiator -FreeInitiators
+
+    Returns Fibre Channel initiators that are not associated with a host.
+
+.NOTES
+    Filename: Get-DMFiberChannelInitiator.ps1
+#>
 function Get-DMFiberChannelInitiator {
     [CmdletBinding(DefaultParameterSetName = 'All')]
     param(

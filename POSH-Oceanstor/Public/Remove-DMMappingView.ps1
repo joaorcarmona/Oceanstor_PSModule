@@ -2,6 +2,30 @@ function Remove-DMMappingView {
     <#
     .SYNOPSIS
         Removes a Huawei OceanStor mapping view.
+
+    .DESCRIPTION
+        Deletes an existing mapping view by name, optionally scoped to a vStore.
+
+    .PARAMETER WebSession
+        Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+    .PARAMETER MappingViewName
+        Name of the mapping view to remove.
+
+    .PARAMETER VstoreId
+        Optional vStore identifier to scope the deletion request.
+
+    .INPUTS
+        System.Management.Automation.PSCustomObject
+
+    .OUTPUTS
+        Returns the API error object from the delete operation.
+
+    .EXAMPLE
+        PS> Remove-DMMappingView -MappingViewName 'mv-prod' -WhatIf
+
+    .NOTES
+        Filename: Remove-DMMappingView.ps1
     #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(

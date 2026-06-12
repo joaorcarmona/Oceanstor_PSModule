@@ -1,23 +1,33 @@
+<#
+.SYNOPSIS
+    Reactivates an OceanStor LUN snapshot.
+
+.DESCRIPTION
+    Resolves a snapshot name to its ID and replaces its existing point-in-time data with current source LUN data.
+    This changes the snapshot contents. The cmdlet validates the snapshot name and supports -WhatIf and -Confirm.
+
+.PARAMETER WebSession
+    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+
+.PARAMETER SnapShotName
+    Name of the snapshot to reactivate. Valid values are checked against Get-DMLunSnapshots and support tab completion.
+
+.INPUTS
+    System.Management.Automation.PSCustomObject
+
+.OUTPUTS
+    System.Management.Automation.PSCustomObject
+    Returns the OceanStor API error object.
+
+.EXAMPLE
+    PS> Restart-DMLunSnapshot -SnapShotName 'snap_lun01_before_patch' -WhatIf
+
+    Shows what would happen if the LUN snapshot were reactivated.
+
+.NOTES
+    Filename: Restart-DMLunSnapshot.ps1
+#>
 function Restart-DMLunSnapshot {
-    <#
-    .SYNOPSIS
-        Reactivates a Huawei OceanStor LUN snapshot.
-
-    .DESCRIPTION
-        Resolves a snapshot name to its ID and replaces its existing point-in-time
-        data with current source LUN data.
-
-    .PARAMETER WebSession
-        Optional session for the REST call. If omitted, the deviceManager
-        global variable is used.
-
-    .PARAMETER SnapShotName
-        Name of the snapshot to reactivate. Valid values are checked against
-        Get-DMLunSnapshots and support tab completion.
-
-    .OUTPUTS
-        REST error status returned by the storage system.
-    #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
