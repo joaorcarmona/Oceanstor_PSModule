@@ -1,5 +1,6 @@
 class OceanstorHostinitiatorISCSI {
     hidden [pscustomobject]${Session}
+	hidden [pscustomobject]${WebSession}
     #Define properties
     [string]${Id}
     [string]${Host Id}
@@ -22,9 +23,10 @@ class OceanstorHostinitiatorISCSI {
     [int64]${vStore ID}
 	[string]${vStore Name}
 
-    OceanstorHostinitiatorISCSI ([array]$initiator, [pscustomobject]$Session)
+    OceanstorHostinitiatorISCSI ([array]$initiator, [pscustomobject]$WebSession)
     {
-        $this.Session = $Session
+        $this.Session = $WebSession
+		$this.WebSession = $WebSession
         $this.{Id} = $initiator.ID
         $this.{Host Id} = $initiator.PARENTID
         $this.{Host Name} = $initiator.PARENTNAME
@@ -134,3 +136,5 @@ class OceanstorHostinitiatorISCSI {
     }
 
 }
+
+

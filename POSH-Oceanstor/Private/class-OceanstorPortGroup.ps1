@@ -1,5 +1,6 @@
 class OceanstorPortGroup {
     hidden [pscustomobject]${Session}
+	hidden [pscustomobject]${WebSession}
     [string]${Id}
     [string]${Name}
     [string]${Description}
@@ -9,8 +10,9 @@ class OceanstorPortGroup {
     [string]${vStore Id}
     [string]${vStore Name}
 
-    OceanstorPortGroup([pscustomobject]$PortGroupReceived, [pscustomobject]$Session) {
-        $this.Session = $Session
+    OceanstorPortGroup([pscustomobject]$PortGroupReceived, [pscustomobject]$WebSession) {
+        $this.Session = $WebSession
+		$this.WebSession = $WebSession
         $this.Id = $PortGroupReceived.ID
         $this.Name = $PortGroupReceived.NAME
         $this.Description = $PortGroupReceived.DESCRIPTION
@@ -27,3 +29,5 @@ class OceanstorPortGroup {
         }
     }
 }
+
+

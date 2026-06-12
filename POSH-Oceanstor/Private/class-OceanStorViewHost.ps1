@@ -2,6 +2,7 @@ class OceanStorViewHost
 {
     #TODO
     hidden [pscustomobject]${Session}
+	hidden [pscustomobject]${WebSession}
     [PSCustomObject]$Properties
     [PSCustomObject]$Paths
     [PSCustomObject]$Luns
@@ -10,11 +11,13 @@ class OceanStorViewHost
     [PSCustomObject]${FC Initiators}
     [PSCustomObject]${ISCSI Initiators}
 
-    OceanStorViewHost ([array]$thost,[psCustomObject]$webSession)
+    OceanStorViewHost ([array]$thost,[psCustomObject]$WebSession)
     {
-        $this.Session = $webSession
+        $this.Session = $WebSession
+		$this.WebSession = $WebSession
         $this.Properties = $thost
         $this.Paths = Get-DMHostLinks -WebSession $webSession
 
     }
 }
+

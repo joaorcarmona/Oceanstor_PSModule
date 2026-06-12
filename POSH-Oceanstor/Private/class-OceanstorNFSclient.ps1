@@ -1,6 +1,7 @@
 class OceanstorNFSclient
 {
     hidden [pscustomobject]${Session}
+	hidden [pscustomobject]${WebSession}
     [string]${Name}
     [string]${Id}
     [string]${Parent Id}
@@ -21,9 +22,10 @@ class OceanstorNFSclient
     [string]${Nfs Share krb5p Mode}
     #[string]${vStore Name} unsupported
 
-    OceanstorNFSclient ([array]$NFSExport, [pscustomobject]$Session)
+    OceanstorNFSclient ([array]$NFSExport, [pscustomobject]$WebSession)
     {
-        $this.Session = $Session
+        $this.Session = $WebSession
+		$this.WebSession = $WebSession
         $this.{Name} = $NFSExport.NAME
         $this.{Id} = $NFSExport.ID
         $this.{Parent Id} = $NFSExport.PARENTID 
@@ -136,3 +138,5 @@ class OceanstorNFSclient
         #$this.{vStore Name} = $NFSExport.vstoreName - unsupported
     }
 }
+
+

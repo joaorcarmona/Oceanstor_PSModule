@@ -24,7 +24,7 @@ Currently only get functions are developed, but in the future more operations co
 
 ### Examples
 
-The Module is a powershell module to interact with Huawei Oceanstor Devices, via the REST API. All module was developed to allow a user to use all commands without having to pass arguments (unless for query filtering). The websession is optional parameters in all commands, if you are querying multiple storage at same time, if not, you just need to connect and start using the get commands.
+The module is a PowerShell module to interact with Huawei OceanStor devices through the REST API. All commands are designed to work without extra arguments unless you are filtering results. The WebSession parameter is optional on all commands. If you are querying multiple storage systems at the same time, pass the WebSession object returned by Connect-deviceManager.
 
 To start, it is necessary to connect to a storage system.
 ```powershell
@@ -48,17 +48,17 @@ Next the user can Query any command without requiring the input the username aga
 $luns = Get-DMLuns
 ```
 
-For multiple storage is advised to work with the parameter websession:
+For multiple storage systems, use the WebSession parameter:
 ```powershell
-# Connect to two storages and save each session in a different variable.
+# Connect to two storages and save each WebSession in a different variable.
 $storage1 = Connect-deviceManager -Hostname "10.0.0.1" -Return $true
 $storage2 = Connect-deviceManager -Hostname "10.0.0.2" -Return $true
 ```
-Next the user can Query any command without requiring the input the username again, but you will need to input the webSession parameter
+Next, query any command without re-entering credentials, but pass the WebSession parameter explicitly:
 ```powershell
-#Query all storage luns
-$storage1luns = Get-DMLuns -webSession $storage1
-$storage2luns = Get-DMLuns -webSession $storage2
+# Query all storage LUNs
+$storage1luns = Get-DMLuns -WebSession $storage1
+$storage2luns = Get-DMLuns -WebSession $storage2
 ```
 
 #### Export Storage Configuration to Excel
@@ -79,7 +79,7 @@ Export-DMStorageToExcel -OceanStor $storage -ReportFile "c:\temp\MyStorage.xlsx"
 $storage = Connect-deviceManager -Hostname "10.0.0.1" -Return $true
 
 #Search for a lun by Lun WWN
- $luns = Get-DMlunsByWWN -webSession $storage -wwn "6a08cf810075766e1efc050700000005"
+ $luns = Get-DMlunsByWWN -WebSession $storage -wwn "6a08cf810075766e1efc050700000005"
 ```
 
 ## Additional Resources

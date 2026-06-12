@@ -1,6 +1,7 @@
 class OceanStorHostLink
 {
     hidden [pscustomobject]${Session}
+	hidden [pscustomobject]${WebSession}
     [string]${Id}
     [string]${Initiator Id}
     [string]${Host Id}
@@ -18,9 +19,10 @@ class OceanStorHostLink
     [string]${Type}
     [string]${Ultrapath Version}
 
-    OceanStorHostLink([array]$linkReceived, [pscustomobject]$Session)
+    OceanStorHostLink([array]$linkReceived, [pscustomobject]$WebSession)
     {
-        $this.Session = $Session
+        $this.Session = $WebSession
+		$this.WebSession = $WebSession
         $this.{Controller ID} = $linkReceived.CTRL_ID
         switch($linkReceived.HEALTHSTATUS)
 		{
@@ -61,3 +63,5 @@ class OceanStorHostLink
         $this.{Ultrapath Version} = $linkReceived.ULTRAPATHVERSION
     }
 }
+
+

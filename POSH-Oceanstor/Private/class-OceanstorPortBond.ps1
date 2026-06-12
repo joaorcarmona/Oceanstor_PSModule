@@ -1,5 +1,6 @@
 class OceanStorPortBond{
     hidden [pscustomobject]${Session}
+	hidden [pscustomobject]${WebSession}
     [string]${Id}
     [string]${Name}
     [string]${Port Type}
@@ -10,8 +11,9 @@ class OceanStorPortBond{
     [string]${Port Usage}
     [string]${Device Name}
 
-    OceanStorPortBond ([array]$portReceived, [pscustomobject]$Session){
-        $this.Session = $Session
+    OceanStorPortBond ([array]$portReceived, [pscustomobject]$WebSession){
+        $this.Session = $WebSession
+		$this.WebSession = $WebSession
 
         switch ($portReceived.TYPE)
         {
@@ -52,3 +54,5 @@ class OceanStorPortBond{
     }
 
 }
+
+

@@ -1,5 +1,6 @@
 class OceanStorWorkload {
     hidden [pscustomobject]${Session}
+	hidden [pscustomobject]${WebSession}
     [string]${Id}
     [string]${Name}
     [string]${Workload Type}
@@ -9,8 +10,9 @@ class OceanStorWorkload {
     [string]${Application Type}
     [string]${DataDistribution Alg.}
 
-    OceanStorWorkload([array]$workloadReceived, [pscustomobject]$Session){
-        $this.Session = $Session
+    OceanStorWorkload([array]$workloadReceived, [pscustomobject]$WebSession){
+        $this.Session = $WebSession
+		$this.WebSession = $WebSession
 
         $this.{Id} = $workloadReceived.ID
         $this.{Name} = $workloadReceived.NAME
@@ -58,3 +60,5 @@ class OceanStorWorkload {
         }
     }
 }
+
+

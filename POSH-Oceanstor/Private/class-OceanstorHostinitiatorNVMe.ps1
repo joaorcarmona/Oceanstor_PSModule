@@ -1,5 +1,6 @@
 class OceanstorHostinitiatorNVMe {
     hidden [pscustomobject]${Session}
+	hidden [pscustomobject]${WebSession}
     [string]${Id}
     [string]${Name}
     [string]${Host Id}
@@ -12,8 +13,9 @@ class OceanstorHostinitiatorNVMe {
     [string]${vStore ID}
     [string]${vStore Name}
 
-    OceanstorHostinitiatorNVMe([array]$initiator, [pscustomobject]$Session) {
-        $this.Session = $Session
+    OceanstorHostinitiatorNVMe([array]$initiator, [pscustomobject]$WebSession) {
+        $this.Session = $WebSession
+		$this.WebSession = $WebSession
         $this.Id = $initiator.ID
         $this.Name = $initiator.NAME
         $this.{Host Id} = $initiator.PARENTID
@@ -32,3 +34,5 @@ class OceanstorHostinitiatorNVMe {
         }
     }
 }
+
+

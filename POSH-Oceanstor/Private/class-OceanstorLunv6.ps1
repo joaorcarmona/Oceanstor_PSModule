@@ -1,5 +1,6 @@
 class OceanstorLunv6{
-	hidden [pscustomobject]${Session}
+	hidden [pscustomobject]$Session
+	hidden [pscustomobject]$WebSession
 	hidden [string]${Object Type}
 	[string]${Id}
 	[string]${Name}
@@ -66,9 +67,10 @@ class OceanstorLunv6{
 	[string]${SmartCache Partition Id}
 	[string]${SmartCache Hit Rate}
 
-	OceanstorLunv6 ([array]$LunReceived,[pscustomobject]$ObjStorage)
+	OceanstorLunv6 ([array]$LunReceived,[pscustomobject]$WebSession)
 	{
-		$this.Session = $ObjStorage
+		$this.Session = $WebSession
+		$this.WebSession = $WebSession
 		switch ($lunReceived.TYPE)
 		{
 			11 {$this.{Object Type} = "LUN"}
@@ -364,3 +366,4 @@ class OceanstorLunv6{
 		return @(Get-DMLunSnapshots -WebSession $this.Session -LunName $this.Name)
 	}
 }
+

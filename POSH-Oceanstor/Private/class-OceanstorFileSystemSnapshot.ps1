@@ -1,5 +1,6 @@
 class OceanstorFileSystemSnapshot {
     hidden [pscustomobject]${Session}
+	hidden [pscustomobject]${WebSession}
     [string]${Id}
     [string]${Name}
     [string]${Description}
@@ -17,8 +18,9 @@ class OceanstorFileSystemSnapshot {
     [boolean]${Security Snapshot}
     [boolean]${Auto Delete}
 
-    OceanstorFileSystemSnapshot([pscustomobject]$SnapshotReceived, [pscustomobject]$Session) {
-        $this.Session = $Session
+    OceanstorFileSystemSnapshot([pscustomobject]$SnapshotReceived, [pscustomobject]$WebSession) {
+        $this.Session = $WebSession
+		$this.WebSession = $WebSession
         $this.Id = $SnapshotReceived.ID
         $this.Name = $SnapshotReceived.NAME
         $this.Description = $SnapshotReceived.description
@@ -67,3 +69,5 @@ class OceanstorFileSystemSnapshot {
         return (Restore-DMFileSystemSnapshot -WebSession $this.Session -FileSystemName $this.{Source File System Name} -SnapshotName $this.Name)
     }
 }
+
+

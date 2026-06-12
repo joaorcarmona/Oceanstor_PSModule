@@ -61,7 +61,7 @@ Tests/Integration/Invoke-GetterIntegrityValidation.ps1
 
 Every live run:
 
-1. Prompts for credentials and creates an OceanStor session.
+1. Prompts for credentials and creates an OceanStor WebSession.
 2. Runs read-only getter validation.
 3. Confirms returned object types when a type is expected.
 4. Writes a JSON report.

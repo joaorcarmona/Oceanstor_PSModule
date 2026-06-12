@@ -1,5 +1,6 @@
 class OceanStorvStore{
 	hidden [pscustomobject]${Session}
+	hidden [pscustomobject]${WebSession}
 	#Define Properties
 	[int]${ID}
 	[string]${Name}
@@ -12,9 +13,10 @@ class OceanStorvStore{
 	[int64]${NAS Free Capacity Quota}
 	[int64]${NAS Total Capacity}
 
-	OceanStorvStore ([array]$vStoresReceived, [pscustomobject]$Session)
+	OceanStorvStore ([array]$vStoresReceived, [pscustomobject]$WebSession)
 	{
-		$this.Session = $Session
+		$this.Session = $WebSession
+		$this.WebSession = $WebSession
 		$this.{ID} = $vStoresReceived.ID
 		$this.{Name} = $vStoresReceived.NAME
 
@@ -47,3 +49,5 @@ class OceanStorvStore{
 		$this.{NAS Total Capacity} = $vStoresReceived.nasTotalCapacity * 512 / 1GB
 	}
 }
+
+

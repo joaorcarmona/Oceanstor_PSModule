@@ -1,6 +1,7 @@
 class OceanStorController
 {
     hidden [pscustomobject]${Session}
+	hidden [pscustomobject]${WebSession}
     #Define Properties
     [string]${Id}
     [string]${Name}
@@ -36,9 +37,10 @@ class OceanStorController
     [string]${Type}
     [string]${Voltage}
 
-    OceanStorController ([array]$ctrlReceived, [pscustomobject]$Session)
+    OceanStorController ([array]$ctrlReceived, [pscustomobject]$WebSession)
     {
-        $this.Session = $Session
+        $this.Session = $WebSession
+		$this.WebSession = $WebSession
         $this.{BIOS Version} = $ctrlReceived.BIOSVER
         $this.{BMC Version} = $ctrlReceived.BMCVER
         $this.{CPU Info} = $ctrlReceived.CPUINFO
@@ -129,3 +131,5 @@ class OceanStorController
     }
 
 }
+
+

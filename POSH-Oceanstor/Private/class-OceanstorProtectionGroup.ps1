@@ -1,5 +1,6 @@
 class OceanstorProtectionGroup {
     hidden [pscustomobject]${Session}
+	hidden [pscustomobject]${WebSession}
     [string]${Id}
     [string]${Name}
     [string]${Description}
@@ -15,8 +16,9 @@ class OceanstorProtectionGroup {
     [string]${vStore Name}
     [string]${Usage Type}
 
-    OceanstorProtectionGroup([pscustomobject]$ProtectionGroupReceived, [pscustomobject]$Session) {
-        $this.Session = $Session
+    OceanstorProtectionGroup([pscustomobject]$ProtectionGroupReceived, [pscustomobject]$WebSession) {
+        $this.Session = $WebSession
+		$this.WebSession = $WebSession
         $this.Id = $ProtectionGroupReceived.protectGroupId
         $this.Name = $ProtectionGroupReceived.protectGroupName
         $this.Description = $ProtectionGroupReceived.description
@@ -50,3 +52,5 @@ class OceanstorProtectionGroup {
         return @(Get-DMlunGroups -WebSession $this.Session | Where-Object Id -EQ $this.{Lun Group Id})[0]
     }
 }
+
+

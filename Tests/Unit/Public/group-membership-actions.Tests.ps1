@@ -93,6 +93,16 @@ Describe 'LUN group membership commands' {
         }
     }
 
+    It 'accepts a LUN object from the pipeline by property name' {
+        $lun = [pscustomobject]@{ Id = 'lun-01'; Name = 'database' }
+
+        $result = $lun | Add-DMLunToLunGroup -WebSession $script:session -LunGroupName 'production' -Confirm:$false
+
+        $result.Code | Should -Be 0
+        $script:request.ASSOCIATEOBJID | Should -Be 'lun-01'
+        $script:request.ID | Should -Be 'lg-01'
+    }
+
     It 'associates a resolved LUN with host LUN ID options' {
         $result = Add-DMLunToLunGroup -WebSession $script:session -LunName 'database' -LunGroupName 'production' -HostLunId 5 -Force -VstoreId '7' -Confirm:$false
 
