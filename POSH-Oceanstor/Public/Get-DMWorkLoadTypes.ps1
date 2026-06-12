@@ -29,9 +29,6 @@ function Get-DMWorkLoadTypes {
 
 	.NOTES
 		Filename: Get-DMWorkLoadTypes.ps1
-		Author: Joao Carmona
-		Modified date: 2022-06-29
-		Version 0.1
 
 	.LINK
 	#>

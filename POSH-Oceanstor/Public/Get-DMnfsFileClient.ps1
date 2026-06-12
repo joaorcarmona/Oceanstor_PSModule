@@ -29,9 +29,6 @@ function Get-DMnfsFileClient {
 
 	.NOTES
 		Filename: Get-DMnfsFileClient.ps1
-		Author: Joao Carmona
-		Modified date: 2025-03-09
-		Version 0.1
 
 	.LINK
 	#>

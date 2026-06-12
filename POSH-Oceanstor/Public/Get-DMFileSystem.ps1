@@ -29,9 +29,6 @@ function Get-DMFileSystem {
 
 	.NOTES
 		Filename: Get-DMFileSystem.ps1
-		Author: Joao Carmona
-		Modified date: 2025-03-09
-		Version 0.2
 
 	.LINK
 	#>

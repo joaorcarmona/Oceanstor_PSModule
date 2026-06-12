@@ -29,9 +29,6 @@ function Get-DMEnclosures {
 
 .NOTES
     Filename: Get-DMEnclosures.ps1
-    Author: Joao Carmona
-    Modified date: 2022-06-02
-    Version 0.1
 
 .LINK
 #>

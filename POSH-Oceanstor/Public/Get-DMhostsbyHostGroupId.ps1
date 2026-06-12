@@ -32,9 +32,6 @@ function Get-DMhostsbyHostGroupId {
 
 .NOTES
     Filename: Get-DMhostsbyHostGroupId.ps1
-    Author: Joao Carmona
-    Modified date: 2022-05-27
-    Version 0.1
 
 .LINK
 #>

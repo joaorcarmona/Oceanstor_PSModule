@@ -29,9 +29,6 @@ function Get-DMInterfaceModules {
 
 .NOTES
     Filename: Get-DMInterfaceModules.ps1
-    Author: Joao Carmona
-    Modified date: 2022-06-02
-    Version 0.1
 
 .LINK
 #>

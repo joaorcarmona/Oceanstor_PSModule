@@ -35,9 +35,6 @@ function Get-DMLunsbyFilter {
 
 	.NOTES
 		Filename: Get-DMLunsbyFilter.ps1
-		Author: Joao Carmona
-		Modified date: 2022-06-28
-		Version 0.2
 
 	.LINK
 	#>

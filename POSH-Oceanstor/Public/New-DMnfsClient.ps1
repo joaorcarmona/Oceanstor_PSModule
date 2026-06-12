@@ -62,9 +62,6 @@ function New-DMnfsClient {
 
 	.NOTES
 		Filename: New-DMnfsClient.ps1
-		Author: Joao Carmona
-		Modified date: 2025-03-10
-		Version 0.1
 
 	.LINK
 	#>

@@ -32,9 +32,6 @@ function Get-DMdisksbyPoolName {
 
 	.NOTES
 		Filename: Get-DMdisksbyPoolName.ps1
-		Author: Joao Carmona
-		Modified date: 2022-05-22
-		Version 0.2
 
 	.LINK
 	#>

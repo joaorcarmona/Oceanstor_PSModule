@@ -29,9 +29,6 @@ function Get-DMPortBond {
 
 .NOTES
     Filename: Get-DMPortBond.ps1
-    Author: Joao Carmona
-    Modified date: 2022-06-23
-    Version 0.1
 
 .LINK
 #>
