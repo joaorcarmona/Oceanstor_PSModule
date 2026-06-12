@@ -2,6 +2,7 @@ class OceanStorvLan
 {
     #Define properties
     hidden [pscustomobject]${Session}
+	hidden [pscustomobject]${WebSession}
     [string]$Id
     [string]${Name}
     [string]${Type}
@@ -12,9 +13,10 @@ class OceanStorvLan
     [string]${Running Status}
     [string]${MTU}
 
-    OceanStorvLan ([array]$vlanReceived,[pscustomobject]$webSession)
+    OceanStorvLan ([array]$vlanReceived,[pscustomobject]$WebSession)
     {
-        $this.Session = $webSession
+        $this.Session = $WebSession
+		$this.WebSession = $WebSession
         switch ($vlanReceived.TYPE)
         {
             280 {$this.Type = "VLAN"}
@@ -50,3 +52,4 @@ class OceanStorvLan
 
 
 }
+

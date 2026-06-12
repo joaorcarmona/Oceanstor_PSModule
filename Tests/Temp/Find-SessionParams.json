@@ -1,0 +1,557 @@
+[
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Private\\Get-DMPortGroupCandidates.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Add-DMHostGroupToMappingView.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Add-DMHostToHostGroup.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Add-DMLunGroupToMappingView.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Add-DMLunToLunGroup.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Add-DMPortGroupToMappingView.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Add-DMPortToPortGroup.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Enable-DMLunSnapshot.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Enable-DMSnapshotConsistencyGroup.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMAlarms.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMbbus.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMcofferDisks.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMControllers.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMDiskbyLocation.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMdisks.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMdisksbyPoolId.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMdisksbyPoolName.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMdnsServer.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMEnclosures.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMFiberChannelInitiator.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMFileSystem.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMFileSystemSnapshots.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMfreeDisks.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMhostGroups.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMHostInitiators.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMHostLinks.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMhosts.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMhostsbyHostGroupId.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMhostsbyHostGroupName.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMhostsbyId.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMhostsbyName.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMInterfaceModules.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMIscsiInitiator.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMLifs.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMlunGroups.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMluns.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMLunsbyFilter.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMlunsbyLunGroup.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMlunsByWWN.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMLunSnapshots.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMMappingView.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMnfsFileClient.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMNvmeInitiator.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMPortBond.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMPortETH.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMPortFc.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMPortGroup.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMPortSAS.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMProtectionGroup.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMShares.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMSnapshotConsistencyGroup.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMstoragePools.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMSystem.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMvLans.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMvStore.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMWorkLoadTypes.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Get-DMWorkLoadTypesbyFilter.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\New-DMCifsShare.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\New-DMdTree.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\New-DMFiberChannelInitiator.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\New-DMFileSystem.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\New-DMFileSystemSnapshot.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\New-DMHost.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\New-DMHostGroup.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\New-DMIscsiInitiator.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\New-DMLun.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\New-DMLunGroup.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\New-DMLunSnapshot.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\New-DMLunSnapshotCopy.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\New-DMMappingView.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\New-DMnfsClient.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\New-DMnfsShare.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\New-DMNvmeInitiator.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\New-DMPortGroup.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\New-DMProtectionGroup.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\New-DMSnapshotConsistencyGroup.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\New-DMSnapshotConsistencyGroupCopy.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Remove-DMCifsShare.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Remove-DMDTree.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Remove-DMFiberChannelInitiator.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Remove-DMFiberChannelInitiatorFromHost.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Remove-DMFileSystem.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Remove-DMFileSystemSnapshot.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Remove-DMHost.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Remove-DMHostFromHostGroup.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Remove-DMHostGroup.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Remove-DMHostGroupFromMappingView.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Remove-DMIscsiInitiator.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Remove-DMIscsiInitiatorFromHost.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Remove-DMLun.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Remove-DMLunFromLunGroup.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Remove-DMLunGroup.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Remove-DMLunGroupFromMappingView.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Remove-DMLunSnapShot.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Remove-DMMappingView.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Remove-DMNfsClient.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Remove-DMNfsShare.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Remove-DMNvmeInitiator.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Remove-DMNvmeInitiatorFromHost.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Remove-DMPortFromPortGroup.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Remove-DMPortGroup.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Remove-DMPortGroupFromMappingView.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Remove-DMProtectionGroup.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Remove-DMSnapshotConsistencyGroup.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Resize-DMLunSnapshot.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Restart-DMLunSnapshot.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Restart-DMSnapshotConsistencyGroup.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Restore-DMFileSystemSnapshot.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Restore-DMLunSnapshot.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Restore-DMSnapshotConsistencyGroup.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  },
+  {
+    "File": "C:\\Users\\joaor\\OneDrive\\Documentos\\Scripts\\POSH-Oceanstor\\Public\\Set-DMdnsServer.ps1",
+    "HasSessionParam": false,
+    "HasWebSessionParam": true
+  }
+]

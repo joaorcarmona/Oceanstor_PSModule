@@ -1,5 +1,6 @@
 class OceanStorDisks{
 	hidden [pscustomobject]${Session}
+	hidden [pscustomobject]${WebSession}
 	[string]$id
 	[string]$location
 	[string]${Part Number}
@@ -43,9 +44,10 @@ class OceanStorDisks{
 	[string]$name
 	[string]${Vendor Name}
 
-	OceanStorDisks ([array]$disks, [pscustomobject]$Session)
+	OceanStorDisks ([array]$disks, [pscustomobject]$WebSession)
 	{
-		$this.Session = $Session
+		$this.Session = $WebSession
+		$this.WebSession = $WebSession
 		switch ($disks.TYPE)
 		{
 			10 {$this.Type = "disk"}
@@ -178,3 +180,5 @@ class OceanStorDisks{
         $this.{Vendor Name} = $labels.VendorName
 	}
 }
+
+

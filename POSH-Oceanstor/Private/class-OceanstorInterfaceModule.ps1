@@ -1,6 +1,7 @@
 class OceanstorInterfaceModule
 {
     hidden [pscustomobject]${Session}
+	hidden [pscustomobject]${WebSession}
     #Define Properties
     [string]${Id}
     [string]${Name}
@@ -24,9 +25,10 @@ class OceanstorInterfaceModule
     [string]${Running Status}
     [string]${Temperature}
 
-    OceanstorInterfaceModule ([array]$moduleReceived, [pscustomobject]$Session)
+    OceanstorInterfaceModule ([array]$moduleReceived, [pscustomobject]$WebSession)
     {
-        $this.Session = $Session
+        $this.Session = $WebSession
+		$this.WebSession = $WebSession
         $this.{Health Status} = $moduleReceived.HEALTHSTATUS
 
         switch($moduleReceived.HEALTHSTATUS)
@@ -188,3 +190,5 @@ class OceanstorInterfaceModule
         $this.{Vendor Name} = $labels.VendorName
     }
 }
+
+

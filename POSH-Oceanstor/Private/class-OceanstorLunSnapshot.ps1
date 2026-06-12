@@ -1,5 +1,6 @@
 class OceanstorLunSnapshot {
     hidden [pscustomobject]${Session}
+	hidden [pscustomobject]${WebSession}
     hidden [string]${Object Type}
     [string]${Id}
     [string]${Name}
@@ -15,8 +16,9 @@ class OceanstorLunSnapshot {
     [boolean]${Read Only}
     hidden [boolean]${Deleted}
 
-    OceanstorLunSnapshot([pscustomobject]$SnapshotReceived, [pscustomobject]$ObjStorage) {
-        $this.Session = $ObjStorage
+    OceanstorLunSnapshot([pscustomobject]$SnapshotReceived, [pscustomobject]$WebSession) {
+        $this.Session = $WebSession
+		$this.WebSession = $WebSession
         $this.{Object Type} = 'LUN Snapshot'
         $this.Id = $SnapshotReceived.ID
         $this.Name = $SnapshotReceived.NAME
@@ -50,6 +52,7 @@ class OceanstorLunSnapshot {
         if ($null -ne $response -and $response.Code -eq 0) {
             $this.Deleted = $true
             $this.Session = $null
+		$this.WebSession = $null
             $this.{Object Type} = 'Deleted LUN Snapshot'
             $this.Id = $null
             $this.Name = $null
@@ -104,3 +107,4 @@ class OceanstorLunSnapshot {
         return (New-DMLunSnapshotCopy -WebSession $this.Session -SourceSnapShotName $this.Name -SnapshotCopyName $SnapshotCopyName -Description $Description)
     }
 }
+

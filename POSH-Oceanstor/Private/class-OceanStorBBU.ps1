@@ -1,6 +1,7 @@
 class OceanStorBBU
 {
     hidden [pscustomobject]${Session}
+	hidden [pscustomobject]${WebSession}
     [string]${Id}
     [string]${Parent Id}
     [string]${Parent Type}
@@ -21,9 +22,10 @@ class OceanStorBBU
     [Int64]${voltage}
     hidden [string]$eLabel
 
-    OceanStorBBU ([array]$bbu, [pscustomobject]$Session)
+    OceanStorBBU ([array]$bbu, [pscustomobject]$WebSession)
     {
-        $this.Session = $Session
+        $this.Session = $WebSession
+		$this.WebSession = $WebSession
         $this.{Id} = $bbu.ID
         $this.{Parent Id} = $bbu.PARENTID
 
@@ -87,3 +89,5 @@ class OceanStorBBU
         $this.{voltage} = $bbu.VOLTAGE / 10
     }
 }
+
+

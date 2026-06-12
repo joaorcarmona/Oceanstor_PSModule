@@ -1,5 +1,6 @@
 class OceanStorSystem{
 	hidden [pscustomobject]${Session}
+	hidden [pscustomobject]${WebSession}
 	#Define Properties
 	[string]$sn
 	[string]$version
@@ -10,9 +11,10 @@ class OceanStorSystem{
 	[string]${Running Status}
 	[int]$HotSpareNumbers
 
-	OceanStorSystem ([array]$systemArray, [pscustomobject]$Session)
+	OceanStorSystem ([array]$systemArray, [pscustomobject]$WebSession)
 	{
-		$this.Session = $Session
+		$this.Session = $WebSession
+		$this.WebSession = $WebSession
 		$SystemProperties = @{}
 
 		foreach ($line in $systemArray)
@@ -49,3 +51,5 @@ class OceanStorSystem{
 		$this.HotSpareNumbers = $SystemProperties["HOTSPAREDISKSCAPACITY"]
 	}
 }
+
+

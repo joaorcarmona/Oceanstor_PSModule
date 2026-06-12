@@ -5,10 +5,13 @@ function Add-DMLunToLunGroup {
     #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory = $true, Position = 1)]
+        [Parameter(ValueFromPipeline = $true, Position = 1)]
+        [pscustomobject]$Lun,
+
+        [Parameter(Position = 2)]
         [ValidateScript({
                 $candidate = $_
                 $session = if ($WebSession) {
@@ -39,7 +42,7 @@ function Add-DMLunToLunGroup {
             })]
         [string]$LunName,
 
-        [Parameter(Mandatory = $true, Position = 2)]
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, Position = 3)]
         [ValidateScript({
                 $candidate = $_
                 $session = if ($WebSession) {
@@ -91,7 +94,18 @@ function Add-DMLunToLunGroup {
     else {
         $deviceManager
     }
-    $lun = @(Get-DMluns -WebSession $session | Where-Object Name -EQ $LunName)[0]
+
+    $resolvedLunName = if ($Lun -and $Lun.PSObject.Properties.Name -contains 'Name') {
+        $Lun.Name
+    }
+    elseif ($LunName) {
+        $LunName
+    }
+    else {
+        throw 'LunName is required. Pass a LUN name or pipe a LUN object with a Name property.'
+    }
+
+    $lun = @(Get-DMluns -WebSession $session | Where-Object Name -EQ $resolvedLunName)[0]
     $group = @(Get-DMlunGroups -WebSession $session | Where-Object Name -EQ $LunGroupName)[0]
     $body = @{
         ID               = $group.Id
@@ -111,7 +125,7 @@ function Add-DMLunToLunGroup {
         $body.vstoreId = $VstoreId
     }
 
-    if ($PSCmdlet.ShouldProcess("$LunName -> $LunGroupName", 'Associate LUN with LUN group')) {
+    if ($PSCmdlet.ShouldProcess("$resolvedLunName -> $LunGroupName", 'Associate LUN with LUN group')) {
         return (Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'lungroup/associate' -BodyData $body).error
     }
 }

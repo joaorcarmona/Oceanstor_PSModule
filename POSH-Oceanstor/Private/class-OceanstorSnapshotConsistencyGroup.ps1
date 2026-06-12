@@ -1,5 +1,6 @@
 class OceanstorSnapshotConsistencyGroup {
     hidden [pscustomobject]${Session}
+	hidden [pscustomobject]${WebSession}
     [string]${Id}
     [string]${Name}
     [string]${Description}
@@ -11,8 +12,9 @@ class OceanstorSnapshotConsistencyGroup {
     [string]${vStore ID}
     [string]${vStore Name}
 
-    OceanstorSnapshotConsistencyGroup([pscustomobject]$GroupReceived, [pscustomobject]$Session) {
-        $this.Session = $Session
+    OceanstorSnapshotConsistencyGroup([pscustomobject]$GroupReceived, [pscustomobject]$WebSession) {
+        $this.Session = $WebSession
+		$this.WebSession = $WebSession
         $this.Id = $GroupReceived.ID
         $this.Name = $GroupReceived.NAME
         $this.Description = $GroupReceived.DESCRIPTION
@@ -68,3 +70,5 @@ class OceanstorSnapshotConsistencyGroup {
         return (New-DMSnapshotConsistencyGroupCopy -WebSession $this.Session -SourceName $this.Name -Name $Name)
     }
 }
+
+

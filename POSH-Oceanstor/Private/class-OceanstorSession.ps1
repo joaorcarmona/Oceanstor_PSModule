@@ -9,8 +9,11 @@ class OceanstorSession{
 	#Define DeviceID Property
 	[string]$DeviceId
 
-	#Define WebSession Property
+	#Define WebSession Property (canonical)
 	hidden [Microsoft.PowerShell.Commands.WebRequestSession]$WebSession
+
+	#Compatibility alias for legacy callers that still use Session
+	hidden [Microsoft.PowerShell.Commands.WebRequestSession]$Session
 
 	#Define Headers Array Property
 	hidden [System.Collections.IDictionary]$Headers
@@ -22,10 +25,12 @@ class OceanstorSession{
 	[string]$Version
 
     # Constructor
-    OceanstorSession ([PSCustomObject] $logonSession, [System.Collections.IDictionary]$SessionHeader, [Microsoft.PowerShell.Commands.WebRequestSession]$webSession, [string] $hostname)
+    OceanstorSession ([PSCustomObject] $logonSession, [System.Collections.IDictionary]$SessionHeader, [Microsoft.PowerShell.Commands.WebRequestSession]$WebSession, [string] $hostname)
     {
         $this.DeviceId = $logonsession.data.deviceid
         $this.WebSession = $WebSession
+        $this.Session = $WebSession
+		$this.WebSession = $WebSession
         $this.Headers = $SessionHeader
         $this.iBaseToken = $logonsession.data.iBaseToken
         #$this.Credentials = $credentials

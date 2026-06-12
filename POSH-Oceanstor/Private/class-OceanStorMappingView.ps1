@@ -1,5 +1,6 @@
 class OceanStorMappingView {
     hidden [pscustomobject]${Session}
+	hidden [pscustomobject]${WebSession}
     [string]${Id}
     [string]${Name}
     [string]${Description}
@@ -11,8 +12,9 @@ class OceanStorMappingView {
     [string]${vStore Id}
     [string]${vStore Name}
 
-    OceanStorMappingView([pscustomobject]$MappingViewReceived, [pscustomobject]$Session) {
-        $this.Session = $Session
+    OceanStorMappingView([pscustomobject]$MappingViewReceived, [pscustomobject]$WebSession) {
+        $this.Session = $WebSession
+		$this.WebSession = $WebSession
         $this.Id = $MappingViewReceived.ID
         $this.Name = $MappingViewReceived.NAME
         $this.Description = $MappingViewReceived.DESCRIPTION
@@ -25,3 +27,5 @@ class OceanStorMappingView {
         $this.{vStore Name} = $MappingViewReceived.vstoreName
     }
 }
+
+

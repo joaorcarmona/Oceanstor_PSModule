@@ -1,6 +1,7 @@
 class OceanStorNFSShare
 {
     hidden [pscustomobject]${Session}
+	hidden [pscustomobject]${WebSession}
     [string]${Id}
     [string]${Name}
     [string]${Share Path}
@@ -14,9 +15,10 @@ class OceanStorNFSShare
     [string]${vStore ID}
     [string]${vStore Name}
 
-    OceanStorNFSShare ([array]$NFSShare, [pscustomobject]$Session)
+    OceanStorNFSShare ([array]$NFSShare, [pscustomobject]$WebSession)
     {
-        $this.Session = $Session
+        $this.Session = $WebSession
+		$this.WebSession = $WebSession
         $this.{Id} = $NFSShare.ID
         $this.{Name} = $NFSShare.NAME
         $this.{Share Path} = $NFSShare.SHAREPATH
@@ -61,3 +63,5 @@ class OceanStorNFSShare
 
     }
 }
+
+

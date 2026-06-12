@@ -1,5 +1,6 @@
 class OceanstorLunv3{
 	hidden [pscustomobject]${Session}
+	hidden [pscustomobject]${WebSession}
 	hidden[string]${Object Type}
 	[string]${Id}
 	[string]${Name}
@@ -78,9 +79,10 @@ class OceanstorLunv3{
 	[string]${vStore Id}
 	[string]${vStore Name}
 
-	OceanstorLunv3 ([array]$LunReceived,[pscustomobject]$ObjStorage)
+	OceanstorLunv3 ([array]$LunReceived,[pscustomobject]$WebSession)
 	{
-		$this.Session = $ObjStorage
+		$this.Session = $WebSession
+		$this.WebSession = $WebSession
 		switch ($lunReceived.TYPE)
 		{
 			11 {$this.{Object Type} = "LUN"}
@@ -366,3 +368,4 @@ class OceanstorLunv3{
 
 	}
 }
+

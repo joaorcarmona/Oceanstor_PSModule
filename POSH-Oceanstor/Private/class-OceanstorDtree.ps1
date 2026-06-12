@@ -1,5 +1,6 @@
 class OceanStorDtree {
     hidden [pscustomobject]${Session}
+	hidden [pscustomobject]${WebSession}
     #Define Properties
     [string]$Id
     [string]$Name
@@ -16,9 +17,10 @@ class OceanStorDtree {
     [string]${Snapshot Count}
     [string]${Locking Policy}
     
-    OceanStorDtree ([array]$dtree, [pscustomobject]$Session)
+    OceanStorDtree ([array]$dtree, [pscustomobject]$WebSession)
     {
-        $this.Session = $Session
+        $this.Session = $WebSession
+		$this.WebSession = $WebSession
         $this.Id = $dtree.ID
         $this.Name = $dtree.NAME
         $this.parentId = $dtree.PARENTID
@@ -36,3 +38,5 @@ class OceanStorDtree {
     }
 
 }
+
+

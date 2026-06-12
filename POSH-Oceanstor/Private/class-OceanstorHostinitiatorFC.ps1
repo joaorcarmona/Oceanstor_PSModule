@@ -1,5 +1,6 @@
 class OceanstorHostinitiatorFC {
     hidden [pscustomobject]${Session}
+	hidden [pscustomobject]${WebSession}
     #Define properties
     [string]${Id}
     [string]${Host Id}
@@ -17,9 +18,10 @@ class OceanstorHostinitiatorFC {
     [int64]${vStore ID}
 	[string]${vStore Name}
 
-    OceanstorHostinitiatorFC ([array]$initiator, [pscustomobject]$Session)
+    OceanstorHostinitiatorFC ([array]$initiator, [pscustomobject]$WebSession)
     {
-        $this.Session = $Session
+        $this.Session = $WebSession
+		$this.WebSession = $WebSession
         $this.{Id} = $initiator.ID
         $this.{Host Id} = $initiator.PARENTID
         $this.{Host Name} = $initiator.PARENTNAME
@@ -106,3 +108,5 @@ class OceanstorHostinitiatorFC {
     }
 
 }
+
+

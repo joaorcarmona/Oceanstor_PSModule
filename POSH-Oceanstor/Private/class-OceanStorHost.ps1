@@ -1,6 +1,7 @@
 class OceanStorHost{
 	#Define Properties
 	hidden [pscustomobject]${Session}
+	hidden [pscustomobject]${WebSession}
 	[string]$id
 	[string]$name
 	[string]${Health Status}
@@ -21,9 +22,10 @@ class OceanStorHost{
 	[int]${vStore ID}
 	[string]${vStore Name}
 
-	OceanStorHost ([array] $hostReceived, [pscustomobject]$Session)
+	OceanStorHost ([array] $hostReceived, [pscustomobject]$WebSession)
 	{
-		$this.Session = $Session
+		$this.Session = $WebSession
+		$this.WebSession = $WebSession
 		$this.description = $hostReceived.DESCRIPTION
 
 		switch($hostReceived.HEALTHSTATUS)
@@ -104,3 +106,5 @@ class OceanStorHost{
 		return $paths
 	}
 }
+
+

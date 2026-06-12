@@ -1,5 +1,6 @@
 class OceanstorFileSystem{
     hidden [pscustomobject]${Session}
+	hidden [pscustomobject]${WebSession}
     [int64]$RealCapacity
     [string]${Id}
     [string]${Name}
@@ -108,9 +109,10 @@ class OceanstorFileSystem{
     [string]${Worm Type}
     [boolean]${Write Check}
 
-    OceanstorFileSystem ([array]$FileSystem, [pscustomobject]$Session)
+    OceanstorFileSystem ([array]$FileSystem, [pscustomobject]$WebSession)
     {
-        $this.Session = $Session
+        $this.Session = $WebSession
+		$this.WebSession = $WebSession
         [int64]$fSector = 512
         $this.{Sector Size} = $FileSystem.SECTORSIZE
         
@@ -519,3 +521,5 @@ class OceanstorFileSystem{
         return @(Get-DMFileSystemSnapshots -WebSession $this.Session -FileSystemName $this.Name)
     }
 }
+
+

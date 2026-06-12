@@ -1,5 +1,6 @@
 class OceanStorPortETH {
     hidden [pscustomobject]${Session}
+	hidden [pscustomobject]${WebSession}
     [string]${Id}
     [string]${Name}
     [string]${Port Type}
@@ -55,9 +56,10 @@ class OceanStorPortETH {
     [string]${Port Function}
     [string]${Host Initiators}
 
-    OceanStorPortETH ([array]$portReceived, [pscustomobject]$Session)
+    OceanStorPortETH ([array]$portReceived, [pscustomobject]$WebSession)
     {
-        $this.Session = $Session
+        $this.Session = $WebSession
+		$this.WebSession = $WebSession
         switch ($portReceived.TYPE)
         {
             213 {$this.{Port Type} = "Ethernet Port"}
@@ -208,3 +210,5 @@ class OceanStorPortETH {
         $this.{Host Initiators} = $portReceived.numberOfInitiators
     }
 }
+
+
