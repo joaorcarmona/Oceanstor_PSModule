@@ -25,7 +25,7 @@ Author = "Joao Carmona"
 #CompanyName = "Unknown"
 
 # Copyright statement for this module
-Copyright = "(c) 2025 Joao Carmona All rights reserved."
+Copyright = "(c) 2026 Joao Carmona All rights reserved."
 
 # Description of the functionality provided by this module
 Description = "PowerShell module to interact with Huawei Oceanstor Devices"
