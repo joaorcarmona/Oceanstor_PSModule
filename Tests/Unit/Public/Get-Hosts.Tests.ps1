@@ -131,7 +131,7 @@ Describe 'Public getter functions' {
         It 'gets all fibre channel initiators' {
             Mock Invoke-DeviceManager { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'fc-01'; TYPE = 223; RUNNINGSTATUS = 27; vstoreid = 4294967295 }) } }
 
-            $result = (Get-DMHostInitiators -WebSession $script:session -InitatorType FibreChannel)[0]
+            $result = (Get-DMHostInitiators -WebSession $script:session -InitiatorType FibreChannel)[0]
 
             $result.Type | Should -Be 'FC Initiator'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
@@ -142,7 +142,7 @@ Describe 'Public getter functions' {
         It 'gets free iSCSI initiators' {
             Mock Invoke-DeviceManager { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'iscsi-01'; TYPE = 222; ISFREE = $true; vstoreid = 4294967295 }) } }
 
-            $result = (Get-DMHostInitiators -WebSession $script:session -InitatorType ISCSI -FreeInitiators)[0]
+            $result = (Get-DMHostInitiators -WebSession $script:session -InitiatorType ISCSI -FreeInitiators)[0]
 
             $result.Type | Should -Be 'ISCSI Initiator'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
@@ -153,7 +153,7 @@ Describe 'Public getter functions' {
         It 'returns no initiators when the requested protocol has no data' {
             Mock Invoke-DeviceManager { [pscustomobject]@{ error = [pscustomobject]@{ code = 0 } } }
 
-            $result = @(Get-DMHostInitiators -WebSession $script:session -HostId 'host-fc-only' -InitatorType ISCSI)
+            $result = @(Get-DMHostInitiators -WebSession $script:session -HostId 'host-fc-only' -InitiatorType ISCSI)
 
             $result | Should -BeNullOrEmpty
         }

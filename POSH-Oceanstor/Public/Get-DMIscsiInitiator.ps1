@@ -82,10 +82,10 @@ function Get-DMIscsiInitiator {
     }
     if ($HostName) {
         $hostObject = @(Get-DMhosts -WebSession $session | Where-Object Name -EQ $HostName)[0]
-        return @(Get-DMHostInitiators -WebSession $session -InitatorType ISCSI -HostId $hostObject.Id)
+        return @(Get-DMHostInitiators -WebSession $session -InitiatorType ISCSI -HostId $hostObject.Id)
     }
     if ($FreeInitiators) {
-        return @(Get-DMHostInitiators -WebSession $session -InitatorType ISCSI -FreeInitiators)
+        return @(Get-DMHostInitiators -WebSession $session -InitiatorType ISCSI -FreeInitiators)
     }
-    return @(Get-DMHostInitiators -WebSession $session -InitatorType ISCSI -All)
+    return @(Get-DMHostInitiators -WebSession $session -InitiatorType ISCSI -All)
 }

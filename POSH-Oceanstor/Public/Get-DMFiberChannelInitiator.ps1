@@ -82,10 +82,10 @@ function Get-DMFiberChannelInitiator {
     }
     if ($HostName) {
         $hostObject = @(Get-DMhosts -WebSession $session | Where-Object Name -EQ $HostName)[0]
-        return @(Get-DMHostInitiators -WebSession $session -InitatorType FibreChannel -HostId $hostObject.Id)
+        return @(Get-DMHostInitiators -WebSession $session -InitiatorType FibreChannel -HostId $hostObject.Id)
     }
     if ($FreeInitiators) {
-        return @(Get-DMHostInitiators -WebSession $session -InitatorType FibreChannel -FreeInitiators)
+        return @(Get-DMHostInitiators -WebSession $session -InitiatorType FibreChannel -FreeInitiators)
     }
-    return @(Get-DMHostInitiators -WebSession $session -InitatorType FibreChannel -All)
+    return @(Get-DMHostInitiators -WebSession $session -InitiatorType FibreChannel -All)
 }

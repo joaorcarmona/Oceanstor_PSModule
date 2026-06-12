@@ -12,9 +12,8 @@ function Get-DMHostInitiators {
 		Optional parameter to Query the Initiators for a specific Host Id
 	.PARAMETER FreeInitiators
 		Optional switch parameter to Query the Initiators that are free
-	.PARAMETER initatorType
+	.PARAMETER InitiatorType
 		Mandatory parameter to define the initiator type. Valid values are FibreChannel and ISCSI.
-		The correctly spelled -InitiatorType name is available as an alias.
 	.PARAMETER All
 		(Default) Optional switch parameter to Query the All Initiators. If no other parameter is passed, function assume all
 
@@ -27,7 +26,7 @@ function Get-DMHostInitiators {
 		OceanstorHostinitiatorFC
 		OceanstorHostinitiatorISCSI
 
-		Returns Fibre Channel or iSCSI host initiator objects, depending on InitatorType.
+		Returns Fibre Channel or iSCSI host initiator objects, depending on InitiatorType.
 
 	.EXAMPLE
 
@@ -67,8 +66,7 @@ function Get-DMHostInitiators {
         [pscustomobject]$WebSession,
         [Parameter(Position = 1, Mandatory = $true)]
         [ValidateSet("FibreChannel", "ISCSI")]
-        [Alias("InitiatorType")]
-        [string]$initatorType,
+        [string]$InitiatorType,
         [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $false, Position = 1, Mandatory = $false, ParameterSetName = "HostInitiators")]
         [string]$hostId,
         [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $false, Position = 2, Mandatory = $false, ParameterSetName = "FreeInitiators")]
@@ -93,7 +91,7 @@ function Get-DMHostInitiators {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    switch ($initatorType) {
+    switch ($InitiatorType) {
         FibreChannel {
             $resourceQuery = "fc_initiator"
         }
@@ -124,7 +122,7 @@ function Get-DMHostInitiators {
     $HostInitiators = New-Object System.Collections.ArrayList
 
     foreach ($initator in $response) {
-        switch ($initatorType) {
+        switch ($InitiatorType) {
             FibreChannel {
                 $HostInitiator = [OceanstorHostinitiatorFC]::new($initator, $session)
             }

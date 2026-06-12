@@ -102,13 +102,13 @@ function Invoke-ReadValidation {
         Get-DMvStore -WebSession $session
     } | Out-Null
     Add-ValidationResult -Name 'Get-DMHostInitiators:FibreChannel' -ExpectedType 'OceanstorHostinitiatorFC' -Action {
-        Get-DMHostInitiators -WebSession $session -InitatorType FibreChannel -All
+        Get-DMHostInitiators -WebSession $session -InitiatorType FibreChannel -All
     } | Out-Null
     Add-ValidationResult -Name 'Get-DMFiberChannelInitiator' -ExpectedType 'OceanstorHostinitiatorFC' -Action {
         Get-DMFiberChannelInitiator -WebSession $session
     } | Out-Null
     $samples.IscsiInitiators = Add-ValidationResult -Name 'Get-DMHostInitiators:ISCSI' -ExpectedType 'OceanstorHostinitiatorISCSI' -Action {
-        Get-DMHostInitiators -WebSession $session -InitatorType ISCSI -All
+        Get-DMHostInitiators -WebSession $session -InitiatorType ISCSI -All
     }
     Add-ValidationResult -Name 'Get-DMIscsiInitiator' -ExpectedType 'OceanstorHostinitiatorISCSI' -Action {
         Get-DMIscsiInitiator -WebSession $session

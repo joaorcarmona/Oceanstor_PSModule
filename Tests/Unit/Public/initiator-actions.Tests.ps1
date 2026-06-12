@@ -6,7 +6,7 @@ BeforeDiscovery {
         function Get-DMHostInitiators {
             param(
                 [pscustomobject]$WebSession,
-                [string]$InitatorType,
+                [string]$InitiatorType,
                 [string]$HostId,
                 [switch]$FreeInitiators,
                 [switch]$All
@@ -71,7 +71,7 @@ Describe 'Initiator creation and query commands' {
             }
         }
         Mock Get-DMHostInitiators {
-            if ($InitatorType -eq 'FibreChannel') {
+            if ($InitiatorType -eq 'FibreChannel') {
                 return @([OceanstorHostinitiatorFC]::new([pscustomobject]@{ ID = '10000090FA123456'; TYPE = 223 }, $script:session))
             }
             return @([OceanstorHostinitiatorISCSI]::new([pscustomobject]@{ ID = 'iqn.2026-05.example:server01'; TYPE = 222 }, $script:session))
@@ -118,8 +118,8 @@ Describe 'Initiator creation and query commands' {
         (Get-DMFiberChannelInitiator -WebSession $script:session -FreeInitiators)[0].Id | Should -Be '10000090FA123456'
         (Get-DMIscsiInitiator -WebSession $script:session -HostName 'server01')[0].Id | Should -Be 'iqn.2026-05.example:server01'
 
-        Should -Invoke Get-DMHostInitiators -ParameterFilter { $InitatorType -eq 'FibreChannel' -and $FreeInitiators }
-        Should -Invoke Get-DMHostInitiators -ParameterFilter { $InitatorType -eq 'ISCSI' -and $HostId -eq 'host-01' }
+        Should -Invoke Get-DMHostInitiators -ParameterFilter { $InitiatorType -eq 'FibreChannel' -and $FreeInitiators }
+        Should -Invoke Get-DMHostInitiators -ParameterFilter { $InitiatorType -eq 'ISCSI' -and $HostId -eq 'host-01' }
     }
 
     It 'queries NVMe initiators associated with a host' {
@@ -146,7 +146,7 @@ Describe 'Initiator removal commands' {
         Mock Get-DMIscsiInitiator { @([pscustomobject]@{ Id = 'iqn.2026-05.example:server01' }) }
         Mock Get-DMNvmeInitiator { @([pscustomobject]@{ Id = 'nqn.2026-05.example:host01' }) }
         Mock Get-DMHostInitiators {
-            if ($InitatorType -eq 'FibreChannel') {
+            if ($InitiatorType -eq 'FibreChannel') {
                 return @([pscustomobject]@{ Id = '10000090FA123456' })
             }
             return @([pscustomobject]@{ Id = 'iqn.2026-05.example:server01' })
