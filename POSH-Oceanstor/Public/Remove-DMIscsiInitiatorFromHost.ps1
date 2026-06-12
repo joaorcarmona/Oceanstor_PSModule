@@ -81,7 +81,7 @@ function Remove-DMIscsiInitiatorFromHost {
                 }
                 $selectedHostName = [string]$HostName
                 $hostObject = @(Get-DMhosts -WebSession $session | Where-Object Name -EQ $selectedHostName)[0]
-                $initiators = @(Get-DMHostInitiators -WebSession $session -InitatorType ISCSI -HostId $hostObject.Id)
+                $initiators = @(Get-DMHostInitiators -WebSession $session -InitiatorType ISCSI -HostId $hostObject.Id)
                 if ($initiators.Id -contains $candidate) {
                     return $true
                 }

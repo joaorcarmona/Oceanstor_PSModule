@@ -81,7 +81,7 @@ function Remove-DMFiberChannelInitiatorFromHost {
                 }
                 $selectedHostName = [string]$HostName
                 $hostObject = @(Get-DMhosts -WebSession $session | Where-Object Name -EQ $selectedHostName)[0]
-                $initiators = @(Get-DMHostInitiators -WebSession $session -InitatorType FibreChannel -HostId $hostObject.Id)
+                $initiators = @(Get-DMHostInitiators -WebSession $session -InitiatorType FibreChannel -HostId $hostObject.Id)
                 if ($initiators.Id -contains $candidate) {
                     return $true
                 }
