@@ -56,9 +56,6 @@ function New-DMdTree {
 
 	.NOTES
 		Filename: New-DMFileSystem.ps1
-		Author: Joao Carmona
-		Modified date: 2025-03-12
-		Version 0.1
 
 	.LINK
 	#>

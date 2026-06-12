@@ -87,9 +87,6 @@ function New-DMFileSystem {
 
 	.NOTES
 		Filename: New-DMFileSystem.ps1
-		Author: Joao Carmona
-		Modified date: 2025-03-10
-		Version 0.1
 
 	.LINK
 	#>

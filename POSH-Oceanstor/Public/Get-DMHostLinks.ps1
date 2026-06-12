@@ -35,9 +35,6 @@ function Get-DMHostLinks {
 
 	.NOTES
 		Filename: Get-DMHostFCLinks.ps1
-		Author: Joao Carmona
-		Modified date: 2022-05-25
-		Version 0.1
 
 	.LINK
 	#>

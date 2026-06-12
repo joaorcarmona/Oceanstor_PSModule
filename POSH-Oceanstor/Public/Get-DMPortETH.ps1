@@ -29,9 +29,6 @@ function Get-DMPortETH {
 
 .NOTES
     Filename: Get-DMPortETH.ps1
-    Author: Joao Carmona
-    Modified date: 2022-06-23
-    Version 0.1
 
 .LINK
 #>

@@ -47,9 +47,6 @@ function New-DMnfsShare {
 
 	.NOTES
 		Filename: New-DMnfsShare.ps1
-		Author: Joao Carmona
-		Modified date: 2025-03-10
-		Version 0.1
 
 	.LINK
 	#>

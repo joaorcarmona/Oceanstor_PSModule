@@ -31,9 +31,6 @@ function Get-DMDiskbyLocation {
 
 	.NOTES
 		Filename: Get-DMDiskbyLocation.ps1
-		Author: Joao Carmona
-		Modified date: 2022-05-24
-		Version 0.1
 
 	.LINK
 	#>

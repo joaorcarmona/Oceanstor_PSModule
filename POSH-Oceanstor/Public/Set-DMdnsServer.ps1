@@ -29,9 +29,6 @@ function Set-DMdnsServer {
 
     .NOTES
 		Filename: Set-DMdnsServer.ps1
-		Author: Joao Carmona
-		Modified date: 2022-06-5
-		Version 0.1
 
 	.LINK
 	#>

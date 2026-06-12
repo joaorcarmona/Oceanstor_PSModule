@@ -82,9 +82,6 @@ function New-DMLun {
 
 	.NOTES
 		Filename: New-DMLun.ps1
-		Author: Joao Carmona
-		Modified date: 2026-02-26
-		Version 0.1
 
 	.LINK
 	#>

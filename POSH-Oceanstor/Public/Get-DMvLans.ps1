@@ -29,9 +29,6 @@ function Get-DMvLans {
 
 	.NOTES
 		Filename: Get-DMvLans.ps1
-		Author: Joao Carmona
-		Modified date: 2022-06-07
-		Version 0.1
 
 	.LINK
 	#>

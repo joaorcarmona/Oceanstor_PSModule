@@ -35,9 +35,6 @@ function Export-DMStorageToExcel {
 
 	.NOTES
 		Filename: Export-DMStorageToExcel.ps1
-		Author: Joao Carmona
-		Modified date: 2022-06-29
-		Version 0.5
 
 	.LINK
 	#>

@@ -41,9 +41,6 @@ function Get-DMAlarms {
 
 	.NOTES
 		Filename: Get-DMAlarms.ps1
-		Author: Joao Carmona
-		Modified date: 2022-05-24
-		Version 0.1
 
 	.LINK
 	#>

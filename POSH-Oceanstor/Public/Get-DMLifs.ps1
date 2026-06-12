@@ -29,9 +29,6 @@ function Get-DMLifs {
 
 	.NOTES
 		Filename: Get-DMLifs.ps1
-		Author: Joao Carmona
-		Modified date: 2022-06-08
-		Version 0.1
 
 	.LINK
 	#>
