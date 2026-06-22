@@ -4,8 +4,9 @@
 
 # v0.9.3
 
-Date: 2026-06-12
+Date: 2026-06-23
 Branch: `v0.9.3`
+Status: Released to `master`
 
 ## Summary
 
@@ -24,7 +25,7 @@ comment-based help.
 - Added `Expand()` and `Rename()` methods to the corresponding storage object classes. LUN modification remains restricted to Dorado V6 sessions.
 - Added shared capacity and named-object validation helpers, duplicate-name protection, and vStore-aware modification resources.
 - Removed generated pipeline report artifacts from version control and added them to `.gitignore`.
-- Expanded the unit suite to 294 passing tests with no failures.
+- Expanded the unit suite to 295 passing tests with no failures.
 
 ## Commit History
 
@@ -33,6 +34,10 @@ comment-based help.
 - `bd405ed` - Clarify report template customization
 - `0af4963` - Standardize `InitiatorType` parameter spelling
 - `96a6504` - Simplify public command notes metadata
+- `c75545a` - Prepare v0.9.3 release notes
+- `ac5fd8a` - Update manifest copyright year
+- `d9d548e` - Add storage modification and rename workflows
+- `cb9a00e` - Validate Set and Rename mutation workflows
 
 ## Highlights
 
@@ -57,7 +62,7 @@ comment-based help.
 
 ## Validation
 
-- Unit tests: 240 passed, 0 failed.
+- Unit tests: 295 passed, 0 failed.
 - Public command metadata validation: `Get-DMHostInitiators` exposes
   `InitiatorType` only, with no typo alias.
 - Typo scan: no `InitatorType` or `initatorType` references remain.
