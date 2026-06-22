@@ -1,6 +1,7 @@
 class OceanstorLunv6{
 	hidden [pscustomobject]$Session
 	hidden [pscustomobject]$WebSession
+	[int64]$RealCapacity
 	hidden [string]${Object Type}
 	[string]${Id}
 	[string]${Name}
@@ -113,6 +114,7 @@ class OceanstorLunv6{
 		$this.{Sector Size} = $lSectorSize
 
 		[int64]$lcapacity = $lunReceived.CAPACITY
+		$this.RealCapacity = $lcapacity
 		$this.{Lun Size} =  $lcapacity * $lSectorSize / 1GB
 
 		[int64]$lAllocatedCap = $lunReceived.ALLOCCAPACITY
@@ -364,6 +366,20 @@ class OceanstorLunv6{
 	[array] GetSnapShots()
 	{
 		return @(Get-DMLunSnapshots -WebSession $this.Session -LunName $this.Name)
+	}
+
+	[psobject] Expand([object]$Capacity)
+	{
+		return (Set-DMLun -WebSession $this.Session -LunName $this.Name -Capacity $Capacity -Confirm:$false)
+	}
+
+	[psobject] Rename([string]$NewName)
+	{
+		$result = Rename-DMLun -WebSession $this.Session -LunName $this.Name -NewName $NewName -Confirm:$false
+		if ($result.Code -eq 0) {
+			$this.Name = $NewName
+		}
+		return $result
 	}
 }
 

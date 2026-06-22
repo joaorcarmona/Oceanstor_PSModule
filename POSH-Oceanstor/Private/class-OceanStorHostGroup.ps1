@@ -46,6 +46,15 @@ class OceanStorHostGroup{
 		$this.{Protection Capacity} = $HostGroupReceived.protectionCapacity / 1GB #for v6
 
 	}
+
+	[psobject] Rename([string]$NewName)
+	{
+		$result = Rename-DMHostGroup -WebSession $this.Session -HostGroupName $this.Name -NewName $NewName -Confirm:$false
+		if ($result.Code -eq 0) {
+			$this.Name = $NewName
+		}
+		return $result
+	}
 }
 
 

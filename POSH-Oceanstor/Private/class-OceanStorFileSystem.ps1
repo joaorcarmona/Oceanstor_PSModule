@@ -520,6 +520,22 @@ class OceanstorFileSystem{
     [array] GetSnapshots() {
         return @(Get-DMFileSystemSnapshots -WebSession $this.Session -FileSystemName $this.Name)
     }
+
+    [psobject] Expand([object]$Capacity) {
+        $newCapacity = ConvertTo-DMCapacityBlocks -Capacity $Capacity -UnitlessUnit GB
+        if ($newCapacity -le $this.RealCapacity) {
+            throw "File-system expansion must be greater than the current capacity of $($this.RealCapacity) blocks."
+        }
+        return (Set-DMFileSystem -WebSession $this.Session -FileSystemName $this.Name -Capacity $Capacity -Confirm:$false)
+    }
+
+    [psobject] Rename([string]$NewName) {
+        $result = Rename-DMFileSystem -WebSession $this.Session -FileSystemName $this.Name -NewName $NewName -Confirm:$false
+        if ($result.Code -eq 0) {
+            $this.Name = $NewName
+        }
+        return $result
+    }
 }
 
 

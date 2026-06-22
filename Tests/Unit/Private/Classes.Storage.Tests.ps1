@@ -11,10 +11,87 @@ BeforeAll {
     function global:Get-DMFileSystemSnapshots {}
     function global:Remove-DMFileSystemSnapshot {}
     function global:Restore-DMFileSystemSnapshot {}
+    function global:Set-DMLun {
+        [CmdletBinding(SupportsShouldProcess = $true)]
+        param(
+            [pscustomobject]$WebSession,
+            [string]$LunName,
+            [object]$Capacity,
+            [string]$NewName
+        )
+        $global:LunModificationInvocation = [pscustomobject]@{
+            WebSession = $WebSession; LunName = $LunName; Capacity = $Capacity; NewName = $NewName
+        }
+        [pscustomobject]@{ Code = 0 }
+    }
+    function global:Set-DMFileSystem {
+        [CmdletBinding(SupportsShouldProcess = $true)]
+        param(
+            [pscustomobject]$WebSession,
+            [string]$FileSystemName,
+            [object]$Capacity,
+            [string]$NewName
+        )
+        $global:FileSystemModificationInvocation = [pscustomobject]@{
+            WebSession = $WebSession; FileSystemName = $FileSystemName; Capacity = $Capacity; NewName = $NewName
+        }
+        [pscustomobject]@{ Code = 0 }
+    }
+    function global:ConvertTo-DMCapacityBlocks {
+        param([object]$Capacity, [string]$UnitlessUnit)
+        switch ([string]$Capacity) {
+            '512MB' { return 1048576 }
+            '2GB' { return 4194304 }
+            default { return [long]$Capacity }
+        }
+    }
+    function global:Rename-DMLun {
+        [CmdletBinding(SupportsShouldProcess = $true)]
+        param([pscustomobject]$WebSession, [string]$LunName, [string]$NewName)
+        $global:LunModificationInvocation = [pscustomobject]@{
+            WebSession = $WebSession; LunName = $LunName; NewName = $NewName
+        }
+        [pscustomobject]@{ Code = 0 }
+    }
+    function global:Rename-DMFileSystem {
+        [CmdletBinding(SupportsShouldProcess = $true)]
+        param([pscustomobject]$WebSession, [string]$FileSystemName, [string]$NewName)
+        $global:FileSystemModificationInvocation = [pscustomobject]@{
+            WebSession = $WebSession; FileSystemName = $FileSystemName; NewName = $NewName
+        }
+        [pscustomobject]@{ Code = 0 }
+    }
+    function global:Rename-DMHost {
+        [CmdletBinding(SupportsShouldProcess = $true)]
+        param([pscustomobject]$WebSession, [string]$HostName, [string]$NewName)
+        $global:NamedObjectRenameInvocation = [pscustomobject]@{ Type = 'Host'; Name = $HostName; NewName = $NewName; WebSession = $WebSession }
+        [pscustomobject]@{ Code = 0 }
+    }
+    function global:Rename-DMHostGroup {
+        [CmdletBinding(SupportsShouldProcess = $true)]
+        param([pscustomobject]$WebSession, [string]$HostGroupName, [string]$NewName)
+        $global:NamedObjectRenameInvocation = [pscustomobject]@{ Type = 'HostGroup'; Name = $HostGroupName; NewName = $NewName; WebSession = $WebSession }
+        [pscustomobject]@{ Code = 0 }
+    }
+    function global:Rename-DMLunGroup {
+        [CmdletBinding(SupportsShouldProcess = $true)]
+        param([pscustomobject]$WebSession, [string]$LunGroupName, [string]$NewName)
+        $global:NamedObjectRenameInvocation = [pscustomobject]@{ Type = 'LunGroup'; Name = $LunGroupName; NewName = $NewName; WebSession = $WebSession }
+        [pscustomobject]@{ Code = 0 }
+    }
+    function global:Rename-DMPortGroup {
+        [CmdletBinding(SupportsShouldProcess = $true)]
+        param([pscustomobject]$WebSession, [string]$PortGroupName, [string]$NewName)
+        $global:NamedObjectRenameInvocation = [pscustomobject]@{ Type = 'PortGroup'; Name = $PortGroupName; NewName = $NewName; WebSession = $WebSession }
+        [pscustomobject]@{ Code = 0 }
+    }
 
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorCIFSShare.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorFileSystem.ps1"
+    . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorHost.ps1"
+    . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorHostGroup.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorLunGroup.ps1"
+    . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorPortGroup.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorLunv3.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorLunv6.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorLunSnapshot.ps1"
@@ -37,6 +114,15 @@ AfterAll {
     Remove-Item -LiteralPath 'Function:\global:Get-DMFileSystemSnapshots' -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath 'Function:\global:Remove-DMFileSystemSnapshot' -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath 'Function:\global:Restore-DMFileSystemSnapshot' -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:Set-DMLun' -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:Set-DMFileSystem' -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:ConvertTo-DMCapacityBlocks' -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:Rename-DMLun' -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:Rename-DMFileSystem' -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:Rename-DMHost' -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:Rename-DMHostGroup' -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:Rename-DMLunGroup' -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:Rename-DMPortGroup' -ErrorAction SilentlyContinue
     Remove-Variable -Name LunSnapshotInvocation -Scope Global -ErrorAction SilentlyContinue
     Remove-Variable -Name LunSnapshotQuery -Scope Global -ErrorAction SilentlyContinue
     Remove-Variable -Name LunSnapshotRemoval -Scope Global -ErrorAction SilentlyContinue
@@ -45,6 +131,9 @@ AfterAll {
     Remove-Variable -Name FileSystemSnapshotInvocation -Scope Global -ErrorAction SilentlyContinue
     Remove-Variable -Name FileSystemSnapshotQuery -Scope Global -ErrorAction SilentlyContinue
     Remove-Variable -Name FileSystemSnapshotAction -Scope Global -ErrorAction SilentlyContinue
+    Remove-Variable -Name LunModificationInvocation -Scope Global -ErrorAction SilentlyContinue
+    Remove-Variable -Name FileSystemModificationInvocation -Scope Global -ErrorAction SilentlyContinue
+    Remove-Variable -Name NamedObjectRenameInvocation -Scope Global -ErrorAction SilentlyContinue
 }
 
 Describe 'Storage and share model classes' {
@@ -137,6 +226,44 @@ Describe 'Storage and share model classes' {
         $result.'Is Mapped' | Should -BeFalse
     }
 
+    It 'renames host and group objects through their public commands' {
+        $cases = @(
+            @{
+                Type = 'OceanStorHost'
+                Source = [pscustomobject]@{ ID = 'host-01'; NAME = 'host-old'; TYPE = 21 }
+                ExpectedType = 'Host'
+            },
+            @{
+                Type = 'OceanStorHostGroup'
+                Source = [pscustomobject]@{ ID = 1; NAME = 'hostgroup-old'; TYPE = 0 }
+                ExpectedType = 'HostGroup'
+            },
+            @{
+                Type = 'OceanStorLunGroup'
+                Source = [pscustomobject]@{ ID = 2; NAME = 'lungroup-old'; GROUPTYPE = 0; CAPCITY = 0 }
+                ExpectedType = 'LunGroup'
+            },
+            @{
+                Type = 'OceanstorPortGroup'
+                Source = [pscustomobject]@{ ID = 'pg-01'; NAME = 'portgroup-old'; portType = 0; isAddToMappingView = $false }
+                ExpectedType = 'PortGroup'
+            }
+        )
+
+        foreach ($case in $cases) {
+            $object = New-Object -TypeName $case.Type -ArgumentList @($case.Source, $script:session)
+            $oldName = $object.Name
+            $newName = "$oldName-new"
+
+            $object.Rename($newName).Code | Should -Be 0
+            $global:NamedObjectRenameInvocation.Type | Should -Be $case.ExpectedType
+            $global:NamedObjectRenameInvocation.Name | Should -Be $oldName
+            $global:NamedObjectRenameInvocation.NewName | Should -Be $newName
+            $global:NamedObjectRenameInvocation.WebSession | Should -Be $script:session
+            $object.Name | Should -Be $newName
+        }
+    }
+
     It 'maps a version 3 LUN' {
         $source = [pscustomobject]@{ ID = 'lun-v3'; NAME = 'legacy'; TYPE = 11; SECTORSIZE = 512; CAPACITY = 2097152; ALLOCCAPACITY = 1048576; HEALTHSTATUS = 1; RUNNINGSTATUS = 27; ALLOCTYPE = 1 }
 
@@ -155,6 +282,49 @@ Describe 'Storage and share model classes' {
         $result.Id | Should -Be 'lun-v6'
         $result.'Lun Size' | Should -Be 1
         $result.Mapped | Should -Be 'yes'
+    }
+
+    It 'expands and renames from a version 6 LUN object' {
+        $source = [pscustomobject]@{ ID = 'lun-v6'; NAME = 'modern'; TYPE = 11; SECTORSIZE = 512; CAPACITY = 2097152; ALLOCCAPACITY = 1048576; HEALTHSTATUS = 1; RUNNINGSTATUS = 27; ALLOCTYPE = 1 }
+        $lun = New-Object -TypeName OceanstorLunv6 -ArgumentList @($source, $script:session)
+
+        $lun.Expand('2GB').Code | Should -Be 0
+        $global:LunModificationInvocation.WebSession | Should -Be $script:session
+        $global:LunModificationInvocation.LunName | Should -Be 'modern'
+        $global:LunModificationInvocation.Capacity | Should -Be '2GB'
+
+        $lun.Rename('modern-prod').Code | Should -Be 0
+        $global:LunModificationInvocation.NewName | Should -Be 'modern-prod'
+        $lun.Name | Should -Be 'modern-prod'
+    }
+
+    It 'exposes unsupported modification methods on a version 3 LUN object' {
+        $source = [pscustomobject]@{ ID = 'lun-v3'; NAME = 'legacy'; TYPE = 11; SECTORSIZE = 512; CAPACITY = 2097152; ALLOCCAPACITY = 1048576; HEALTHSTATUS = 1; RUNNINGSTATUS = 27; ALLOCTYPE = 1 }
+        $lun = New-Object -TypeName OceanstorLunv3 -ArgumentList @($source, $script:session)
+
+        { $lun.Expand('2GB') } | Should -Throw '*only for OceanStor Dorado V6*'
+        { $lun.Rename('legacy-new') } | Should -Throw '*only for OceanStor Dorado V6*'
+    }
+
+    It 'expands and renames from a file-system object' {
+        $source = [pscustomobject]@{ ID = 'fs-01'; NAME = 'documents'; SECTORSIZE = 512; CAPACITY = 2097152; ALLOCCAPACITY = '0' }
+        $fileSystem = New-Object -TypeName OceanstorFileSystem -ArgumentList @($source, $script:session)
+
+        $fileSystem.Expand('2GB').Code | Should -Be 0
+        $global:FileSystemModificationInvocation.WebSession | Should -Be $script:session
+        $global:FileSystemModificationInvocation.FileSystemName | Should -Be 'documents'
+        $global:FileSystemModificationInvocation.Capacity | Should -Be '2GB'
+
+        $fileSystem.Rename('documents-prod').Code | Should -Be 0
+        $global:FileSystemModificationInvocation.NewName | Should -Be 'documents-prod'
+        $fileSystem.Name | Should -Be 'documents-prod'
+    }
+
+    It 'rejects a non-expanding file-system object capacity' {
+        $source = [pscustomobject]@{ ID = 'fs-01'; NAME = 'documents'; SECTORSIZE = 512; CAPACITY = 2097152; ALLOCCAPACITY = '0' }
+        $fileSystem = New-Object -TypeName OceanstorFileSystem -ArgumentList @($source, $script:session)
+
+        { $fileSystem.Expand('512MB') } | Should -Throw '*must be greater*'
     }
 
     It 'creates a snapshot from a version 6 LUN object' {

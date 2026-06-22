@@ -28,6 +28,14 @@ class OceanstorPortGroup {
             default { $this.{Port Type} = $PortGroupReceived.portType }
         }
     }
+
+    [psobject] Rename([string]$NewName) {
+        $result = Rename-DMPortGroup -WebSession $this.Session -PortGroupName $this.Name -NewName $NewName -Confirm:$false
+        if ($result.Code -eq 0) {
+            $this.Name = $NewName
+        }
+        return $result
+    }
 }
 
 

@@ -61,6 +61,33 @@ Describe 'New-DMLun' {
         $script:lunResource | Should -Be 'lun'
         $script:lunRequest.PARENTID | Should -Be 'pool-01'
         $script:lunRequest.ALLOCTYPE | Should -Be 1
+        $script:lunRequest.CAPACITY | Should -Be 2097152
+    }
+
+    It 'converts <Capacity> to <ExpectedBlocks> 512-byte blocks' -ForEach @(
+        @{ Capacity = '10MB';   ExpectedBlocks = 20480 }
+        @{ Capacity = '10GB';   ExpectedBlocks = 20971520 }
+        @{ Capacity = '1TB';    ExpectedBlocks = 2147483648 }
+        @{ Capacity = '1.5GB';  ExpectedBlocks = 3145728 }
+        @{ Capacity = '1,5GB';  ExpectedBlocks = 3145728 }
+        @{ Capacity = '10 mb';  ExpectedBlocks = 20480 }
+    ) {
+        $null = New-DMLun -WebSession $script:session -LunName 'data-lun' -Capacity $Capacity -StoragePoolID 'pool-01'
+
+        $script:lunRequest.CAPACITY | Should -Be $ExpectedBlocks
+        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly
+    }
+
+    It 'rejects invalid capacity <Capacity>' -ForEach @(
+        @{ Capacity = '10XB' }
+        @{ Capacity = '0MB' }
+        @{ Capacity = '-1GB' }
+        @{ Capacity = '0.0001MB' }
+    ) {
+        { New-DMLun -WebSession $script:session -LunName 'data-lun' -Capacity $Capacity -StoragePoolID 'pool-01' } |
+            Should -Throw '*Capacity*'
+
+        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 
     It 'rejects a storage pool identifier that does not exist' {

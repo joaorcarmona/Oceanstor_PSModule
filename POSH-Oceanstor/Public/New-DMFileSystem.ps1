@@ -22,7 +22,11 @@ function New-DMFileSystem {
         If the FileSystem is a WORM FileSystem  (Write Once Read Many)
 
     .PARAMETER capacity
-        Capacity of the FileSystem to be created (in gigabytes)
+        Capacity of the FileSystem to be created.
+        Specify a size with an MB, GB, or TB suffix, for example 100MB, 10GB, 1.5TB, or 1,5TB.
+        Both a period and a comma are accepted as the decimal separator. Unit suffixes are case-insensitive
+        and use binary units (1MB = 1024^2 bytes). For backward compatibility, an integer without a suffix
+        is treated as a number of gigabytes.
 
     .PARAMETER snapShotReserve
         Percentage of the FileSystem capacity to be reserved for Snapshots  (default 20%)
@@ -79,11 +83,11 @@ function New-DMFileSystem {
 
 	.EXAMPLE
 
-		PS C:\> New-DMFileSystem -webSession $session
+		PS C:\> New-DMFileSystem -WebSession $session -FileSystemName 'documents' -StoragePoolID 0 -Capacity 100MB
 
 		OR
 
-		PS C:\> New-DMFileSystem
+		PS C:\> New-DMFileSystem -WebSession $session -FileSystemName 'archive' -StoragePoolID 0 -Capacity '1,5TB'
 
 	.NOTES
 		Filename: New-DMFileSystem.ps1
@@ -126,7 +130,8 @@ function New-DMFileSystem {
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
         [bool]$Worm = $false,
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
-        [Int64]$capacity,
+        [ValidateNotNullOrEmpty()]
+        [object]$capacity,
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
         [Int32]$snapShotReserve = 20,
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
@@ -211,6 +216,56 @@ function New-DMFileSystem {
         }
     }
 
+    $capacityInBlocks = $null
+    if ($PSBoundParameters.ContainsKey('capacity')) {
+        # OceanStor expects file-system capacity as a count of 512-byte blocks.
+        # Unitless integers retain the command's historical gigabyte behavior.
+        $capacityText = ([string]$capacity).Trim()
+        if ($capacityText -match '^(?<Value>(?:\d+(?:[.,]\d+)?|[.,]\d+))\s*(?<Unit>MB|GB|TB)$') {
+            $size = [decimal]0
+            $normalizedValue = $Matches.Value.Replace(',', '.')
+            $parsed = [decimal]::TryParse(
+                $normalizedValue,
+                [Globalization.NumberStyles]::AllowDecimalPoint,
+                [Globalization.CultureInfo]::InvariantCulture,
+                [ref]$size
+            )
+            if (-not $parsed -or $size -le 0) {
+                throw "Capacity must be greater than zero. Received '$capacityText'."
+            }
+
+            $blocksPerUnit = switch ($Matches.Unit.ToUpperInvariant()) {
+                'MB' { [decimal]2048 }
+                'GB' { [decimal]2097152 }
+                'TB' { [decimal]2147483648 }
+            }
+            $blockCount = $size * $blocksPerUnit
+        }
+        else {
+            $sizeInGB = [long]0
+            if (-not [long]::TryParse(
+                    $capacityText,
+                    [Globalization.NumberStyles]::Integer,
+                    [Globalization.CultureInfo]::InvariantCulture,
+                    [ref]$sizeInGB
+                )) {
+                throw "Invalid capacity '$capacityText'. Use a positive value followed by MB, GB, or TB (for example, 10GB)."
+            }
+            if ($sizeInGB -le 0) {
+                throw "Capacity must be greater than zero. Received '$capacityText'."
+            }
+            $blockCount = [decimal]$sizeInGB * [decimal]2097152
+        }
+
+        if ($blockCount -gt [long]::MaxValue) {
+            throw "Capacity '$capacityText' exceeds the supported maximum."
+        }
+        if ([decimal]::Truncate($blockCount) -ne $blockCount) {
+            throw "Capacity '$capacityText' does not resolve to a whole number of 512-byte blocks."
+        }
+        $capacityInBlocks = [long]$blockCount
+    }
+
     $body = @{
         NAME                  = $FileSystemName;
         PARENTTYPE            = 216;
@@ -234,9 +289,8 @@ function New-DMFileSystem {
         $body.Add("DESCRIPTION", $description)
     }
 
-    if ($capacity) {
-        $fcapacity = [math]::Round($capacity / 512 * 1GB)
-        $body.Add("CAPACITY", $fcapacity)
+    if ($null -ne $capacityInBlocks) {
+        $body.Add("CAPACITY", $capacityInBlocks)
     }
 
     $response = Invoke-DeviceManager -WebSession $session -Method "POST" -Resource "filesystem" -BodyData $body

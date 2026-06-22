@@ -105,6 +105,15 @@ class OceanStorHost{
 
 		return $paths
 	}
+
+	[psobject] Rename([string]$NewName)
+	{
+		$result = Rename-DMHost -WebSession $this.Session -HostName $this.Name -NewName $NewName -Confirm:$false
+		if ($result.Code -eq 0) {
+			$this.Name = $NewName
+		}
+		return $result
+	}
 }
 
 

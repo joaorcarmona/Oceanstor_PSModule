@@ -367,5 +367,19 @@ class OceanstorLunv3{
 		$this.{vStore Name} = $lunReceived.vstoreName
 
 	}
+
+	[psobject] Expand([object]$Capacity)
+	{
+		throw [System.NotSupportedException]::new(
+			'Expanding a LUN through its object is supported only for OceanStor Dorado V6 API sessions.'
+		)
+	}
+
+	[psobject] Rename([string]$NewName)
+	{
+		throw [System.NotSupportedException]::new(
+			'Renaming a LUN through its object is supported only for OceanStor Dorado V6 API sessions.'
+		)
+	}
 }
 

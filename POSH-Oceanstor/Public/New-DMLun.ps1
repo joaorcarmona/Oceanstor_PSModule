@@ -16,7 +16,11 @@ function New-DMLun {
         Mandatory parameter. ID of the Storage Pool where the LUN will be created.
         Valid values are dynamically generated from the output of Get-DMstoragePools and support tab-completion.
     .PARAMETER capacity
-        Mandatory parameter. Capacity of the LUN to be created (in MB)
+        Mandatory parameter. Capacity of the LUN to be created.
+        Specify a size with an MB, GB, or TB suffix, for example 10MB, 10GB, 1.5TB, or 1,5TB.
+        Both a period and a comma are accepted as the decimal separator.
+        Unit suffixes are case-insensitive and use binary units (1MB = 1024^2 bytes).
+        For backward compatibility, an integer without a suffix is treated as a raw count of 512-byte blocks.
 
     .PARAMETER description
         Optional parameter. Description of the LUN to be created
@@ -74,11 +78,11 @@ function New-DMLun {
 
 	.EXAMPLE
 
-		PS C:\> New-DMLun -LunName "MyLUN" -StoragePoolID "0" -capacity 1048576
+		PS C:\> New-DMLun -LunName "MyLUN" -StoragePoolID "0" -Capacity 512MB
 
 		OR
 
-		PS C:\> New-DMLun -webSession $session -LunName "TestLUN" -StoragePoolID "1" -capacity 2097152 -allocType "Thin" -enableCompression $true
+		PS C:\> New-DMLun -WebSession $session -LunName "TestLUN" -StoragePoolID "1" -Capacity 1GB -AllocType "Thin" -EnableCompression $true
 
 	.NOTES
 		Filename: New-DMLun.ps1
@@ -91,7 +95,8 @@ function New-DMLun {
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 1, Mandatory = $true)]
         [string]$LunName,
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 2, Mandatory = $true)]
-        [Int64]$capacity,
+        [ValidateNotNullOrEmpty()]
+        [object]$capacity,
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 3, Mandatory = $true)]
         [ValidateScript({
                 # Validate that the StoragePoolID exists by checking against existing storage pools
@@ -168,6 +173,51 @@ function New-DMLun {
         $StoragePoolID = $PSBoundParameters['StoragePoolID']
     }
 
+    # OceanStor expects LUN capacity as a count of 512-byte blocks. Accept a
+    # human-readable binary size while retaining legacy raw-block input.
+    $capacityText = ([string]$capacity).Trim()
+    $capacityInBlocks = [long]0
+    if ($capacityText -match '^(?<Value>(?:\d+(?:[.,]\d+)?|[.,]\d+))\s*(?<Unit>MB|GB|TB)$') {
+        $size = [decimal]0
+        $normalizedValue = $Matches.Value.Replace(',', '.')
+        $parsed = [decimal]::TryParse(
+            $normalizedValue,
+            [Globalization.NumberStyles]::AllowDecimalPoint,
+            [Globalization.CultureInfo]::InvariantCulture,
+            [ref]$size
+        )
+        if (-not $parsed -or $size -le 0) {
+            throw "Capacity must be greater than zero. Received '$capacityText'."
+        }
+
+        $blocksPerUnit = switch ($Matches.Unit.ToUpperInvariant()) {
+            'MB' { [decimal]2048 }
+            'GB' { [decimal]2097152 }
+            'TB' { [decimal]2147483648 }
+        }
+        $blockCount = $size * $blocksPerUnit
+        if ($blockCount -gt [long]::MaxValue) {
+            throw "Capacity '$capacityText' exceeds the supported maximum."
+        }
+        if ([decimal]::Truncate($blockCount) -ne $blockCount) {
+            throw "Capacity '$capacityText' does not resolve to a whole number of 512-byte blocks."
+        }
+        $capacityInBlocks = [long]$blockCount
+    }
+    elseif ([long]::TryParse(
+            $capacityText,
+            [Globalization.NumberStyles]::Integer,
+            [Globalization.CultureInfo]::InvariantCulture,
+            [ref]$capacityInBlocks
+        )) {
+        if ($capacityInBlocks -le 0) {
+            throw "Capacity must be greater than zero. Received '$capacityText'."
+        }
+    }
+    else {
+        throw "Invalid capacity '$capacityText'. Use a positive value followed by MB, GB, or TB (for example, 10GB)."
+    }
+
     # Convert allocation type to Huawei API value
     switch ($allocType) {
         "Thin" {
@@ -238,7 +288,7 @@ function New-DMLun {
     $body = @{
         NAME            = $LunName;
         PARENTID        = $StoragePoolID;
-        CAPACITY        = $capacity;
+        CAPACITY        = $capacityInBlocks;
         SECTORSIZE      = $sectorSize;
         ALLOCTYPE       = $allocationType;
         IOPRIORITY      = $ioPriorityValue;
