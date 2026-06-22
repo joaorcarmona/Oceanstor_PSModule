@@ -28,6 +28,8 @@
     <Test Name="Get-Storage.Tests.ps1" Function="Storage getter commands" Order="190" Priority="Read" DependsOn="None" />
     <Test Name="Export-functions.Tests.ps1" Function="Public export functions" Order="200" Priority="Read" DependsOn="None" />
     <Test Name="New-DMLun.Tests.ps1" Function="New-DMLun" Order="210" Priority="Mutation" DependsOn="None" />
+    <Test Name="New-DMFileSystem.Tests.ps1" Function="New-DMFileSystem" Order="211" Priority="Mutation" DependsOn="None" />
+    <Test Name="Set-storage.Tests.ps1" Function="Set and rename LUN and file-system commands" Order="212" Priority="Mutation" DependsOn="New-DMLun.Tests.ps1,New-DMFileSystem.Tests.ps1" />
     <Test Name="New-DMLunSnapshot.Tests.ps1" Function="New-DMLunSnapshot" Order="220" Priority="Mutation" DependsOn="None" />
     <Test Name="New-DMLunSnapshotCopy.Tests.ps1" Function="New-DMLunSnapshotCopy" Order="230" Priority="Mutation" DependsOn="None" />
     <Test Name="snapshot-actions.Tests.ps1" Function="Enable, Restart, Resize and Restore LUN snapshots" Order="240" Priority="Mutation" DependsOn="None" />
@@ -37,6 +39,7 @@
     <Test Name="filesystem-snapshots.Tests.ps1" Function="File-system snapshot commands" Order="280" Priority="Mutation" DependsOn="None" />
     <Test Name="Remove-storage-and-new-cifs.Tests.ps1" Function="Storage and NAS removal, CIFS share and dTree commands" Order="290" Priority="Mutation" DependsOn="None" />
     <Test Name="port-group-actions.Tests.ps1" Function="Port-group and port-group membership commands" Order="300" Priority="Mutation" DependsOn="None" />
+    <Test Name="Set-and-Rename-NamedObjects.Tests.ps1" Function="Set and rename host, host group, LUN group and port group commands" Order="305" Priority="Mutation" DependsOn="New-host-and-groups.Tests.ps1,port-group-actions.Tests.ps1" />
     <Test Name="mapping-view-actions.Tests.ps1" Function="Mapping-view and mapping-view association commands" Order="310" Priority="Mutation" DependsOn="None" />
     <Test Name="protection-and-consistency-groups.Tests.ps1" Function="Protection-group and snapshot-consistency-group commands" Order="320" Priority="Mutation" DependsOn="None" />
     <Test Name="initiator-actions.Tests.ps1" Function="FC, iSCSI and NVMe initiator commands" Order="330" Priority="Mutation" DependsOn="None" />
@@ -103,29 +106,41 @@
 
     <Phase Name="MutationCreation" Priority="3" Condition="-RunMutatingTests and AllowMutatingTests">
       <Test Name="New-DMLun" Function="Create test-owned LUN" Order="2000" DependsOn="Connect-deviceManager,Configuration.StoragePoolId" />
-      <Test Name="New-DMLunSnapshot" Function="Create snapshot of test-owned LUN" Order="2010" DependsOn="New-DMLun" />
+      <Test Name="Set-DMLun" Function="Update test-owned LUN description (Dorado V6)" Order="2001" DependsOn="New-DMLun" />
+      <Test Name="Rename-DMLun" Function="Rename test-owned LUN (Dorado V6)" Order="2002" DependsOn="Set-DMLun" />
+      <Test Name="New-DMLunSnapshot" Function="Create snapshot of test-owned LUN" Order="2010" DependsOn="Rename-DMLun" />
       <Test Name="New-DMLunSnapshotCopy" Function="Create copy of test-owned LUN snapshot" Order="2020" DependsOn="New-DMLunSnapshot" />
       <Test Name="Enable-DMLunSnapshot" Function="Activate test-owned LUN snapshot" Order="2030" DependsOn="New-DMLunSnapshot" />
       <Test Name="Restart-DMLunSnapshot" Function="Reactivate test-owned LUN snapshot" Order="2040" DependsOn="New-DMLunSnapshot" />
       <Test Name="Restore-DMLunSnapshot" Function="Rollback test-owned LUN snapshot" Order="2050" DependsOn="New-DMLunSnapshot" />
       <Test Name="Resize-DMLunSnapshot" Function="Expand test-owned LUN snapshot" Order="2060" DependsOn="New-DMLunSnapshot" />
       <Test Name="New-DMLunGroup" Function="Create test-owned LUN group" Order="2070" DependsOn="Connect-deviceManager" />
-      <Test Name="Add-DMLunToLunGroup" Function="Associate test-owned LUN with test-owned LUN group" Order="2080" DependsOn="New-DMLun,New-DMLunGroup" />
+      <Test Name="Set-DMLunGroup" Function="Update test-owned LUN group description" Order="2071" DependsOn="New-DMLunGroup" />
+      <Test Name="Rename-DMLunGroup" Function="Rename test-owned LUN group" Order="2072" DependsOn="Set-DMLunGroup" />
+      <Test Name="Add-DMLunToLunGroup" Function="Associate test-owned LUN with test-owned LUN group" Order="2080" DependsOn="Rename-DMLun,Rename-DMLunGroup" />
       <Test Name="New-DMHostGroup" Function="Create test-owned host group" Order="2090" DependsOn="Connect-deviceManager" />
+      <Test Name="Set-DMHostGroup" Function="Update test-owned host group description" Order="2091" DependsOn="New-DMHostGroup" />
+      <Test Name="Rename-DMHostGroup" Function="Rename test-owned host group" Order="2092" DependsOn="Set-DMHostGroup" />
       <Test Name="New-DMHost" Function="Create test-owned host" Order="2100" DependsOn="Connect-deviceManager" />
-      <Test Name="Add-DMHostToHostGroup" Function="Associate test-owned host with test-owned host group" Order="2110" DependsOn="New-DMHost,New-DMHostGroup" />
+      <Test Name="Set-DMHost" Function="Update test-owned host description" Order="2101" DependsOn="New-DMHost" />
+      <Test Name="Rename-DMHost" Function="Rename test-owned host" Order="2102" DependsOn="Set-DMHost" />
+      <Test Name="Add-DMHostToHostGroup" Function="Associate test-owned host with test-owned host group" Order="2110" DependsOn="Rename-DMHost,Rename-DMHostGroup" />
       <Test Name="New-DMFileSystem" Function="Create test-owned file system" Order="2120" DependsOn="Connect-deviceManager,Configuration.StoragePoolId" />
-      <Test Name="New-DMFileSystemSnapshot" Function="Create test-owned file-system snapshot" Order="2130" DependsOn="New-DMFileSystem" />
+      <Test Name="Set-DMFileSystem" Function="Update test-owned file-system description" Order="2121" DependsOn="New-DMFileSystem" />
+      <Test Name="Rename-DMFileSystem" Function="Rename test-owned file system" Order="2122" DependsOn="Set-DMFileSystem" />
+      <Test Name="New-DMFileSystemSnapshot" Function="Create test-owned file-system snapshot" Order="2130" DependsOn="Rename-DMFileSystem" />
       <Test Name="Restore-DMFileSystemSnapshot" Function="Rollback test-owned file-system snapshot" Order="2140" DependsOn="New-DMFileSystemSnapshot" />
-      <Test Name="New-DMdTree" Function="Create test-owned dTree" Order="2150" DependsOn="New-DMFileSystem" />
-      <Test Name="New-DMnfsShare" Function="Create test-owned NFS share" Order="2160" DependsOn="New-DMFileSystem" />
+      <Test Name="New-DMdTree" Function="Create test-owned dTree" Order="2150" DependsOn="Rename-DMFileSystem" />
+      <Test Name="New-DMnfsShare" Function="Create test-owned NFS share" Order="2160" DependsOn="Rename-DMFileSystem" />
       <Test Name="New-DMnfsClient" Function="Create test-owned NFS client grant" Order="2170" DependsOn="New-DMnfsShare" />
-      <Test Name="New-DMCifsShare" Function="Create test-owned CIFS share" Order="2180" DependsOn="New-DMFileSystem" />
+      <Test Name="New-DMCifsShare" Function="Create test-owned CIFS share" Order="2180" DependsOn="Rename-DMFileSystem" />
       <Test Name="New-DMPortGroup" Function="Create test-owned port group" Order="2190" DependsOn="Connect-deviceManager" />
+      <Test Name="Set-DMPortGroup" Function="Update test-owned port group description" Order="2191" DependsOn="New-DMPortGroup" />
+      <Test Name="Rename-DMPortGroup" Function="Rename test-owned port group" Order="2192" DependsOn="Set-DMPortGroup" />
       <Test Name="New-DMMappingView" Function="Create test-owned mapping view" Order="2200" DependsOn="Connect-deviceManager" />
-      <Test Name="Add-DMHostGroupToMappingView" Function="Associate test-owned host group with mapping view" Order="2210" DependsOn="New-DMHostGroup,New-DMMappingView" />
-      <Test Name="Add-DMLunGroupToMappingView" Function="Associate test-owned LUN group with mapping view" Order="2220" DependsOn="New-DMLunGroup,New-DMMappingView" />
-      <Test Name="Add-DMPortGroupToMappingView" Function="Associate test-owned port group with mapping view" Order="2230" DependsOn="New-DMPortGroup,New-DMMappingView" />
+      <Test Name="Add-DMHostGroupToMappingView" Function="Associate test-owned host group with mapping view" Order="2210" DependsOn="Rename-DMHostGroup,New-DMMappingView" />
+      <Test Name="Add-DMLunGroupToMappingView" Function="Associate test-owned LUN group with mapping view" Order="2220" DependsOn="Rename-DMLunGroup,New-DMMappingView" />
+      <Test Name="Add-DMPortGroupToMappingView" Function="Associate test-owned port group with mapping view" Order="2230" DependsOn="Rename-DMPortGroup,New-DMMappingView" />
       <Test Name="New-DMProtectionGroup" Function="Create protection group for test-owned LUN group" Order="2240" DependsOn="New-DMLunGroup" />
       <Test Name="New-DMSnapshotConsistencyGroup" Function="Create snapshot consistency group" Order="2250" DependsOn="New-DMProtectionGroup" />
       <Test Name="New-DMSnapshotConsistencyGroupCopy" Function="Create snapshot consistency group copy" Order="2260" DependsOn="New-DMSnapshotConsistencyGroup" />

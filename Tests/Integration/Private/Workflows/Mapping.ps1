@@ -14,6 +14,28 @@ $script:MappingMutationWorkflow = {
                     }
                 }
             }
+            if ($owned.PortGroup.Contains($portGroupName)) {
+                Invoke-MutationStep -Name 'Set-DMPortGroup' -Action {
+                    Assert-TestOwnedResource -Kind PortGroup -Identity $portGroupName
+                    Set-DMPortGroup -WebSession $session -PortGroupName $portGroupName `
+                        -Description "Integrity validation updated $runId" -Confirm:$false
+                } | Out-Null
+                $renameResult = @(Invoke-MutationStep -Name 'Rename-DMPortGroup' -Action {
+                    Assert-TestOwnedResource -Kind PortGroup -Identity $portGroupName
+                    if (@(Get-DMPortGroup -WebSession $session | Where-Object Name -EQ $renamedPortGroupName).Count -gt 0) {
+                        throw "A port group named '$renamedPortGroupName' already exists; refusing to overwrite it."
+                    }
+                    Rename-DMPortGroup -WebSession $session -PortGroupName $portGroupName `
+                        -NewName $renamedPortGroupName -Confirm:$false
+                })
+                if ($renameResult.Count -gt 0) {
+                    Update-TestOwnedResourceIdentity -Kind PortGroup -OldIdentity $portGroupName -NewIdentity $renamedPortGroupName
+                    $portGroupName = $renamedPortGroupName
+                    Add-MutationReadVerification -Name 'Rename-DMPortGroup:ReadBack' -ExpectedType 'OceanstorPortGroup' -Action {
+                        Get-DMPortGroup -WebSession $session | Where-Object Name -EQ $portGroupName
+                    } | Out-Null
+                }
+            }
             $mappingView = @(Invoke-MutationStep -Name 'New-DMMappingView' -ExpectedType 'OceanStorMappingView' -Action {
                 if (@(Get-DMMappingView -WebSession $session | Where-Object Name -EQ $mappingViewName).Count -gt 0) {
                     throw "A mapping view named '$mappingViewName' already exists; refusing to claim it as test-owned."
@@ -110,7 +132,7 @@ $script:MappingMutationWorkflow = {
         }
         else {
             Add-SkippedResult -Name @(
-                'New-DMPortGroup', 'New-DMMappingView', 'Add-DMPortGroupToMappingView',
+                'New-DMPortGroup', 'Set-DMPortGroup', 'Rename-DMPortGroup', 'New-DMMappingView', 'Add-DMPortGroupToMappingView',
                 'Remove-DMPortGroupFromMappingView', 'Add-DMHostGroupToMappingView',
                 'Remove-DMHostGroupFromMappingView', 'Add-DMLunGroupToMappingView',
                 'Remove-DMLunGroupFromMappingView', 'Remove-DMMappingView', 'Remove-DMPortGroup'

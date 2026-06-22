@@ -17,6 +17,30 @@ $script:NasMutationWorkflow = {
                 }
             }
 
+            if ($owned.FileSystem.Contains($fileSystemName)) {
+                Invoke-MutationStep -Name 'Set-DMFileSystem' -Action {
+                    Assert-TestOwnedResource -Kind FileSystem -Identity $fileSystemName
+                    Set-DMFileSystem -WebSession $session -FileSystemName $fileSystemName `
+                        -Description "Integrity validation updated $runId" -Confirm:$false
+                } | Out-Null
+                $renameResult = @(Invoke-MutationStep -Name 'Rename-DMFileSystem' -Action {
+                    Assert-TestOwnedResource -Kind FileSystem -Identity $fileSystemName
+                    if (@(Get-DMFileSystem -WebSession $session | Where-Object Name -EQ $renamedFileSystemName).Count -gt 0) {
+                        throw "A file system named '$renamedFileSystemName' already exists; refusing to overwrite it."
+                    }
+                    Rename-DMFileSystem -WebSession $session -FileSystemName $fileSystemName `
+                        -NewName $renamedFileSystemName -Confirm:$false
+                })
+                if ($renameResult.Count -gt 0) {
+                    Update-TestOwnedResourceIdentity -Kind FileSystem -OldIdentity $fileSystemName -NewIdentity $renamedFileSystemName
+                    $fileSystemName = $renamedFileSystemName
+                    $nfsSharePath = "/$fileSystemName/"
+                    Add-MutationReadVerification -Name 'Rename-DMFileSystem:ReadBack' -ExpectedType 'OceanstorFileSystem' -Action {
+                        Get-DMFileSystem -WebSession $session | Where-Object Name -EQ $fileSystemName
+                    } | Out-Null
+                }
+            }
+
             if ($owned.FileSystem.Contains($fileSystemName) -and $configuration.Nas.EnableFileSystemSnapshot) {
                 $fsSnapshot = @(Invoke-MutationStep -Name 'New-DMFileSystemSnapshot' -ExpectedType 'OceanstorFileSystemSnapshot' -Action {
                     Assert-TestOwnedResource -Kind FileSystem -Identity $fileSystemName
@@ -124,7 +148,7 @@ $script:NasMutationWorkflow = {
         }
         else {
             Add-SkippedResult -Name @(
-                'New-DMFileSystem', 'New-DMdTree', 'Remove-DMDTree', 'New-DMFileSystemSnapshot',
+                'New-DMFileSystem', 'Set-DMFileSystem', 'Rename-DMFileSystem', 'New-DMdTree', 'Remove-DMDTree', 'New-DMFileSystemSnapshot',
                 'Restore-DMFileSystemSnapshot', 'Remove-DMFileSystemSnapshot', 'New-DMnfsShare',
                 'New-DMnfsClient', 'Remove-DMNfsClient', 'Remove-DMNfsShare', 'New-DMCifsShare',
                 'Remove-DMCifsShare', 'Remove-DMFileSystem'

@@ -38,7 +38,10 @@ function Invoke-MutationValidation {
             'New-DMSnapshotConsistencyGroup', 'New-DMSnapshotConsistencyGroupCopy',
             'Enable-DMSnapshotConsistencyGroup', 'Restart-DMSnapshotConsistencyGroup',
             'Restore-DMSnapshotConsistencyGroup', 'Remove-DMSnapshotConsistencyGroup',
-            'Remove-DMFiberChannelInitiatorFromHost', 'Remove-DMIscsiInitiatorFromHost'
+            'Remove-DMFiberChannelInitiatorFromHost', 'Remove-DMIscsiInitiatorFromHost',
+            'Set-DMLun', 'Rename-DMLun', 'Set-DMFileSystem', 'Rename-DMFileSystem',
+            'Set-DMHost', 'Rename-DMHost', 'Set-DMHostGroup', 'Rename-DMHostGroup',
+            'Set-DMLunGroup', 'Rename-DMLunGroup', 'Set-DMPortGroup', 'Rename-DMPortGroup'
         ) -Status 'NotRequested' -Reason 'Call the runner with -RunMutatingTests and enable the desired section in IntegrityValidationConfig.psd1.'
     }
     elseif (-not $configuration.AllowMutatingTests) {
@@ -48,21 +51,27 @@ function Invoke-MutationValidation {
         Test-MutatingConfiguration
         Enable-DMValidationRequestTrace -Sink $mutationRequests
         $lunName = New-TestName -Suffix 'lun'
+        $renamedLunName = New-TestName -Suffix 'lun_renamed'
         $snapshotName = New-TestName -Suffix 'snap'
         $snapshotCopyName = New-TestName -Suffix 'snapcopy'
         $fileSystemName = New-TestName -Suffix 'fs'
+        $renamedFileSystemName = New-TestName -Suffix 'fs_renamed'
         $fileSystemSnapshotName = New-TestName -Suffix 'fssnap'
         $dTreeName = New-TestName -Suffix 'dtree'
         $cifsShareName = New-TestName -Suffix 'cifs'
         $nfsSharePath = "/$fileSystemName/"
         $mappingViewName = New-TestName -Suffix 'map'
         $portGroupName = New-TestName -Suffix 'ports'
+        $renamedPortGroupName = New-TestName -Suffix 'ports_renamed'
         $lunGroupName = New-TestName -Suffix 'lungroup'
+        $renamedLunGroupName = New-TestName -Suffix 'lungroup_renamed'
         $protectionGroupName = New-TestName -Suffix 'protect'
         $consistencyGroupName = New-TestName -Suffix 'cgsnap'
         $consistencyCopyName = New-TestName -Suffix 'cgcopy'
         $testHostName = New-TestName -Suffix 'host'
+        $renamedHostName = New-TestName -Suffix 'host_renamed'
         $hostGroupName = New-TestName -Suffix 'hostgroup'
+        $renamedHostGroupName = New-TestName -Suffix 'hostgroup_renamed'
         $lunGroupContainsLun = $false
         $hostGroupContainsHost = $false
         $mappingContainsHostGroup = $false

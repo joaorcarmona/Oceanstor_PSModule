@@ -41,6 +41,13 @@ AfterAll {
 
 InModuleScope NamedObjectModificationTestModule {
 Describe 'Named object Set commands' {
+    It 'loads the shared update helper in the live integration runner' {
+        $runnerPath = Join-Path $PSScriptRoot '..\..\Integration\Invoke-GetterIntegrityValidation.ps1'
+        $runnerSource = Get-Content -LiteralPath $runnerPath -Raw
+        $runnerSource | Should -Match "'New-DMNamedObjectUpdate\.ps1'"
+        $runnerSource | Should -Match "'ConvertTo-DMCapacityBlocks\.ps1'"
+    }
+
     BeforeEach {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
         Mock Get-DMhosts { @([pscustomobject]@{ Id = 'host-01'; Name = 'host-old' }, [pscustomobject]@{ Id = 'host-02'; Name = 'taken' }) }

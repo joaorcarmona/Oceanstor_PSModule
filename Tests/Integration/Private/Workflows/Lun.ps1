@@ -18,6 +18,34 @@ $script:LunMutationWorkflow = {
             }
 
             if ($owned.Lun.Contains($lunName)) {
+                if ([string]$session.version -match '^V6') {
+                    Invoke-MutationStep -Name 'Set-DMLun' -Action {
+                        Assert-TestOwnedResource -Kind Lun -Identity $lunName
+                        Set-DMLun -WebSession $session -LunName $lunName `
+                            -Description "Integrity validation updated $runId" -Confirm:$false
+                    } | Out-Null
+                    $renameResult = @(Invoke-MutationStep -Name 'Rename-DMLun' -Action {
+                        Assert-TestOwnedResource -Kind Lun -Identity $lunName
+                        if (@(Get-DMluns -WebSession $session | Where-Object Name -EQ $renamedLunName).Count -gt 0) {
+                            throw "A LUN named '$renamedLunName' already exists; refusing to overwrite it."
+                        }
+                        Rename-DMLun -WebSession $session -LunName $lunName -NewName $renamedLunName -Confirm:$false
+                    })
+                    if ($renameResult.Count -gt 0) {
+                        Update-TestOwnedResourceIdentity -Kind Lun -OldIdentity $lunName -NewIdentity $renamedLunName
+                        $lunName = $renamedLunName
+                        Add-MutationReadVerification -Name 'Rename-DMLun:ReadBack' -Action {
+                            Get-DMluns -WebSession $session | Where-Object Name -EQ $lunName
+                        } | Out-Null
+                    }
+                }
+                else {
+                    Add-SkippedResult -Name @('Set-DMLun', 'Rename-DMLun') -Status 'NotExecuted' `
+                        -Reason 'LUN modification is supported only on Dorado V6 sessions.'
+                }
+            }
+
+            if ($owned.Lun.Contains($lunName)) {
                 $snapshot = @(Invoke-MutationStep -Name 'New-DMLunSnapshot' -ExpectedType 'OceanstorLunSnapshot' -Action {
                     Assert-TestOwnedResource -Kind Lun -Identity $lunName
                     if (@(Get-DMLunSnapshots -WebSession $session | Where-Object Name -EQ $snapshotName).Count -gt 0) {
@@ -84,7 +112,7 @@ $script:LunMutationWorkflow = {
         }
         else {
             Add-SkippedResult -Name @(
-                'New-DMLun', 'New-DMLunSnapshot', 'New-DMLunSnapshotCopy', 'Enable-DMLunSnapshot',
+                'New-DMLun', 'Set-DMLun', 'Rename-DMLun', 'New-DMLunSnapshot', 'New-DMLunSnapshotCopy', 'Enable-DMLunSnapshot',
                 'Restart-DMLunSnapshot', 'Resize-DMLunSnapshot', 'Restore-DMLunSnapshot',
                 'Remove-DMLunSnapShot', 'Remove-DMLun'
             ) -Status 'NotConfigured' -Reason 'Set Lun.Enabled = $true and provide StoragePoolId to run the test-owned LUN workflow.'

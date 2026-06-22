@@ -70,10 +70,11 @@ When mutation mode is explicitly enabled, the runner also:
 
 1. Creates resources with a generated test prefix and run timestamp.
 2. Registers every created resource as test-owned.
-3. Modifies only resources registered by the current run.
-4. Reads resources back to verify creation and associations.
-5. Removes resources in reverse dependency order.
-6. Writes a detailed mutation request trace.
+3. Updates descriptions and renames supported resources immediately after creation.
+4. Uses the renamed identities for dependent resources and associations.
+5. Reads resources back to verify renames, creation, and associations.
+6. Removes resources in reverse dependency order using their current names.
+7. Writes a detailed mutation request trace.
 
 Cleanup actions are registered as resources are created. Removal commands refuse
 to modify resources that were not created and registered by the same run.
