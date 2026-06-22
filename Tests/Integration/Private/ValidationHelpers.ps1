@@ -171,6 +171,21 @@ function Complete-TestOwnedResource {
     [void]$owned[$Kind].Remove($Identity)
 }
 
+function Update-TestOwnedResourceIdentity {
+    param(
+        [Parameter(Mandatory)][string]$Kind,
+        [Parameter(Mandatory)][string]$OldIdentity,
+        [Parameter(Mandatory)][string]$NewIdentity
+    )
+
+    Assert-TestOwnedResource -Kind $Kind -Identity $OldIdentity
+    if ($owned[$Kind].Contains($NewIdentity)) {
+        throw "Cannot rename test-owned $Kind '$OldIdentity' to '$NewIdentity' because the new identity is already registered."
+    }
+    Complete-TestOwnedResource -Kind $Kind -Identity $OldIdentity
+    Register-TestOwnedResource -Kind $Kind -Identity $NewIdentity
+}
+
 function Register-CleanupAction {
     param(
         [Parameter(Mandatory)][string]$Name,

@@ -14,6 +14,28 @@ $script:HostMutationWorkflow = {
                     }
                 }
             }
+            if ($owned.HostGroup.Contains($hostGroupName)) {
+                Invoke-MutationStep -Name 'Set-DMHostGroup' -Action {
+                    Assert-TestOwnedResource -Kind HostGroup -Identity $hostGroupName
+                    Set-DMHostGroup -WebSession $session -HostGroupName $hostGroupName `
+                        -Description "Integrity validation updated $runId" -Confirm:$false
+                } | Out-Null
+                $renameResult = @(Invoke-MutationStep -Name 'Rename-DMHostGroup' -Action {
+                    Assert-TestOwnedResource -Kind HostGroup -Identity $hostGroupName
+                    if (@(Get-DMhostGroups -WebSession $session | Where-Object Name -EQ $renamedHostGroupName).Count -gt 0) {
+                        throw "A host group named '$renamedHostGroupName' already exists; refusing to overwrite it."
+                    }
+                    Rename-DMHostGroup -WebSession $session -HostGroupName $hostGroupName `
+                        -NewName $renamedHostGroupName -Confirm:$false
+                })
+                if ($renameResult.Count -gt 0) {
+                    Update-TestOwnedResourceIdentity -Kind HostGroup -OldIdentity $hostGroupName -NewIdentity $renamedHostGroupName
+                    $hostGroupName = $renamedHostGroupName
+                    Add-MutationReadVerification -Name 'Rename-DMHostGroup:ReadBack' -ExpectedType 'OceanStorHostGroup' -Action {
+                        Get-DMhostGroups -WebSession $session | Where-Object Name -EQ $hostGroupName
+                    } | Out-Null
+                }
+            }
             $createdHost = @(Invoke-MutationStep -Name 'New-DMHost' -ExpectedType 'OceanStorHost' -Action {
                 if (@(Get-DMhosts -WebSession $session | Where-Object Name -EQ $testHostName).Count -gt 0) {
                     throw "A host named '$testHostName' already exists; refusing to claim it as test-owned."
@@ -27,6 +49,27 @@ $script:HostMutationWorkflow = {
                     Invoke-OwnedRemoval -Name 'Remove-DMHost' -Kind Host -Identity $testHostName -Action {
                         Remove-DMHost -WebSession $session -HostName $testHostName -Confirm:$false
                     }
+                }
+            }
+            if ($owned.Host.Contains($testHostName)) {
+                Invoke-MutationStep -Name 'Set-DMHost' -Action {
+                    Assert-TestOwnedResource -Kind Host -Identity $testHostName
+                    Set-DMHost -WebSession $session -HostName $testHostName `
+                        -Description "Integrity validation updated $runId" -Confirm:$false
+                } | Out-Null
+                $renameResult = @(Invoke-MutationStep -Name 'Rename-DMHost' -Action {
+                    Assert-TestOwnedResource -Kind Host -Identity $testHostName
+                    if (@(Get-DMhosts -WebSession $session | Where-Object Name -EQ $renamedHostName).Count -gt 0) {
+                        throw "A host named '$renamedHostName' already exists; refusing to overwrite it."
+                    }
+                    Rename-DMHost -WebSession $session -HostName $testHostName -NewName $renamedHostName -Confirm:$false
+                })
+                if ($renameResult.Count -gt 0) {
+                    Update-TestOwnedResourceIdentity -Kind Host -OldIdentity $testHostName -NewIdentity $renamedHostName
+                    $testHostName = $renamedHostName
+                    Add-MutationReadVerification -Name 'Rename-DMHost:ReadBack' -ExpectedType 'OceanStorHost' -Action {
+                        Get-DMhosts -WebSession $session | Where-Object Name -EQ $testHostName
+                    } | Out-Null
                 }
             }
             if ($owned.Host.Contains($testHostName) -and $owned.HostGroup.Contains($hostGroupName)) {
@@ -49,7 +92,7 @@ $script:HostMutationWorkflow = {
         }
         else {
             Add-SkippedResult -Name @(
-                'New-DMHost', 'New-DMHostGroup', 'Add-DMHostToHostGroup',
+                'New-DMHost', 'Set-DMHost', 'Rename-DMHost', 'New-DMHostGroup', 'Set-DMHostGroup', 'Rename-DMHostGroup', 'Add-DMHostToHostGroup',
                 'Remove-DMHostFromHostGroup', 'Remove-DMHost', 'Remove-DMHostGroup'
             ) -Status 'NotConfigured' -Reason 'Set Host.Enabled = $true to run the test-owned host and host group workflow.'
         }

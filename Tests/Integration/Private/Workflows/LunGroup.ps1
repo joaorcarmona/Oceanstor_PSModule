@@ -15,6 +15,28 @@ $script:LunGroupMutationWorkflow = {
                     }
                 }
             }
+            if ($owned.LunGroup.Contains($lunGroupName)) {
+                Invoke-MutationStep -Name 'Set-DMLunGroup' -Action {
+                    Assert-TestOwnedResource -Kind LunGroup -Identity $lunGroupName
+                    Set-DMLunGroup -WebSession $session -LunGroupName $lunGroupName `
+                        -Description "Integrity validation updated $runId" -Confirm:$false
+                } | Out-Null
+                $renameResult = @(Invoke-MutationStep -Name 'Rename-DMLunGroup' -Action {
+                    Assert-TestOwnedResource -Kind LunGroup -Identity $lunGroupName
+                    if (@(Get-DMlunGroups -WebSession $session | Where-Object Name -EQ $renamedLunGroupName).Count -gt 0) {
+                        throw "A LUN group named '$renamedLunGroupName' already exists; refusing to overwrite it."
+                    }
+                    Rename-DMLunGroup -WebSession $session -LunGroupName $lunGroupName `
+                        -NewName $renamedLunGroupName -Confirm:$false
+                })
+                if ($renameResult.Count -gt 0) {
+                    Update-TestOwnedResourceIdentity -Kind LunGroup -OldIdentity $lunGroupName -NewIdentity $renamedLunGroupName
+                    $lunGroupName = $renamedLunGroupName
+                    Add-MutationReadVerification -Name 'Rename-DMLunGroup:ReadBack' -ExpectedType 'OceanStorLunGroup' -Action {
+                        Get-DMlunGroups -WebSession $session | Where-Object Name -EQ $lunGroupName
+                    } | Out-Null
+                }
+            }
             if ($owned.Lun.Contains($lunName) -and $owned.LunGroup.Contains($lunGroupName)) {
                 $associateLun = @(Invoke-MutationStep -Name 'Add-DMLunToLunGroup' -Action {
                     Assert-TestOwnedResource -Kind Lun -Identity $lunName
@@ -34,7 +56,7 @@ $script:LunGroupMutationWorkflow = {
             }
         }
         else {
-            Add-SkippedResult -Name @('New-DMLunGroup', 'Add-DMLunToLunGroup', 'Remove-DMLunFromLunGroup', 'Remove-DMLunGroup') `
+            Add-SkippedResult -Name @('New-DMLunGroup', 'Set-DMLunGroup', 'Rename-DMLunGroup', 'Add-DMLunToLunGroup', 'Remove-DMLunFromLunGroup', 'Remove-DMLunGroup') `
                 -Status 'NotConfigured' -Reason 'Set LunGroup.Enabled = $true with Lun.Enabled = $true to run the test-owned LUN group workflow.'
         }
 

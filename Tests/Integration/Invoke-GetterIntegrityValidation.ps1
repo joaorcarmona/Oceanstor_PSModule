@@ -30,9 +30,11 @@ $validationModule = New-Module -Name OceanstorLiveGetterValidation -ArgumentList
         ForEach-Object { . $_.FullName }
 
     foreach ($privateHelper in @(
+        'ConvertTo-DMCapacityBlocks.ps1',
         'Get-DMparsedElabel.ps1',
         'Get-DMPortGroupCandidates.ps1',
         'Invoke-DeviceManager.ps1',
+        'New-DMNamedObjectUpdate.ps1',
         'Set-DMHostInitiators.ps1',
         'Validate-WWNAddress.ps1',
         'Write-DMError.ps1'
