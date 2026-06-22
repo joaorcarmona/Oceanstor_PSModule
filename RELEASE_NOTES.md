@@ -15,6 +15,17 @@ standardizes initiator parameter spelling, clarifies report-template usage,
 updates WebSession wording, and removes stale per-command metadata from
 comment-based help.
 
+## Maintenance Update — 2026-06-22
+
+- Added human-readable `MB`, `GB`, and `TB` capacity input for LUN and file-system creation, including period and comma decimal separators.
+- Added `Set-DMLun` and `Set-DMFileSystem` with first-class rename and resize operations, additional Huawei API property passthrough, and `WhatIf`/confirmation support.
+- Added `Set-DMHost`, `Set-DMHostGroup`, `Set-DMLunGroup`, and `Set-DMPortGroup` for safe named-object modification.
+- Added focused `Rename-DM*` commands for LUNs, file systems, hosts, host groups, LUN groups, and port groups.
+- Added `Expand()` and `Rename()` methods to the corresponding storage object classes. LUN modification remains restricted to Dorado V6 sessions.
+- Added shared capacity and named-object validation helpers, duplicate-name protection, and vStore-aware modification resources.
+- Removed generated pipeline report artifacts from version control and added them to `.gitignore`.
+- Expanded the unit suite to 294 passing tests with no failures.
+
 ## Commit History
 
 - `1d8f7e6` - Update WebSession naming and docs

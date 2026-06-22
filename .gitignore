@@ -12,3 +12,4 @@ pipeline-report.csv
 pipeline-report.json
 Reports/
 temp-doc-*
+.codegraph/

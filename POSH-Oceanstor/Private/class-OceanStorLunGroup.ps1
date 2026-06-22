@@ -75,6 +75,15 @@ class OceanStorLunGroup{
 	{
 		return @(Get-DMlunsbyLunGroup -WebSession $this.Session -LunGroup $this)
 	}
+
+	[psobject] Rename([string]$NewName)
+	{
+		$result = Rename-DMLunGroup -WebSession $this.Session -LunGroupName $this.Name -NewName $NewName -Confirm:$false
+		if ($result.Code -eq 0) {
+			$this.Name = $NewName
+		}
+		return $result
+	}
 }
 
 
