@@ -1,4 +1,6 @@
-#Get Script RootPath
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidGlobalVars', '')]
+param()
+
 $workDir = $(Get-item $PSScriptRoot).Parent.FullName
 
 #Locattion for Lun Report Template
