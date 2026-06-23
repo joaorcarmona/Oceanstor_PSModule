@@ -174,23 +174,46 @@ Describe 'Public getter functions' {
                 Should -Throw '*Invalid LunName*'
         }
 
-        It 'gets LUNs by filter' {
-            Mock Invoke-DeviceManager { [pscustomobject]@{ data = @((New-TestLun -Id 'lun-01' -Name 'finance'), (New-TestLun -Id 'lun-02' -Name 'archive')) } }
+        It 'gets LUNs by filter using server-side query for known fields' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                $script:filterResource = $Resource
+                [pscustomobject]@{ data = @(New-TestLun -Id 'lun-01' -Name 'finance') }
+            }
 
             $result = (Get-DMLunsbyFilter -WebSession $script:session -Filter Name -Keyword finance)[0]
 
             $result.Id | Should -Be 'lun-01'
+            $script:filterResource | Should -Be 'lun?filter=NAME:finance'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
                 Should -Be @('Id', 'Name', 'Health Status', 'Lun Size', 'WWN')
             $result.'Allocation Type' | Should -Be 'Thin'
         }
 
-        It 'gets a LUN by WWN' {
-            Mock Invoke-DeviceManager { [pscustomobject]@{ data = @((New-TestLun -Id 'lun-01' -WWN 'wwn-a'), (New-TestLun -Id 'lun-02' -WWN 'wwn-b')) } }
+        It 'gets LUNs by filter using client-side exact match for unmapped properties' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                $script:filterResource = $Resource
+                [pscustomobject]@{ data = @((New-TestLun -Id 'lun-01' -Name 'finance'), (New-TestLun -Id 'lun-02' -Name 'archive')) }
+            }
+
+            $result = @(Get-DMLunsbyFilter -WebSession $script:session -Filter 'Allocation Type' -Keyword 'Thin')
+
+            $script:filterResource | Should -Be 'lun'
+            $result.Count | Should -Be 2
+        }
+
+        It 'gets a LUN by WWN using server-side filter' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                $script:wwnResource = $Resource
+                [pscustomobject]@{ data = @(New-TestLun -Id 'lun-02' -WWN 'wwn-b') }
+            }
 
             $result = (Get-DMlunsByWWN -WebSession $script:session -WWN 'wwn-b')[0]
 
             $result.Id | Should -Be 'lun-02'
+            $script:wwnResource | Should -Be 'lun?filter=WWN:wwn-b'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
                 Should -Be @('Id', 'Name', 'Health Status', 'Lun Size', 'WWN')
             $result.'Allocation Type' | Should -Be 'Thin'
