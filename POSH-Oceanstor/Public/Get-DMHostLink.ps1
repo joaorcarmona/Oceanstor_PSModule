@@ -1,4 +1,4 @@
-function Get-DMHostLinks {
+function Get-DMHostLink {
     <#
 	.SYNOPSIS
 		To Get Huawei Oceanstor Storage Host links
@@ -27,11 +27,11 @@ function Get-DMHostLinks {
 
 	.EXAMPLE
 
-		PS C:\> Get-DMHostLinks -webSession $session -HostId 1 -InitiatorType FC
+		PS C:\> Get-DMHostLink -webSession $session -HostId 1 -InitiatorType FC
 
 		OR
 
-		PS C:\> $disks = Get-DMHostLinks -HostId 1 -InitiatorType FC
+		PS C:\> $disks = Get-DMHostLink -HostId 1 -InitiatorType FC
 
 	.NOTES
 		Filename: Get-DMHostFCLinks.ps1
@@ -93,3 +93,5 @@ function Get-DMHostLinks {
 
     return $result
 }
+
+Set-Alias -Name Get-DMHostLinks -Value Get-DMHostLink

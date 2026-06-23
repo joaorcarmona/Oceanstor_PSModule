@@ -1,36 +1,36 @@
 $script:MutationReadBackWorkflow = {
 
         if ($owned.Lun.Contains($lunName)) {
-            Add-MutationReadVerification -Name 'Get-DMluns:Created' -Action {
-                Get-DMluns -WebSession $session | Where-Object Name -EQ $lunName
+            Add-MutationReadVerification -Name 'Get-DMlun:Created' -Action {
+                Get-DMlun -WebSession $session | Where-Object Name -EQ $lunName
             } | Out-Null
         }
         if ($owned.LunSnapshot.Contains($snapshotName)) {
-            Add-MutationReadVerification -Name 'Get-DMLunSnapshots:Created' -ExpectedType 'OceanstorLunSnapshot' -Action {
-                Get-DMLunSnapshots -WebSession $session | Where-Object Name -EQ $snapshotName
+            Add-MutationReadVerification -Name 'Get-DMLunSnapshot:Created' -ExpectedType 'OceanstorLunSnapshot' -Action {
+                Get-DMLunSnapshot -WebSession $session | Where-Object Name -EQ $snapshotName
             } | Out-Null
         }
         if ($owned.LunGroup.Contains($lunGroupName)) {
-            Add-MutationReadVerification -Name 'Get-DMlunGroups:Created' -ExpectedType 'OceanStorLunGroup' -Action {
-                Get-DMlunGroups -WebSession $session | Where-Object Name -EQ $lunGroupName
+            Add-MutationReadVerification -Name 'Get-DMlunGroup:Created' -ExpectedType 'OceanStorLunGroup' -Action {
+                Get-DMlunGroup -WebSession $session | Where-Object Name -EQ $lunGroupName
             } | Out-Null
         }
         if ($lunGroupContainsLun) {
-            Add-MutationReadVerification -Name 'Get-DMlunsbyLunGroup:Association' -Action {
-                Get-DMlunsbyLunGroup -WebSession $session -LunGroup $lunGroup[0] | Where-Object Name -EQ $lunName
+            Add-MutationReadVerification -Name 'Get-DMlunbyLunGroup:Association' -Action {
+                Get-DMlunbyLunGroup -WebSession $session -LunGroup $lunGroup[0] | Where-Object Name -EQ $lunName
             } | Out-Null
         }
         if ($owned.Host.Contains($testHostName)) {
-            Add-MutationReadVerification -Name 'Get-DMhosts:Created' -ExpectedType 'OceanStorHost' -Action {
-                Get-DMhosts -WebSession $session | Where-Object Name -EQ $testHostName
+            Add-MutationReadVerification -Name 'Get-DMhost:Created' -ExpectedType 'OceanStorHost' -Action {
+                Get-DMhost -WebSession $session | Where-Object Name -EQ $testHostName
             } | Out-Null
         }
         if ($hostGroupContainsHost) {
-            Add-MutationReadVerification -Name 'Get-DMhostsbyHostGroupId:Association' -ExpectedType 'OceanStorHost' -Action {
-                Get-DMhostsbyHostGroupId -WebSession $session -HostGroupId $hostGroup[0].Id | Where-Object Name -EQ $testHostName
+            Add-MutationReadVerification -Name 'Get-DMhostbyHostGroupId:Association' -ExpectedType 'OceanStorHost' -Action {
+                Get-DMhostbyHostGroupId -WebSession $session -HostGroupId $hostGroup[0].Id | Where-Object Name -EQ $testHostName
             } | Out-Null
-            Add-MutationReadVerification -Name 'Get-DMhostsbyHostGroupName:Association' -ExpectedType 'OceanStorHost' -Action {
-                Get-DMhostsbyHostGroupName -WebSession $session -HostGroupName $hostGroupName | Where-Object Name -EQ $testHostName
+            Add-MutationReadVerification -Name 'Get-DMhostbyHostGroupName:Association' -ExpectedType 'OceanStorHost' -Action {
+                Get-DMhostbyHostGroupName -WebSession $session -HostGroupName $hostGroupName | Where-Object Name -EQ $testHostName
             } | Out-Null
         }
         if ($owned.FileSystem.Contains($fileSystemName)) {
@@ -39,18 +39,18 @@ $script:MutationReadBackWorkflow = {
             } | Out-Null
         }
         if ($owned.FileSystemSnapshot.Contains($fileSystemSnapshotName)) {
-            Add-MutationReadVerification -Name 'Get-DMFileSystemSnapshots:Created' -ExpectedType 'OceanstorFileSystemSnapshot' -Action {
-                Get-DMFileSystemSnapshots -WebSession $session -FileSystemName $fileSystemName | Where-Object Name -EQ $fileSystemSnapshotName
+            Add-MutationReadVerification -Name 'Get-DMFileSystemSnapshot:Created' -ExpectedType 'OceanstorFileSystemSnapshot' -Action {
+                Get-DMFileSystemSnapshot -WebSession $session -FileSystemName $fileSystemName | Where-Object Name -EQ $fileSystemSnapshotName
             } | Out-Null
         }
         if ($owned.NfsShare.Contains($nfsSharePath)) {
-            Add-MutationReadVerification -Name 'Get-DMShares:NFS:Created' -ExpectedType 'OceanStorNFSShare' -Action {
-                Get-DMShares -WebSession $session -ShareType NFS | Where-Object 'Share Path' -EQ $nfsSharePath
+            Add-MutationReadVerification -Name 'Get-DMShare:NFS:Created' -ExpectedType 'OceanStorNFSShare' -Action {
+                Get-DMShare -WebSession $session -ShareType NFS | Where-Object 'Share Path' -EQ $nfsSharePath
             } | Out-Null
         }
         if ($owned.CifsShare.Contains($cifsShareName)) {
-            Add-MutationReadVerification -Name 'Get-DMShares:CIFS:Created' -ExpectedType 'OceanStorCIFSShare' -Action {
-                Get-DMShares -WebSession $session -ShareType CIFS | Where-Object Name -EQ $cifsShareName
+            Add-MutationReadVerification -Name 'Get-DMShare:CIFS:Created' -ExpectedType 'OceanStorCIFSShare' -Action {
+                Get-DMShare -WebSession $session -ShareType CIFS | Where-Object Name -EQ $cifsShareName
             } | Out-Null
         }
         if ($owned.MappingView.Contains($mappingViewName)) {

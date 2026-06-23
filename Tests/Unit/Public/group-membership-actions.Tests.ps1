@@ -2,12 +2,12 @@ BeforeDiscovery {
     $script:groupMembershipModule = New-Module -Name GroupMembershipTestModule -ArgumentList $PSScriptRoot -ScriptBlock {
         param($testRoot)
 
-        function Get-DMhosts { param([pscustomobject]$WebSession) }
-        function Get-DMhostGroups { param([pscustomobject]$WebSession) }
-        function Get-DMhostsbyHostGroupId { param([pscustomobject]$WebSession, [string]$HostGroupId) }
-        function Get-DMluns { param([pscustomobject]$WebSession) }
-        function Get-DMlunGroups { param([pscustomobject]$WebSession) }
-        function Get-DMlunsbyLunGroup { param([pscustomobject]$WebSession, [psobject]$LunGroup) }
+        function Get-DMhost { param([pscustomobject]$WebSession) }
+        function Get-DMhostGroup { param([pscustomobject]$WebSession) }
+        function Get-DMhostbyHostGroupId { param([pscustomobject]$WebSession, [string]$HostGroupId) }
+        function Get-DMlun { param([pscustomobject]$WebSession) }
+        function Get-DMlunGroup { param([pscustomobject]$WebSession) }
+        function Get-DMlunbyLunGroup { param([pscustomobject]$WebSession, [psobject]$LunGroup) }
         function Invoke-DeviceManager {
             param(
                 [pscustomobject]$WebSession,
@@ -36,9 +36,9 @@ InModuleScope GroupMembershipTestModule {
 Describe 'Host group membership commands' {
     BeforeEach {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
-        Mock Get-DMhosts { @([pscustomobject]@{ Id = 'host-01'; Name = 'server01' }) }
-        Mock Get-DMhostGroups { @([pscustomobject]@{ Id = 'hg-01'; Name = 'cluster01' }) }
-        Mock Get-DMhostsbyHostGroupId { @([pscustomobject]@{ Id = 'host-01'; Name = 'server01' }) }
+        Mock Get-DMhost { @([pscustomobject]@{ Id = 'host-01'; Name = 'server01' }) }
+        Mock Get-DMhostGroup { @([pscustomobject]@{ Id = 'hg-01'; Name = 'cluster01' }) }
+        Mock Get-DMhostbyHostGroupId { @([pscustomobject]@{ Id = 'host-01'; Name = 'server01' }) }
         Mock Invoke-DeviceManager {
             $script:method = $Method
             $script:resource = $Resource
@@ -70,7 +70,7 @@ Describe 'Host group membership commands' {
     }
 
     It 'rejects removal when the host is not a group member' {
-        Mock Get-DMhostsbyHostGroupId { @() }
+        Mock Get-DMhostbyHostGroupId { @() }
 
         { Remove-DMHostFromHostGroup -WebSession $script:session -HostName 'server01' -HostGroupName 'cluster01' -Confirm:$false } |
             Should -Throw '*not a member*'
@@ -82,9 +82,9 @@ Describe 'Host group membership commands' {
 Describe 'LUN group membership commands' {
     BeforeEach {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
-        Mock Get-DMluns { @([pscustomobject]@{ Id = 'lun-01'; Name = 'database' }) }
-        Mock Get-DMlunGroups { @([pscustomobject]@{ Id = 'lg-01'; Name = 'production' }) }
-        Mock Get-DMlunsbyLunGroup { @([pscustomobject]@{ Id = 'lun-01'; Name = 'database' }) }
+        Mock Get-DMlun { @([pscustomobject]@{ Id = 'lun-01'; Name = 'database' }) }
+        Mock Get-DMlunGroup { @([pscustomobject]@{ Id = 'lg-01'; Name = 'production' }) }
+        Mock Get-DMlunbyLunGroup { @([pscustomobject]@{ Id = 'lun-01'; Name = 'database' }) }
         Mock Invoke-DeviceManager {
             $script:method = $Method
             $script:resource = $Resource

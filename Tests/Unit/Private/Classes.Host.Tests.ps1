@@ -1,5 +1,5 @@
 BeforeAll {
-    function global:Get-DMHostLinks {}
+    function global:Get-DMHostLink {}
 
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorHost.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorHostGroup.ps1"
@@ -9,7 +9,7 @@ BeforeAll {
 }
 
 AfterAll {
-    Remove-Item function:global:Get-DMHostLinks -ErrorAction SilentlyContinue
+    Remove-Item function:global:Get-DMHostLink -ErrorAction SilentlyContinue
     Remove-Variable -Name HostPathsCall -Scope Global -ErrorAction SilentlyContinue
 }
 
@@ -32,7 +32,7 @@ Describe 'Host model classes' {
     }
 
     It 'retrieves all supported path types from a host object' {
-        function global:Get-DMHostLinks {
+        function global:Get-DMHostLink {
             param($WebSession, $HostId, $InitiatorType)
             $global:HostPathsCall += [pscustomobject]@{
                 Session = $WebSession

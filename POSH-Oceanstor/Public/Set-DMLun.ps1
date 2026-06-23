@@ -75,7 +75,7 @@ function Set-DMLun {
         throw 'Specify NewName, Capacity, Description, or at least one ApiProperties entry.'
     }
 
-    $luns = @(Get-DMluns -WebSession $session)
+    $luns = @(Get-DMlun -WebSession $session)
     $matches = @($luns | Where-Object Name -CEQ $LunName)
     if ($matches.Count -ne 1) {
         if ($matches.Count -gt 1) {

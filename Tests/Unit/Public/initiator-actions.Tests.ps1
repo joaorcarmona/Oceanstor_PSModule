@@ -2,8 +2,8 @@ BeforeDiscovery {
     $script:initiatorModule = New-Module -Name InitiatorActionsTestModule -ArgumentList $PSScriptRoot -ScriptBlock {
         param($testRoot)
 
-        function Get-DMhosts { param([pscustomobject]$WebSession) }
-        function Get-DMHostInitiators {
+        function Get-DMhost { param([pscustomobject]$WebSession) }
+        function Get-DMHostInitiator {
             param(
                 [pscustomobject]$WebSession,
                 [string]$InitiatorType,
@@ -52,7 +52,7 @@ InModuleScope InitiatorActionsTestModule {
 Describe 'Initiator creation and query commands' {
     BeforeEach {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
-        Mock Get-DMhosts { @([pscustomobject]@{ Id = 'host-01'; Name = 'server01' }) }
+        Mock Get-DMhost { @([pscustomobject]@{ Id = 'host-01'; Name = 'server01' }) }
         Mock Invoke-DeviceManager {
             $script:method = $Method
             $script:resource = $Resource
@@ -70,7 +70,7 @@ Describe 'Initiator creation and query commands' {
                 default { [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 }; data = @() } }
             }
         }
-        Mock Get-DMHostInitiators {
+        Mock Get-DMHostInitiator {
             if ($InitiatorType -eq 'FibreChannel') {
                 return @([OceanstorHostinitiatorFC]::new([pscustomobject]@{ ID = '10000090FA123456'; TYPE = 223 }, $script:session))
             }
@@ -118,8 +118,8 @@ Describe 'Initiator creation and query commands' {
         (Get-DMFiberChannelInitiator -WebSession $script:session -FreeInitiators)[0].Id | Should -Be '10000090FA123456'
         (Get-DMIscsiInitiator -WebSession $script:session -HostName 'server01')[0].Id | Should -Be 'iqn.2026-05.example:server01'
 
-        Should -Invoke Get-DMHostInitiators -ParameterFilter { $InitiatorType -eq 'FibreChannel' -and $FreeInitiators }
-        Should -Invoke Get-DMHostInitiators -ParameterFilter { $InitiatorType -eq 'ISCSI' -and $HostId -eq 'host-01' }
+        Should -Invoke Get-DMHostInitiator -ParameterFilter { $InitiatorType -eq 'FibreChannel' -and $FreeInitiators }
+        Should -Invoke Get-DMHostInitiator -ParameterFilter { $InitiatorType -eq 'ISCSI' -and $HostId -eq 'host-01' }
     }
 
     It 'queries NVMe initiators associated with a host' {
@@ -141,11 +141,11 @@ Describe 'Initiator creation and query commands' {
 Describe 'Initiator removal commands' {
     BeforeEach {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
-        Mock Get-DMhosts { @([pscustomobject]@{ Id = 'host-01'; Name = 'server01' }) }
+        Mock Get-DMhost { @([pscustomobject]@{ Id = 'host-01'; Name = 'server01' }) }
         Mock Get-DMFiberChannelInitiator { @([pscustomobject]@{ Id = '10000090FA123456' }) }
         Mock Get-DMIscsiInitiator { @([pscustomobject]@{ Id = 'iqn.2026-05.example:server01' }) }
         Mock Get-DMNvmeInitiator { @([pscustomobject]@{ Id = 'nqn.2026-05.example:host01' }) }
-        Mock Get-DMHostInitiators {
+        Mock Get-DMHostInitiator {
             if ($InitiatorType -eq 'FibreChannel') {
                 return @([pscustomobject]@{ Id = '10000090FA123456' })
             }

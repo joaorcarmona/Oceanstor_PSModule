@@ -1,7 +1,7 @@
-function Get-DMhostsbyName {
+function Get-DMhostbyId {
     <#
 .SYNOPSIS
-    To Get Huawei Oceanstor Storage configured Hosts querying by Host Name
+    To Get Huawei Oceanstor Storage configured Hosts querying by Hostid
 
 .DESCRIPTION
     Function to request Huawei Oceanstor Storage configured Hosts
@@ -9,29 +9,29 @@ function Get-DMhostsbyName {
 .PARAMETER webSession
     Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
 
-.PARAMETER Name
-		Mandatory parameter [string], to set the Host Name to look for.
+.PARAMETER HostId
+		Mandatory parameter [string], to set the Host ID to look for.
 
 .INPUTS
     System.Management.Automation.PSCustomObject
 
-    You can pipe an OceanStor session object to WebSession and provide Name by property name.
+    You can pipe an OceanStor session object to WebSession and provide hostId by property name.
 
 .OUTPUTS
     OceanStorHost
 
-    Returns host objects whose name matches the supplied Name value.
+    Returns host objects whose ID matches the supplied hostId value.
 
 .EXAMPLE
 
-    PS C:\> Get-DMhostsbyName -webSession $session -Name Host001
+    PS C:\> Get-DMhostbyId -webSession $session -hostId 1
 
     OR
 
-    PS C:\> $hosts = Get-DMhostsbyName -Name Host001
+    PS C:\> $hosts = Get-DMhostbyId -hostId 1
 
 .NOTES
-    Filename: Get-DMhostsbyName.ps1
+    Filename: Get-DMhostbyId.ps1
 
 .LINK
 #>
@@ -40,7 +40,7 @@ function Get-DMhostsbyName {
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession,
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
-        [string]$Name
+        [string]$hostId
     )
 
     if ($WebSession) {
@@ -59,7 +59,7 @@ function Get-DMhostsbyName {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "host?filter=NAME:$Name" | Select-Object -ExpandProperty data
+    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "host?filter=ID:$hostId" | Select-Object -ExpandProperty data
     $hosts = New-Object System.Collections.ArrayList
 
     foreach ($thost in $response) {
@@ -77,3 +77,5 @@ function Get-DMhostsbyName {
 
     return $result
 }
+
+Set-Alias -Name Get-DMhostsbyId -Value Get-DMhostbyId

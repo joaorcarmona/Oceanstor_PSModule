@@ -45,7 +45,7 @@ Describe 'Public getter functions' {
         It 'gets logical interfaces' {
             Mock Invoke-DeviceManager { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'lif-01'; ADDRESSFAMILY = 0; SUPPORTPROTOCOL = 3 }) } }
 
-            $result = (Get-DMLifs -WebSession $script:session)[0]
+            $result = (Get-DMLif -WebSession $script:session)[0]
 
             $result.Id | Should -Be 'lif-01'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
@@ -100,7 +100,7 @@ Describe 'Public getter functions' {
         It 'gets VLAN interfaces' {
             Mock Invoke-DeviceManager { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'vlan-01'; TYPE = 280; TAG = 100 }) } }
 
-            $result = (Get-DMvLans -WebSession $script:session)[0]
+            $result = (Get-DMvLan -WebSession $script:session)[0]
 
             $result.Id | Should -Be 'vlan-01'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |

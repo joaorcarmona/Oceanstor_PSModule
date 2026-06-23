@@ -1,37 +1,37 @@
-function Get-DMhostsbyId {
+function Get-DMhostbyHostGroupId {
     <#
 .SYNOPSIS
-    To Get Huawei Oceanstor Storage configured Hosts querying by Hostid
+    To Get Huawei Oceanstor Storage configured Hosts querying by HostGroupId
 
 .DESCRIPTION
-    Function to request Huawei Oceanstor Storage configured Hosts
+    Function to request Huawei Oceanstor Storage configured Hosts querying by HostGroupId
 
 .PARAMETER webSession
     Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
 
-.PARAMETER HostId
-		Mandatory parameter [string], to set the Host ID to look for.
+.PARAMETER HostGroupId
+		Mandatory parameter [string], to set the HostGroup ID to look for.
 
 .INPUTS
     System.Management.Automation.PSCustomObject
 
-    You can pipe an OceanStor session object to WebSession and provide hostId by property name.
+    You can pipe an OceanStor session object to WebSession and provide HostGroupId by property name.
 
 .OUTPUTS
     OceanStorHost
 
-    Returns host objects whose ID matches the supplied hostId value.
+    Returns host objects whose Parent Id matches the supplied HostGroupId value.
 
 .EXAMPLE
 
-    PS C:\> Get-DMhostsbyId -webSession $session -hostId 1
+    PS C:\> Get-DMhostbyHostGroupId -webSession $session -HostGroupId 10
 
     OR
 
-    PS C:\> $hosts = Get-DMhostsbyId -hostId 1
+    PS C:\> $hosts = Get-DMhostbyHostGroupId -HostGroupId 10
 
 .NOTES
-    Filename: Get-DMhostsbyId.ps1
+    Filename: Get-DMhostbyHostGroupId.ps1
 
 .LINK
 #>
@@ -39,8 +39,8 @@ function Get-DMhostsbyId {
     param(
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
-        [string]$hostId
+        [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
+        [string]$HostGroupId
     )
 
     if ($WebSession) {
@@ -59,7 +59,7 @@ function Get-DMhostsbyId {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "host?filter=ID:$hostId" | Select-Object -ExpandProperty data
+    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "host" | Select-Object -ExpandProperty data
     $hosts = New-Object System.Collections.ArrayList
 
     foreach ($thost in $response) {
@@ -67,13 +67,15 @@ function Get-DMhostsbyId {
         [void]$hosts.Add($hostobj)
     }
 
-    $hosts = @(Set-DMHostInitiators -InputObject $hosts -WebSession $session)
+    $result = $hosts | Where-Object "Parent Id" -Match $HostGroupId
 
-    $hosts | ForEach-Object {
+    $result = @(Set-DMHostInitiators -InputObject $result -WebSession $session)
+
+    $result | ForEach-Object {
         $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
     }
 
-    $result = $hosts
-
     return $result
 }
+
+Set-Alias -Name Get-DMhostsbyHostGroupId -Value Get-DMhostbyHostGroupId

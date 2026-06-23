@@ -1,4 +1,4 @@
-function Get-DMhostsbyHostGroupName {
+function Get-DMhostbyHostGroupName {
     <#
 .SYNOPSIS
     To Get Huawei Oceanstor Storage configured Hosts querying by HostGroupName
@@ -24,14 +24,14 @@ function Get-DMhostsbyHostGroupName {
 
 .EXAMPLE
 
-    PS C:\> Get-DMhostsbyHostGroupName -webSession $session -HostGroupName 10
+    PS C:\> Get-DMhostbyHostGroupName -webSession $session -HostGroupName 10
 
     OR
 
-    PS C:\> $hosts = Get-DMhostsbyHostGroupName -HostGroupName 10
+    PS C:\> $hosts = Get-DMhostbyHostGroupName -HostGroupName 10
 
 .NOTES
-    Filename: Get-DMhostsbyHostGroupName.ps1
+    Filename: Get-DMhostbyHostGroupName.ps1
 
 .LINK
 #>
@@ -77,3 +77,5 @@ function Get-DMhostsbyHostGroupName {
 
     return $result
 }
+
+Set-Alias -Name Get-DMhostsbyHostGroupName -Value Get-DMhostbyHostGroupName

@@ -1,10 +1,10 @@
-function Get-DMcofferDisks {
+function Get-DMhostGroup {
     <#
 	.SYNOPSIS
-		To Get Huawei Oceanstor Storage System coffer disks
+		To Get Huawei Oceanstor Storage Host Groups
 
 	.DESCRIPTION
-		Function to request Huawei Oceanstor Storage System coffer disks
+		Function to request Huawei Oceanstor Storage Host Groups
 
 	.PARAMETER webSession
 		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
@@ -15,20 +15,20 @@ function Get-DMcofferDisks {
 		You can pipe an OceanStor session object to WebSession.
 
 	.OUTPUTS
-		OceanStorDisks
+		OceanStorHostGroup
 
-		Returns disk objects where cofferDisk is true.
+		Returns host group objects.
 
 	.EXAMPLE
 
-		PS C:\> Get-DMcofferDisks -webSession $session
+		PS C:\> Get-DMhostGroup -webSession $session
 
 		OR
 
-		PS C:\> $cofferDisks = Get-DMcofferDisks
+		PS C:\> $hostGroups = Get-DMhostGroup
 
 	.NOTES
-		Filename: Get-DMcofferDisks.ps1
+		Filename: Get-DMhostGroup.ps1
 
 	.LINK
 	#>
@@ -45,7 +45,7 @@ function Get-DMcofferDisks {
         $session = $deviceManager
     }
 
-    $defaultDisplaySet = "Id", "Location", "Health Status", "Disk Usage", "PoolName"
+    $defaultDisplaySet = "Id", "Name", "Is Mapped", "Host Member Number", "vStore Name"
 
     $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
         'DefaultDisplayPropertySet',
@@ -54,19 +54,21 @@ function Get-DMcofferDisks {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "disk" | Select-Object -ExpandProperty data
-    $Storagedisks = New-Object System.Collections.ArrayList
+    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "hostgroup" | Select-Object -ExpandProperty data
+    $hostgroups = New-Object System.Collections.ArrayList
 
-    foreach ($tdisk in $response) {
-        $disk = [OceanStorDisks]::new($tdisk, $session)
-        [void]$Storagedisks.Add($disk)
+    foreach ($hgroup in $response) {
+        $hostgroup = [OceanStorHostGroup]::new($hgroup, $session)
+        [void]$hostgroups.Add($hostgroup)
     }
 
-    $result = $Storagedisks | Where-Object cofferDisk -EQ $true
-
-    $result | ForEach-Object {
+    $hostgroups | ForEach-Object {
         $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
     }
 
+    $result = $hostgroups
+
     return $result
 }
+
+Set-Alias -Name Get-DMhostGroups -Value Get-DMhostGroup

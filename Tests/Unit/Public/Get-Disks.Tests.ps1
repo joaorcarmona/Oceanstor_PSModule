@@ -71,7 +71,7 @@ Describe 'Public getter functions' {
         }
 
         It 'gets all disks' {
-            $result = @(Get-DMdisks -WebSession $script:session)
+            $result = @(Get-DMdisk -WebSession $script:session)
 
             $result.Count | Should -Be 2
             $result[0].PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
@@ -88,7 +88,7 @@ Describe 'Public getter functions' {
         }
 
         It 'gets disks by pool id' {
-            $result = (Get-DMdisksbyPoolId -WebSession $script:session -PoolId 'pool-01')[0]
+            $result = (Get-DMdiskbyPoolId -WebSession $script:session -PoolId 'pool-01')[0]
 
             $result.id | Should -Be 'disk-free'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
@@ -96,7 +96,7 @@ Describe 'Public getter functions' {
         }
 
         It 'gets disks by pool name' {
-            $result = (Get-DMdisksbyPoolName -WebSession $script:session -PoolName 'capacity')[0]
+            $result = (Get-DMdiskbyPoolName -WebSession $script:session -PoolName 'capacity')[0]
 
             $result.id | Should -Be 'disk-coffer'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
@@ -104,7 +104,7 @@ Describe 'Public getter functions' {
         }
 
         It 'gets coffer disks' {
-            $result = (Get-DMcofferDisks -WebSession $script:session)[0]
+            $result = (Get-DMcofferDisk -WebSession $script:session)[0]
 
             $result.id | Should -Be 'disk-coffer'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
@@ -112,7 +112,7 @@ Describe 'Public getter functions' {
         }
 
         It 'gets free disks' {
-            $result = (Get-DMfreeDisks -WebSession $script:session)[0]
+            $result = (Get-DMfreeDisk -WebSession $script:session)[0]
 
             $result.id | Should -Be 'disk-free'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |

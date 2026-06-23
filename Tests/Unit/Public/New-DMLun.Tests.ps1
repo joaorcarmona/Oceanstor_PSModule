@@ -2,7 +2,7 @@ BeforeDiscovery {
     $script:newLunModule = New-Module -Name NewDMLunTestModule -ArgumentList $PSScriptRoot -ScriptBlock {
         param($testRoot)
 
-        function Get-DMstoragePools {
+        function Get-DMstoragePool {
             param([pscustomobject]$WebSession)
         }
 
@@ -32,7 +32,7 @@ InModuleScope NewDMLunTestModule {
 Describe 'New-DMLun' {
     BeforeEach {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
-        Mock Get-DMstoragePools {
+        Mock Get-DMstoragePool {
             @([pscustomobject]@{ Id = 'pool-01'; Name = 'performance' })
         }
         Mock Invoke-DeviceManager {

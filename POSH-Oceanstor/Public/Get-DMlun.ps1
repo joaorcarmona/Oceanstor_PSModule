@@ -1,4 +1,4 @@
-function Get-DMluns {
+function Get-DMlun {
     <#
 	.SYNOPSIS
 		To Get Huawei Oceanstor Storage Luns
@@ -22,14 +22,14 @@ function Get-DMluns {
 
 	.EXAMPLE
 
-		PS C:\> Get-DMluns -webSession $session
+		PS C:\> Get-DMlun -webSession $session
 
 		OR
 
-		PS C:\> $luns = Get-DMluns
+		PS C:\> $luns = Get-DMlun
 
 	.NOTES
-		Filename: Get-DMluns.ps1
+		Filename: Get-DMlun.ps1
 
 	.LINK
 	#>
@@ -81,3 +81,5 @@ function Get-DMluns {
 
     return $result
 }
+
+Set-Alias -Name Get-DMluns -Value Get-DMlun

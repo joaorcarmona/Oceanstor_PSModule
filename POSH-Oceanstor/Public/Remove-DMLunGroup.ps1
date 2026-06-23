@@ -44,7 +44,7 @@ function Remove-DMLunGroup {
                 else {
                     $deviceManager
                 }
-                $groups = @(Get-DMlunGroups -WebSession $session)
+                $groups = @(Get-DMlunGroup -WebSession $session)
                 $matchingItems = @($groups | Where-Object Name -EQ $_)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -62,7 +62,7 @@ function Remove-DMLunGroup {
                 else {
                     $deviceManager
                 }
-                (Get-DMlunGroups -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMlunGroup -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$LunGroupName,
 
@@ -75,7 +75,7 @@ function Remove-DMLunGroup {
     else {
         $deviceManager
     }
-    $group = @(Get-DMlunGroups -WebSession $session | Where-Object Name -EQ $LunGroupName)[0]
+    $group = @(Get-DMlunGroup -WebSession $session | Where-Object Name -EQ $LunGroupName)[0]
     $resource = "lungroup/$($group.Id)"
     if ($VstoreId) {
         $resource += "?vstoreId=$VstoreId"

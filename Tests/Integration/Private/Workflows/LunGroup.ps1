@@ -1,7 +1,7 @@
 $script:LunGroupMutationWorkflow = {
         if ($configuration.LunGroup.Enabled) {
             $lunGroup = @(Invoke-MutationStep -Name 'New-DMLunGroup' -ExpectedType 'OceanStorLunGroup' -Action {
-                if (@(Get-DMlunGroups -WebSession $session | Where-Object Name -EQ $lunGroupName).Count -gt 0) {
+                if (@(Get-DMlunGroup -WebSession $session | Where-Object Name -EQ $lunGroupName).Count -gt 0) {
                     throw "A LUN group named '$lunGroupName' already exists; refusing to claim it as test-owned."
                 }
                 New-DMLunGroup -WebSession $session -Name $lunGroupName `
@@ -23,7 +23,7 @@ $script:LunGroupMutationWorkflow = {
                 } | Out-Null
                 $renameResult = @(Invoke-MutationStep -Name 'Rename-DMLunGroup' -Action {
                     Assert-TestOwnedResource -Kind LunGroup -Identity $lunGroupName
-                    if (@(Get-DMlunGroups -WebSession $session | Where-Object Name -EQ $renamedLunGroupName).Count -gt 0) {
+                    if (@(Get-DMlunGroup -WebSession $session | Where-Object Name -EQ $renamedLunGroupName).Count -gt 0) {
                         throw "A LUN group named '$renamedLunGroupName' already exists; refusing to overwrite it."
                     }
                     Rename-DMLunGroup -WebSession $session -LunGroupName $lunGroupName `
@@ -33,7 +33,7 @@ $script:LunGroupMutationWorkflow = {
                     Update-TestOwnedResourceIdentity -Kind LunGroup -OldIdentity $lunGroupName -NewIdentity $renamedLunGroupName
                     $lunGroupName = $renamedLunGroupName
                     Add-MutationReadVerification -Name 'Rename-DMLunGroup:ReadBack' -ExpectedType 'OceanStorLunGroup' -Action {
-                        Get-DMlunGroups -WebSession $session | Where-Object Name -EQ $lunGroupName
+                        Get-DMlunGroup -WebSession $session | Where-Object Name -EQ $lunGroupName
                     } | Out-Null
                 }
             }

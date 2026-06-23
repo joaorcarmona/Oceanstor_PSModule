@@ -1,4 +1,4 @@
-function Get-DMAlarms {
+function Get-DMAlarm {
     <#
 	.SYNOPSIS
 		To Get Huawei Oceanstor Storage alarms
@@ -24,23 +24,23 @@ function Get-DMAlarms {
 
 	.EXAMPLE
 
-		PS C:\> Get-DMAlarms -webSession $session -AlarmStatus "Cleared"
+		PS C:\> Get-DMAlarm -webSession $session -AlarmStatus "Cleared"
 
 		OR
 
-		PS C:\> $disks = Get-DMAlarms -AlarmStatus "Cleared"
+		PS C:\> $disks = Get-DMAlarm -AlarmStatus "Cleared"
 
 	.EXAMPLE
 
-		PS C:\> Get-DMAlarms -webSession $session
+		PS C:\> Get-DMAlarm -webSession $session
 
 		OR
 
-		PS C:\> $disks = Get-DMAlarms
+		PS C:\> $disks = Get-DMAlarm
 
 
 	.NOTES
-		Filename: Get-DMAlarms.ps1
+		Filename: Get-DMAlarm.ps1
 
 	.LINK
 	#>
@@ -99,3 +99,5 @@ function Get-DMAlarms {
     $result = $alarms
     return $result
 }
+
+Set-Alias -Name Get-DMAlarms -Value Get-DMAlarm

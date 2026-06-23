@@ -10,7 +10,7 @@
     Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
 
 .PARAMETER SnapShotName
-    Name of the snapshot to activate. Valid values are checked against Get-DMLunSnapshots and support tab completion.
+    Name of the snapshot to activate. Valid values are checked against Get-DMLunSnapshot and support tab completion.
 
 .INPUTS
     System.Management.Automation.PSCustomObject
@@ -42,7 +42,7 @@ function Enable-DMLunSnapshot {
                     $session = $deviceManager
                 }
 
-                $snapshots = @(Get-DMLunSnapshots -WebSession $session)
+                $snapshots = @(Get-DMLunSnapshot -WebSession $session)
                 $matchingSnapshots = @($snapshots | Where-Object Name -EQ $_)
 
                 if ($matchingSnapshots.Count -eq 1) {
@@ -65,7 +65,7 @@ function Enable-DMLunSnapshot {
                     $session = $deviceManager
                 }
 
-                (Get-DMLunSnapshots -WebSession $session).Name |
+                (Get-DMLunSnapshot -WebSession $session).Name |
                     Sort-Object -Unique |
                     Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -79,7 +79,7 @@ function Enable-DMLunSnapshot {
         $session = $deviceManager
     }
 
-    $snapshot = @(Get-DMLunSnapshots -WebSession $session | Where-Object Name -EQ $SnapShotName)[0]
+    $snapshot = @(Get-DMLunSnapshot -WebSession $session | Where-Object Name -EQ $SnapShotName)[0]
 
     if ($PSCmdlet.ShouldProcess($SnapShotName, 'Activate LUN snapshot')) {
         $body = @{ SNAPSHOTLIST = @($snapshot.Id) }

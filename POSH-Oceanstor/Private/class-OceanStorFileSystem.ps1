@@ -518,7 +518,7 @@ class OceanstorFileSystem{
     }
 
     [array] GetSnapshots() {
-        return @(Get-DMFileSystemSnapshots -WebSession $this.Session -FileSystemName $this.Name)
+        return @(Get-DMFileSystemSnapshot -WebSession $this.Session -FileSystemName $this.Name)
     }
 
     [psobject] Expand([object]$Capacity) {

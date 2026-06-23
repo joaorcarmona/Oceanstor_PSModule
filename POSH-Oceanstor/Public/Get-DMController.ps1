@@ -1,10 +1,10 @@
-function Get-DMhosts {
+function Get-DMController {
     <#
 .SYNOPSIS
-    To Get Huawei Oceanstor Storage configured Hosts
+    To Get Huawei Oceanstor Storage Controller
 
 .DESCRIPTION
-    Function to request Huawei Oceanstor Storage configured Hosts
+    Function to request Huawei Oceanstor Controller in the system
 
 .PARAMETER webSession
     Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
@@ -15,20 +15,20 @@ function Get-DMhosts {
     You can pipe an OceanStor session object to WebSession.
 
 .OUTPUTS
-    OceanStorHost
+    OceanStorController
 
-    Returns host objects.
+    Returns controller objects.
 
 .EXAMPLE
 
-    PS C:\> Get-DMhosts -webSession $session
+    PS C:\> Get-DMController -webSession $session
 
     OR
 
-    PS C:\> $hosts = Get-DMhosts
+    PS C:\> $controllers = Get-DMController
 
 .NOTES
-    Filename: Get-DMhosts.ps1
+    Filename: Get-DMController.ps1
 
 .LINK
 #>
@@ -45,7 +45,7 @@ function Get-DMhosts {
         $session = $deviceManager
     }
 
-    $defaultDisplaySet = "Id", "Name", "Health Status", "Operation System", "Parent Name"
+    $defaultDisplaySet = "Id", "Location", "Health Status", "Running Status", "Is Master"
 
     $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
         'DefaultDisplayPropertySet',
@@ -54,21 +54,21 @@ function Get-DMhosts {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "host" | Select-Object -ExpandProperty data
-    $hosts = New-Object System.Collections.ArrayList
+    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "controller" | Select-Object -ExpandProperty data
+    $controllers = New-Object System.Collections.ArrayList
 
-    foreach ($thost in $response) {
-        $hostobj = [OceanStorHost]::new($thost, $session)
-        [void]$hosts.Add($hostobj)
+    foreach ($tcont in $response) {
+        $controller = [OceanStorController]::new($tcont, $session)
+        [void]$controllers.Add($controller)
     }
 
-    $hosts = @(Set-DMHostInitiators -InputObject $hosts -WebSession $session)
-
-    $hosts | ForEach-Object {
+    $controllers | ForEach-Object {
         $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
     }
 
-    $result = $hosts
+    $result = $controllers
 
     return $result
 }
+
+Set-Alias -Name Get-DMControllers -Value Get-DMController

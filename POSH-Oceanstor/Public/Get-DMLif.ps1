@@ -1,10 +1,10 @@
-function Get-DMvLans {
+function Get-DMLif {
     <#
 	.SYNOPSIS
-		To Get Huawei OceanStor Storage VLANs
+		To Get Huawei OceanStor Storage LIFs
 
 	.DESCRIPTION
-		Function to request configured Huawei OceanStor VLANs.
+		Function to request configured Huawei OceanStor logical interfaces.
 
 	.PARAMETER webSession
 		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
@@ -15,20 +15,20 @@ function Get-DMvLans {
 		You can pipe an OceanStor session object to WebSession.
 
 	.OUTPUTS
-		OceanStorvLan
+		OceanStorLIF
 
-		Returns VLAN objects.
+		Returns logical interface objects.
 
 	.EXAMPLE
 
-		PS C:\> Get-DMvLans -webSession $session
+		PS C:\> Get-DMLif -webSession $session
 
 		OR
 
-		PS C:\> $vlans = Get-DMvLans
+		PS C:\> $lifs = Get-DMLif
 
 	.NOTES
-		Filename: Get-DMvLans.ps1
+		Filename: Get-DMLif.ps1
 
 	.LINK
 	#>
@@ -45,7 +45,7 @@ function Get-DMvLans {
         $session = $deviceManager
     }
 
-    $defaultDisplaySet = "Id", "Name", "Vlan Tag Id", "Port Type", "Running Status"
+    $defaultDisplaySet = "Id", "LIF Name", "IPv4 Address", "Running Status", "Support Protocol"
 
     $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
         'DefaultDisplayPropertySet',
@@ -54,18 +54,20 @@ function Get-DMvLans {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "vlan" | Select-Object -ExpandProperty data
-    $vlans = New-Object System.Collections.ArrayList
+    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "lif" | Select-Object -ExpandProperty data
+    $lifs = New-Object System.Collections.ArrayList
 
-    foreach ($tvlan in $response) {
-        $vlan = [OceanStorvLan]::new($tvlan, $session)
-        [void]$vlans.Add($vlan)
+    foreach ($tlif in $response) {
+        $lif = [OceanStorLIF]::new($tlif, $session)
+        [void]$lifs.Add($lif)
     }
 
-    $vlans | ForEach-Object {
+    $lifs | ForEach-Object {
         $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
     }
 
-    $result = $vlans
+    $result = $lifs
     return $result
 }
+
+Set-Alias -Name Get-DMLifs -Value Get-DMLif

@@ -1,10 +1,10 @@
-function Get-DMstoragePools {
+function Get-DMlunGroup {
     <#
 	.SYNOPSIS
-		To Get Huawei Oceanstor Storage Pools Configured
+		To Get Huawei Oceanstor Storage Lun Groups
 
 	.DESCRIPTION
-		Function to request Huawei Oceanstor Storage Pools Configured in the system
+		Function to request Huawei Oceanstor Storage Lun Groups
 
 	.PARAMETER webSession
 		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
@@ -15,20 +15,25 @@ function Get-DMstoragePools {
 		You can pipe an OceanStor session object to WebSession.
 
 	.OUTPUTS
-		OceanStorStoragePool
+		OceanStorLunGroup
 
-		Returns storage pool objects.
+		Returns LUN group objects.
 
 	.EXAMPLE
 
-		PS C:\> Get-DMstoragePools -webSession $session
+		PS C:\> Get-DMlunGroup -webSession $session
 
 		OR
 
-		PS C:\> $StoragePools = Get-DMstoragePools
+		PS C:\> $lunGroups = Get-DMlunGroup
+
+	.EXAMPLE
+
+		PS C:\> $lunGroup = (Get-DMlunGroup -WebSession $session)[0]
+		PS C:\> $memberLuns = $lunGroup.GetLuns()
 
 	.NOTES
-		Filename: Get-DMstoragePools.ps1
+		Filename: Get-DMlunGroup.ps1
 
 	.LINK
 	#>
@@ -45,7 +50,7 @@ function Get-DMstoragePools {
         $session = $deviceManager
     }
 
-    $defaultDisplaySet = "Id", "Name", "Health Status", "Running Status", "DataSpace"
+    $defaultDisplaySet = "Id", "Name", "LunGroup Capacity", "Is Mapped", "Luns Members number"
 
     $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
         'DefaultDisplayPropertySet',
@@ -54,19 +59,21 @@ function Get-DMstoragePools {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "storagepool" | Select-Object -ExpandProperty data
-    $storagePools = New-Object System.Collections.ArrayList
+    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "lungroup" | Select-Object -ExpandProperty data
+    $lunGroups = New-Object System.Collections.ArrayList
 
-    foreach ($spool in $response) {
-        $storagepool = [OceanStorStoragePool]::new($spool, $session)
-        [void]$storagePools.Add($storagepool)
+    foreach ($lgroup in $response) {
+        $lunGroup = [OceanStorLunGroup]::new($lgroup, $session)
+        [void]$lunGroups.Add($lunGroup)
     }
 
-    $storagePools | ForEach-Object {
+    $lunGroups | ForEach-Object {
         $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
     }
 
-    $result = $storagePools
+    $result = $lunGroups
 
     return $result
 }
+
+Set-Alias -Name Get-DMlunGroups -Value Get-DMlunGroup

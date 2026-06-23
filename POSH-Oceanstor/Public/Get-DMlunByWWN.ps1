@@ -1,4 +1,4 @@
-function Get-DMlunsByWWN {
+function Get-DMlunByWWN {
     <#
     .SYNOPSIS
         Searches for a LUN by its WWN.
@@ -26,14 +26,14 @@ function Get-DMlunsByWWN {
 
     .EXAMPLE
 
-        PS C:\> Get-DMlunsByWWN -webSession $session -wwn "6a08cf810075766e1efc050700000005"
+        PS C:\> Get-DMlunByWWN -webSession $session -wwn "6a08cf810075766e1efc050700000005"
 
         OR
 
-        PS C:\> $luns = Get-DMlunsByWWN -wwn "6a08cf810075766e1efc050700000005"
+        PS C:\> $luns = Get-DMlunByWWN -wwn "6a08cf810075766e1efc050700000005"
 
     .NOTES
-        Filename: Get-DMlunsByWWN.ps1
+        Filename: Get-DMlunByWWN.ps1
 
     .LINK
     #>
@@ -85,3 +85,5 @@ function Get-DMlunsByWWN {
 
     return $StorageLuns
 }
+
+Set-Alias -Name Get-DMlunsByWWN -Value Get-DMlunByWWN

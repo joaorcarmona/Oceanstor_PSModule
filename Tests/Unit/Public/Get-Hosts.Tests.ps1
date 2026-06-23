@@ -52,7 +52,7 @@ Describe 'Public getter functions' {
                 }
             }
 
-            $result = @(Get-DMhosts -WebSession $script:session)
+            $result = @(Get-DMhost -WebSession $script:session)
 
             $result.Count | Should -Be 2
             $result[0].PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
@@ -65,7 +65,7 @@ Describe 'Public getter functions' {
         It 'gets hosts by id through the filtered endpoint' {
             Mock Invoke-DeviceManager { [pscustomobject]@{ data = @($script:hostRecords[0]) } }
 
-            $result = (Get-DMhostsbyId -WebSession $script:session -HostId 'host-01')[0]
+            $result = (Get-DMhostbyId -WebSession $script:session -HostId 'host-01')[0]
 
             $result.id | Should -Be 'host-01'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
@@ -76,7 +76,7 @@ Describe 'Public getter functions' {
         It 'gets hosts by name through the filtered endpoint' {
             Mock Invoke-DeviceManager { [pscustomobject]@{ data = @($script:hostRecords[0]) } }
 
-            $result = (Get-DMhostsbyName -WebSession $script:session -Name 'server-a')[0]
+            $result = (Get-DMhostbyName -WebSession $script:session -Name 'server-a')[0]
 
             $result.name | Should -Be 'server-a'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
@@ -87,7 +87,7 @@ Describe 'Public getter functions' {
         It 'gets hosts by host group id' {
             Mock Invoke-DeviceManager { [pscustomobject]@{ data = $script:hostRecords } }
 
-            $result = (Get-DMhostsbyHostGroupId -WebSession $script:session -HostGroupId 'group-01')[0]
+            $result = (Get-DMhostbyHostGroupId -WebSession $script:session -HostGroupId 'group-01')[0]
 
             $result.id | Should -Be 'host-01'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
@@ -98,7 +98,7 @@ Describe 'Public getter functions' {
         It 'gets hosts by host group name' {
             Mock Invoke-DeviceManager { [pscustomobject]@{ data = $script:hostRecords } }
 
-            $result = (Get-DMhostsbyHostGroupName -WebSession $script:session -HostGroupName 'cluster-b')[0]
+            $result = (Get-DMhostbyHostGroupName -WebSession $script:session -HostGroupName 'cluster-b')[0]
 
             $result.id | Should -Be 'host-02'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
@@ -109,7 +109,7 @@ Describe 'Public getter functions' {
         It 'gets host groups' {
             Mock Invoke-DeviceManager { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 4; NAME = 'cluster'; TYPE = 0; ISADD2MAPPINGVIEW = 'true' }) } }
 
-            $result = (Get-DMhostGroups -WebSession $script:session)[0]
+            $result = (Get-DMhostGroup -WebSession $script:session)[0]
 
             $result.Name | Should -Be 'cluster'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
@@ -120,7 +120,7 @@ Describe 'Public getter functions' {
         It 'gets FC host links for a host' {
             Mock Invoke-DeviceManager { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'link-01'; HEALTHSTATUS = 1; RUNNINGSTATUS = 10; TARGET_TYPE = 212; TYPE = 255 }) } }
 
-            $result = (Get-DMHostLinks -WebSession $script:session -HostId 'host-01' -InitiatorType FC)[0]
+            $result = (Get-DMHostLink -WebSession $script:session -HostId 'host-01' -InitiatorType FC)[0]
 
             $result.Id | Should -Be 'link-01'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
@@ -131,7 +131,7 @@ Describe 'Public getter functions' {
         It 'gets all fibre channel initiators' {
             Mock Invoke-DeviceManager { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'fc-01'; TYPE = 223; RUNNINGSTATUS = 27; vstoreid = 4294967295 }) } }
 
-            $result = (Get-DMHostInitiators -WebSession $script:session -InitiatorType FibreChannel)[0]
+            $result = (Get-DMHostInitiator -WebSession $script:session -InitiatorType FibreChannel)[0]
 
             $result.Type | Should -Be 'FC Initiator'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
@@ -142,7 +142,7 @@ Describe 'Public getter functions' {
         It 'gets free iSCSI initiators' {
             Mock Invoke-DeviceManager { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'iscsi-01'; TYPE = 222; ISFREE = $true; vstoreid = 4294967295 }) } }
 
-            $result = (Get-DMHostInitiators -WebSession $script:session -InitiatorType ISCSI -FreeInitiators)[0]
+            $result = (Get-DMHostInitiator -WebSession $script:session -InitiatorType ISCSI -FreeInitiators)[0]
 
             $result.Type | Should -Be 'ISCSI Initiator'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
@@ -153,7 +153,7 @@ Describe 'Public getter functions' {
         It 'returns no initiators when the requested protocol has no data' {
             Mock Invoke-DeviceManager { [pscustomobject]@{ error = [pscustomobject]@{ code = 0 } } }
 
-            $result = @(Get-DMHostInitiators -WebSession $script:session -HostId 'host-fc-only' -InitiatorType ISCSI)
+            $result = @(Get-DMHostInitiator -WebSession $script:session -HostId 'host-fc-only' -InitiatorType ISCSI)
 
             $result | Should -BeNullOrEmpty
         }

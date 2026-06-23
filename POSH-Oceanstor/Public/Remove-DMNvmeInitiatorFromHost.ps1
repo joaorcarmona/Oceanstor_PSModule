@@ -48,7 +48,7 @@ function Remove-DMNvmeInitiatorFromHost {
                 else {
                     $deviceManager
                 }
-                $hosts = @(Get-DMhosts -WebSession $session)
+                $hosts = @(Get-DMhost -WebSession $session)
                 $matchingItems = @($hosts | Where-Object Name -EQ $candidate)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -66,7 +66,7 @@ function Remove-DMNvmeInitiatorFromHost {
                 else {
                     $deviceManager
                 }
-                (Get-DMhosts -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMhost -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$HostName,
 
@@ -80,7 +80,7 @@ function Remove-DMNvmeInitiatorFromHost {
                     $deviceManager
                 }
                 $selectedHostName = [string]$HostName
-                $hostObject = @(Get-DMhosts -WebSession $session | Where-Object Name -EQ $selectedHostName)[0]
+                $hostObject = @(Get-DMhost -WebSession $session | Where-Object Name -EQ $selectedHostName)[0]
                 $resource = "NVMe_over_RoCE_initiator/associate?ASSOCIATEOBJTYPE=21&ASSOCIATEOBJID=$($hostObject.Id)"
                 $initiators = @((Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource $resource).data)
                 if ($initiators.ID -contains $candidate) {
@@ -112,7 +112,7 @@ function Remove-DMNvmeInitiatorFromHost {
     else {
         $deviceManager
     }
-    $hostObject = @(Get-DMhosts -WebSession $session | Where-Object Name -EQ $HostName)[0]
+    $hostObject = @(Get-DMhost -WebSession $session | Where-Object Name -EQ $HostName)[0]
     $body = @{
         ID               = $hostObject.Id
         ASSOCIATEOBJTYPE = 57870

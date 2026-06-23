@@ -52,7 +52,7 @@ function Remove-DMNfsShare {
                 else {
                     $deviceManager
                 }
-                $shares = @(Get-DMShares -WebSession $session -ShareType NFS)
+                $shares = @(Get-DMShare -WebSession $session -ShareType NFS)
                 $matchingItems = @($shares | Where-Object 'Share Path' -EQ $_)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -70,7 +70,7 @@ function Remove-DMNfsShare {
                 else {
                     $deviceManager
                 }
-                (Get-DMShares -WebSession $session -ShareType NFS).'Share Path' |
+                (Get-DMShare -WebSession $session -ShareType NFS).'Share Path' |
                     Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$SharePath,
@@ -86,7 +86,7 @@ function Remove-DMNfsShare {
     else {
         $deviceManager
     }
-    $share = @(Get-DMShares -WebSession $session -ShareType NFS | Where-Object 'Share Path' -EQ $SharePath)[0]
+    $share = @(Get-DMShare -WebSession $session -ShareType NFS | Where-Object 'Share Path' -EQ $SharePath)[0]
     $parameters = @()
     if ($PrivateShare) {
         $parameters += 'sharePrivate=1'

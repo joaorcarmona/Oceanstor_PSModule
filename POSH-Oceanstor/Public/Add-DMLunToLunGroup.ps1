@@ -43,7 +43,7 @@
     Shows what would happen if lun01 were added to the production-luns LUN group.
 
 .EXAMPLE
-    PS> Get-DMluns | Where-Object Name -EQ 'lun02' | Add-DMLunToLunGroup -LunGroupName 'production-luns' -HostLunId 12
+    PS> Get-DMlun | Where-Object Name -EQ 'lun02' | Add-DMLunToLunGroup -LunGroupName 'production-luns' -HostLunId 12
 
     Adds lun02 to the production-luns LUN group and requests host LUN ID 12.
 
@@ -68,7 +68,7 @@ function Add-DMLunToLunGroup {
                 else {
                     $deviceManager
                 }
-                $luns = @(Get-DMluns -WebSession $session)
+                $luns = @(Get-DMlun -WebSession $session)
                 $matchingItems = @($luns | Where-Object Name -EQ $candidate)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -86,7 +86,7 @@ function Add-DMLunToLunGroup {
                 else {
                     $deviceManager
                 }
-                (Get-DMluns -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMlun -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$LunName,
 
@@ -99,7 +99,7 @@ function Add-DMLunToLunGroup {
                 else {
                     $deviceManager
                 }
-                $groups = @(Get-DMlunGroups -WebSession $session)
+                $groups = @(Get-DMlunGroup -WebSession $session)
                 $matchingItems = @($groups | Where-Object Name -EQ $candidate)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -117,7 +117,7 @@ function Add-DMLunToLunGroup {
                 else {
                     $deviceManager
                 }
-                (Get-DMlunGroups -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMlunGroup -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$LunGroupName,
 
@@ -153,8 +153,8 @@ function Add-DMLunToLunGroup {
         throw 'LunName is required. Pass a LUN name or pipe a LUN object with a Name property.'
     }
 
-    $lun = @(Get-DMluns -WebSession $session | Where-Object Name -EQ $resolvedLunName)[0]
-    $group = @(Get-DMlunGroups -WebSession $session | Where-Object Name -EQ $LunGroupName)[0]
+    $lun = @(Get-DMlun -WebSession $session | Where-Object Name -EQ $resolvedLunName)[0]
+    $group = @(Get-DMlunGroup -WebSession $session | Where-Object Name -EQ $LunGroupName)[0]
     $body = @{
         ID               = $group.Id
         ASSOCIATEOBJTYPE = 11

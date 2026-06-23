@@ -1,4 +1,4 @@
-function Get-DMlunsbyLunGroup {
+function Get-DMlunbyLunGroup {
     <#
 	.SYNOPSIS
 		Retrieves the LUNs associated with a LUN group.
@@ -30,11 +30,11 @@ function Get-DMlunsbyLunGroup {
 
 	.EXAMPLE
 
-		PS C:\> $group = (Get-DMlunGroups -WebSession $session)[0]
-		PS C:\> Get-DMlunsbyLunGroup -WebSession $session -LunGroup $group
+		PS C:\> $group = (Get-DMlunGroup -WebSession $session)[0]
+		PS C:\> Get-DMlunbyLunGroup -WebSession $session -LunGroup $group
 
 	.NOTES
-		The command reads the LUN group's ASSOCIATELUNIDLIST value and resolves the identifiers through Get-DMluns.
+		The command reads the LUN group's ASSOCIATELUNIDLIST value and resolves the identifiers through Get-DMlun.
 		If WebSession is omitted, the command uses the module-level deviceManager session.
 	#>
     [CmdletBinding()]
@@ -98,7 +98,7 @@ function Get-DMlunsbyLunGroup {
     }
 
     $result = @(
-        Get-DMluns -WebSession $session |
+        Get-DMlun -WebSession $session |
             Where-Object { $associatedLunIds -contains $_.Id }
     )
 
@@ -108,3 +108,5 @@ function Get-DMlunsbyLunGroup {
 
     return $result
 }
+
+Set-Alias -Name Get-DMlunsbyLunGroup -Value Get-DMlunbyLunGroup
