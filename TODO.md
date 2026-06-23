@@ -18,8 +18,6 @@ This backlog records confirmed gaps and explicit design decisions still required
 
 ## Consistency and maintainability
 
-- [ ] Deprecate the misspelled `OceanstorLunSnapshot.Activacate()` method while retaining a compatibility path to `Activate()`.
-- [ ] Standardize public command casing and singular/plural naming without breaking existing scripts; provide aliases for renamed commands.
 - [ ] Define a consistent minimum object-method surface, such as `Rename()`, `Delete()`, and relationship helpers, for mutable returned objects.
 - [ ] Generate command/object inventory during CI and fail when a new public command or class is absent from the maintained coverage metadata.
 - [ ] Expand unit coverage for public commands that are currently validated only through grouped tests or live integration tests.
