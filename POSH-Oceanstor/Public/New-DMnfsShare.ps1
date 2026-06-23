@@ -22,7 +22,7 @@ function New-DMnfsShare {
         The type of the share. Default is "normal share"
 
     .PARAMETER dTree
-        The ID of the DTree to be used by the share
+        Optional DTree ID. When specified, the NFS share is scoped to the given DTree within the file system.
 
 	.INPUTS
 		System.Management.Automation.PSCustomObject

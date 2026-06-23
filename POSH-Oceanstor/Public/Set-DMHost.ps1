@@ -5,6 +5,35 @@ function Set-DMHost {
     .DESCRIPTION
         Modifies a host by name. NewName and Description are first-class properties; ApiProperties passes
         additional Huawei host API fields through unchanged. ID and NAME are reserved ApiProperties keys.
+
+    .PARAMETER WebSession
+        Optional session returned by Connect-deviceManager. The global deviceManager session is used by default.
+
+    .PARAMETER HostName
+        Existing host name to modify.
+
+    .PARAMETER NewName
+        New name for the host.
+
+    .PARAMETER Description
+        New description. An empty string clears the description.
+
+    .PARAMETER ApiProperties
+        Additional Huawei API modification fields to send verbatim.
+
+    .PARAMETER VstoreId
+        Optional vStore ID used to scope the operation.
+
+    .INPUTS
+        System.Management.Automation.PSCustomObject
+
+        You can pipe an OceanStor session object to WebSession.
+
+    .OUTPUTS
+        System.Management.Automation.PSCustomObject
+
+        Returns the OceanStor API error object indicating success or failure of the modification.
+
     .EXAMPLE
         PS> Set-DMHost -HostName 'esx01' -NewName 'esx01-prod' -WhatIf
     #>

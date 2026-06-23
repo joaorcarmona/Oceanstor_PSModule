@@ -2,6 +2,23 @@ function Rename-DMLunGroup {
     <#
     .SYNOPSIS
         Renames an OceanStor LUN group through Set-DMLunGroup.
+
+    .DESCRIPTION
+        Renames an OceanStor LUN group by resolving the current name and issuing a PUT with the new name.
+        Validates that the new name does not conflict with an existing object.
+
+    .PARAMETER WebSession
+        Optional session returned by Connect-deviceManager. The global deviceManager session is used by default.
+
+    .PARAMETER LunGroupName
+        Current name of the LUN group to rename.
+
+    .PARAMETER NewName
+        New name to assign to the LUN group.
+
+    .PARAMETER VstoreId
+        Optional vStore ID used to scope the operation.
+
     .INPUTS
         System.Management.Automation.PSCustomObject
 
