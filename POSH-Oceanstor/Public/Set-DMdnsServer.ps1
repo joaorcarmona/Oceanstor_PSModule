@@ -56,9 +56,7 @@ function Set-DMdnsServer {
         }
     }
 
-    $PostData = New-Object System.Collections.Hashtable
-
-    $PostData.Add("ADDRESS", $DNSserver)
+    $PostData = @{ ADDRESS = $DNSserver }
     if ($PSCmdlet.ShouldProcess(($DNSserver -join ', '), 'Configure DNS servers')) {
         $SetConfig = Invoke-DeviceManager -WebSession $session -Method "PUT" -Resource "dns_server" -BodyData $PostData
 
