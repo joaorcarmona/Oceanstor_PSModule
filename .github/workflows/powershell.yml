@@ -45,8 +45,12 @@ jobs:
           sarif_file: results.sarif
 
   pester-test:
-    name: Pester Unit Tests
-    runs-on: windows-latest
+    name: Pester Unit Tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -56,15 +60,21 @@ jobs:
           Set-PSRepository PSGallery -InstallationPolicy Trusted
           Install-Module -Name Pester -RequiredVersion 5.7.1 -Scope CurrentUser -Force -SkipPublisherCheck
       - name: Run unit tests with code coverage
+        if: matrix.os == 'windows-latest'
         shell: pwsh
         run: |
           ./Tests/Invoke-UnitTests.ps1 -Output Normal -ResultPath ./TestResults/Pester.xml -CoveragePath ./TestResults/Coverage.xml
+      - name: Run unit tests
+        if: matrix.os != 'windows-latest'
+        shell: pwsh
+        run: |
+          ./Tests/Invoke-UnitTests.ps1 -Output Normal -ResultPath ./TestResults/Pester.xml
       - name: Upload Pester results
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
-          name: pester-test-results
+          name: pester-test-results-${{ matrix.os }}
           path: |
             TestResults/Pester.xml
             TestResults/Coverage.xml
-          if-no-files-found: error
+          if-no-files-found: warn
