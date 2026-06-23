@@ -77,6 +77,7 @@ Import-Module $validationModule -Force
 $checks = [System.Collections.Generic.List[object]]::new()
 $mutationRequests = [System.Collections.Generic.List[object]]::new()
 $cleanupActions = [System.Collections.Generic.List[object]]::new()
+$sessionDisconnected = $false
 $samples = @{}
 $owned = @{}
 foreach ($kind in @('Lun', 'LunSnapshot', 'LunGroup', 'ProtectionGroup', 'SnapshotConsistencyGroup', 'Host', 'HostGroup', 'FileSystem', 'FileSystemSnapshot', 'DTree', 'CifsShare', 'NfsShare', 'NfsClient', 'MappingView', 'PortGroup', 'FibreChannelInitiator', 'IscsiInitiator', 'NvmeInitiator')) {
@@ -112,6 +113,9 @@ try {
     Write-ValidationReport
 }
 finally {
+    if ($session -and -not $sessionDisconnected) {
+        try { Disconnect-deviceManager -WebSession $session } catch { Write-Verbose "Session cleanup failed: $_" }
+    }
     if (-not $NoProgress) {
         Write-Progress -Id 1 -Activity "Validating OceanStor $Hostname" -Completed
     }

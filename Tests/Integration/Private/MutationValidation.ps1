@@ -41,7 +41,8 @@ function Invoke-MutationValidation {
             'Remove-DMFiberChannelInitiatorFromHost', 'Remove-DMIscsiInitiatorFromHost',
             'Set-DMLun', 'Rename-DMLun', 'Set-DMFileSystem', 'Rename-DMFileSystem',
             'Set-DMHost', 'Rename-DMHost', 'Set-DMHostGroup', 'Rename-DMHostGroup',
-            'Set-DMLunGroup', 'Rename-DMLunGroup', 'Set-DMPortGroup', 'Rename-DMPortGroup'
+            'Set-DMLunGroup', 'Rename-DMLunGroup', 'Set-DMPortGroup', 'Rename-DMPortGroup',
+            'Disconnect-deviceManager'
         ) -Status 'NotRequested' -Reason 'Call the runner with -RunMutatingTests and enable the desired section in IntegrityValidationConfig.psd1.'
     }
     elseif (-not $configuration.AllowMutatingTests) {
@@ -88,5 +89,10 @@ function Invoke-MutationValidation {
         . $script:MutationReadBackWorkflow
 
         Invoke-RegisteredCleanup
+
+        Invoke-MutationStep -Name 'Disconnect-deviceManager' -Action {
+            Disconnect-deviceManager -WebSession $session
+        }
+        $script:sessionDisconnected = $true
     }
 }
