@@ -89,6 +89,8 @@ function New-DMLun {
 
 	.LINK
 	#>
+    [CmdletBinding(SupportsShouldProcess = $true)]
+
     param(
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession,
@@ -116,6 +118,8 @@ function New-DMLun {
             })]
 
         [ArgumentCompleter({
+                [CmdletBinding(SupportsShouldProcess = $true)]
+
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
                 if ($WebSession) {
                     $session = $WebSession
@@ -311,27 +315,29 @@ function New-DMLun {
         $body.Add("WORKLOADTYPEID", $workloadTypeId)
     }
 
-    # Make the REST API call
-    $response = Invoke-DeviceManager -WebSession $session -Method "POST" -Resource "lun" -BodyData $body
+    if ($PSCmdlet.ShouldProcess($LunName, 'Create LUN')) {
+        # Make the REST API call
+        $response = Invoke-DeviceManager -WebSession $session -Method "POST" -Resource "lun" -BodyData $body
 
-    # Check if the operation was successful and create the appropriate object
-    if ($response.error.Code -eq 0) {
-        # Determine the correct LUN class based on device version
-        $storageVersion = $session.version.Substring(0, 2)
+        # Check if the operation was successful and create the appropriate object
+        if ($response.error.Code -eq 0) {
+            # Determine the correct LUN class based on device version
+            $storageVersion = $session.version.Substring(0, 2)
 
-        if ($storageVersion -eq "V6") {
-            $LunObjectClass = "OceanstorLunv6"
+            if ($storageVersion -eq "V6") {
+                $LunObjectClass = "OceanstorLunv6"
+            }
+            else {
+                $LunObjectClass = "OceanstorLunv3"
+            }
+
+            # Create the LUN object from the response
+            $result = New-Object -TypeName $LunObjectClass -ArgumentList @($response.data, $session)
         }
         else {
-            $LunObjectClass = "OceanstorLunv3"
+            $result = $response.error
         }
 
-        # Create the LUN object from the response
-        $result = New-Object -TypeName $LunObjectClass -ArgumentList @($response.data, $session)
+        return $result
     }
-    else {
-        $result = $response.error
-    }
-
-    return $result
 }

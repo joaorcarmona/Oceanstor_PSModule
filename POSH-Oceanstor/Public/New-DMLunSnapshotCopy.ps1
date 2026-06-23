@@ -39,7 +39,7 @@
     Filename: New-DMLunSnapshotCopy.ps1
 #>
 function New-DMLunSnapshotCopy {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
@@ -119,11 +119,13 @@ function New-DMLunSnapshotCopy {
         $body.Add('DESCRIPTION', $Description)
     }
 
-    $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'snapshot/createcopy' -BodyData $body
+    if ($PSCmdlet.ShouldProcess($resolvedCopyName, 'Create LUN snapshot copy')) {
+        $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'snapshot/createcopy' -BodyData $body
 
-    if ($response.error.Code -eq 0) {
-        return [OceanstorLunSnapshot]::new($response.data, $session)
+        if ($response.error.Code -eq 0) {
+            return [OceanstorLunSnapshot]::new($response.data, $session)
+        }
+
+        return $response.error
     }
-
-    return $response.error
 }

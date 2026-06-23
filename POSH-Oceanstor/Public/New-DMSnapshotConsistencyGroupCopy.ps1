@@ -39,7 +39,7 @@
     Filename: New-DMSnapshotConsistencyGroupCopy.ps1
 #>
 function New-DMSnapshotConsistencyGroupCopy {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
@@ -106,10 +106,12 @@ function New-DMSnapshotConsistencyGroupCopy {
         $body.vstoreId = $source.'vStore ID'
     }
 
-    $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'CONSISTENCY_GROUP/createcopy' -BodyData $body
-    if ($response.error.Code -eq 0) {
-        return [OceanstorSnapshotConsistencyGroup]::new($response.data, $session)
-    }
+    if ($PSCmdlet.ShouldProcess($Name, 'Create snapshot consistency group copy')) {
+        $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'CONSISTENCY_GROUP/createcopy' -BodyData $body
+        if ($response.error.Code -eq 0) {
+            return [OceanstorSnapshotConsistencyGroup]::new($response.data, $session)
+        }
 
-    return $response.error
+        return $response.error
+    }
 }

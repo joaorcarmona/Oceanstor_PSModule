@@ -42,7 +42,7 @@
     Filename: New-DMProtectionGroup.ps1
 #>
 function New-DMProtectionGroup {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
@@ -136,10 +136,12 @@ function New-DMProtectionGroup {
         $body.description = $Description
     }
 
-    $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'protectgroup' -BodyData $body -ApiV2
-    if ($response.error.Code -eq 0) {
-        return [OceanstorProtectionGroup]::new($response.data, $session)
-    }
+    if ($PSCmdlet.ShouldProcess($Name, 'Create protection group')) {
+        $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'protectgroup' -BodyData $body -ApiV2
+        if ($response.error.Code -eq 0) {
+            return [OceanstorProtectionGroup]::new($response.data, $session)
+        }
 
-    return $response.error
+        return $response.error
+    }
 }

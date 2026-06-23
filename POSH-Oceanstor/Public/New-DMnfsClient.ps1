@@ -65,7 +65,7 @@ function New-DMnfsClient {
 
 	.LINK
 	#>
-    [Cmdletbinding()]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession,
@@ -224,14 +224,16 @@ function New-DMnfsClient {
         $body.Add("vstoreId", $vStoreId)
     }
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "POST" -Resource "NFS_SHARE_AUTH_CLIENT" -BodyData $body
+    if ($PSCmdlet.ShouldProcess($clientName, 'Create NFS client')) {
+        $response = Invoke-DeviceManager -WebSession $session -Method "POST" -Resource "NFS_SHARE_AUTH_CLIENT" -BodyData $body
 
-    if ($response.error.Code -eq 0) {
-        $result = [OceanstorNFSclient]::new($response.data, $session)
-    }
-    else {
-        $result = $response.error
-    }
+        if ($response.error.Code -eq 0) {
+            $result = [OceanstorNFSclient]::new($response.data, $session)
+        }
+        else {
+            $result = $response.error
+        }
 
-    return $result.Id
+        return $result.Id
+    }
 }

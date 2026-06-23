@@ -32,7 +32,7 @@ function Set-DMdnsServer {
 
 	.LINK
 	#>
-    [Cmdletbinding()]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession,
@@ -59,14 +59,16 @@ function Set-DMdnsServer {
     $PostData = New-Object System.Collections.Hashtable
 
     $PostData.Add("ADDRESS", $DNSserver)
-    $SetConfig = Invoke-DeviceManager -WebSession $session -Method "PUT" -Resource "dns_server" -BodyData $PostData
+    if ($PSCmdlet.ShouldProcess(($DNSserver -join ', '), 'Configure DNS servers')) {
+        $SetConfig = Invoke-DeviceManager -WebSession $session -Method "PUT" -Resource "dns_server" -BodyData $PostData
 
-    if ($SetConfig.error.code -eq 0) {
-        $result = Get-DMdnsServer -WebSession $session
-    }
-    else {
-        $result = "error setting DNS Server"
-    }
+        if ($SetConfig.error.code -eq 0) {
+            $result = Get-DMdnsServer -WebSession $session
+        }
+        else {
+            $result = "error setting DNS Server"
+        }
 
-    return $result
+        return $result
+    }
 }

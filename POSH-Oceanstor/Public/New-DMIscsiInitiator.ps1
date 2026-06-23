@@ -63,7 +63,7 @@
     Filename: New-DMIscsiInitiator.ps1
 #>
 function New-DMIscsiInitiator {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
@@ -166,9 +166,11 @@ function New-DMIscsiInitiator {
         $body.vstoreId = $VstoreId
     }
 
-    $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'iscsi_initiator' -BodyData $body
-    if ($response.error.Code -eq 0) {
-        return [OceanstorHostinitiatorISCSI]::new($response.data, $session)
+    if ($PSCmdlet.ShouldProcess($Identifier, 'Create iSCSI initiator')) {
+        $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'iscsi_initiator' -BodyData $body
+        if ($response.error.Code -eq 0) {
+            return [OceanstorHostinitiatorISCSI]::new($response.data, $session)
+        }
+        return $response.error
     }
-    return $response.error
 }
