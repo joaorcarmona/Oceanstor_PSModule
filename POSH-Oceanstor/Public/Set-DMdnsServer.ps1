@@ -51,8 +51,8 @@ function Set-DMdnsServer {
     foreach ($dns in $DNSserver) {
         $IPResult = Test-IPv4Address -IPv4 $dns
         if ($IPResult -eq $false) {
-            Write-Host $dns "is not a valid IP address"
-            exit
+            # throw instead of exit to avoid terminating the caller's session
+            throw "'$dns' is not a valid IPv4 address."
         }
     }
 

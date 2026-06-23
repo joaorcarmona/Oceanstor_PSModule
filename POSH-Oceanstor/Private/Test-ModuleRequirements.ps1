@@ -9,5 +9,6 @@ if (!(Get-Module -ListAvailable -Name ImportExcel )) {
 	Write-Host "`r`n"
 	Write-Host "`r`n"
 	Write-Host "For more information, consult the ImportExcel page: https://github.com/dfinke/ImportExcel"
-	exit
+	# throw instead of exit so Import-Module fails cleanly without killing the host
+	throw "Required module 'ImportExcel' is not installed. Run: Install-Module -Name ImportExcel"
 }

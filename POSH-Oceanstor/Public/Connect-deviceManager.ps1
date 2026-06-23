@@ -84,10 +84,10 @@ function Connect-deviceManager {
     $logonsession = Invoke-RestMethod -Method Post -Uri "https://$($Hostname):8088/deviceManager/rest/xxxxx/sessions" -Body (ConvertTo-Json $body) -SkipCertificateCheck -SessionVariable WebSession
 
     if ($logonsession.error.code -ne 0) {
-        #Write-Host $logonsession.error
         $SessionError = $logonsession.error
         Write-DMError -SessionError $SessionError
-        exit
+        # throw instead of exit to avoid terminating the caller's session
+        throw "Login failed for host '$Hostname': $($SessionError.description)"
     }
 
     $CredentialsBytes = [System.Text.Encoding]::UTF8.GetBytes( -join ("{0}:{1}" -f $username, $password))
