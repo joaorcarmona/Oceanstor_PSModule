@@ -483,9 +483,6 @@ Describe 'Storage and share model classes' {
         $global:LunSnapshotAction.Action | Should -Be 'Activate'
         $global:LunSnapshotAction.WebSession | Should -Be $script:session
         $global:LunSnapshotAction.SnapShotName | Should -Be 'before-patch'
-
-        $snapshot.Activacate().Code | Should -Be 0
-        $global:LunSnapshotAction.Action | Should -Be 'Activate'
     }
 
     It 'reactivates a LUN snapshot object' {

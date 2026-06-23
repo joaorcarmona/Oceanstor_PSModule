@@ -75,10 +75,6 @@ class OceanstorLunSnapshot {
         return (Enable-DMLunSnapshot -WebSession $this.Session -SnapShotName $this.Name)
     }
 
-    [psobject] Activacate() {
-        return $this.Activate()
-    }
-
     [psobject] Reactivate() {
         return (Restart-DMLunSnapshot -WebSession $this.Session -SnapShotName $this.Name)
     }
