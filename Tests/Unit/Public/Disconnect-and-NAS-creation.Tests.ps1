@@ -2,6 +2,7 @@ BeforeDiscovery {
     $script:testModule = New-Module -Name DisconnectAndNasTestModule -ArgumentList $PSScriptRoot -ScriptBlock {
         param($testRoot)
 
+        function Get-DMSystem { param([pscustomobject]$WebSession) }
         function Get-DMFileSystem { param([pscustomobject]$WebSession) }
         function Get-DMShare { param([pscustomobject]$WebSession, [string]$ShareType) }
         function Get-DMdnsServer { param([pscustomobject]$WebSession) }
@@ -16,6 +17,7 @@ BeforeDiscovery {
         }
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Test-IPv4Address.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorNFSShare.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorNFSclient.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Disconnect-deviceManager.ps1"

@@ -22,8 +22,11 @@ BeforeDiscovery {
         }
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Test-WWNAddress.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorHostinitiatorFC.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorHostinitiatorISCSI.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorHostinitiatorNVMe.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMFiberChannelInitiator.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMIscsiInitiator.ps1"

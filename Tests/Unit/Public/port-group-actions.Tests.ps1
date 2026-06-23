@@ -14,6 +14,7 @@ BeforeDiscovery {
             )
         }
 
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorPortGroup.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Get-DMPortGroupCandidate.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\New-DMPortGroup.ps1"
