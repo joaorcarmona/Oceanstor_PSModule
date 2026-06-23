@@ -21,7 +21,7 @@ BeforeDiscovery {
             )
         }
 
-        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Validate-WWNAddress.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Test-WWNAddress.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorHostinitiatorFC.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorHostinitiatorISCSI.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorHostinitiatorNVMe.ps1"

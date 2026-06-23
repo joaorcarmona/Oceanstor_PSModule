@@ -36,7 +36,7 @@ $validationModule = New-Module -Name OceanstorLiveGetterValidation -ArgumentList
         'Invoke-DeviceManager.ps1',
         'New-DMNamedObjectUpdate.ps1',
         'Set-DMHostInitiators.ps1',
-        'Validate-WWNAddress.ps1',
+        'Test-WWNAddress.ps1',
         'Write-DMError.ps1'
     )) {
         . (Join-Path $root "Private\$privateHelper")

@@ -1,4 +1,4 @@
-function Validate-WWNAddress {
+function Test-WWNAddress {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
@@ -11,3 +11,5 @@ function Validate-WWNAddress {
 
     return $WWN -notmatch '^(0{16}|[Ff]{16})$'
 }
+
+Set-Alias -Name Validate-WWNAddress -Value Test-WWNAddress
