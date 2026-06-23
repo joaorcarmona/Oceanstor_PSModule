@@ -2,10 +2,10 @@ BeforeDiscovery {
     $script:testModule = New-Module -Name ConnectDeviceManagerTestModule -ArgumentList $PSScriptRoot -ScriptBlock {
         param($testRoot)
 
-        function Get-DMSystem { param([pscustomobject]$WebSession) return [pscustomobject]@{ version = 'V600R001' } }
         function Write-DMError { param($SessionError) }
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMSystem.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Connect-deviceManager.ps1"
 
         Export-ModuleMember -Function Connect-deviceManager, Get-DMSystem
