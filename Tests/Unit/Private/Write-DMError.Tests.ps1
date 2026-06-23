@@ -3,19 +3,19 @@ BeforeAll {
 }
 
 Describe 'Write-DMError' {
-    It 'writes the session error details to the host output stream' {
+    It 'writes the session error details as warnings' {
         $sessionError = [pscustomobject]@{
             code        = 1077948993
             description = 'Authentication failed'
             suggestion  = 'Check credentials'
         }
 
-        $output = & { Write-DMError -SessionError $sessionError } 6>&1
+        $output = & { Write-DMError -SessionError $sessionError } 3>&1
         $messages = @($output | ForEach-Object { $_.ToString() })
 
-        $messages | Should -Contain 'Error Code:  1077948993'
-        $messages | Should -Contain 'Error Description:  Authentication failed'
-        $messages | Should -Contain 'Suggestion:  Check credentials'
+        $messages | Should -Contain 'Error Code: 1077948993'
+        $messages | Should -Contain 'Error Description: Authentication failed'
+        $messages | Should -Contain 'Suggestion: Check credentials'
     }
 
     It 'accepts a session error from the pipeline' {
@@ -25,8 +25,8 @@ Describe 'Write-DMError' {
             suggestion  = 'Retry'
         }
 
-        $output = & { $sessionError | Write-DMError } 6>&1
+        $output = & { $sessionError | Write-DMError } 3>&1
 
-        @($output | ForEach-Object { $_.ToString() }) | Should -Contain 'Error Code:  1'
+        @($output | ForEach-Object { $_.ToString() }) | Should -Contain 'Error Code: 1'
     }
 }
