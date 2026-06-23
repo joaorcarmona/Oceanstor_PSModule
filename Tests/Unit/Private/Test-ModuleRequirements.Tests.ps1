@@ -14,13 +14,14 @@ Describe 'Test-ModuleRequirements.ps1' {
         $output | Should -Not -Contain 'ImportExcel Module is not available or is not installed!'
     }
 
-    It 'prints installation guidance when ImportExcel is unavailable' {
+    It 'throws with installation guidance when ImportExcel is unavailable' {
         $command = "function Get-Module { `$null }; . '$script:requirementsPath'; 'unreachable'"
 
-        $output = & $script:pwshPath -NoProfile -Command $command
+        $output = & $script:pwshPath -NoProfile -Command $command 2>&1
 
-        $LASTEXITCODE | Should -Be 0
+        $LASTEXITCODE | Should -Be 1
         ($output -join "`n") | Should -Match 'ImportExcel Module is not available or is not installed!'
         ($output -join "`n") | Should -Match 'Install-Module -Name ImportExcel'
+        $output | Should -Not -Contain 'unreachable'
     }
 }

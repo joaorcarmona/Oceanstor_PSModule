@@ -1,46 +1,49 @@
 function Get-DMlunsByWWN {
     <#
-	.SYNOPSIS
-		To Search for lun by lun WWN
+    .SYNOPSIS
+        Searches for a LUN by its WWN.
 
-	.DESCRIPTION
-		Function to search for a lun based on lun WWN
+    .DESCRIPTION
+        Searches for a LUN whose WWN equals the supplied value. The filter is
+        pushed server-side so only the matching row is transferred from the array.
 
-	.PARAMETER webSession
-		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
-	.PARAMETER wwn
-		Mandatory parameter [string], to set the WWN to look for.
+    .PARAMETER WebSession
+        Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
 
-	.INPUTS
-		System.Management.Automation.PSCustomObject
+    .PARAMETER WWN
+        Mandatory LUN WWN to search for. The comparison is an exact match.
 
-		You can pipe an OceanStor session object to WebSession and provide wwn by property name.
+    .INPUTS
+        System.Management.Automation.PSCustomObject
 
-	.OUTPUTS
-		OceanstorLunv3
-		OceanstorLunv6
+        You can pipe an OceanStor session object to WebSession and provide wwn by property name.
 
-		Returns LUN objects whose WWN matches the supplied wwn value. The class depends on the connected OceanStor version.
+    .OUTPUTS
+        OceanstorLunv3
+        OceanstorLunv6
 
-	.EXAMPLE
+        Returns LUN objects whose WWN matches the supplied value. The class depends on the connected OceanStor version.
 
-		PS C:\> Get-DMlunsByWWN -webSession $session -wwn "6a08cf810075766e1efc050700000005"
+    .EXAMPLE
 
-		OR
+        PS C:\> Get-DMlunsByWWN -webSession $session -wwn "6a08cf810075766e1efc050700000005"
 
-		PS C:\> $luns = Get-DMlunsByWWN -wwn "6a08cf810075766e1efc050700000005"
+        OR
 
-	.NOTES
-		Filename: Get-DMlunsByWWN.ps1
+        PS C:\> $luns = Get-DMlunsByWWN -wwn "6a08cf810075766e1efc050700000005"
 
-	.LINK
-	#>
+    .NOTES
+        Filename: Get-DMlunsByWWN.ps1
+
+    .LINK
+    #>
     [Cmdletbinding()]
     param(
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession,
-        [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $True, Position = 1, Mandatory = $true)]
-        [pscustomobject]$wwn
+        [Parameter(ValueFromPipelineByPropertyName = $True, Position = 1, Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WWN
     )
 
     if ($WebSession) {
@@ -59,7 +62,7 @@ function Get-DMlunsByWWN {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "lun" | Select-Object -ExpandProperty data
+    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "lun?filter=WWN:$WWN" | Select-Object -ExpandProperty data
     $StorageLuns = New-Object System.Collections.ArrayList
 
     $StorageVersion = $session.version.Substring(0, 2)
@@ -73,15 +76,12 @@ function Get-DMlunsByWWN {
 
     foreach ($tlun in $response) {
         $lun = New-Object -TypeName $LunObjectClass -ArgumentList @($tlun, $session)
-        #$lun = [OceanstorLun]::new($tlun,$session)
         [void]$StorageLuns.Add($lun)
     }
 
-    $result = $StorageLuns | Where-Object wwn -Match $wwn
-
-    $result | ForEach-Object {
+    $StorageLuns | ForEach-Object {
         $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
     }
 
-    return $result
+    return $StorageLuns
 }
