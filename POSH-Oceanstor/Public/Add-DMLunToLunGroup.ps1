@@ -51,6 +51,8 @@
     Filename: Add-DMLunToLunGroup.ps1
 #>
 function Add-DMLunToLunGroup {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param(
         [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $true, Position = 0)]

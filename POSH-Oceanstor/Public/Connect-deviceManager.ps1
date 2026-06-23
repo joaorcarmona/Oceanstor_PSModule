@@ -44,6 +44,8 @@ function Connect-deviceManager {
 
 	.LINK
 	#>
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
     [Cmdletbinding(DefaultParameterSetName = 'Prompt')]
     param(
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $true)]

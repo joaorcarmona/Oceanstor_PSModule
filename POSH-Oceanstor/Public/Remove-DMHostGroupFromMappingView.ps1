@@ -34,6 +34,8 @@
     Filename: Remove-DMHostGroupFromMappingView.ps1
 #>
 function Remove-DMHostGroupFromMappingView {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

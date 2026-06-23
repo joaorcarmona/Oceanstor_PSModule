@@ -36,6 +36,8 @@ function Get-DMMappingView {
     .NOTES
         Filename: Get-DMMappingView.ps1
     #>
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
     [CmdletBinding(DefaultParameterSetName = 'All')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

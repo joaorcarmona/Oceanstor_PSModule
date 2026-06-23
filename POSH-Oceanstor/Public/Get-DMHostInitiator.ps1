@@ -57,6 +57,8 @@ function Get-DMHostInitiator {
 
 	.LINK
 	#>
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
     [Cmdletbinding(DefaultParameterSetName = "AllInitiators")]
     param(
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]

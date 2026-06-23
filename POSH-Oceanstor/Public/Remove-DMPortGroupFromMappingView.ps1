@@ -34,6 +34,8 @@
     Filename: Remove-DMPortGroupFromMappingView.ps1
 #>
 function Remove-DMPortGroupFromMappingView {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

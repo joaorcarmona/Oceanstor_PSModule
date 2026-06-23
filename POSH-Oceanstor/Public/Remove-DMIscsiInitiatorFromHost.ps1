@@ -34,6 +34,8 @@
     Filename: Remove-DMIscsiInitiatorFromHost.ps1
 #>
 function Remove-DMIscsiInitiatorFromHost {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
