@@ -2,6 +2,20 @@ function Rename-DMLun {
     <#
     .SYNOPSIS
         Renames an OceanStor Dorado V6 LUN through Set-DMLun.
+
+    .DESCRIPTION
+        Renames an OceanStor LUN by resolving the current name and issuing a PUT with the new name.
+        Validates that the new name does not conflict with an existing object.
+
+    .PARAMETER WebSession
+        Optional session returned by Connect-deviceManager. The global deviceManager session is used by default.
+
+    .PARAMETER LunName
+        Current name of the LUN to rename.
+
+    .PARAMETER NewName
+        New name to assign to the LUN.
+
     .INPUTS
         System.Management.Automation.PSCustomObject
 

@@ -36,6 +36,16 @@ function Set-DMLun {
     .EXAMPLE
         PS> Set-DMLun -LunName 'database' -Capacity 2.5TB -Confirm:$false
 
+    .INPUTS
+        System.Management.Automation.PSCustomObject
+
+        You can pipe an OceanStor session object to WebSession.
+
+    .OUTPUTS
+        System.Collections.Generic.List[System.Object]
+
+        Returns a list of OceanStor API error objects, one per operation (property change and/or capacity expansion).
+
     .EXAMPLE
         PS> Set-DMLun -LunName 'database' -ApiProperties @{ IOPRIORITY = 3 }
     #>

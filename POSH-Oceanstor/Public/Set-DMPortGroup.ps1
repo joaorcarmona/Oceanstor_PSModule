@@ -5,6 +5,35 @@ function Set-DMPortGroup {
     .DESCRIPTION
         Modifies a port group by name. NewName and Description are first-class properties; ApiProperties
         passes additional Huawei port-group API fields through unchanged.
+
+    .PARAMETER WebSession
+        Optional session returned by Connect-deviceManager. The global deviceManager session is used by default.
+
+    .PARAMETER PortGroupName
+        Existing port group name to modify.
+
+    .PARAMETER NewName
+        New name for the port group.
+
+    .PARAMETER Description
+        New description. An empty string clears the description.
+
+    .PARAMETER ApiProperties
+        Additional Huawei API modification fields to send verbatim.
+
+    .PARAMETER VstoreId
+        Optional vStore ID used to scope the operation.
+
+    .INPUTS
+        System.Management.Automation.PSCustomObject
+
+        You can pipe an OceanStor session object to WebSession.
+
+    .OUTPUTS
+        System.Management.Automation.PSCustomObject
+
+        Returns the OceanStor API error object indicating success or failure of the modification.
+
     .EXAMPLE
         PS> Set-DMPortGroup -PortGroupName 'front-end' -NewName 'front-end-prod' -WhatIf
     #>

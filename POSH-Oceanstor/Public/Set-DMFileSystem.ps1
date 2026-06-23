@@ -35,6 +35,16 @@ function Set-DMFileSystem {
     .EXAMPLE
         PS> Set-DMFileSystem -FileSystemName 'documents' -Capacity '1,5TB' -Confirm:$false
 
+    .INPUTS
+        System.Management.Automation.PSCustomObject
+
+        You can pipe an OceanStor session object to WebSession.
+
+    .OUTPUTS
+        System.Management.Automation.PSCustomObject
+
+        Returns the OceanStor API error object indicating success or failure of the modification.
+
     .EXAMPLE
         PS> Set-DMFileSystem -FileSystemName 'documents' -ApiProperties @{ CAPACITYTHRESHOLD = 85 }
     #>
