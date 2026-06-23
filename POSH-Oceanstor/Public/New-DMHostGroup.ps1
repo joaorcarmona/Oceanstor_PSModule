@@ -34,7 +34,7 @@
     Filename: New-DMHostGroup.ps1
 #>
 function New-DMHostGroup {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
@@ -68,10 +68,12 @@ function New-DMHostGroup {
         $body.vstoreId = $VstoreId
     }
 
-    $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'hostgroup' -BodyData $body
-    if ($response.error.Code -eq 0) {
-        return [OceanStorHostGroup]::new($response.data, $session)
-    }
+    if ($PSCmdlet.ShouldProcess($Name, 'Create host group')) {
+        $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'hostgroup' -BodyData $body
+        if ($response.error.Code -eq 0) {
+            return [OceanStorHostGroup]::new($response.data, $session)
+        }
 
-    return $response.error
+        return $response.error
+    }
 }

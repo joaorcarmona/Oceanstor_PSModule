@@ -37,7 +37,7 @@
     Filename: New-DMLunGroup.ps1
 #>
 function New-DMLunGroup {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
@@ -84,10 +84,12 @@ function New-DMLunGroup {
         $body.vstoreId = $VstoreId
     }
 
-    $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'lungroup' -BodyData $body
-    if ($response.error.Code -eq 0) {
-        return [OceanStorLunGroup]::new($response.data, $session)
-    }
+    if ($PSCmdlet.ShouldProcess($Name, 'Create LUN group')) {
+        $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'lungroup' -BodyData $body
+        if ($response.error.Code -eq 0) {
+            return [OceanStorLunGroup]::new($response.data, $session)
+        }
 
-    return $response.error
+        return $response.error
+    }
 }

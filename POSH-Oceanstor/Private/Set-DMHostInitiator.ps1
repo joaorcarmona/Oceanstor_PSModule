@@ -1,4 +1,5 @@
 function Set-DMHostInitiator {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '')]
     [CmdletBinding()]
     Param(
         [Parameter(Mandatory=$true)]

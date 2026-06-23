@@ -94,7 +94,7 @@ function New-DMFileSystem {
 
 	.LINK
 	#>
-    [Cmdletbinding()]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession,
@@ -293,14 +293,16 @@ function New-DMFileSystem {
         $body.Add("CAPACITY", $capacityInBlocks)
     }
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "POST" -Resource "filesystem" -BodyData $body
+    if ($PSCmdlet.ShouldProcess($FileSystemName, 'Create file system')) {
+        $response = Invoke-DeviceManager -WebSession $session -Method "POST" -Resource "filesystem" -BodyData $body
 
-    if ($response.error.Code -eq 0) {
-        $result = [OceanstorFileSystem]::new($response.data, $session)
-    }
-    else {
-        $result = $response.error
-    }
+        if ($response.error.Code -eq 0) {
+            $result = [OceanstorFileSystem]::new($response.data, $session)
+        }
+        else {
+            $result = $response.error
+        }
 
-    return $result
+        return $result
+    }
 }

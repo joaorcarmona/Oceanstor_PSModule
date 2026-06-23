@@ -54,7 +54,7 @@
     Filename: New-DMFiberChannelInitiator.ps1
 #>
 function New-DMFiberChannelInitiator {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
@@ -145,9 +145,11 @@ function New-DMFiberChannelInitiator {
         $body.vstoreId = $VstoreId
     }
 
-    $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'fc_initiator' -BodyData $body
-    if ($response.error.Code -eq 0) {
-        return [OceanstorHostinitiatorFC]::new($response.data, $session)
+    if ($PSCmdlet.ShouldProcess($WWN, 'Create Fibre Channel initiator')) {
+        $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'fc_initiator' -BodyData $body
+        if ($response.error.Code -eq 0) {
+            return [OceanstorHostinitiatorFC]::new($response.data, $session)
+        }
+        return $response.error
     }
-    return $response.error
 }

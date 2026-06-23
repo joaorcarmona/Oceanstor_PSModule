@@ -33,7 +33,7 @@
     Filename: New-DMNvmeInitiator.ps1
 #>
 function New-DMNvmeInitiator {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
@@ -62,9 +62,11 @@ function New-DMNvmeInitiator {
         $body.vstoreId = $VstoreId
     }
 
-    $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'NVMe_over_RoCE_initiator' -BodyData $body
-    if ($response.error.Code -eq 0) {
-        return [OceanstorHostinitiatorNVMe]::new($response.data, $session)
+    if ($PSCmdlet.ShouldProcess($Nqn, 'Create NVMe initiator')) {
+        $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'NVMe_over_RoCE_initiator' -BodyData $body
+        if ($response.error.Code -eq 0) {
+            return [OceanstorHostinitiatorNVMe]::new($response.data, $session)
+        }
+        return $response.error
     }
-    return $response.error
 }
