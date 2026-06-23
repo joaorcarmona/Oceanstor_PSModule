@@ -126,7 +126,7 @@ SAFETY AND CONFIRMATION
         Get-Help Restore-DMFileSystemSnapshot -Full
 
 NOTES
-    Module version: 0.9.3
+    Module version: 0.9.4
     Minimum PowerShell version: 6.0
 
     Command help is available for all public commands. Use Get-Command
