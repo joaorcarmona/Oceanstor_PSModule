@@ -26,7 +26,9 @@ $moduleRoot = (Resolve-Path -LiteralPath $moduleRoot).Path
 $validationModule = New-Module -Name OceanstorLiveGetterValidation -ArgumentList $moduleRoot -ScriptBlock {
     param($root)
 
+    . (Join-Path $root 'Private\class-OceanstorSession.ps1')
     Get-ChildItem -LiteralPath (Join-Path $root 'Private') -Filter 'class-*.ps1' |
+        Where-Object Name -ne 'class-OceanstorSession.ps1' |
         ForEach-Object { . $_.FullName }
 
     foreach ($privateHelper in @(
