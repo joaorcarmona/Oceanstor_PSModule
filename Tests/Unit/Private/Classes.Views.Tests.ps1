@@ -1,20 +1,20 @@
 BeforeAll {
     function global:Get-DMSystem {}
-    function global:Get-DMHostLinks {}
+    function global:Get-DMHostLink {}
     function global:Connect-deviceManager {}
-    function global:Get-DMluns {}
-    function global:Get-DMlunGroups {}
-    function global:Get-DMdisks {}
-    function global:Get-DMhosts {}
-    function global:Get-DMhostGroups {}
-    function global:Get-DMstoragePools {}
+    function global:Get-DMlun {}
+    function global:Get-DMlunGroup {}
+    function global:Get-DMdisk {}
+    function global:Get-DMhost {}
+    function global:Get-DMhostGroup {}
+    function global:Get-DMstoragePool {}
     function global:Get-DMvStore {}
     function global:Get-DMFileSystem {}
-    function global:Get-DMShares {}
-    function global:Get-DMAlarms {}
-    function global:Get-DMEnclosures {}
-    function global:Get-DMControllers {}
-    function global:Get-DMInterfaceModules {}
+    function global:Get-DMShare {}
+    function global:Get-DMAlarm {}
+    function global:Get-DMEnclosure {}
+    function global:Get-DMController {}
+    function global:Get-DMInterfaceModule {}
 
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorViewHost.ps1"
@@ -23,10 +23,10 @@ BeforeAll {
 
 AfterAll {
     @(
-        'Get-DMSystem', 'Get-DMHostLinks', 'Connect-deviceManager', 'Get-DMluns',
-        'Get-DMlunGroups', 'Get-DMdisks', 'Get-DMhosts', 'Get-DMhostGroups',
-        'Get-DMstoragePools', 'Get-DMvStore', 'Get-DMFileSystem', 'Get-DMShares',
-        'Get-DMAlarms', 'Get-DMEnclosures', 'Get-DMControllers', 'Get-DMInterfaceModules'
+        'Get-DMSystem', 'Get-DMHostLink', 'Connect-deviceManager', 'Get-DMlun',
+        'Get-DMlunGroup', 'Get-DMdisk', 'Get-DMhost', 'Get-DMhostGroup',
+        'Get-DMstoragePool', 'Get-DMvStore', 'Get-DMFileSystem', 'Get-DMShare',
+        'Get-DMAlarm', 'Get-DMEnclosure', 'Get-DMController', 'Get-DMInterfaceModule'
     ) | ForEach-Object {
         Remove-Item -LiteralPath "Function:\global:$_" -ErrorAction SilentlyContinue
     }
@@ -50,7 +50,7 @@ Describe 'Session and view classes' {
     }
 
     It 'creates a host view with retrieved paths' {
-        Mock Get-DMHostLinks {
+        Mock Get-DMHostLink {
             @([pscustomobject]@{ Id = 'path-01' })
         }
         $session = [pscustomobject]@{ DeviceId = 'device-01' }
@@ -61,26 +61,26 @@ Describe 'Session and view classes' {
         $result.Properties.Id | Should -Be 'host-01'
         $result.Paths[0].Id | Should -Be 'path-01'
         $result.Session | Should -Be $session
-        Should -Invoke Get-DMHostLinks -Times 1 -Exactly
+        Should -Invoke Get-DMHostLink -Times 1 -Exactly
     }
 
     It 'assembles a storage view from device manager queries' {
         $connection = [pscustomobject]@{ DeviceId = 'device-01' }
         Mock Connect-deviceManager { $connection }
         Mock Get-DMSystem { [pscustomobject]@{ sn = 'system-01' } }
-        Mock Get-DMluns { @('lun-01') }
-        Mock Get-DMlunGroups { @('lungroup-01') }
-        Mock Get-DMdisks { @('disk-01') }
-        Mock Get-DMhosts { @('host-01') }
-        Mock Get-DMhostGroups { @('hostgroup-01') }
-        Mock Get-DMstoragePools { @('pool-01') }
+        Mock Get-DMlun { @('lun-01') }
+        Mock Get-DMlunGroup { @('lungroup-01') }
+        Mock Get-DMdisk { @('disk-01') }
+        Mock Get-DMhost { @('host-01') }
+        Mock Get-DMhostGroup { @('hostgroup-01') }
+        Mock Get-DMstoragePool { @('pool-01') }
         Mock Get-DMvStore { @('vstore-01') }
         Mock Get-DMFileSystem { @('fs-01') }
-        Mock Get-DMShares { @('share-01') }
-        Mock Get-DMAlarms { @('alarm-01') }
-        Mock Get-DMEnclosures { @('enclosure-01') }
-        Mock Get-DMControllers { @('controller-01') }
-        Mock Get-DMInterfaceModules { @('module-01') }
+        Mock Get-DMShare { @('share-01') }
+        Mock Get-DMAlarm { @('alarm-01') }
+        Mock Get-DMEnclosure { @('enclosure-01') }
+        Mock Get-DMController { @('controller-01') }
+        Mock Get-DMInterfaceModule { @('module-01') }
 
         $result = New-Object -TypeName OceanstorViewStorage -ArgumentList 'oceanstor.test'
 
@@ -90,6 +90,6 @@ Describe 'Session and view classes' {
         $result.Controllers | Should -Contain 'controller-01'
         $result.Session | Should -Be $connection
         Should -Invoke Connect-deviceManager -Times 1 -Exactly
-        Should -Invoke Get-DMShares -Times 2 -Exactly
+        Should -Invoke Get-DMShare -Times 2 -Exactly
     }
 }

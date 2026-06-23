@@ -1,46 +1,41 @@
-function Get-DMhostsbyHostGroupId {
+function Get-DMhost {
     <#
 .SYNOPSIS
-    To Get Huawei Oceanstor Storage configured Hosts querying by HostGroupId
+    To Get Huawei Oceanstor Storage configured Hosts
 
 .DESCRIPTION
-    Function to request Huawei Oceanstor Storage configured Hosts querying by HostGroupId
+    Function to request Huawei Oceanstor Storage configured Hosts
 
 .PARAMETER webSession
     Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
 
-.PARAMETER HostGroupId
-		Mandatory parameter [string], to set the HostGroup ID to look for.
-
 .INPUTS
     System.Management.Automation.PSCustomObject
 
-    You can pipe an OceanStor session object to WebSession and provide HostGroupId by property name.
+    You can pipe an OceanStor session object to WebSession.
 
 .OUTPUTS
     OceanStorHost
 
-    Returns host objects whose Parent Id matches the supplied HostGroupId value.
+    Returns host objects.
 
 .EXAMPLE
 
-    PS C:\> Get-DMhostsbyHostGroupId -webSession $session -HostGroupId 10
+    PS C:\> Get-DMhost -webSession $session
 
     OR
 
-    PS C:\> $hosts = Get-DMhostsbyHostGroupId -HostGroupId 10
+    PS C:\> $hosts = Get-DMhost
 
 .NOTES
-    Filename: Get-DMhostsbyHostGroupId.ps1
+    Filename: Get-DMhost.ps1
 
 .LINK
 #>
     [Cmdletbinding()]
     param(
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
-        [pscustomobject]$WebSession,
-        [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
-        [string]$HostGroupId
+        [pscustomobject]$WebSession
     )
 
     if ($WebSession) {
@@ -67,13 +62,15 @@ function Get-DMhostsbyHostGroupId {
         [void]$hosts.Add($hostobj)
     }
 
-    $result = $hosts | Where-Object "Parent Id" -Match $HostGroupId
+    $hosts = @(Set-DMHostInitiators -InputObject $hosts -WebSession $session)
 
-    $result = @(Set-DMHostInitiators -InputObject $result -WebSession $session)
-
-    $result | ForEach-Object {
+    $hosts | ForEach-Object {
         $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
     }
 
+    $result = $hosts
+
     return $result
 }
+
+Set-Alias -Name Get-DMhosts -Value Get-DMhost

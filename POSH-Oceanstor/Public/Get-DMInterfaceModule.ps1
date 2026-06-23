@@ -1,10 +1,10 @@
-function Get-DMEnclosures {
+function Get-DMInterfaceModule {
     <#
 .SYNOPSIS
-    To Get Huawei Oceanstor Storage Enclosures
+    To Get Huawei Oceanstor Storage Interface Modules
 
 .DESCRIPTION
-    Function to request Huawei Oceanstor Enclosures in the system
+    Function to request Huawei Oceanstor Modules in the system
 
 .PARAMETER webSession
     Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
@@ -15,20 +15,20 @@ function Get-DMEnclosures {
     You can pipe an OceanStor session object to WebSession.
 
 .OUTPUTS
-    OceanStorEnclosure
+    OceanstorInterfaceModule
 
-    Returns enclosure objects.
+    Returns interface module objects.
 
 .EXAMPLE
 
-    PS C:\> Get-DMEnclosures -webSession $session
+    PS C:\> Get-DMInterfaceModule -webSession $session
 
     OR
 
-    PS C:\> $enclosures = Get-DMEnclosures
+    PS C:\> $controllers = Get-DMInterfaceModule
 
 .NOTES
-    Filename: Get-DMEnclosures.ps1
+    Filename: Get-DMInterfaceModule.ps1
 
 .LINK
 #>
@@ -54,19 +54,21 @@ function Get-DMEnclosures {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "enclosure" | Select-Object -ExpandProperty data
-    $enclosures = New-Object System.Collections.ArrayList
+    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "intf_module" | Select-Object -ExpandProperty data
+    $interfaceModules = New-Object System.Collections.ArrayList
 
-    foreach ($tenc in $response) {
-        $enc = [OceanStorEnclosure]::new($tenc, $session)
-        [void]$enclosures.Add($enc)
+    foreach ($imodule in $response) {
+        $interfaceModule = [OceanstorInterfaceModule]::new($imodule, $session)
+        [void]$interfaceModules.Add($interfaceModule)
     }
 
-    $enclosures | ForEach-Object {
+    $interfaceModules | ForEach-Object {
         $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
     }
 
-    $result = $enclosures
+    $result = $interfaceModules
 
     return $result
 }
+
+Set-Alias -Name Get-DMInterfaceModules -Value Get-DMInterfaceModule

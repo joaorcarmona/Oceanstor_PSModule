@@ -1,10 +1,10 @@
-function Get-DMWorkLoadTypes {
+function Get-DMcofferDisk {
     <#
 	.SYNOPSIS
-		To Get Huawei Oceanstor Storage workload Type configured (only works for v6)
+		To Get Huawei Oceanstor Storage System coffer disks
 
 	.DESCRIPTION
-		Function to request Huawei Oceanstor Storage workload Type configured (only works for v6)
+		Function to request Huawei Oceanstor Storage System coffer disks
 
 	.PARAMETER webSession
 		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
@@ -15,20 +15,20 @@ function Get-DMWorkLoadTypes {
 		You can pipe an OceanStor session object to WebSession.
 
 	.OUTPUTS
-		OceanStorWorkload
+		OceanStorDisks
 
-		Returns workload type objects. This command only works for V6 arrays.
+		Returns disk objects where cofferDisk is true.
 
 	.EXAMPLE
 
-		PS C:\> Get-DMWorkLoadTypes -webSession $session
+		PS C:\> Get-DMcofferDisk -webSession $session
 
 		OR
 
-		PS C:\> $workloads = Get-DMWorkLoadTypes
+		PS C:\> $cofferDisks = Get-DMcofferDisk
 
 	.NOTES
-		Filename: Get-DMWorkLoadTypes.ps1
+		Filename: Get-DMcofferDisk.ps1
 
 	.LINK
 	#>
@@ -45,7 +45,7 @@ function Get-DMWorkLoadTypes {
         $session = $deviceManager
     }
 
-    $defaultDisplaySet = "Id", "Name", "Workload Type", "Block Size", "Compression Enabled"
+    $defaultDisplaySet = "Id", "Location", "Health Status", "Disk Usage", "PoolName"
 
     $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
         'DefaultDisplayPropertySet',
@@ -54,18 +54,21 @@ function Get-DMWorkLoadTypes {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "workload_type?isDetailInfo=true" | Select-Object -ExpandProperty data
-    $workloads = New-Object System.Collections.ArrayList
+    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "disk" | Select-Object -ExpandProperty data
+    $Storagedisks = New-Object System.Collections.ArrayList
 
-    foreach ($tworkload in $response) {
-        $workload = [OceanStorWorkload]::new($tworkload, $session)
-        [void]$workloads.Add($workload)
+    foreach ($tdisk in $response) {
+        $disk = [OceanStorDisks]::new($tdisk, $session)
+        [void]$Storagedisks.Add($disk)
     }
 
-    $workloads | ForEach-Object {
+    $result = $Storagedisks | Where-Object cofferDisk -EQ $true
+
+    $result | ForEach-Object {
         $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
     }
 
-    $result = $workloads
     return $result
 }
+
+Set-Alias -Name Get-DMcofferDisks -Value Get-DMcofferDisk

@@ -48,7 +48,7 @@ function Get-DMIscsiInitiator {
                 else {
                     $deviceManager
                 }
-                $hosts = @(Get-DMhosts -WebSession $session)
+                $hosts = @(Get-DMhost -WebSession $session)
                 $matchingItems = @($hosts | Where-Object Name -EQ $candidate)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -66,7 +66,7 @@ function Get-DMIscsiInitiator {
                 else {
                     $deviceManager
                 }
-                (Get-DMhosts -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMhost -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$HostName,
 
@@ -81,11 +81,11 @@ function Get-DMIscsiInitiator {
         $deviceManager
     }
     if ($HostName) {
-        $hostObject = @(Get-DMhosts -WebSession $session | Where-Object Name -EQ $HostName)[0]
-        return @(Get-DMHostInitiators -WebSession $session -InitiatorType ISCSI -HostId $hostObject.Id)
+        $hostObject = @(Get-DMhost -WebSession $session | Where-Object Name -EQ $HostName)[0]
+        return @(Get-DMHostInitiator -WebSession $session -InitiatorType ISCSI -HostId $hostObject.Id)
     }
     if ($FreeInitiators) {
-        return @(Get-DMHostInitiators -WebSession $session -InitiatorType ISCSI -FreeInitiators)
+        return @(Get-DMHostInitiator -WebSession $session -InitiatorType ISCSI -FreeInitiators)
     }
-    return @(Get-DMHostInitiators -WebSession $session -InitiatorType ISCSI -All)
+    return @(Get-DMHostInitiator -WebSession $session -InitiatorType ISCSI -All)
 }

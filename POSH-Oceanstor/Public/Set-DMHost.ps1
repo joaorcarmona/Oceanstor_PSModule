@@ -21,7 +21,7 @@ function Set-DMHost {
     )
 
     $session = if ($WebSession) { $WebSession } else { $deviceManager }
-    $update = New-DMNamedObjectUpdate -Objects @(Get-DMhosts -WebSession $session) `
+    $update = New-DMNamedObjectUpdate -Objects @(Get-DMhost -WebSession $session) `
         -CurrentName $HostName -EntityName 'host' -ResourceBase 'host' -NewName $NewName `
         -NewNameSpecified:$($PSBoundParameters.ContainsKey('NewName')) -Description $Description `
         -DescriptionSpecified:$($PSBoundParameters.ContainsKey('Description')) -ApiProperties $ApiProperties -VstoreId $VstoreId

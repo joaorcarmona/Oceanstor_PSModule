@@ -21,7 +21,7 @@ function Get-DMPortGroupCandidates {
             }
         }
         'LogicalPort' {
-            @(Get-DMLifs -WebSession $WebSession) | ForEach-Object {
+            @(Get-DMLif -WebSession $WebSession) | ForEach-Object {
                 [pscustomobject]@{ Id = $_.Id; Name = $_.'LIF Name'; ObjectType = 279 }
             }
         }

@@ -1,4 +1,4 @@
-function Get-DMShares {
+function Get-DMShare {
     <#
 	.SYNOPSIS
 		To Get Huawei Oceanstor Storage Shares
@@ -25,14 +25,14 @@ function Get-DMShares {
 
 	.EXAMPLE
 
-		PS C:\> Get-DMShares -webSession $session -shareType CIFS
+		PS C:\> Get-DMShare -webSession $session -shareType CIFS
 
 		OR
 
-		PS C:\> $shares = Get-DMShares -shareType NFS
+		PS C:\> $shares = Get-DMShare -shareType NFS
 
 	.NOTES
-		Filename: Get-DMShares.ps1
+		Filename: Get-DMShare.ps1
 
 	.LINK
 	#>
@@ -93,3 +93,5 @@ function Get-DMShares {
     $result = $shares
     return $result
 }
+
+Set-Alias -Name Get-DMShares -Value Get-DMShare

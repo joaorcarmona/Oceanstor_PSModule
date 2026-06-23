@@ -68,7 +68,7 @@ Describe 'Public getter functions' {
         It 'gets LUN groups' {
             Mock Invoke-DeviceManager { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 12; NAME = 'luns'; GROUPTYPE = 0; CAPCITY = 1GB }) } }
 
-            $result = (Get-DMlunGroups -WebSession $script:session)[0]
+            $result = (Get-DMlunGroup -WebSession $script:session)[0]
 
             $result.Id | Should -Be 12
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
@@ -88,7 +88,7 @@ Describe 'Public getter functions' {
                 }
             }
 
-            $lunGroup = (Get-DMlunGroups -WebSession $script:session)[0]
+            $lunGroup = (Get-DMlunGroup -WebSession $script:session)[0]
             $result = @($lunGroup.GetLuns())
 
             $result.Name | Should -Be @('archive')
@@ -107,7 +107,7 @@ Describe 'Public getter functions' {
                 }
             }
 
-            $lunGroup = (Get-DMlunGroups -WebSession $script:session)[0]
+            $lunGroup = (Get-DMlunGroup -WebSession $script:session)[0]
             $result = @($lunGroup.GetLuns())
 
             $result | Should -BeNullOrEmpty
@@ -117,7 +117,7 @@ Describe 'Public getter functions' {
         It 'gets version 6 LUNs' {
             Mock Invoke-DeviceManager { [pscustomobject]@{ data = @(New-TestLun) } }
 
-            $result = Get-DMluns -WebSession $script:session
+            $result = Get-DMlun -WebSession $script:session
 
             $result[0].Id | Should -Be 'lun-01'
             $result[0].GetType().Name | Should -Be 'OceanstorLunv6'
@@ -132,7 +132,7 @@ Describe 'Public getter functions' {
                 [pscustomobject]@{ data = @(New-TestLunSnapshot) }
             }
 
-            $result = Get-DMLunSnapshots -WebSession $script:session
+            $result = Get-DMLunSnapshot -WebSession $script:session
 
             $result[0].GetType().Name | Should -Be 'OceanstorLunSnapshot'
             $result[0].Id | Should -Be 'snap-01'
@@ -158,7 +158,7 @@ Describe 'Public getter functions' {
                 }
             }
 
-            $result = Get-DMLunSnapshots -WebSession $script:session -LunName 'data-lun'
+            $result = Get-DMLunSnapshot -WebSession $script:session -LunName 'data-lun'
 
             $result[0].Id | Should -Be 'snap-01'
             $script:snapshotFilterResource | Should -Be 'snapshot?filter=SOURCELUNID:lun-01'
@@ -170,7 +170,7 @@ Describe 'Public getter functions' {
                 [pscustomobject]@{ data = @(New-TestLun) }
             }
 
-            { Get-DMLunSnapshots -WebSession $script:session -LunName 'missing' } |
+            { Get-DMLunSnapshot -WebSession $script:session -LunName 'missing' } |
                 Should -Throw '*Invalid LunName*'
         }
 
@@ -210,7 +210,7 @@ Describe 'Public getter functions' {
                 [pscustomobject]@{ data = @(New-TestLun -Id 'lun-02' -WWN 'wwn-b') }
             }
 
-            $result = (Get-DMlunsByWWN -WebSession $script:session -WWN 'wwn-b')[0]
+            $result = (Get-DMlunByWWN -WebSession $script:session -WWN 'wwn-b')[0]
 
             $result.Id | Should -Be 'lun-02'
             $script:wwnResource | Should -Be 'lun?filter=WWN:wwn-b'
@@ -233,7 +233,7 @@ Describe 'Public getter functions' {
         It 'gets CIFS shares' {
             Mock Invoke-DeviceManager { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'cifs-01'; NAME = 'share'; subType = 0 }) } }
 
-            $result = (Get-DMShares -WebSession $script:session -ShareType CIFS)[0]
+            $result = (Get-DMShare -WebSession $script:session -ShareType CIFS)[0]
 
             $result.Id | Should -Be 'cifs-01'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
@@ -244,7 +244,7 @@ Describe 'Public getter functions' {
         It 'gets NFS shares' {
             Mock Invoke-DeviceManager { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'nfs-01'; NAME = 'export'; CHARACTERENCODING = 0 }) } }
 
-            $result = (Get-DMShares -WebSession $script:session -ShareType NFS)[0]
+            $result = (Get-DMShare -WebSession $script:session -ShareType NFS)[0]
 
             $result.Id | Should -Be 'nfs-01'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
@@ -255,7 +255,7 @@ Describe 'Public getter functions' {
         It 'gets storage pools' {
             Mock Invoke-DeviceManager { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'pool-01'; NAME = 'pool'; HEALTHSTATUS = 1; RUNNINGSTATUS = 27; DATASPACE = (512 * 1GB) }) } }
 
-            $result = (Get-DMstoragePools -WebSession $script:session)[0]
+            $result = (Get-DMstoragePool -WebSession $script:session)[0]
 
             $result.id | Should -Be 'pool-01'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
@@ -288,7 +288,7 @@ Describe 'Public getter functions' {
         It 'gets workload types' {
             Mock Invoke-DeviceManager { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'workload-01'; NAME = 'db'; CREATETYPE = 1; BLOCKSIZE = 2 }) } }
 
-            $result = (Get-DMWorkLoadTypes -WebSession $script:session)[0]
+            $result = (Get-DMWorkLoadType -WebSession $script:session)[0]
 
             $result.Id | Should -Be 'workload-01'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
@@ -304,7 +304,7 @@ Describe 'Public getter functions' {
                 ) }
             }
 
-            $result = (Get-DMWorkLoadTypesbyFilter -WebSession $script:session -Filter 'Compression Enabled' -Keyword enabled)[0]
+            $result = (Get-DMWorkLoadTypebyFilter -WebSession $script:session -Filter 'Compression Enabled' -Keyword enabled)[0]
 
             $result.Id | Should -Be 'workload-01'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |

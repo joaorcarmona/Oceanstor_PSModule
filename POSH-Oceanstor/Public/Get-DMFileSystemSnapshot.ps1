@@ -22,19 +22,19 @@
     OceanstorFileSystemSnapshot
 
 .EXAMPLE
-    PS> Get-DMFileSystemSnapshots -FileSystemName 'fs01'
+    PS> Get-DMFileSystemSnapshot -FileSystemName 'fs01'
 
     Returns all snapshots for fs01.
 
 .EXAMPLE
-    PS> Get-DMFileSystemSnapshots -FileSystemName 'fs01' -SnapshotName 'snap_fs01'
+    PS> Get-DMFileSystemSnapshot -FileSystemName 'fs01' -SnapshotName 'snap_fs01'
 
     Returns the snap_fs01 snapshot from fs01.
 
 .NOTES
-    Filename: Get-DMFileSystemSnapshots.ps1
+    Filename: Get-DMFileSystemSnapshot.ps1
 #>
-function Get-DMFileSystemSnapshots {
+function Get-DMFileSystemSnapshot {
     [CmdletBinding()]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
@@ -114,3 +114,5 @@ function Get-DMFileSystemSnapshots {
 
     return $snapshots
 }
+
+Set-Alias -Name Get-DMFileSystemSnapshots -Value Get-DMFileSystemSnapshot

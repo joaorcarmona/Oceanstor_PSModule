@@ -1,4 +1,4 @@
-function Get-DMbbus {
+function Get-DMbbu {
     <#
     .SYNOPSIS
         To Get Huawei Oceanstor Storage System BBU
@@ -16,13 +16,13 @@ function Get-DMbbus {
         Returns backup battery unit objects.
     .EXAMPLE
 
-        PS C:\> Get-DMbbus -webSession $session
+        PS C:\> Get-DMbbu -webSession $session
 
         OR
 
-        PS C:\> $bbus = Get-DMbbus
+        PS C:\> $bbus = Get-DMbbu
     .NOTES
-        Filename: Get-DMbbus.ps1
+        Filename: Get-DMbbu.ps1
     #>
     [Cmdletbinding()]
     param(
@@ -62,3 +62,5 @@ function Get-DMbbus {
 
     return $result
 }
+
+Set-Alias -Name Get-DMbbus -Value Get-DMbbu

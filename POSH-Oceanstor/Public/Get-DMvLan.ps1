@@ -1,10 +1,10 @@
-function Get-DMfreeDisks {
+function Get-DMvLan {
     <#
 	.SYNOPSIS
-		To Get Huawei Oceanstor Storage free disks (not used)
+		To Get Huawei OceanStor Storage VLANs
 
 	.DESCRIPTION
-		Function to request Huawei Oceanstor Storage free disks (not used)
+		Function to request configured Huawei OceanStor VLANs.
 
 	.PARAMETER webSession
 		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
@@ -15,20 +15,20 @@ function Get-DMfreeDisks {
 		You can pipe an OceanStor session object to WebSession.
 
 	.OUTPUTS
-		OceanStorDisks
+		OceanStorvLan
 
-		Returns disk objects whose Disk Usage property is free.
+		Returns VLAN objects.
 
 	.EXAMPLE
 
-		PS C:\> Get-DMfreeDisks -webSession $session
+		PS C:\> Get-DMvLan -webSession $session
 
 		OR
 
-		PS C:\> $freeDisks = Get-DMfreeDisks
+		PS C:\> $vlans = Get-DMvLan
 
 	.NOTES
-		Filename: Get-DMfreeDisks.ps1
+		Filename: Get-DMvLan.ps1
 
 	.LINK
 	#>
@@ -45,7 +45,7 @@ function Get-DMfreeDisks {
         $session = $deviceManager
     }
 
-    $defaultDisplaySet = "Id", "Location", "Health Status", "Disk Usage", "PoolName"
+    $defaultDisplaySet = "Id", "Name", "Vlan Tag Id", "Port Type", "Running Status"
 
     $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
         'DefaultDisplayPropertySet',
@@ -54,19 +54,20 @@ function Get-DMfreeDisks {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "disk" | Select-Object -ExpandProperty data
-    $Storagedisks = New-Object System.Collections.ArrayList
+    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "vlan" | Select-Object -ExpandProperty data
+    $vlans = New-Object System.Collections.ArrayList
 
-    foreach ($tdisk in $response) {
-        $disk = [OceanStorDisks]::new($tdisk, $session)
-        [void]$Storagedisks.Add($disk)
+    foreach ($tvlan in $response) {
+        $vlan = [OceanStorvLan]::new($tvlan, $session)
+        [void]$vlans.Add($vlan)
     }
 
-    $result = $Storagedisks | Where-Object 'Disk Usage' -EQ "free"
-
-    $result | ForEach-Object {
+    $vlans | ForEach-Object {
         $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
     }
 
+    $result = $vlans
     return $result
 }
+
+Set-Alias -Name Get-DMvLans -Value Get-DMvLan

@@ -21,7 +21,7 @@ function Set-DMHostGroup {
     )
 
     $session = if ($WebSession) { $WebSession } else { $deviceManager }
-    $update = New-DMNamedObjectUpdate -Objects @(Get-DMhostGroups -WebSession $session) `
+    $update = New-DMNamedObjectUpdate -Objects @(Get-DMhostGroup -WebSession $session) `
         -CurrentName $HostGroupName -EntityName 'host group' -ResourceBase 'hostgroup' -NewName $NewName `
         -NewNameSpecified:$($PSBoundParameters.ContainsKey('NewName')) -Description $Description `
         -DescriptionSpecified:$($PSBoundParameters.ContainsKey('Description')) -ApiProperties $ApiProperties -VstoreId $VstoreId

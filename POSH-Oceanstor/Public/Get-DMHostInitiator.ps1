@@ -1,4 +1,4 @@
-function Get-DMHostInitiators {
+function Get-DMHostInitiator {
     <#
 	.SYNOPSIS
 		To Get Huawei Oceanstor Storage Host Initiators
@@ -30,30 +30,30 @@ function Get-DMHostInitiators {
 
 	.EXAMPLE
 
-		PS C:\> Get-DMHostInitiators -webSession $session -initiatorType "FibreChannel"
+		PS C:\> Get-DMHostInitiator -webSession $session -initiatorType "FibreChannel"
 
 		OR
 
-		PS C:\> $fcInitiators = Get-DMHostInitiators -All -initiatorType "FibreChannel"
+		PS C:\> $fcInitiators = Get-DMHostInitiator -All -initiatorType "FibreChannel"
 
 	.EXAMPLE
 
-		PS C:\> Get-DMHostInitiators -webSession $session -FreeInitiators -initiatorType "ISCSI"
+		PS C:\> Get-DMHostInitiator -webSession $session -FreeInitiators -initiatorType "ISCSI"
 
 		OR
 
-		PS C:\> $fcInitiators = Get-DMHostInitiators -FreeInitiators -initiatorType "ISCSI"
+		PS C:\> $fcInitiators = Get-DMHostInitiator -FreeInitiators -initiatorType "ISCSI"
 
 	.EXAMPLE
 
-		PS C:\> Get-DMHostInitiators -webSession $session -hostId 1 -initiatorType "FibreChannel"
+		PS C:\> Get-DMHostInitiator -webSession $session -hostId 1 -initiatorType "FibreChannel"
 
 		OR
 
-		PS C:\> $fcInitiators = Get-DMHostInitiators -hostId 1 -initiatorType "FibreChannel"
+		PS C:\> $fcInitiators = Get-DMHostInitiator -hostId 1 -initiatorType "FibreChannel"
 
 	.NOTES
-		Filename: Get-DMHostInitiators.ps1
+		Filename: Get-DMHostInitiator.ps1
 
 	.LINK
 	#>
@@ -139,3 +139,5 @@ function Get-DMHostInitiators {
 
     return $result
 }
+
+Set-Alias -Name Get-DMHostInitiators -Value Get-DMHostInitiator

@@ -77,7 +77,7 @@ function Remove-DMLunGroupFromMappingView {
                 else {
                     $deviceManager
                 }
-                $groups = @(Get-DMlunGroups -WebSession $session)
+                $groups = @(Get-DMlunGroup -WebSession $session)
                 $matchingItems = @($groups | Where-Object Name -EQ $_)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -95,7 +95,7 @@ function Remove-DMLunGroupFromMappingView {
                 else {
                     $deviceManager
                 }
-                (Get-DMlunGroups -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMlunGroup -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$LunGroupName,
 
@@ -112,7 +112,7 @@ function Remove-DMLunGroupFromMappingView {
     if (-not $view) {
         throw "Mapping view '$MappingViewName' was not found."
     }
-    $group = @(Get-DMlunGroups -WebSession $session | Where-Object Name -EQ $LunGroupName)[0]
+    $group = @(Get-DMlunGroup -WebSession $session | Where-Object Name -EQ $LunGroupName)[0]
     if (-not $group) {
         throw "LUN group '$LunGroupName' was not found."
     }

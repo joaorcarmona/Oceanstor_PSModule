@@ -14,7 +14,7 @@ BeforeDiscovery {
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorFileSystemSnapshot.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\New-DMFileSystemSnapshot.ps1"
-        . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMFileSystemSnapshots.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMFileSystemSnapshot.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Remove-DMFileSystemSnapshot.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Restore-DMFileSystemSnapshot.ps1"
 
@@ -80,7 +80,7 @@ Describe 'File-system snapshot commands' {
             }) }
         }
 
-        $result = Get-DMFileSystemSnapshots -WebSession $script:session -FileSystemName 'documents'
+        $result = Get-DMFileSystemSnapshot -WebSession $script:session -FileSystemName 'documents'
 
         $result[0].GetType().Name | Should -Be 'OceanstorFileSystemSnapshot'
         $result[0].'Source File System Name' | Should -Be 'documents'
@@ -94,7 +94,7 @@ Describe 'File-system snapshot commands' {
     It 'returns no file-system snapshots when the API contains no data property' {
         Mock Invoke-DeviceManager { [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 } } }
 
-        @(Get-DMFileSystemSnapshots -WebSession $script:session -FileSystemName 'documents') | Should -BeNullOrEmpty
+        @(Get-DMFileSystemSnapshot -WebSession $script:session -FileSystemName 'documents') | Should -BeNullOrEmpty
     }
 
     It 'parses file-system snapshots returned as JSON text' {
@@ -102,7 +102,7 @@ Describe 'File-system snapshot commands' {
             '{"data":[{"ID":"5@checkpoint","NAME":"checkpoint","PARENTID":"5","PARENTNAME":"documents","HEALTHSTATUS":"1","snapType":"0","SNAPTYPE":"1","TIMESTAMP":"1594990822"}],"error":{"code":0}}'
         }
 
-        $result = Get-DMFileSystemSnapshots -WebSession $script:session -FileSystemName 'documents'
+        $result = Get-DMFileSystemSnapshot -WebSession $script:session -FileSystemName 'documents'
 
         $result[0].Name | Should -Be 'checkpoint'
         $result[0].GetType().Name | Should -Be 'OceanstorFileSystemSnapshot'
@@ -110,7 +110,7 @@ Describe 'File-system snapshot commands' {
     }
 
     It 'deletes a selected file-system snapshot by ID' {
-        Mock Get-DMFileSystemSnapshots {
+        Mock Get-DMFileSystemSnapshot {
             @([OceanstorFileSystemSnapshot]::new([pscustomobject]@{ ID = '5@checkpoint'; NAME = 'checkpoint'; PARENTID = '5'; PARENTNAME = 'documents' }, $script:session))
         }
 
@@ -122,7 +122,7 @@ Describe 'File-system snapshot commands' {
     }
 
     It 'restores a selected file-system snapshot through rollback' {
-        Mock Get-DMFileSystemSnapshots {
+        Mock Get-DMFileSystemSnapshot {
             @([OceanstorFileSystemSnapshot]::new([pscustomobject]@{ ID = '5@checkpoint'; NAME = 'checkpoint'; PARENTID = '5'; PARENTNAME = 'documents'; vstoreId = '2' }, $script:session))
         }
 
@@ -140,7 +140,7 @@ Describe 'File-system snapshot commands' {
         @{ Command = 'Restore-DMFileSystemSnapshot' }
     ) {
         param($Command)
-        Mock Get-DMFileSystemSnapshots {
+        Mock Get-DMFileSystemSnapshot {
             @([OceanstorFileSystemSnapshot]::new([pscustomobject]@{ ID = '5@checkpoint'; NAME = 'checkpoint'; PARENTID = '5'; PARENTNAME = 'documents' }, $script:session))
         }
 

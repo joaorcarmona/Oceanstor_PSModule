@@ -1,4 +1,4 @@
-function Get-DMdisksbyPoolId {
+function Get-DMdiskbyPoolId {
     <#
 	.SYNOPSIS
 		To Get Huawei Oceanstor Storage disks configured in a Storage Pool
@@ -24,14 +24,14 @@ function Get-DMdisksbyPoolId {
 
 	.EXAMPLE
 
-		PS C:\> Get-DMdisksbyPoolId -webSession $session -poolID 1
+		PS C:\> Get-DMdiskbyPoolId -webSession $session -poolID 1
 
 		OR
 
-		PS C:\> $disks = Get-DMdisksbyPoolId $session -poolID 1
+		PS C:\> $disks = Get-DMdiskbyPoolId $session -poolID 1
 
 	.NOTES
-		Filename: Get-DMdisksbyPoolId.ps1
+		Filename: Get-DMdiskbyPoolId.ps1
 
 	.LINK
 	#>
@@ -75,3 +75,5 @@ function Get-DMdisksbyPoolId {
 
     return $result
 }
+
+Set-Alias -Name Get-DMdisksbyPoolId -Value Get-DMdiskbyPoolId

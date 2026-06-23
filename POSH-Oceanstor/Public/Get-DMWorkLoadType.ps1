@@ -1,10 +1,10 @@
-function Get-DMhostGroups {
+function Get-DMWorkLoadType {
     <#
 	.SYNOPSIS
-		To Get Huawei Oceanstor Storage Host Groups
+		To Get Huawei Oceanstor Storage workload Type configured (only works for v6)
 
 	.DESCRIPTION
-		Function to request Huawei Oceanstor Storage Host Groups
+		Function to request Huawei Oceanstor Storage workload Type configured (only works for v6)
 
 	.PARAMETER webSession
 		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
@@ -15,20 +15,20 @@ function Get-DMhostGroups {
 		You can pipe an OceanStor session object to WebSession.
 
 	.OUTPUTS
-		OceanStorHostGroup
+		OceanStorWorkload
 
-		Returns host group objects.
+		Returns workload type objects. This command only works for V6 arrays.
 
 	.EXAMPLE
 
-		PS C:\> Get-DMhostGroups -webSession $session
+		PS C:\> Get-DMWorkLoadType -webSession $session
 
 		OR
 
-		PS C:\> $hostGroups = Get-DMhostGroups
+		PS C:\> $workloads = Get-DMWorkLoadType
 
 	.NOTES
-		Filename: Get-DMhostGroups.ps1
+		Filename: Get-DMWorkLoadType.ps1
 
 	.LINK
 	#>
@@ -45,7 +45,7 @@ function Get-DMhostGroups {
         $session = $deviceManager
     }
 
-    $defaultDisplaySet = "Id", "Name", "Is Mapped", "Host Member Number", "vStore Name"
+    $defaultDisplaySet = "Id", "Name", "Workload Type", "Block Size", "Compression Enabled"
 
     $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
         'DefaultDisplayPropertySet',
@@ -54,19 +54,20 @@ function Get-DMhostGroups {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "hostgroup" | Select-Object -ExpandProperty data
-    $hostgroups = New-Object System.Collections.ArrayList
+    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "workload_type?isDetailInfo=true" | Select-Object -ExpandProperty data
+    $workloads = New-Object System.Collections.ArrayList
 
-    foreach ($hgroup in $response) {
-        $hostgroup = [OceanStorHostGroup]::new($hgroup, $session)
-        [void]$hostgroups.Add($hostgroup)
+    foreach ($tworkload in $response) {
+        $workload = [OceanStorWorkload]::new($tworkload, $session)
+        [void]$workloads.Add($workload)
     }
 
-    $hostgroups | ForEach-Object {
+    $workloads | ForEach-Object {
         $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
     }
 
-    $result = $hostgroups
-
+    $result = $workloads
     return $result
 }
+
+Set-Alias -Name Get-DMWorkLoadTypes -Value Get-DMWorkLoadType

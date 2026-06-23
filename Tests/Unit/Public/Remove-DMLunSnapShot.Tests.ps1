@@ -2,7 +2,7 @@ BeforeDiscovery {
     $script:removeSnapshotModule = New-Module -Name RemoveDMLunSnapshotTestModule -ArgumentList $PSScriptRoot -ScriptBlock {
         param($testRoot)
 
-        function Get-DMLunSnapshots {
+        function Get-DMLunSnapshot {
             param([pscustomobject]$WebSession)
         }
 
@@ -30,7 +30,7 @@ InModuleScope RemoveDMLunSnapshotTestModule {
 Describe 'Remove-DMLunSnapShot' {
     BeforeEach {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
-        Mock Get-DMLunSnapshots {
+        Mock Get-DMLunSnapshot {
             @([pscustomobject]@{ Id = 'snap-01'; Name = 'before-patch' })
         }
         Mock Invoke-DeviceManager {
@@ -65,7 +65,7 @@ Describe 'Remove-DMLunSnapShot' {
     }
 
     It 'rejects a snapshot name that is not unique' {
-        Mock Get-DMLunSnapshots {
+        Mock Get-DMLunSnapshot {
             @(
                 [pscustomobject]@{ Id = 'snap-01'; Name = 'before-patch' }
                 [pscustomobject]@{ Id = 'snap-02'; Name = 'before-patch' }

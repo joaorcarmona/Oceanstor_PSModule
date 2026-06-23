@@ -77,7 +77,7 @@ function Remove-DMHostGroupFromMappingView {
                 else {
                     $deviceManager
                 }
-                $groups = @(Get-DMhostGroups -WebSession $session)
+                $groups = @(Get-DMhostGroup -WebSession $session)
                 $matchingItems = @($groups | Where-Object Name -EQ $_)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -95,7 +95,7 @@ function Remove-DMHostGroupFromMappingView {
                 else {
                     $deviceManager
                 }
-                (Get-DMhostGroups -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMhostGroup -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$HostGroupName,
 
@@ -112,7 +112,7 @@ function Remove-DMHostGroupFromMappingView {
     if (-not $view) {
         throw "Mapping view '$MappingViewName' was not found."
     }
-    $group = @(Get-DMhostGroups -WebSession $session | Where-Object Name -EQ $HostGroupName)[0]
+    $group = @(Get-DMhostGroup -WebSession $session | Where-Object Name -EQ $HostGroupName)[0]
     if (-not $group) {
         throw "Host group '$HostGroupName' was not found."
     }

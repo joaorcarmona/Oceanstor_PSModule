@@ -1,10 +1,10 @@
-function Get-DMLifs {
+function Get-DMdisk {
     <#
 	.SYNOPSIS
-		To Get Huawei OceanStor Storage LIFs
+		To Get Huawei Oceanstor Storage disks
 
 	.DESCRIPTION
-		Function to request configured Huawei OceanStor logical interfaces.
+		Function to request Huawei Oceanstor Storage disks installed
 
 	.PARAMETER webSession
 		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
@@ -15,20 +15,20 @@ function Get-DMLifs {
 		You can pipe an OceanStor session object to WebSession.
 
 	.OUTPUTS
-		OceanStorLIF
+		OceanStorDisks
 
-		Returns logical interface objects.
+		Returns installed disk objects.
 
 	.EXAMPLE
 
-		PS C:\> Get-DMLifs -webSession $session
+		PS C:\> Get-DMdisk -webSession $session
 
 		OR
 
-		PS C:\> $lifs = Get-DMLifs
+		PS C:\> $disks = Get-DMdisk
 
 	.NOTES
-		Filename: Get-DMLifs.ps1
+		Filename: Get-DMdisk.ps1
 
 	.LINK
 	#>
@@ -45,7 +45,7 @@ function Get-DMLifs {
         $session = $deviceManager
     }
 
-    $defaultDisplaySet = "Id", "LIF Name", "IPv4 Address", "Running Status", "Support Protocol"
+    $defaultDisplaySet = "Id", "Location", "Health Status", "Disk Usage", "PoolName"
 
     $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
         'DefaultDisplayPropertySet',
@@ -54,18 +54,21 @@ function Get-DMLifs {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "lif" | Select-Object -ExpandProperty data
-    $lifs = New-Object System.Collections.ArrayList
+    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "disk" | Select-Object -ExpandProperty data
+    $Storagedisks = New-Object System.Collections.ArrayList
 
-    foreach ($tlif in $response) {
-        $lif = [OceanStorLIF]::new($tlif, $session)
-        [void]$lifs.Add($lif)
+    foreach ($tdisk in $response) {
+        $disk = [OceanStorDisks]::new($tdisk, $session)
+        [void]$Storagedisks.Add($disk)
     }
 
-    $lifs | ForEach-Object {
+    $Storagedisks | ForEach-Object {
         $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
     }
 
-    $result = $lifs
+    $result = $Storagedisks
+
     return $result
 }
+
+Set-Alias -Name Get-DMdisks -Value Get-DMdisk

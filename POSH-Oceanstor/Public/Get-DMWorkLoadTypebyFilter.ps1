@@ -1,4 +1,4 @@
-function Get-DMWorkLoadTypesbyFilter {
+function Get-DMWorkLoadTypebyFilter {
     <#
 	.SYNOPSIS
 		To Get Huawei OceanStor workload types by filter. This command only works for V6 arrays.
@@ -27,14 +27,14 @@ function Get-DMWorkLoadTypesbyFilter {
 
 	.EXAMPLE
 
-		PS C:\> Get-DMWorkLoadTypesbyFilter -webSession $session -Filter "Compression Enabled" -keyword "enabled"
+		PS C:\> Get-DMWorkLoadTypebyFilter -webSession $session -Filter "Compression Enabled" -keyword "enabled"
 
 		OR
 
-		PS C:\> $workloads = Get-DMWorkLoadTypesbyFilter -webSession $session -Filter "Compression Enabled" -keyword "enabled"
+		PS C:\> $workloads = Get-DMWorkLoadTypebyFilter -webSession $session -Filter "Compression Enabled" -keyword "enabled"
 
 	.NOTES
-		Filename: Get-DMWorkLoadTypesbyFilter.ps1
+		Filename: Get-DMWorkLoadTypebyFilter.ps1
 
 	.LINK
 	#>
@@ -80,3 +80,5 @@ function Get-DMWorkLoadTypesbyFilter {
 
     return $result
 }
+
+Set-Alias -Name Get-DMWorkLoadTypesbyFilter -Value Get-DMWorkLoadTypebyFilter

@@ -16,7 +16,7 @@ class OceanStorViewHost
         $this.Session = $WebSession
 		$this.WebSession = $WebSession
         $this.Properties = $thost
-        $this.Paths = Get-DMHostLinks -WebSession $webSession
+        $this.Paths = Get-DMHostLink -WebSession $webSession
 
     }
 }

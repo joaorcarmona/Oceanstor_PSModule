@@ -108,7 +108,7 @@ function New-DMFileSystem {
                 else {
                     $deviceManager
                 }
-                $storagePools = @(Get-DMstoragePools -WebSession $session)
+                $storagePools = @(Get-DMstoragePool -WebSession $session)
                 if ($storagePools.Id -contains $_) {
                     return $true
                 }
@@ -122,7 +122,7 @@ function New-DMFileSystem {
                 else {
                     $deviceManager
                 }
-                (Get-DMstoragePools -WebSession $session).Id | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMstoragePool -WebSession $session).Id | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [Int16]$StoragePoolID,
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]

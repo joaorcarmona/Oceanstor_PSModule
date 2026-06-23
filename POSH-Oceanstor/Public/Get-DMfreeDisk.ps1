@@ -1,10 +1,10 @@
-function Get-DMdisks {
+function Get-DMfreeDisk {
     <#
 	.SYNOPSIS
-		To Get Huawei Oceanstor Storage disks
+		To Get Huawei Oceanstor Storage free disks (not used)
 
 	.DESCRIPTION
-		Function to request Huawei Oceanstor Storage disks installed
+		Function to request Huawei Oceanstor Storage free disks (not used)
 
 	.PARAMETER webSession
 		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
@@ -17,18 +17,18 @@ function Get-DMdisks {
 	.OUTPUTS
 		OceanStorDisks
 
-		Returns installed disk objects.
+		Returns disk objects whose Disk Usage property is free.
 
 	.EXAMPLE
 
-		PS C:\> Get-DMdisks -webSession $session
+		PS C:\> Get-DMfreeDisk -webSession $session
 
 		OR
 
-		PS C:\> $disks = Get-DMdisks
+		PS C:\> $freeDisks = Get-DMfreeDisk
 
 	.NOTES
-		Filename: Get-DMdisks.ps1
+		Filename: Get-DMfreeDisk.ps1
 
 	.LINK
 	#>
@@ -62,11 +62,13 @@ function Get-DMdisks {
         [void]$Storagedisks.Add($disk)
     }
 
-    $Storagedisks | ForEach-Object {
+    $result = $Storagedisks | Where-Object 'Disk Usage' -EQ "free"
+
+    $result | ForEach-Object {
         $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
     }
 
-    $result = $Storagedisks
-
     return $result
 }
+
+Set-Alias -Name Get-DMfreeDisks -Value Get-DMfreeDisk

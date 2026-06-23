@@ -75,7 +75,7 @@ function Restore-DMFileSystemSnapshot {
                 else {
                     $deviceManager
                 }
-                $snapshots = @(Get-DMFileSystemSnapshots -WebSession $session -FileSystemName $FileSystemName)
+                $snapshots = @(Get-DMFileSystemSnapshot -WebSession $session -FileSystemName $FileSystemName)
                 $matchingItems = @($snapshots | Where-Object Name -EQ $_)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -96,7 +96,7 @@ function Restore-DMFileSystemSnapshot {
                 else {
                     $deviceManager
                 }
-                (Get-DMFileSystemSnapshots -WebSession $session -FileSystemName $fakeBoundParameters.FileSystemName).Name |
+                (Get-DMFileSystemSnapshot -WebSession $session -FileSystemName $fakeBoundParameters.FileSystemName).Name |
                     Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$SnapshotName
@@ -108,7 +108,7 @@ function Restore-DMFileSystemSnapshot {
     else {
         $deviceManager
     }
-    $snapshot = @(Get-DMFileSystemSnapshots -WebSession $session -FileSystemName $FileSystemName | Where-Object Name -EQ $SnapshotName)[0]
+    $snapshot = @(Get-DMFileSystemSnapshot -WebSession $session -FileSystemName $FileSystemName | Where-Object Name -EQ $SnapshotName)[0]
 
     if ($PSCmdlet.ShouldProcess("$FileSystemName/$SnapshotName", 'Roll back file system snapshot')) {
         $body = @{ ID = $snapshot.Id }

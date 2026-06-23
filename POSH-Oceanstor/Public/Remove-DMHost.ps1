@@ -44,7 +44,7 @@ function Remove-DMHost {
                 else {
                     $deviceManager
                 }
-                $hosts = @(Get-DMhosts -WebSession $session)
+                $hosts = @(Get-DMhost -WebSession $session)
                 $matchingItems = @($hosts | Where-Object Name -EQ $_)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -62,7 +62,7 @@ function Remove-DMHost {
                 else {
                     $deviceManager
                 }
-                (Get-DMhosts -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMhost -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$HostName,
 
@@ -75,7 +75,7 @@ function Remove-DMHost {
     else {
         $deviceManager
     }
-    $hostObject = @(Get-DMhosts -WebSession $session | Where-Object Name -EQ $HostName)[0]
+    $hostObject = @(Get-DMhost -WebSession $session | Where-Object Name -EQ $HostName)[0]
     $resource = "host/$($hostObject.Id)"
     if ($VstoreId) {
         $resource += "?vstoreId=$VstoreId"

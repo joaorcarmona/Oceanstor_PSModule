@@ -79,7 +79,7 @@ function New-DMnfsClient {
                 else {
                     $deviceManager
                 }
-                $shares = @(Get-DMShares -WebSession $session -ShareType NFS)
+                $shares = @(Get-DMShare -WebSession $session -ShareType NFS)
                 if ($shares.Id -contains $_) {
                     return $true
                 }
@@ -93,7 +93,7 @@ function New-DMnfsClient {
                 else {
                     $deviceManager
                 }
-                (Get-DMShares -WebSession $session -ShareType NFS).Id | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMShare -WebSession $session -ShareType NFS).Id | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$shareId,
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]

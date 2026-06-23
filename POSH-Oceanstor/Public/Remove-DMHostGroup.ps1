@@ -44,7 +44,7 @@ function Remove-DMHostGroup {
                 else {
                     $deviceManager
                 }
-                $groups = @(Get-DMhostGroups -WebSession $session)
+                $groups = @(Get-DMhostGroup -WebSession $session)
                 $matchingItems = @($groups | Where-Object Name -EQ $_)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -62,7 +62,7 @@ function Remove-DMHostGroup {
                 else {
                     $deviceManager
                 }
-                (Get-DMhostGroups -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMhostGroup -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$HostGroupName,
 
@@ -75,7 +75,7 @@ function Remove-DMHostGroup {
     else {
         $deviceManager
     }
-    $group = @(Get-DMhostGroups -WebSession $session | Where-Object Name -EQ $HostGroupName)[0]
+    $group = @(Get-DMhostGroup -WebSession $session | Where-Object Name -EQ $HostGroupName)[0]
     $resource = "hostgroup/$($group.Id)"
     if ($VstoreId) {
         $resource += "?vstoreId=$VstoreId"
