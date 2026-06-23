@@ -32,8 +32,8 @@ GETTING STARTED
     To work with more than one array, return the session object and pass it to
     commands with WebSession:
 
-        $arrayA = Connect-deviceManager -Hostname 10.0.0.1 -Return $true
-        $arrayB = Connect-deviceManager -Hostname 10.0.0.2 -Return $true
+        $arrayA = Connect-deviceManager -Hostname 10.0.0.1 -PassThru
+        $arrayB = Connect-deviceManager -Hostname 10.0.0.2 -PassThru
 
         Get-DMSystem -WebSession $arrayA
         Get-DMSystem -WebSession $arrayB
@@ -43,10 +43,10 @@ AUTHENTICATION
     PSCredential object, or a username with a SecureString password:
 
         $credential = Get-Credential
-        $session = Connect-deviceManager -Hostname 10.0.0.1 -Return $true -Credential $credential
+        $session = Connect-deviceManager -Hostname 10.0.0.1 -PassThru -Credential $credential
 
         $securePassword = Read-Host -AsSecureString
-        $session = Connect-deviceManager -Hostname 10.0.0.1 -Return $true -LoginUser admin -LoginPwd $securePassword
+        $session = Connect-deviceManager -Hostname 10.0.0.1 -PassThru -LoginUser admin -LoginPwd $securePassword
 
     Avoid storing plain-text passwords in scripts.
 
@@ -54,19 +54,19 @@ COMMAND AREAS
     Discovery and inventory:
 
         Get-DMSystem
-        Get-DMstoragePools
-        Get-DMluns
+        Get-DMstoragePool
+        Get-DMlun
         Get-DMFileSystem
-        Get-DMhosts
-        Get-DMdisks
-        Get-DMAlarms
+        Get-DMhost
+        Get-DMdisk
+        Get-DMAlarm
 
     Connectivity and host access:
 
         Get-DMFiberChannelInitiator
         Get-DMIscsiInitiator
         Get-DMNvmeInitiator
-        Get-DMHostLinks
+        Get-DMHostLink
         Add-DMLunToLunGroup
         Add-DMHostGroupToMappingView
         Add-DMPortGroupToMappingView
@@ -83,11 +83,11 @@ COMMAND AREAS
 
     Snapshot operations:
 
-        Get-DMLunSnapshots
+        Get-DMLunSnapshot
         New-DMLunSnapshot
         Enable-DMLunSnapshot
         Restore-DMLunSnapshot
-        Get-DMFileSystemSnapshots
+        Get-DMFileSystemSnapshot
         New-DMFileSystemSnapshot
         Restore-DMFileSystemSnapshot
         Get-DMSnapshotConsistencyGroup
