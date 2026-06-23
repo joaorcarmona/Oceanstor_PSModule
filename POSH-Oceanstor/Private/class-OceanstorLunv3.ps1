@@ -1,3 +1,4 @@
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingCmdletAliases', '')]
 class OceanstorLunv3{
 	hidden [pscustomobject]${Session}
 	hidden [pscustomobject]${WebSession}

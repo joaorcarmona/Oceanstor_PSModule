@@ -1,3 +1,4 @@
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingCmdletAliases', '')]
 class OceanStorMappingView {
     hidden [pscustomobject]${Session}
 	hidden [pscustomobject]${WebSession}
