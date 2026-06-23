@@ -8,9 +8,10 @@ function Connect-deviceManager {
 
 	.PARAMETER Hostname
 		Mandatory hostname or IP address of the Huawei OceanStor array.
-	.PARAMETER Return
-		Optional Boolean that controls whether the connection object is returned or assigned to the global $deviceManager variable.
-		By default, this value is false and the global $deviceManager variable is set.
+	.PARAMETER PassThru
+		When supplied, the connection object is returned instead of being assigned to the global $deviceManager variable.
+		The legacy -Return switch is accepted as an alias for backward compatibility.
+		Note: callers using -Return $true must change to -Return (without $true) since this is now a switch.
 	.PARAMETER Secure
 		is an optional compatibility switch. When supplied, the function prompts for credentials securely.
 		If neither Credential nor LoginUser/LoginPwd is supplied, a secure credential prompt is also used by default.
@@ -36,7 +37,7 @@ function Connect-deviceManager {
 		PS C:\> Connect-deviceManager -Hostname storage.domain.tld
 
 		Example syntax for returning a WebSession connection object.
-		PS C:\> $storage = Connect-deviceManager -Hostname storage.domain.tld -Return $true -Credential $credential
+		PS C:\> $storage = Connect-deviceManager -Hostname storage.domain.tld -PassThru -Credential $credential
 
 	.NOTES
 		Filename: Connect-deviceManager.ps1
@@ -47,8 +48,8 @@ function Connect-deviceManager {
     param(
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $true)]
         [String]$Hostname,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 1, Mandatory = $false)]
-        [boolean]$Return = $false,
+        [Alias('Return')]
+        [switch]$PassThru,
         [Parameter(ParameterSetName = 'Prompt')]
         [switch]$Secure = $false,
         [Parameter(Mandatory = $true, ParameterSetName = 'Credential')]
@@ -99,7 +100,7 @@ function Connect-deviceManager {
 
     $connection = [OceanstorSession]::new($logonSession, $SessionHeader, $webSession, $Hostname)
 
-    if ($return -eq $true) {
+    if ($PassThru) {
         return $connection
     }
     else {

@@ -62,7 +62,7 @@ class OceanstorViewStorage{
     # Constructor
     OceanstorViewStorage ([String] $Hostname)
     {
-		$storageConnection = Connect-deviceManager -Hostname $Hostname -Return $true -Secure
+		$storageConnection = Connect-deviceManager -Hostname $Hostname -PassThru -Secure
 
 		$this.Session = $storageConnection
 		$this.WebSession = $storageConnection

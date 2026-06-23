@@ -94,7 +94,7 @@ try {
     Write-Host "A credential prompt will open for validation of $Hostname. No credentials are read from or written to the configuration file."
     Write-ValidationProgress -Name 'Connect-deviceManager' -Category 'Session'
     $connectionStartedAt = Get-Date
-    $session = Connect-deviceManager -Hostname $Hostname -Return $true -Secure
+    $session = Connect-deviceManager -Hostname $Hostname -PassThru -Secure
     $connectionDurationMs = [math]::Round(((Get-Date) - $connectionStartedAt).TotalMilliseconds, 2)
     $checks.Add([pscustomobject]@{
         Name         = 'Connect-deviceManager'

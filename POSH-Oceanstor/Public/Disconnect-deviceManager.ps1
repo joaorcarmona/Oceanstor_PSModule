@@ -28,12 +28,12 @@ function Disconnect-deviceManager {
         PS C:\> Disconnect-deviceManager
 
     .EXAMPLE
-        Disconnect a specific session returned by Connect-deviceManager -Return $true:
+        Disconnect a specific session returned by Connect-deviceManager -PassThru:
         PS C:\> Disconnect-deviceManager -WebSession $storage
 
     .EXAMPLE
         Safe automation pattern using try/finally:
-        PS C:\> $session = Connect-deviceManager -Hostname storage.domain.tld -Return $true -Credential $cred
+        PS C:\> $session = Connect-deviceManager -Hostname storage.domain.tld -PassThru -Credential $cred
         PS C:\> try {
         PS C:\>     Get-DMSystem -WebSession $session
         PS C:\> } finally {
