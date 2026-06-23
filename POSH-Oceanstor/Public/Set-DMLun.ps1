@@ -76,14 +76,14 @@ function Set-DMLun {
     }
 
     $luns = @(Get-DMlun -WebSession $session)
-    $matches = @($luns | Where-Object Name -CEQ $LunName)
-    if ($matches.Count -ne 1) {
-        if ($matches.Count -gt 1) {
+    $matchingItems = @($luns | Where-Object Name -CEQ $LunName)
+    if ($matchingItems.Count -ne 1) {
+        if ($matchingItems.Count -gt 1) {
             throw "LunName '$LunName' is ambiguous."
         }
         throw "Invalid LunName '$LunName'. Valid values are: $($luns.Name -join ', ')"
     }
-    $lun = $matches[0]
+    $lun = $matchingItems[0]
 
     if ($PSBoundParameters.ContainsKey('NewName') -and $NewName -cne $LunName -and $luns.Name -contains $NewName) {
         throw "A LUN named '$NewName' already exists."
