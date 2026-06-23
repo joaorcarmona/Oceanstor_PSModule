@@ -61,7 +61,7 @@ function New-DMFiberChannelInitiator {
 
         [Parameter(Mandatory = $true, Position = 1)]
         [ValidateScript({
-                if (Validate-WWNAddress -WWN $_) {
+                if (Test-WWNAddress -WWN $_) {
                     return $true
                 }
                 throw 'WWN must contain 16 hexadecimal characters and cannot be all zeros or all Fs.'

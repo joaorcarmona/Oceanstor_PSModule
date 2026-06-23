@@ -1,5 +1,5 @@
 BeforeAll {
-    . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\Validate-Ipv4Address.ps1"
+    . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\Test-IPv4Address.ps1"
 }
 
 Describe 'Test-IPv4Address' {
