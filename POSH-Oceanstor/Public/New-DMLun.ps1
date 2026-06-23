@@ -89,6 +89,8 @@ function New-DMLun {
 
 	.LINK
 	#>
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
     [CmdletBinding(SupportsShouldProcess = $true)]
 
     param(
@@ -118,6 +120,8 @@ function New-DMLun {
             })]
 
         [ArgumentCompleter({
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
                 [CmdletBinding(SupportsShouldProcess = $true)]
 
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)

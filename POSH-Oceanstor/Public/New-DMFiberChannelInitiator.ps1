@@ -54,6 +54,8 @@
     Filename: New-DMFiberChannelInitiator.ps1
 #>
 function New-DMFiberChannelInitiator {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
     [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

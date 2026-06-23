@@ -35,6 +35,8 @@
     Filename: Get-DMFileSystemSnapshot.ps1
 #>
 function Get-DMFileSystemSnapshot {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
     [CmdletBinding()]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

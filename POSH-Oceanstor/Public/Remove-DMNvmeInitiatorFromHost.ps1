@@ -34,6 +34,8 @@
     Filename: Remove-DMNvmeInitiatorFromHost.ps1
 #>
 function Remove-DMNvmeInitiatorFromHost {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

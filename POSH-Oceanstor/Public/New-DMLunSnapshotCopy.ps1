@@ -39,6 +39,8 @@
     Filename: New-DMLunSnapshotCopy.ps1
 #>
 function New-DMLunSnapshotCopy {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
     [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

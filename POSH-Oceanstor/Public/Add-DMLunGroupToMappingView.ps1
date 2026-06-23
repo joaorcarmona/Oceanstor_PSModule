@@ -34,6 +34,8 @@
     Filename: Add-DMLunGroupToMappingView.ps1
 #>
 function Add-DMLunGroupToMappingView {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

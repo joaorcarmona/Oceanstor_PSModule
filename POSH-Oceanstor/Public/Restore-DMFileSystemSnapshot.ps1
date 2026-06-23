@@ -32,6 +32,8 @@
     Filename: Restore-DMFileSystemSnapshot.ps1
 #>
 function Restore-DMFileSystemSnapshot {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

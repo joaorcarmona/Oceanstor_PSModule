@@ -34,6 +34,8 @@
     Filename: Remove-DMLunGroupFromMappingView.ps1
 #>
 function Remove-DMLunGroupFromMappingView {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

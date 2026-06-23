@@ -38,6 +38,8 @@
     Filename: Get-DMNvmeInitiator.ps1
 #>
 function Get-DMNvmeInitiator {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
     [CmdletBinding(DefaultParameterSetName = 'All')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

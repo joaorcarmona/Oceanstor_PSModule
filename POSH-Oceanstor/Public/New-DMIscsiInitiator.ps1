@@ -63,6 +63,8 @@
     Filename: New-DMIscsiInitiator.ps1
 #>
 function New-DMIscsiInitiator {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
     [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

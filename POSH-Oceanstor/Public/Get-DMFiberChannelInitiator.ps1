@@ -34,6 +34,8 @@
     Filename: Get-DMFiberChannelInitiator.ps1
 #>
 function Get-DMFiberChannelInitiator {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
     [CmdletBinding(DefaultParameterSetName = 'All')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
