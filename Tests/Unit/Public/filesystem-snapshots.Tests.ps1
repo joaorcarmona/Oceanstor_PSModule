@@ -12,6 +12,7 @@ BeforeDiscovery {
             )
         }
 
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorFileSystemSnapshot.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\New-DMFileSystemSnapshot.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMFileSystemSnapshot.ps1"

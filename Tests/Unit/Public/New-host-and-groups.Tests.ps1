@@ -11,8 +11,11 @@ BeforeDiscovery {
             )
         }
 
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorHost.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorHostGroup.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorLunGroup.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\New-DMHost.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\New-DMHostGroup.ps1"

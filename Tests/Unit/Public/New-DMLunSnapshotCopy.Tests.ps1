@@ -15,6 +15,7 @@ BeforeDiscovery {
             )
         }
 
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorLunSnapshot.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\New-DMLunSnapshotCopy.ps1"
 
