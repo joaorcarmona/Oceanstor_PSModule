@@ -6,10 +6,10 @@ function Write-DMError {
     )
 
     $errorCode = $SessionError.code
-    Write-Host -ForegroundColor Red -BackgroundColor Yellow "Error Code: "$errorCode
     $errorDescription = $SessionError.description
-    Write-Host -ForegroundColor Red "Error Description: "$errorDescription
     $errorSuggestion = $SessionError.suggestion
-    Write-Host -ForegroundColor Green "Suggestion: "$errorSuggestion
+    Write-Warning "Error Code: $errorCode"
+    Write-Warning "Error Description: $errorDescription"
+    Write-Warning "Suggestion: $errorSuggestion"
 
 }

@@ -2,12 +2,12 @@ BeforeDiscovery {
     $script:storageMutationModule = New-Module -Name StorageMutationTestModule -ArgumentList $PSScriptRoot -ScriptBlock {
         param($testRoot)
 
-        function Get-DMluns { param([pscustomobject]$WebSession) }
-        function Get-DMlunGroups { param([pscustomobject]$WebSession) }
-        function Get-DMhosts { param([pscustomobject]$WebSession) }
-        function Get-DMhostGroups { param([pscustomobject]$WebSession) }
+        function Get-DMlun { param([pscustomobject]$WebSession) }
+        function Get-DMlunGroup { param([pscustomobject]$WebSession) }
+        function Get-DMhost { param([pscustomobject]$WebSession) }
+        function Get-DMhostGroup { param([pscustomobject]$WebSession) }
         function Get-DMFileSystem { param([pscustomobject]$WebSession) }
-        function Get-DMShares { param([pscustomobject]$WebSession, [string]$ShareType) }
+        function Get-DMShare { param([pscustomobject]$WebSession, [string]$ShareType) }
         function Get-DMnfsFileClient { param([pscustomobject]$WebSession) }
         function Invoke-DeviceManager {
             param(
@@ -46,12 +46,12 @@ InModuleScope StorageMutationTestModule {
 Describe 'Storage and NAS removal commands' {
     BeforeEach {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
-        Mock Get-DMluns { @([pscustomobject]@{ Id = 'lun-01'; Name = 'database' }) }
-        Mock Get-DMlunGroups { @([pscustomobject]@{ Id = 'lg-01'; Name = 'database-group' }) }
-        Mock Get-DMhosts { @([pscustomobject]@{ Id = 'host-01'; Name = 'esx01' }) }
-        Mock Get-DMhostGroups { @([pscustomobject]@{ Id = 'hg-01'; Name = 'cluster' }) }
+        Mock Get-DMlun { @([pscustomobject]@{ Id = 'lun-01'; Name = 'database' }) }
+        Mock Get-DMlunGroup { @([pscustomobject]@{ Id = 'lg-01'; Name = 'database-group' }) }
+        Mock Get-DMhost { @([pscustomobject]@{ Id = 'host-01'; Name = 'esx01' }) }
+        Mock Get-DMhostGroup { @([pscustomobject]@{ Id = 'hg-01'; Name = 'cluster' }) }
         Mock Get-DMFileSystem { @([pscustomobject]@{ Id = 'fs-01'; Name = 'documents' }) }
-        Mock Get-DMShares {
+        Mock Get-DMShare {
             if ($ShareType -eq 'CIFS') { return @([pscustomobject]@{ Id = 'cifs-01'; Name = 'docs' }) }
             return @([pscustomobject]@{ Id = 'nfs-01'; 'Share Path' = '/documents/' })
         }

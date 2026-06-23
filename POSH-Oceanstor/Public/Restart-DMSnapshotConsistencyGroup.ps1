@@ -28,6 +28,8 @@
     Filename: Restart-DMSnapshotConsistencyGroup.ps1
 #>
 function Restart-DMSnapshotConsistencyGroup {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

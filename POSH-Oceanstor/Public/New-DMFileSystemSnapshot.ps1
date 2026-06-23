@@ -42,7 +42,9 @@
     Filename: New-DMFileSystemSnapshot.ps1
 #>
 function New-DMFileSystemSnapshot {
-    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
@@ -115,10 +117,12 @@ function New-DMFileSystemSnapshot {
         $body.snapTag = $SnapTag
     }
 
-    $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'fssnapshot' -BodyData $body
-    if ($response.error.Code -eq 0) {
-        return [OceanstorFileSystemSnapshot]::new($response.data, $session)
-    }
+    if ($PSCmdlet.ShouldProcess($SnapshotName, 'Create file-system snapshot')) {
+        $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'fssnapshot' -BodyData $body
+        if ($response.error.Code -eq 0) {
+            return [OceanstorFileSystemSnapshot]::new($response.data, $session)
+        }
 
-    return $response.error
+        return $response.error
+    }
 }

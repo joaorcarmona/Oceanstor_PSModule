@@ -2,8 +2,8 @@ BeforeDiscovery {
     $script:mappingViewModule = New-Module -Name MappingViewTestModule -ArgumentList $PSScriptRoot -ScriptBlock {
         param($testRoot)
 
-        function Get-DMhostGroups { param([pscustomobject]$WebSession) }
-        function Get-DMlunGroups { param([pscustomobject]$WebSession) }
+        function Get-DMhostGroup { param([pscustomobject]$WebSession) }
+        function Get-DMlunGroup { param([pscustomobject]$WebSession) }
         function Get-DMPortGroup { param([pscustomobject]$WebSession) }
         function Invoke-DeviceManager {
             param(
@@ -47,8 +47,8 @@ Describe 'Mapping view commands' {
             LUNGROUPID = 'lg-01'; PORTGROUPID = 'pg-01'; vstoreId = '7'; vstoreName = 'tenant-a'
         }
         $script:view = [OceanStorMappingView]::new($script:viewData, $script:session)
-        Mock Get-DMhostGroups { @([pscustomobject]@{ Id = 'hg-01'; Name = 'cluster01' }) }
-        Mock Get-DMlunGroups { @([pscustomobject]@{ Id = 'lg-01'; Name = 'production' }) }
+        Mock Get-DMhostGroup { @([pscustomobject]@{ Id = 'hg-01'; Name = 'cluster01' }) }
+        Mock Get-DMlunGroup { @([pscustomobject]@{ Id = 'lg-01'; Name = 'production' }) }
         Mock Get-DMPortGroup { @([pscustomobject]@{ Id = 'pg-01'; Name = 'front-end' }) }
     }
 
@@ -136,8 +136,8 @@ Describe 'Mapping view association commands' {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
         $script:view = [OceanStorMappingView]::new([pscustomobject]@{ ID = 'mv-01'; NAME = 'application' }, $script:session)
         Mock Get-DMMappingView { @($script:view) }
-        Mock Get-DMhostGroups { @([pscustomobject]@{ Id = 'hg-01'; Name = 'cluster01' }) }
-        Mock Get-DMlunGroups { @([pscustomobject]@{ Id = 'lg-01'; Name = 'production' }) }
+        Mock Get-DMhostGroup { @([pscustomobject]@{ Id = 'hg-01'; Name = 'cluster01' }) }
+        Mock Get-DMlunGroup { @([pscustomobject]@{ Id = 'lg-01'; Name = 'production' }) }
         Mock Get-DMPortGroup { @([pscustomobject]@{ Id = 'pg-01'; Name = 'front-end' }) }
         Mock Invoke-DeviceManager {
             $script:method = $Method

@@ -2,7 +2,7 @@ BeforeDiscovery {
     $script:snapshotActionsModule = New-Module -Name SnapshotActionsTestModule -ArgumentList $PSScriptRoot -ScriptBlock {
         param($testRoot)
 
-        function Get-DMLunSnapshots {
+        function Get-DMLunSnapshot {
             param([pscustomobject]$WebSession)
         }
 
@@ -34,7 +34,7 @@ InModuleScope SnapshotActionsTestModule {
 Describe 'Snapshot action functions' {
     BeforeEach {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
-        Mock Get-DMLunSnapshots {
+        Mock Get-DMLunSnapshot {
             @([pscustomobject]@{ Id = 'snap-01'; Name = 'before-patch' })
         }
         Mock Invoke-DeviceManager {
@@ -120,7 +120,7 @@ Describe 'Snapshot action functions' {
     }
 
     It 'rejects an expansion capacity that is not greater than the existing snapshot capacity' {
-        Mock Get-DMLunSnapshots {
+        Mock Get-DMLunSnapshot {
             @([pscustomobject]@{ Id = 'snap-01'; Name = 'before-patch'; 'User Capacity' = [uint64]10485760 })
         }
 

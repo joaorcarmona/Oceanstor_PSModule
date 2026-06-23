@@ -59,7 +59,9 @@ function New-DMdTree {
 
 	.LINK
 	#>
-    [Cmdletbinding(DefaultParameterSetName = 'byId')]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
+    [CmdletBinding(SupportsShouldProcess = $true, DefaultParameterSetName = 'byId')]
     param(
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession,
@@ -193,16 +195,18 @@ function New-DMdTree {
         }
     }
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "POST" -Resource "QUOTATREE" -BodyData $body
+    if ($PSCmdlet.ShouldProcess($dTreeName, 'Create dTree')) {
+        $response = Invoke-DeviceManager -WebSession $session -Method "POST" -Resource "QUOTATREE" -BodyData $body
 
-    if ($response.error.Code -eq 0) {
-        $result = [OceanStorDtree]::new($response.data, $session)
-    }
-    else {
-        $result = $response.error
-    }
+        if ($response.error.Code -eq 0) {
+            $result = [OceanStorDtree]::new($response.data, $session)
+        }
+        else {
+            $result = $response.error
+        }
 
-    return $result
+        return $result
+    }
 }
 
 

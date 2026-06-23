@@ -30,7 +30,7 @@ function New-DMMappingView {
     .NOTES
         Filename: New-DMMappingView.ps1
     #>
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
@@ -63,10 +63,12 @@ function New-DMMappingView {
         $body.vstoreId = $VstoreId
     }
 
-    $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'mappingview' -BodyData $body
-    if ($response.error.Code -eq 0) {
-        return [OceanStorMappingView]::new($response.data, $session)
-    }
+    if ($PSCmdlet.ShouldProcess($Name, 'Create mapping view')) {
+        $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'mappingview' -BodyData $body
+        if ($response.error.Code -eq 0) {
+            return [OceanStorMappingView]::new($response.data, $session)
+        }
 
-    return $response.error
+        return $response.error
+    }
 }

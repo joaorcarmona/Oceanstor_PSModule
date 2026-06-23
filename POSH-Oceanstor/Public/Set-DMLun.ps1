@@ -36,6 +36,16 @@ function Set-DMLun {
     .EXAMPLE
         PS> Set-DMLun -LunName 'database' -Capacity 2.5TB -Confirm:$false
 
+    .INPUTS
+        System.Management.Automation.PSCustomObject
+
+        You can pipe an OceanStor session object to WebSession.
+
+    .OUTPUTS
+        System.Collections.Generic.List[System.Object]
+
+        Returns a list of OceanStor API error objects, one per operation (property change and/or capacity expansion).
+
     .EXAMPLE
         PS> Set-DMLun -LunName 'database' -ApiProperties @{ IOPRIORITY = 3 }
     #>
@@ -75,15 +85,15 @@ function Set-DMLun {
         throw 'Specify NewName, Capacity, Description, or at least one ApiProperties entry.'
     }
 
-    $luns = @(Get-DMluns -WebSession $session)
-    $matches = @($luns | Where-Object Name -CEQ $LunName)
-    if ($matches.Count -ne 1) {
-        if ($matches.Count -gt 1) {
+    $luns = @(Get-DMlun -WebSession $session)
+    $matchingItems = @($luns | Where-Object Name -CEQ $LunName)
+    if ($matchingItems.Count -ne 1) {
+        if ($matchingItems.Count -gt 1) {
             throw "LunName '$LunName' is ambiguous."
         }
         throw "Invalid LunName '$LunName'. Valid values are: $($luns.Name -join ', ')"
     }
-    $lun = $matches[0]
+    $lun = $matchingItems[0]
 
     if ($PSBoundParameters.ContainsKey('NewName') -and $NewName -cne $LunName -and $luns.Name -contains $NewName) {
         throw "A LUN named '$NewName' already exists."
@@ -108,7 +118,7 @@ function Set-DMLun {
 
     $newCapacityBlocks = $null
     if ($hasCapacityChange) {
-        $newCapacityBlocks = ConvertTo-DMCapacityBlocks -Capacity $Capacity -UnitlessUnit Blocks
+        $newCapacityBlocks = ConvertTo-DMCapacityBlock -Capacity $Capacity -UnitlessUnit Blocks
         $currentCapacityBlocks = if ($null -ne $lun.PSObject.Properties['RealCapacity']) {
             [long]$lun.RealCapacity
         }

@@ -37,7 +37,7 @@
     Filename: New-DMHost.ps1
 #>
 function New-DMHost {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
@@ -92,10 +92,11 @@ function New-DMHost {
         $body.vstoreId = $VstoreId
     }
 
-    $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'host' -BodyData $body
-    if ($response.error.Code -eq 0) {
-        return [OceanStorHost]::new($response.data, $session)
+    if ($PSCmdlet.ShouldProcess($Name, 'Create host')) {
+        $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'host' -BodyData $body
+        if ($response.error.Code -eq 0) {
+            return [OceanStorHost]::new($response.data, $session)
+        }
+        return $response.error
     }
-
-    return $response.error
 }

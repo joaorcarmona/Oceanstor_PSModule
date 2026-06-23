@@ -2,7 +2,7 @@ BeforeDiscovery {
     $script:newSnapshotCopyModule = New-Module -Name NewDMLunSnapshotCopyTestModule -ArgumentList $PSScriptRoot -ScriptBlock {
         param($testRoot)
 
-        function Get-DMLunSnapshots {
+        function Get-DMLunSnapshot {
             param([pscustomobject]$WebSession)
         }
 
@@ -32,7 +32,7 @@ InModuleScope NewDMLunSnapshotCopyTestModule {
 Describe 'New-DMLunSnapshotCopy' {
     BeforeEach {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
-        Mock Get-DMLunSnapshots {
+        Mock Get-DMLunSnapshot {
             @([pscustomobject]@{ Id = 'snap-01'; Name = 'before-patch' })
         }
         Mock Invoke-DeviceManager {
@@ -81,7 +81,7 @@ Describe 'New-DMLunSnapshotCopy' {
     }
 
     It 'rejects a source snapshot name that is not unique' {
-        Mock Get-DMLunSnapshots {
+        Mock Get-DMLunSnapshot {
             @(
                 [pscustomobject]@{ Id = 'snap-01'; Name = 'before-patch' }
                 [pscustomobject]@{ Id = 'snap-02'; Name = 'before-patch' }
@@ -103,7 +103,7 @@ Describe 'New-DMLunSnapshotCopy' {
 
     It 'requires an explicit copy name when the generated name exceeds the API limit' {
         $longName = 'a' * 252
-        Mock Get-DMLunSnapshots {
+        Mock Get-DMLunSnapshot {
             @([pscustomobject]@{ Id = 'snap-long'; Name = $longName })
         }
 

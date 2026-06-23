@@ -10,7 +10,7 @@
     Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
 
 .PARAMETER SnapShotName
-    Name of the snapshot to roll back. Valid values are checked against Get-DMLunSnapshots and support tab completion.
+    Name of the snapshot to roll back. Valid values are checked against Get-DMLunSnapshot and support tab completion.
 
 .PARAMETER RollbackSpeed
     Rate for the rollback operation. Valid values are Low, Medium, High, and Highest. The default is Medium.
@@ -31,6 +31,8 @@
     Filename: Restore-DMLunSnapshot.ps1
 #>
 function Restore-DMLunSnapshot {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
@@ -45,7 +47,7 @@ function Restore-DMLunSnapshot {
                     $session = $deviceManager
                 }
 
-                $snapshots = @(Get-DMLunSnapshots -WebSession $session)
+                $snapshots = @(Get-DMLunSnapshot -WebSession $session)
                 $matchingSnapshots = @($snapshots | Where-Object Name -EQ $_)
 
                 if ($matchingSnapshots.Count -eq 1) {
@@ -68,7 +70,7 @@ function Restore-DMLunSnapshot {
                     $session = $deviceManager
                 }
 
-                (Get-DMLunSnapshots -WebSession $session).Name |
+                (Get-DMLunSnapshot -WebSession $session).Name |
                     Sort-Object -Unique |
                     Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -86,7 +88,7 @@ function Restore-DMLunSnapshot {
         $session = $deviceManager
     }
 
-    $snapshot = @(Get-DMLunSnapshots -WebSession $session | Where-Object Name -EQ $SnapShotName)[0]
+    $snapshot = @(Get-DMLunSnapshot -WebSession $session | Where-Object Name -EQ $SnapShotName)[0]
     $speedValue = @{
         Low     = 1
         Medium  = 2

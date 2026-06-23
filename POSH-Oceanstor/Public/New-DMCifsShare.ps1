@@ -75,7 +75,9 @@
     Filename: New-DMCifsShare.ps1
 #>
 function New-DMCifsShare {
-    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
@@ -194,10 +196,12 @@ function New-DMCifsShare {
         $body.DTREEID = $DTreeId
     }
 
-    $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'CIFSSHARE' -BodyData $body
-    if ($response.error.Code -eq 0) {
-        return [OceanStorCIFSShare]::new($response.data, $session)
-    }
+    if ($PSCmdlet.ShouldProcess($sharePath, 'Create CIFS share')) {
+        $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'CIFSSHARE' -BodyData $body
+        if ($response.error.Code -eq 0) {
+            return [OceanStorCIFSShare]::new($response.data, $session)
+        }
 
-    return $response.error
+        return $response.error
+    }
 }

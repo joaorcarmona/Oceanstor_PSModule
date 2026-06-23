@@ -5,10 +5,11 @@ BeforeDiscovery {
         function Invoke-DeviceManager {}
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Get-DMparsedElabel.ps1"
-        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Set-DMHostInitiators.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Set-DMHostInitiator.ps1"
 
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
         Get-ChildItem -LiteralPath "$testRoot\..\..\..\POSH-Oceanstor\Private" -Filter 'class-*.ps1' |
-            Where-Object Name -ne 'class-OceanStorMappingView.ps1' |
+            Where-Object Name -notin 'class-OceanStorMappingView.ps1', 'class-OceanstorSession.ps1' |
             ForEach-Object { . $_.FullName }
 
         Get-ChildItem -LiteralPath "$testRoot\..\..\..\POSH-Oceanstor\Public" -Filter 'Get-*.ps1' |
@@ -48,7 +49,7 @@ Describe 'Public getter functions' {
                 [pscustomobject]@{ data = @([pscustomobject]@{ name = 'warning'; alarmStatus = 2; level = 2; type = 1; eventType = 1; clearTime = 0; recoverTime = 0; startTime = 0 }) }
             }
 
-            $result = Get-DMAlarms -WebSession $script:session -AlarmStatus Cleared
+            $result = Get-DMAlarm -WebSession $script:session -AlarmStatus Cleared
 
             $result[0].Name | Should -Be 'warning'
             $result[0].PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
@@ -62,7 +63,7 @@ Describe 'Public getter functions' {
                 [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'bbu-01'; ELABEL = $script:eLabel; HEALTHSTATUS = 1; RUNNINGSTATUS = 1; TYPE = 210; VOLTAGE = 120; REMAINLIFEDAYS = 30 }) }
             }
 
-            $result = Get-DMbbus -WebSession $script:session
+            $result = Get-DMbbu -WebSession $script:session
 
             $result[0].Id | Should -Be 'bbu-01'
             $result[0].PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
@@ -75,7 +76,7 @@ Describe 'Public getter functions' {
                 [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'ctrl-01'; ELABEL = $script:eLabel; HEALTHSTATUS = 1; RUNNINGSTATUS = 27; TYPE = 207; MEMORYSIZE = 1GB }) }
             }
 
-            $result = (Get-DMControllers -WebSession $script:session)[0]
+            $result = (Get-DMController -WebSession $script:session)[0]
 
             $result.Id | Should -Be 'ctrl-01'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
@@ -88,7 +89,7 @@ Describe 'Public getter functions' {
                 [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'enc-01'; ELABEL = $script:eLabel; HEALTHSTATUS = 1; RUNNINGSTATUS = 27; TYPE = 206; MODEL = 17 }) }
             }
 
-            $result = (Get-DMEnclosures -WebSession $script:session)[0]
+            $result = (Get-DMEnclosure -WebSession $script:session)[0]
 
             $result.Id | Should -Be 'enc-01'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
@@ -101,7 +102,7 @@ Describe 'Public getter functions' {
                 [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'module-01'; ELABEL = $script:eLabel; HEALTHSTATUS = 1; RUNNINGSTATUS = 1; TYPE = 209; MODEL = 2307 }) }
             }
 
-            $result = (Get-DMInterfaceModules -WebSession $script:session)[0]
+            $result = (Get-DMInterfaceModule -WebSession $script:session)[0]
 
             $result.Id | Should -Be 'module-01'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |

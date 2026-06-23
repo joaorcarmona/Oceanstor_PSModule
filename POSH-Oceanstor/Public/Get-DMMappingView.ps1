@@ -36,6 +36,8 @@ function Get-DMMappingView {
     .NOTES
         Filename: Get-DMMappingView.ps1
     #>
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
     [CmdletBinding(DefaultParameterSetName = 'All')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
@@ -52,7 +54,7 @@ function Get-DMMappingView {
                 else {
                     $deviceManager
                 }
-                $groups = @(Get-DMhostGroups -WebSession $session)
+                $groups = @(Get-DMhostGroup -WebSession $session)
                 $matchingItems = @($groups | Where-Object Name -EQ $_)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -70,7 +72,7 @@ function Get-DMMappingView {
                 else {
                     $deviceManager
                 }
-                (Get-DMhostGroups -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMhostGroup -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$HostGroupName,
 
@@ -82,7 +84,7 @@ function Get-DMMappingView {
                 else {
                     $deviceManager
                 }
-                $groups = @(Get-DMlunGroups -WebSession $session)
+                $groups = @(Get-DMlunGroup -WebSession $session)
                 $matchingItems = @($groups | Where-Object Name -EQ $_)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -100,7 +102,7 @@ function Get-DMMappingView {
                 else {
                     $deviceManager
                 }
-                (Get-DMlunGroups -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMlunGroup -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$LunGroupName,
 
@@ -147,14 +149,14 @@ function Get-DMMappingView {
 
     switch ($PSCmdlet.ParameterSetName) {
         'HostGroup' {
-            $group = @(Get-DMhostGroups -WebSession $session | Where-Object Name -EQ $HostGroupName)[0]
+            $group = @(Get-DMhostGroup -WebSession $session | Where-Object Name -EQ $HostGroupName)[0]
             if (-not $group) {
                 throw "Host group '$HostGroupName' was not found."
             }
             $resource = "mappingview/associate?TYPE=245&ASSOCIATEOBJTYPE=14&ASSOCIATEOBJID=$($group.Id)"
         }
         'LunGroup' {
-            $group = @(Get-DMlunGroups -WebSession $session | Where-Object Name -EQ $LunGroupName)[0]
+            $group = @(Get-DMlunGroup -WebSession $session | Where-Object Name -EQ $LunGroupName)[0]
             if (-not $group) {
                 throw "LUN group '$LunGroupName' was not found."
             }

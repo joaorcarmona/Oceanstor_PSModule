@@ -13,7 +13,7 @@
     Optional name of the snapshot to create.
 
 .PARAMETER SourceLunName
-    Name of the source LUN. Valid values are checked against Get-DMluns and support tab completion. The selected LUN ID is sent to the API.
+    Name of the source LUN. Valid values are checked against Get-DMlun and support tab completion. The selected LUN ID is sent to the API.
 
 .PARAMETER Description
     Optional description of the snapshot.
@@ -42,7 +42,9 @@
     Filename: New-DMLunSnapshot.ps1
 #>
 function New-DMLunSnapshot {
-    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
@@ -59,7 +61,7 @@ function New-DMLunSnapshot {
                     $session = $deviceManager
                 }
 
-                $luns = Get-DMluns -WebSession $session
+                $luns = Get-DMlun -WebSession $session
                 $matchingLuns = @($luns | Where-Object Name -EQ $_)
 
                 if ($matchingLuns.Count -eq 1) {
@@ -82,7 +84,7 @@ function New-DMLunSnapshot {
                     $session = $deviceManager
                 }
 
-                (Get-DMluns -WebSession $session).Name |
+                (Get-DMlun -WebSession $session).Name |
                     Sort-Object -Unique |
                     Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -102,7 +104,7 @@ function New-DMLunSnapshot {
         $session = $deviceManager
     }
 
-    $sourceLun = @(Get-DMluns -WebSession $session | Where-Object Name -EQ $SourceLunName)[0]
+    $sourceLun = @(Get-DMlun -WebSession $session | Where-Object Name -EQ $SourceLunName)[0]
 
     $body = @{
         TYPE       = 27
@@ -125,11 +127,13 @@ function New-DMLunSnapshot {
         $body.Add('isReadOnly', $true)
     }
 
-    $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'snapshot' -BodyData $body
+    if ($PSCmdlet.ShouldProcess($SnapshotName, 'Create LUN snapshot')) {
+        $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'snapshot' -BodyData $body
 
-    if ($response.error.Code -eq 0) {
-        return [OceanstorLunSnapshot]::new($response.data, $session)
+        if ($response.error.Code -eq 0) {
+            return [OceanstorLunSnapshot]::new($response.data, $session)
+        }
+
+        return $response.error
     }
-
-    return $response.error
 }

@@ -34,6 +34,8 @@
     Filename: Remove-DMLunFromLunGroup.ps1
 #>
 function Remove-DMLunFromLunGroup {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
@@ -48,7 +50,7 @@ function Remove-DMLunFromLunGroup {
                 else {
                     $deviceManager
                 }
-                $luns = @(Get-DMluns -WebSession $session)
+                $luns = @(Get-DMlun -WebSession $session)
                 $matchingItems = @($luns | Where-Object Name -EQ $candidate)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -66,7 +68,7 @@ function Remove-DMLunFromLunGroup {
                 else {
                     $deviceManager
                 }
-                (Get-DMluns -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMlun -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$LunName,
 
@@ -79,7 +81,7 @@ function Remove-DMLunFromLunGroup {
                 else {
                     $deviceManager
                 }
-                $groups = @(Get-DMlunGroups -WebSession $session)
+                $groups = @(Get-DMlunGroup -WebSession $session)
                 $matchingItems = @($groups | Where-Object Name -EQ $candidate)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -97,7 +99,7 @@ function Remove-DMLunFromLunGroup {
                 else {
                     $deviceManager
                 }
-                (Get-DMlunGroups -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMlunGroup -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$LunGroupName,
 
@@ -110,9 +112,9 @@ function Remove-DMLunFromLunGroup {
     else {
         $deviceManager
     }
-    $lun = @(Get-DMluns -WebSession $session | Where-Object Name -EQ $LunName)[0]
-    $group = @(Get-DMlunGroups -WebSession $session | Where-Object Name -EQ $LunGroupName)[0]
-    $members = @(Get-DMlunsbyLunGroup -WebSession $session -LunGroup $group)
+    $lun = @(Get-DMlun -WebSession $session | Where-Object Name -EQ $LunName)[0]
+    $group = @(Get-DMlunGroup -WebSession $session | Where-Object Name -EQ $LunGroupName)[0]
+    $members = @(Get-DMlunbyLunGroup -WebSession $session -LunGroup $group)
     if ($members.Id -notcontains $lun.Id) {
         throw "LUN '$LunName' is not a member of LUN group '$LunGroupName'."
     }

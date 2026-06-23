@@ -1,7 +1,7 @@
 $script:LunMutationWorkflow = {
         if ($configuration.Lun.Enabled) {
             $lun = @(Invoke-MutationStep -Name 'New-DMLun' -Action {
-                if (@(Get-DMluns -WebSession $session | Where-Object Name -EQ $lunName).Count -gt 0) {
+                if (@(Get-DMlun -WebSession $session | Where-Object Name -EQ $lunName).Count -gt 0) {
                     throw "A LUN named '$lunName' already exists; refusing to claim it as test-owned."
                 }
                 New-DMLun -WebSession $session -LunName $lunName -Capacity $configuration.Lun.CapacityMB `
@@ -26,7 +26,7 @@ $script:LunMutationWorkflow = {
                     } | Out-Null
                     $renameResult = @(Invoke-MutationStep -Name 'Rename-DMLun' -Action {
                         Assert-TestOwnedResource -Kind Lun -Identity $lunName
-                        if (@(Get-DMluns -WebSession $session | Where-Object Name -EQ $renamedLunName).Count -gt 0) {
+                        if (@(Get-DMlun -WebSession $session | Where-Object Name -EQ $renamedLunName).Count -gt 0) {
                             throw "A LUN named '$renamedLunName' already exists; refusing to overwrite it."
                         }
                         Rename-DMLun -WebSession $session -LunName $lunName -NewName $renamedLunName -Confirm:$false
@@ -35,7 +35,7 @@ $script:LunMutationWorkflow = {
                         Update-TestOwnedResourceIdentity -Kind Lun -OldIdentity $lunName -NewIdentity $renamedLunName
                         $lunName = $renamedLunName
                         Add-MutationReadVerification -Name 'Rename-DMLun:ReadBack' -Action {
-                            Get-DMluns -WebSession $session | Where-Object Name -EQ $lunName
+                            Get-DMlun -WebSession $session | Where-Object Name -EQ $lunName
                         } | Out-Null
                     }
                 }
@@ -48,7 +48,7 @@ $script:LunMutationWorkflow = {
             if ($owned.Lun.Contains($lunName)) {
                 $snapshot = @(Invoke-MutationStep -Name 'New-DMLunSnapshot' -ExpectedType 'OceanstorLunSnapshot' -Action {
                     Assert-TestOwnedResource -Kind Lun -Identity $lunName
-                    if (@(Get-DMLunSnapshots -WebSession $session | Where-Object Name -EQ $snapshotName).Count -gt 0) {
+                    if (@(Get-DMLunSnapshot -WebSession $session | Where-Object Name -EQ $snapshotName).Count -gt 0) {
                         throw "A LUN snapshot named '$snapshotName' already exists; refusing to claim it as test-owned."
                     }
                     New-DMLunSnapshot -WebSession $session -SnapshotName $snapshotName -SourceLunName $lunName `
@@ -67,7 +67,7 @@ $script:LunMutationWorkflow = {
             if ($owned.LunSnapshot.Contains($snapshotName)) {
                 $copy = @(Invoke-MutationStep -Name 'New-DMLunSnapshotCopy' -ExpectedType 'OceanstorLunSnapshot' -Action {
                     Assert-TestOwnedResource -Kind LunSnapshot -Identity $snapshotName
-                    if (@(Get-DMLunSnapshots -WebSession $session | Where-Object Name -EQ $snapshotCopyName).Count -gt 0) {
+                    if (@(Get-DMLunSnapshot -WebSession $session | Where-Object Name -EQ $snapshotCopyName).Count -gt 0) {
                         throw "A LUN snapshot named '$snapshotCopyName' already exists; refusing to claim it as test-owned."
                     }
                     New-DMLunSnapshotCopy -WebSession $session -SourceSnapShotName $snapshotName `

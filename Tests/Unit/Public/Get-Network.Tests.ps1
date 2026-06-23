@@ -5,10 +5,11 @@ BeforeDiscovery {
         function Invoke-DeviceManager {}
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Get-DMparsedElabel.ps1"
-        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Set-DMHostInitiators.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Set-DMHostInitiator.ps1"
 
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
         Get-ChildItem -LiteralPath "$testRoot\..\..\..\POSH-Oceanstor\Private" -Filter 'class-*.ps1' |
-            Where-Object Name -ne 'class-OceanStorMappingView.ps1' |
+            Where-Object Name -notin 'class-OceanStorMappingView.ps1', 'class-OceanstorSession.ps1' |
             ForEach-Object { . $_.FullName }
 
         Get-ChildItem -LiteralPath "$testRoot\..\..\..\POSH-Oceanstor\Public" -Filter 'Get-*.ps1' |
@@ -45,7 +46,7 @@ Describe 'Public getter functions' {
         It 'gets logical interfaces' {
             Mock Invoke-DeviceManager { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'lif-01'; ADDRESSFAMILY = 0; SUPPORTPROTOCOL = 3 }) } }
 
-            $result = (Get-DMLifs -WebSession $script:session)[0]
+            $result = (Get-DMLif -WebSession $script:session)[0]
 
             $result.Id | Should -Be 'lif-01'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
@@ -100,7 +101,7 @@ Describe 'Public getter functions' {
         It 'gets VLAN interfaces' {
             Mock Invoke-DeviceManager { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'vlan-01'; TYPE = 280; TAG = 100 }) } }
 
-            $result = (Get-DMvLans -WebSession $script:session)[0]
+            $result = (Get-DMvLan -WebSession $script:session)[0]
 
             $result.Id | Should -Be 'vlan-01'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |

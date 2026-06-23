@@ -2,7 +2,7 @@ BeforeDiscovery {
     $script:protectionModule = New-Module -Name ProtectionGroupTestModule -ArgumentList $PSScriptRoot -ScriptBlock {
         param($testRoot)
 
-        function Get-DMlunGroups { param([pscustomobject]$WebSession) }
+        function Get-DMlunGroup { param([pscustomobject]$WebSession) }
         function Get-DMvStore { param([pscustomobject]$WebSession) }
         function Invoke-DeviceManager {
             param(
@@ -41,7 +41,7 @@ InModuleScope ProtectionGroupTestModule {
 Describe 'Protection group commands and class' {
     BeforeEach {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
-        Mock Get-DMlunGroups { @([pscustomobject]@{ Id = '12'; Name = 'production-luns' }) }
+        Mock Get-DMlunGroup { @([pscustomobject]@{ Id = '12'; Name = 'production-luns' }) }
         Mock Get-DMvStore { @([pscustomobject]@{ Id = '7'; Name = 'tenant-a' }) }
     }
 

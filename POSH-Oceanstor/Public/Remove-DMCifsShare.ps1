@@ -31,6 +31,8 @@
     Filename: Remove-DMCifsShare.ps1
 #>
 function Remove-DMCifsShare {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
@@ -44,7 +46,7 @@ function Remove-DMCifsShare {
                 else {
                     $deviceManager
                 }
-                $shares = @(Get-DMShares -WebSession $session -ShareType CIFS)
+                $shares = @(Get-DMShare -WebSession $session -ShareType CIFS)
                 $matchingItems = @($shares | Where-Object Name -EQ $_)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -62,7 +64,7 @@ function Remove-DMCifsShare {
                 else {
                     $deviceManager
                 }
-                (Get-DMShares -WebSession $session -ShareType CIFS).Name |
+                (Get-DMShare -WebSession $session -ShareType CIFS).Name |
                     Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$ShareName,
@@ -76,7 +78,7 @@ function Remove-DMCifsShare {
     else {
         $deviceManager
     }
-    $share = @(Get-DMShares -WebSession $session -ShareType CIFS | Where-Object Name -EQ $ShareName)[0]
+    $share = @(Get-DMShare -WebSession $session -ShareType CIFS | Where-Object Name -EQ $ShareName)[0]
     $resource = "CIFSSHARE/$($share.Id)"
     if ($VstoreId) {
         $resource += "?vstoreId=$VstoreId"

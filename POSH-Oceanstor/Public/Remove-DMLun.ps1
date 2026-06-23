@@ -39,6 +39,8 @@
     Filename: Remove-DMLun.ps1
 #>
 function Remove-DMLun {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
@@ -52,7 +54,7 @@ function Remove-DMLun {
                 else {
                     $deviceManager
                 }
-                $luns = @(Get-DMluns -WebSession $session)
+                $luns = @(Get-DMlun -WebSession $session)
                 $matchingItems = @($luns | Where-Object Name -EQ $_)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -70,7 +72,7 @@ function Remove-DMLun {
                 else {
                     $deviceManager
                 }
-                (Get-DMluns -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMlun -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$LunName,
 
@@ -85,7 +87,7 @@ function Remove-DMLun {
     else {
         $deviceManager
     }
-    $lun = @(Get-DMluns -WebSession $session | Where-Object Name -EQ $LunName)[0]
+    $lun = @(Get-DMlun -WebSession $session | Where-Object Name -EQ $LunName)[0]
     $parameters = @()
     if ($ImmediateDelete) {
         $parameters += 'isDelayDelete=false'

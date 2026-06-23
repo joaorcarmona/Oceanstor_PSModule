@@ -89,7 +89,7 @@ $script:NasMutationWorkflow = {
             if ($owned.FileSystem.Contains($fileSystemName) -and $configuration.Nas.EnableNfs) {
                 $nfsShare = @(Invoke-MutationStep -Name 'New-DMnfsShare' -ExpectedType 'OceanStorNFSShare' -Action {
                     Assert-TestOwnedResource -Kind FileSystem -Identity $fileSystemName
-                    if (@(Get-DMShares -WebSession $session -ShareType NFS | Where-Object 'Share Path' -EQ $nfsSharePath).Count -gt 0) {
+                    if (@(Get-DMShare -WebSession $session -ShareType NFS | Where-Object 'Share Path' -EQ $nfsSharePath).Count -gt 0) {
                         throw "An NFS share using '$nfsSharePath' already exists; refusing to claim it as test-owned."
                     }
                     New-DMnfsShare -WebSession $session -SharePath $nfsSharePath -FileSystemId $fileSystem[0].Id
@@ -127,7 +127,7 @@ $script:NasMutationWorkflow = {
             if ($owned.FileSystem.Contains($fileSystemName) -and $configuration.Nas.EnableCifs) {
                 $cifsShare = @(Invoke-MutationStep -Name 'New-DMCifsShare' -ExpectedType 'OceanStorCIFSShare' -Action {
                     Assert-TestOwnedResource -Kind FileSystem -Identity $fileSystemName
-                    if (@(Get-DMShares -WebSession $session -ShareType CIFS | Where-Object Name -EQ $cifsShareName).Count -gt 0) {
+                    if (@(Get-DMShare -WebSession $session -ShareType CIFS | Where-Object Name -EQ $cifsShareName).Count -gt 0) {
                         throw "A CIFS share named '$cifsShareName' already exists; refusing to claim it as test-owned."
                     }
                     New-DMCifsShare -WebSession $session -ShareName $cifsShareName -FileSystemName $fileSystemName `

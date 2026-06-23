@@ -1,3 +1,4 @@
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingCmdletAliases', '')]
 class OceanstorFileSystem{
     hidden [pscustomobject]${Session}
 	hidden [pscustomobject]${WebSession}
@@ -518,11 +519,11 @@ class OceanstorFileSystem{
     }
 
     [array] GetSnapshots() {
-        return @(Get-DMFileSystemSnapshots -WebSession $this.Session -FileSystemName $this.Name)
+        return @(Get-DMFileSystemSnapshot -WebSession $this.Session -FileSystemName $this.Name)
     }
 
     [psobject] Expand([object]$Capacity) {
-        $newCapacity = ConvertTo-DMCapacityBlocks -Capacity $Capacity -UnitlessUnit GB
+        $newCapacity = ConvertTo-DMCapacityBlock -Capacity $Capacity -UnitlessUnit GB
         if ($newCapacity -le $this.RealCapacity) {
             throw "File-system expansion must be greater than the current capacity of $($this.RealCapacity) blocks."
         }

@@ -10,7 +10,7 @@
     Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
 
 .PARAMETER SourceSnapShotName
-    Name of the source snapshot. Valid values are checked against Get-DMLunSnapshots and support tab completion.
+    Name of the source snapshot. Valid values are checked against Get-DMLunSnapshot and support tab completion.
 
 .PARAMETER SnapshotCopyName
     Optional name of the copy. The value must be 1 to 255 characters and may contain letters, numbers, underscores, periods, or hyphens.
@@ -39,7 +39,9 @@
     Filename: New-DMLunSnapshotCopy.ps1
 #>
 function New-DMLunSnapshotCopy {
-    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
@@ -53,7 +55,7 @@ function New-DMLunSnapshotCopy {
                     $session = $deviceManager
                 }
 
-                $snapshots = @(Get-DMLunSnapshots -WebSession $session)
+                $snapshots = @(Get-DMLunSnapshot -WebSession $session)
                 $matchingSnapshots = @($snapshots | Where-Object Name -EQ $_)
 
                 if ($matchingSnapshots.Count -eq 1) {
@@ -76,7 +78,7 @@ function New-DMLunSnapshotCopy {
                     $session = $deviceManager
                 }
 
-                (Get-DMLunSnapshots -WebSession $session).Name |
+                (Get-DMLunSnapshot -WebSession $session).Name |
                     Sort-Object -Unique |
                     Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -100,7 +102,7 @@ function New-DMLunSnapshotCopy {
         $session = $deviceManager
     }
 
-    $sourceSnapshot = @(Get-DMLunSnapshots -WebSession $session | Where-Object Name -EQ $SourceSnapShotName)[0]
+    $sourceSnapshot = @(Get-DMLunSnapshot -WebSession $session | Where-Object Name -EQ $SourceSnapShotName)[0]
 
     $resolvedCopyName = $SnapshotCopyName
     if (-not $resolvedCopyName) {
@@ -119,11 +121,13 @@ function New-DMLunSnapshotCopy {
         $body.Add('DESCRIPTION', $Description)
     }
 
-    $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'snapshot/createcopy' -BodyData $body
+    if ($PSCmdlet.ShouldProcess($resolvedCopyName, 'Create LUN snapshot copy')) {
+        $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'snapshot/createcopy' -BodyData $body
 
-    if ($response.error.Code -eq 0) {
-        return [OceanstorLunSnapshot]::new($response.data, $session)
+        if ($response.error.Code -eq 0) {
+            return [OceanstorLunSnapshot]::new($response.data, $session)
+        }
+
+        return $response.error
     }
-
-    return $response.error
 }

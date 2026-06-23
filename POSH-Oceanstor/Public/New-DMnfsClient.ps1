@@ -18,15 +18,6 @@ function New-DMnfsClient {
     .PARAMETER Permission
         The permission of the client on the share. Default is "read-only"
 
-    .PARAMETER accessKrb5
-        The permission of the client on the share. Default is "no-permission"
-
-    .PARAMETER accessKrb5i
-        The permission of the client on the share. Default is "no-permission"
-
-    .PARAMETER accessKrb5p
-        The permission of the client on the share. Default is "no-permission"
-
     .PARAMETER permissionContraint
         The permission constraint of the client on the share. Default is "no_all_squash"
 
@@ -65,7 +56,9 @@ function New-DMnfsClient {
 
 	.LINK
 	#>
-    [Cmdletbinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession,
@@ -79,7 +72,7 @@ function New-DMnfsClient {
                 else {
                     $deviceManager
                 }
-                $shares = @(Get-DMShares -WebSession $session -ShareType NFS)
+                $shares = @(Get-DMShare -WebSession $session -ShareType NFS)
                 if ($shares.Id -contains $_) {
                     return $true
                 }
@@ -93,24 +86,12 @@ function New-DMnfsClient {
                 else {
                     $deviceManager
                 }
-                (Get-DMShares -WebSession $session -ShareType NFS).Id | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMShare -WebSession $session -ShareType NFS).Id | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$shareId,
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [ValidateSet("read-only", "read-write", "no-permission")]
         [string]$Permission = "read-only",
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
-        [ValidateSet("read-only", "read-write", "no-permission")]
-        [string]$accessKrb5 = "no-permission",
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
-        [ValidateSet("read-only", "read-write", "no-permission")]
-        [string]$accessKrb5i = "no-permission",
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
-        [ValidateSet("read-only", "read-write", "no-permission")]
-        [string]$accessKrb5p = "no-permission",
-        #[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
-        #    [ValidateSet("synchronous","asynchronous")]
-        #    [string]$writeMode = "no-permission",
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [ValidateSet("all_squash", "no_all_squash")]
         [string]$permissionContraint = "no_all_squash",
@@ -142,45 +123,6 @@ function New-DMnfsClient {
             $accessval = 5
         }
     }
-    switch ($accessKrb5) {
-        "read-only" {
-            $Krb5Access = 0
-        }
-        "read-write" {
-            $Krb5Access = 1
-        }
-        "no-permission" {
-            $Krb5Access = 5
-        }
-    }
-    switch ($accessKrb5i) {
-        "read-only" {
-            $Krb5iAccess = 0
-        }
-        "read-write" {
-            $Krb5iAccess = 1
-        }
-        "no-permission" {
-            $Krb5iAccess = 5
-        }
-    }
-    switch ($accessKrb5p) {
-        "read-only" {
-            $Krb5pAccess = 0
-        }
-        "read-write" {
-            $Krb5pAccess = 1
-        }
-        "no-permission" {
-            $Krb5pAccess = 5
-        }
-    }
-
-    #switch ($writeMode){
-    #    "synchronous" {$writeMode = 0}
-    #    "asynchronous" {$writeMode = 1}
-    #}
-
     switch ($permissionContraint) {
         "all_squash" {
             $allsquash = 0
@@ -212,9 +154,6 @@ function New-DMnfsClient {
         NAME       = $clientName;
         PARENTID   = $shareId;
         ACCESSVAL  = $accessval;
-        #ACCESSKRB5 = $Krb5Access;
-        #ACCESSKRB5I = $Krb5iAccess;
-        #ACCESSKRB5P = $Krb5pAccess;
         ALLSQUASH  = $allsquash;
         ROOTSQUASH = $rootSquash;
         SECURE     = $secure;
@@ -224,14 +163,16 @@ function New-DMnfsClient {
         $body.Add("vstoreId", $vStoreId)
     }
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "POST" -Resource "NFS_SHARE_AUTH_CLIENT" -BodyData $body
+    if ($PSCmdlet.ShouldProcess($clientName, 'Create NFS client')) {
+        $response = Invoke-DeviceManager -WebSession $session -Method "POST" -Resource "NFS_SHARE_AUTH_CLIENT" -BodyData $body
 
-    if ($response.error.Code -eq 0) {
-        $result = [OceanstorNFSclient]::new($response.data, $session)
-    }
-    else {
-        $result = $response.error
-    }
+        if ($response.error.Code -eq 0) {
+            $result = [OceanstorNFSclient]::new($response.data, $session)
+        }
+        else {
+            $result = $response.error
+        }
 
-    return $result.Id
+        return $result.Id
+    }
 }

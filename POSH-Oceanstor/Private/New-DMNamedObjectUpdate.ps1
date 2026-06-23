@@ -1,4 +1,5 @@
 function New-DMNamedObjectUpdate {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '')]
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)][object[]]$Objects,
@@ -18,14 +19,14 @@ function New-DMNamedObjectUpdate {
         throw 'Specify NewName, Description, or at least one ApiProperties entry.'
     }
 
-    $matches = @($Objects | Where-Object Name -CEQ $CurrentName)
-    if ($matches.Count -ne 1) {
-        if ($matches.Count -gt 1) {
+    $matchingItems = @($Objects | Where-Object Name -CEQ $CurrentName)
+    if ($matchingItems.Count -ne 1) {
+        if ($matchingItems.Count -gt 1) {
             throw "$EntityName name '$CurrentName' is ambiguous."
         }
         throw "Invalid $EntityName name '$CurrentName'. Valid values are: $($Objects.Name -join ', ')"
     }
-    $item = $matches[0]
+    $item = $matchingItems[0]
 
     if ($NewNameSpecified -and $NewName -cne $CurrentName -and $Objects.Name -contains $NewName) {
         throw "A $EntityName named '$NewName' already exists."

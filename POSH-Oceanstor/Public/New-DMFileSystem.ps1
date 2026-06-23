@@ -94,7 +94,9 @@ function New-DMFileSystem {
 
 	.LINK
 	#>
-    [Cmdletbinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession,
@@ -108,7 +110,7 @@ function New-DMFileSystem {
                 else {
                     $deviceManager
                 }
-                $storagePools = @(Get-DMstoragePools -WebSession $session)
+                $storagePools = @(Get-DMstoragePool -WebSession $session)
                 if ($storagePools.Id -contains $_) {
                     return $true
                 }
@@ -122,7 +124,7 @@ function New-DMFileSystem {
                 else {
                     $deviceManager
                 }
-                (Get-DMstoragePools -WebSession $session).Id | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMstoragePool -WebSession $session).Id | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [Int16]$StoragePoolID,
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
@@ -293,14 +295,16 @@ function New-DMFileSystem {
         $body.Add("CAPACITY", $capacityInBlocks)
     }
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "POST" -Resource "filesystem" -BodyData $body
+    if ($PSCmdlet.ShouldProcess($FileSystemName, 'Create file system')) {
+        $response = Invoke-DeviceManager -WebSession $session -Method "POST" -Resource "filesystem" -BodyData $body
 
-    if ($response.error.Code -eq 0) {
-        $result = [OceanstorFileSystem]::new($response.data, $session)
-    }
-    else {
-        $result = $response.error
-    }
+        if ($response.error.Code -eq 0) {
+            $result = [OceanstorFileSystem]::new($response.data, $session)
+        }
+        else {
+            $result = $response.error
+        }
 
-    return $result
+        return $result
+    }
 }

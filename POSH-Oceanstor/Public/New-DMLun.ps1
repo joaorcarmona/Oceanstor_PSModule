@@ -14,7 +14,7 @@ function New-DMLun {
 
     .PARAMETER StoragePoolID
         Mandatory parameter. ID of the Storage Pool where the LUN will be created.
-        Valid values are dynamically generated from the output of Get-DMstoragePools and support tab-completion.
+        Valid values are dynamically generated from the output of Get-DMstoragePool and support tab-completion.
     .PARAMETER capacity
         Mandatory parameter. Capacity of the LUN to be created.
         Specify a size with an MB, GB, or TB suffix, for example 10MB, 10GB, 1.5TB, or 1,5TB.
@@ -89,6 +89,10 @@ function New-DMLun {
 
 	.LINK
 	#>
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
+    [CmdletBinding(SupportsShouldProcess = $true)]
+
     param(
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession,
@@ -106,7 +110,7 @@ function New-DMLun {
                 else {
                     $session = $deviceManager
                 }
-                $storagePools = Get-DMstoragePools -WebSession $session
+                $storagePools = Get-DMstoragePool -WebSession $session
                 if ($storagePools.Id -contains $_) {
                     $true
                 }
@@ -116,6 +120,10 @@ function New-DMLun {
             })]
 
         [ArgumentCompleter({
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
+                [CmdletBinding(SupportsShouldProcess = $true)]
+
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
                 if ($WebSession) {
                     $session = $WebSession
@@ -123,7 +131,7 @@ function New-DMLun {
                 else {
                     $session = $deviceManager
                 }
-                (Get-DMstoragePools -WebSession $session).Id | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMstoragePool -WebSession $session).Id | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$StoragePoolID,
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 4, Mandatory = $false)]
@@ -311,27 +319,29 @@ function New-DMLun {
         $body.Add("WORKLOADTYPEID", $workloadTypeId)
     }
 
-    # Make the REST API call
-    $response = Invoke-DeviceManager -WebSession $session -Method "POST" -Resource "lun" -BodyData $body
+    if ($PSCmdlet.ShouldProcess($LunName, 'Create LUN')) {
+        # Make the REST API call
+        $response = Invoke-DeviceManager -WebSession $session -Method "POST" -Resource "lun" -BodyData $body
 
-    # Check if the operation was successful and create the appropriate object
-    if ($response.error.Code -eq 0) {
-        # Determine the correct LUN class based on device version
-        $storageVersion = $session.version.Substring(0, 2)
+        # Check if the operation was successful and create the appropriate object
+        if ($response.error.Code -eq 0) {
+            # Determine the correct LUN class based on device version
+            $storageVersion = $session.version.Substring(0, 2)
 
-        if ($storageVersion -eq "V6") {
-            $LunObjectClass = "OceanstorLunv6"
+            if ($storageVersion -eq "V6") {
+                $LunObjectClass = "OceanstorLunv6"
+            }
+            else {
+                $LunObjectClass = "OceanstorLunv3"
+            }
+
+            # Create the LUN object from the response
+            $result = New-Object -TypeName $LunObjectClass -ArgumentList @($response.data, $session)
         }
         else {
-            $LunObjectClass = "OceanstorLunv3"
+            $result = $response.error
         }
 
-        # Create the LUN object from the response
-        $result = New-Object -TypeName $LunObjectClass -ArgumentList @($response.data, $session)
+        return $result
     }
-    else {
-        $result = $response.error
-    }
-
-    return $result
 }

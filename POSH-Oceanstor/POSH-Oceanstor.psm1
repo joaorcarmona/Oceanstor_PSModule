@@ -1,8 +1,12 @@
 # developed originally by Warren Frame "RamblingCookieMonster" (https://github.com/RamblingCookieMonster)
 
+#Load the session class first so other classes can reference [OceanstorSession] in their constructors.
+    . $PSScriptRoot\Private\class-OceanstorSession.ps1
+
 #Get public and private function definition files.
     $Public  = @( Get-ChildItem -Path $PSScriptRoot\Public\*.ps1 -ErrorAction SilentlyContinue )
-    $Private = @( Get-ChildItem -Path $PSScriptRoot\Private\*.ps1 -ErrorAction SilentlyContinue )
+    $Private = @( Get-ChildItem -Path $PSScriptRoot\Private\*.ps1 -ErrorAction SilentlyContinue |
+        Where-Object Name -ne 'class-OceanstorSession.ps1' )
 
 #Dot source the files
     Foreach($import in @($Public + $Private))

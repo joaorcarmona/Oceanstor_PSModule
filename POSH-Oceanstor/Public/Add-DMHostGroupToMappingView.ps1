@@ -34,6 +34,8 @@
     Filename: Add-DMHostGroupToMappingView.ps1
 #>
 function Add-DMHostGroupToMappingView {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
@@ -72,10 +74,10 @@ function Add-DMHostGroupToMappingView {
                 else {
                     $deviceManager
                 }
-                if (@(Get-DMhostGroups -WebSession $session | Where-Object Name -EQ $_).Count -eq 1) {
+                if (@(Get-DMhostGroup -WebSession $session | Where-Object Name -EQ $_).Count -eq 1) {
                     return $true
                 }
-                throw "Invalid HostGroupName. Valid values are: $((Get-DMhostGroups -WebSession $session).Name -join ', ')"
+                throw "Invalid HostGroupName. Valid values are: $((Get-DMhostGroup -WebSession $session).Name -join ', ')"
             })]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
@@ -85,7 +87,7 @@ function Add-DMHostGroupToMappingView {
                 else {
                     $deviceManager
                 }
-                (Get-DMhostGroups -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMhostGroup -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$HostGroupName,
 
@@ -99,7 +101,7 @@ function Add-DMHostGroupToMappingView {
         $deviceManager
     }
     $view = @(Get-DMMappingView -WebSession $session | Where-Object Name -EQ $MappingViewName)[0]
-    $group = @(Get-DMhostGroups -WebSession $session | Where-Object Name -EQ $HostGroupName)[0]
+    $group = @(Get-DMhostGroup -WebSession $session | Where-Object Name -EQ $HostGroupName)[0]
     $body = @{ TYPE = 245; ID = $view.Id; ASSOCIATEOBJTYPE = 14; ASSOCIATEOBJID = $group.Id }
     if ($VstoreId) {
         $body.vstoreId = $VstoreId

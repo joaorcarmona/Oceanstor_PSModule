@@ -365,7 +365,7 @@ class OceanstorLunv6{
 
 	[array] GetSnapShots()
 	{
-		return @(Get-DMLunSnapshots -WebSession $this.Session -LunName $this.Name)
+		return @(Get-DMLunSnapshot -WebSession $this.Session -LunName $this.Name)
 	}
 
 	[psobject] Expand([object]$Capacity)

@@ -1,7 +1,14 @@
 # Huawei Oceanstor_PSModule
+
+[![PowerShell CI](https://github.com/joaorcarmona/Oceanstor_PSModule/actions/workflows/powershell.yml/badge.svg)](https://github.com/joaorcarmona/Oceanstor_PSModule/actions/workflows/powershell.yml)
+[![License: GPL v3](https://img.shields.io/github/license/joaorcarmona/Oceanstor_PSModule)](https://github.com/joaorcarmona/Oceanstor_PSModule/blob/master/LICENSE)
+[![Latest Release](https://img.shields.io/github/v/release/joaorcarmona/Oceanstor_PSModule?include_prereleases&sort=semver)](https://github.com/joaorcarmona/Oceanstor_PSModule/releases)
+[![PowerShell 7+](https://img.shields.io/badge/PowerShell-7%2B-5391FE?logo=powershell&logoColor=white)](https://github.com/PowerShell/PowerShell)
+[![Last Commit](https://img.shields.io/github/last-commit/joaorcarmona/Oceanstor_PSModule)](https://github.com/joaorcarmona/Oceanstor_PSModule/commits/master)
+
 Oceanstor PowerShell Module, is a module to operate with Huawei Oceanstor devices (v6) - Previous versions should work in limited way. Please report any bugs.
 
-Current module version: 0.9.3
+Current module version: 0.9.4
 
 The module includes commands for inventory, reporting, host and initiator
 management, storage-resource creation, mapping-view operations, and snapshot
@@ -33,42 +40,42 @@ The module is a PowerShell module to interact with Huawei OceanStor devices thro
 To start, it is necessary to connect to a storage system.
 ```powershell
 # Connect to a storage. By default, PowerShell securely prompts for your credentials.
-$storage = Connect-deviceManager -Hostname "10.0.0.1" -Return $true
+$storage = Connect-deviceManager -Hostname "10.0.0.1" -PassThru
 
 # The -Secure switch remains available for the interactive prompt form.
-$storage = Connect-deviceManager -Hostname "10.0.0.1" -Return $true -Secure
+$storage = Connect-deviceManager -Hostname "10.0.0.1" -PassThru -Secure
 
 # For unattended operation, provide a PSCredential obtained from a secure source.
 # For example, import an encrypted credential exported for the same user and machine.
 $credential = Import-Clixml -Path "$HOME\.oceanstor\device-manager.credential.xml"
-$storage = Connect-deviceManager -Hostname "10.0.0.1" -Return $true -Credential $credential
+$storage = Connect-deviceManager -Hostname "10.0.0.1" -PassThru -Credential $credential
 
 # A SecureString password may also be paired with a user name.
-$storage = Connect-deviceManager -Hostname "10.0.0.1" -Return $true -LoginUser "username" -LoginPwd $securePassword
+$storage = Connect-deviceManager -Hostname "10.0.0.1" -PassThru -LoginUser "username" -LoginPwd $securePassword
 ```
 Next the user can Query any command without requiring the input the username again.
 ```powershell
 #Query all storage luns
-$luns = Get-DMLuns
+$luns = Get-DMlun
 ```
 
 For multiple storage systems, use the WebSession parameter:
 ```powershell
 # Connect to two storages and save each WebSession in a different variable.
-$storage1 = Connect-deviceManager -Hostname "10.0.0.1" -Return $true
-$storage2 = Connect-deviceManager -Hostname "10.0.0.2" -Return $true
+$storage1 = Connect-deviceManager -Hostname "10.0.0.1" -PassThru
+$storage2 = Connect-deviceManager -Hostname "10.0.0.2" -PassThru
 ```
 Next, query any command without re-entering credentials, but pass the WebSession parameter explicitly:
 ```powershell
 # Query all storage LUNs
-$storage1luns = Get-DMLuns -WebSession $storage1
-$storage2luns = Get-DMLuns -WebSession $storage2
+$storage1luns = Get-DMlun -WebSession $storage1
+$storage2luns = Get-DMlun -WebSession $storage2
 ```
 
 #### Export Storage Configuration to Excel
 ```powershell
 # Connect to a storage (PowerShell securely prompts for credentials).
-$storage = Connect-deviceManager -Hostname "10.0.0.1" -Return $true
+$storage = Connect-deviceManager -Hostname "10.0.0.1" -PassThru
 
 #export all storage data to excel
 Export-DMStorageToExcel -OceanStor $storage -ReportFile "c:\temp\MyStorage.xlsx" -IncludeObject full
@@ -80,10 +87,10 @@ Export-DMStorageToExcel -OceanStor $storage -ReportFile "c:\temp\MyStorage.xlsx"
 #### Search one lun by WWN
 ```powershell
 # Connect to a storage (PowerShell securely prompts for credentials).
-$storage = Connect-deviceManager -Hostname "10.0.0.1" -Return $true
+$storage = Connect-deviceManager -Hostname "10.0.0.1" -PassThru
 
 #Search for a lun by Lun WWN
- $luns = Get-DMlunsByWWN -WebSession $storage -wwn "6a08cf810075766e1efc050700000005"
+ $luns = Get-DMlunByWWN -WebSession $storage -wwn "6a08cf810075766e1efc050700000005"
 ```
 
 ## Additional Resources

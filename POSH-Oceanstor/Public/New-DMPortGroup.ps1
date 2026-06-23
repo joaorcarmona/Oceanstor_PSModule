@@ -31,7 +31,7 @@
     Filename: New-DMPortGroup.ps1
 #>
 function New-DMPortGroup {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
@@ -57,10 +57,12 @@ function New-DMPortGroup {
         $body.DESCRIPTION = $Description
     }
 
-    $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'portgroup' -BodyData $body
-    if ($response.error.Code -eq 0) {
-        return [OceanstorPortGroup]::new($response.data, $session)
-    }
+    if ($PSCmdlet.ShouldProcess($Name, 'Create port group')) {
+        $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'portgroup' -BodyData $body
+        if ($response.error.Code -eq 0) {
+            return [OceanstorPortGroup]::new($response.data, $session)
+        }
 
-    return $response.error
+        return $response.error
+    }
 }

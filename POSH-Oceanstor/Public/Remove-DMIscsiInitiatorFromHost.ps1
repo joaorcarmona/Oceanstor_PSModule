@@ -34,6 +34,8 @@
     Filename: Remove-DMIscsiInitiatorFromHost.ps1
 #>
 function Remove-DMIscsiInitiatorFromHost {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
@@ -48,7 +50,7 @@ function Remove-DMIscsiInitiatorFromHost {
                 else {
                     $deviceManager
                 }
-                $hosts = @(Get-DMhosts -WebSession $session)
+                $hosts = @(Get-DMhost -WebSession $session)
                 $matchingItems = @($hosts | Where-Object Name -EQ $candidate)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -66,7 +68,7 @@ function Remove-DMIscsiInitiatorFromHost {
                 else {
                     $deviceManager
                 }
-                (Get-DMhosts -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMhost -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$HostName,
 
@@ -80,8 +82,8 @@ function Remove-DMIscsiInitiatorFromHost {
                     $deviceManager
                 }
                 $selectedHostName = [string]$HostName
-                $hostObject = @(Get-DMhosts -WebSession $session | Where-Object Name -EQ $selectedHostName)[0]
-                $initiators = @(Get-DMHostInitiators -WebSession $session -InitiatorType ISCSI -HostId $hostObject.Id)
+                $hostObject = @(Get-DMhost -WebSession $session | Where-Object Name -EQ $selectedHostName)[0]
+                $initiators = @(Get-DMHostInitiator -WebSession $session -InitiatorType ISCSI -HostId $hostObject.Id)
                 if ($initiators.Id -contains $candidate) {
                     return $true
                 }

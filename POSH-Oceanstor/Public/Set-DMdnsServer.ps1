@@ -32,7 +32,7 @@ function Set-DMdnsServer {
 
 	.LINK
 	#>
-    [Cmdletbinding()]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession,
@@ -51,22 +51,22 @@ function Set-DMdnsServer {
     foreach ($dns in $DNSserver) {
         $IPResult = Test-IPv4Address -IPv4 $dns
         if ($IPResult -eq $false) {
-            Write-Host $dns "is not a valid IP address"
-            exit
+            # throw instead of exit to avoid terminating the caller's session
+            throw "'$dns' is not a valid IPv4 address."
         }
     }
 
-    $PostData = New-Object System.Collections.Hashtable
+    $PostData = @{ ADDRESS = $DNSserver }
+    if ($PSCmdlet.ShouldProcess(($DNSserver -join ', '), 'Configure DNS servers')) {
+        $SetConfig = Invoke-DeviceManager -WebSession $session -Method "PUT" -Resource "dns_server" -BodyData $PostData
 
-    $PostData.Add("ADDRESS", $DNSserver)
-    $SetConfig = Invoke-DeviceManager -WebSession $session -Method "PUT" -Resource "dns_server" -BodyData $PostData
+        if ($SetConfig.error.code -eq 0) {
+            $result = Get-DMdnsServer -WebSession $session
+        }
+        else {
+            $result = "error setting DNS Server"
+        }
 
-    if ($SetConfig.error.code -eq 0) {
-        $result = Get-DMdnsServer -WebSession $session
+        return $result
     }
-    else {
-        $result = "error setting DNS Server"
-    }
-
-    return $result
 }

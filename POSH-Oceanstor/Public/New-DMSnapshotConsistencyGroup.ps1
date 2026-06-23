@@ -39,7 +39,9 @@
     Filename: New-DMSnapshotConsistencyGroup.ps1
 #>
 function New-DMSnapshotConsistencyGroup {
-    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
@@ -98,10 +100,12 @@ function New-DMSnapshotConsistencyGroup {
         $body.vstoreId = $protectionGroup.'vStore ID'
     }
 
-    $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'SNAPSHOT_CONSISTENCY_GROUP' -BodyData $body
-    if ($response.error.Code -eq 0) {
-        return [OceanstorSnapshotConsistencyGroup]::new($response.data, $session)
-    }
+    if ($PSCmdlet.ShouldProcess($Name, 'Create snapshot consistency group')) {
+        $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'SNAPSHOT_CONSISTENCY_GROUP' -BodyData $body
+        if ($response.error.Code -eq 0) {
+            return [OceanstorSnapshotConsistencyGroup]::new($response.data, $session)
+        }
 
-    return $response.error
+        return $response.error
+    }
 }

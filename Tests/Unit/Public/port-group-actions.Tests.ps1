@@ -4,7 +4,7 @@ BeforeDiscovery {
 
         function Get-DMPortFc { param([pscustomobject]$WebSession) }
         function Get-DMPortETH { param([pscustomobject]$WebSession) }
-        function Get-DMLifs { param([pscustomobject]$WebSession) }
+        function Get-DMLif { param([pscustomobject]$WebSession) }
         function Invoke-DeviceManager {
             param(
                 [pscustomobject]$WebSession,
@@ -15,7 +15,7 @@ BeforeDiscovery {
         }
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorPortGroup.ps1"
-        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Get-DMPortGroupCandidates.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Get-DMPortGroupCandidate.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\New-DMPortGroup.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMPortGroup.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Remove-DMPortGroup.ps1"
@@ -43,7 +43,7 @@ Describe 'Port group commands' {
         $script:group = [OceanstorPortGroup]::new($script:groupData, $script:session)
         Mock Get-DMPortFc { @([pscustomobject]@{ Id = 'fc-01'; Name = 'CTE0.A.IOM0.P0' }) }
         Mock Get-DMPortETH { @([pscustomobject]@{ Id = 'eth-01'; Name = 'CTE0.A.IOM1.P0' }) }
-        Mock Get-DMLifs { @([pscustomobject]@{ Id = 'lif-01'; 'LIF Name' = 'service01' }) }
+        Mock Get-DMLif { @([pscustomobject]@{ Id = 'lif-01'; 'LIF Name' = 'service01' }) }
     }
 
     It 'creates a port group and returns a typed object' {
@@ -105,7 +105,7 @@ Describe 'Port group membership commands' {
         Mock Get-DMPortGroup { @($script:group) }
         Mock Get-DMPortFc { @([pscustomobject]@{ Id = 'fc-01'; Name = 'CTE0.A.IOM0.P0' }) }
         Mock Get-DMPortETH { @([pscustomobject]@{ Id = 'eth-01'; Name = 'CTE0.A.IOM1.P0' }) }
-        Mock Get-DMLifs { @([pscustomobject]@{ Id = 'lif-01'; 'LIF Name' = 'service01' }) }
+        Mock Get-DMLif { @([pscustomobject]@{ Id = 'lif-01'; 'LIF Name' = 'service01' }) }
         Mock Invoke-DeviceManager {
             $script:method = $Method
             $script:resource = $Resource

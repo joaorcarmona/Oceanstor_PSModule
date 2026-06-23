@@ -2,9 +2,9 @@ BeforeDiscovery {
     $script:namedObjectModule = New-Module -Name NamedObjectModificationTestModule -ArgumentList $PSScriptRoot -ScriptBlock {
         param($testRoot)
 
-        function Get-DMhosts { param([pscustomobject]$WebSession) }
-        function Get-DMhostGroups { param([pscustomobject]$WebSession) }
-        function Get-DMlunGroups { param([pscustomobject]$WebSession) }
+        function Get-DMhost { param([pscustomobject]$WebSession) }
+        function Get-DMhostGroup { param([pscustomobject]$WebSession) }
+        function Get-DMlunGroup { param([pscustomobject]$WebSession) }
         function Get-DMPortGroup { param([pscustomobject]$WebSession, [string]$VstoreId) }
         function Invoke-DeviceManager {
             param([pscustomobject]$WebSession, [string]$Method, [string]$Resource, [hashtable]$BodyData)
@@ -45,14 +45,14 @@ Describe 'Named object Set commands' {
         $runnerPath = Join-Path $PSScriptRoot '..\..\Integration\Invoke-GetterIntegrityValidation.ps1'
         $runnerSource = Get-Content -LiteralPath $runnerPath -Raw
         $runnerSource | Should -Match "'New-DMNamedObjectUpdate\.ps1'"
-        $runnerSource | Should -Match "'ConvertTo-DMCapacityBlocks\.ps1'"
+        $runnerSource | Should -Match "'ConvertTo-DMCapacityBlock\.ps1'"
     }
 
     BeforeEach {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
-        Mock Get-DMhosts { @([pscustomobject]@{ Id = 'host-01'; Name = 'host-old' }, [pscustomobject]@{ Id = 'host-02'; Name = 'taken' }) }
-        Mock Get-DMhostGroups { @([pscustomobject]@{ Id = 'hg-01'; Name = 'hostgroup-old' }, [pscustomobject]@{ Id = 'hg-02'; Name = 'taken' }) }
-        Mock Get-DMlunGroups { @([pscustomobject]@{ Id = 'lg-01'; Name = 'lungroup-old' }, [pscustomobject]@{ Id = 'lg-02'; Name = 'taken' }) }
+        Mock Get-DMhost { @([pscustomobject]@{ Id = 'host-01'; Name = 'host-old' }, [pscustomobject]@{ Id = 'host-02'; Name = 'taken' }) }
+        Mock Get-DMhostGroup { @([pscustomobject]@{ Id = 'hg-01'; Name = 'hostgroup-old' }, [pscustomobject]@{ Id = 'hg-02'; Name = 'taken' }) }
+        Mock Get-DMlunGroup { @([pscustomobject]@{ Id = 'lg-01'; Name = 'lungroup-old' }, [pscustomobject]@{ Id = 'lg-02'; Name = 'taken' }) }
         Mock Get-DMPortGroup { @([pscustomobject]@{ Id = 'pg-01'; Name = 'portgroup-old' }, [pscustomobject]@{ Id = 'pg-02'; Name = 'taken' }) }
         Mock Invoke-DeviceManager {
             $script:request = [pscustomobject]@{ Method = $Method; Resource = $Resource; Body = $BodyData }

@@ -1,3 +1,4 @@
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingCmdletAliases', '')]
 class OceanStorCIFSShare
 {
     hidden [pscustomobject]${Session}

@@ -2,7 +2,7 @@ BeforeDiscovery {
     $script:setStorageModule = New-Module -Name SetStorageTestModule -ArgumentList $PSScriptRoot -ScriptBlock {
         param($testRoot)
 
-        function Get-DMluns {
+        function Get-DMlun {
             param([pscustomobject]$WebSession)
         }
 
@@ -19,7 +19,7 @@ BeforeDiscovery {
             )
         }
 
-        . "$testRoot\..\..\..\POSH-Oceanstor\Private\ConvertTo-DMCapacityBlocks.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\ConvertTo-DMCapacityBlock.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Set-DMLun.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Set-DMFileSystem.ps1"
 
@@ -37,7 +37,7 @@ InModuleScope SetStorageTestModule {
 Describe 'Set-DMLun' {
     BeforeEach {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
-        Mock Get-DMluns {
+        Mock Get-DMlun {
             @(
                 [pscustomobject]@{
                     Id = 'lun-01'; Name = 'database'; RealCapacity = 2097152
@@ -104,7 +104,7 @@ Describe 'Set-DMLun' {
         { Set-DMLun -WebSession $v3Session -LunName 'database' -NewName 'database-prod' -Confirm:$false } |
             Should -Throw '*only OceanStor Dorado V6*'
 
-        Should -Invoke Get-DMluns -Times 0 -Exactly
+        Should -Invoke Get-DMlun -Times 0 -Exactly
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 

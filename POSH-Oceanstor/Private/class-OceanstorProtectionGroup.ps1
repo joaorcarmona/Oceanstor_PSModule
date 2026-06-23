@@ -49,7 +49,7 @@ class OceanstorProtectionGroup {
             return $null
         }
 
-        return @(Get-DMlunGroups -WebSession $this.Session | Where-Object Id -EQ $this.{Lun Group Id})[0]
+        return @(Get-DMlunGroup -WebSession $this.Session | Where-Object Id -EQ $this.{Lun Group Id})[0]
     }
 }
 

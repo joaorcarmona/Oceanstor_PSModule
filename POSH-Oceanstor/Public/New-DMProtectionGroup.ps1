@@ -42,7 +42,9 @@
     Filename: New-DMProtectionGroup.ps1
 #>
 function New-DMProtectionGroup {
-    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
@@ -59,7 +61,7 @@ function New-DMProtectionGroup {
                 else {
                     $deviceManager
                 }
-                $lunGroups = @(Get-DMlunGroups -WebSession $session)
+                $lunGroups = @(Get-DMlunGroup -WebSession $session)
                 $matchingItems = @($lunGroups | Where-Object Name -EQ $_)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -77,7 +79,7 @@ function New-DMProtectionGroup {
                 else {
                     $deviceManager
                 }
-                (Get-DMlunGroups -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMlunGroup -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$LunGroupName,
 
@@ -122,7 +124,7 @@ function New-DMProtectionGroup {
     else {
         $deviceManager
     }
-    $lunGroup = @(Get-DMlunGroups -WebSession $session | Where-Object Name -EQ $LunGroupName)[0]
+    $lunGroup = @(Get-DMlunGroup -WebSession $session | Where-Object Name -EQ $LunGroupName)[0]
     $body = @{
         protectGroupName = $Name
         lunGroupId       = $lunGroup.Id
@@ -136,10 +138,12 @@ function New-DMProtectionGroup {
         $body.description = $Description
     }
 
-    $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'protectgroup' -BodyData $body -ApiV2
-    if ($response.error.Code -eq 0) {
-        return [OceanstorProtectionGroup]::new($response.data, $session)
-    }
+    if ($PSCmdlet.ShouldProcess($Name, 'Create protection group')) {
+        $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'protectgroup' -BodyData $body -ApiV2
+        if ($response.error.Code -eq 0) {
+            return [OceanstorProtectionGroup]::new($response.data, $session)
+        }
 
-    return $response.error
+        return $response.error
+    }
 }

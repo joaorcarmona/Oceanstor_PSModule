@@ -26,17 +26,19 @@ $moduleRoot = (Resolve-Path -LiteralPath $moduleRoot).Path
 $validationModule = New-Module -Name OceanstorLiveGetterValidation -ArgumentList $moduleRoot -ScriptBlock {
     param($root)
 
+    . (Join-Path $root 'Private\class-OceanstorSession.ps1')
     Get-ChildItem -LiteralPath (Join-Path $root 'Private') -Filter 'class-*.ps1' |
+        Where-Object Name -ne 'class-OceanstorSession.ps1' |
         ForEach-Object { . $_.FullName }
 
     foreach ($privateHelper in @(
-        'ConvertTo-DMCapacityBlocks.ps1',
+        'ConvertTo-DMCapacityBlock.ps1',
         'Get-DMparsedElabel.ps1',
-        'Get-DMPortGroupCandidates.ps1',
+        'Get-DMPortGroupCandidate.ps1',
         'Invoke-DeviceManager.ps1',
         'New-DMNamedObjectUpdate.ps1',
-        'Set-DMHostInitiators.ps1',
-        'Validate-WWNAddress.ps1',
+        'Set-DMHostInitiator.ps1',
+        'Test-WWNAddress.ps1',
         'Write-DMError.ps1'
     )) {
         . (Join-Path $root "Private\$privateHelper")
@@ -77,6 +79,7 @@ Import-Module $validationModule -Force
 $checks = [System.Collections.Generic.List[object]]::new()
 $mutationRequests = [System.Collections.Generic.List[object]]::new()
 $cleanupActions = [System.Collections.Generic.List[object]]::new()
+$sessionDisconnected = $false
 $samples = @{}
 $owned = @{}
 foreach ($kind in @('Lun', 'LunSnapshot', 'LunGroup', 'ProtectionGroup', 'SnapshotConsistencyGroup', 'Host', 'HostGroup', 'FileSystem', 'FileSystemSnapshot', 'DTree', 'CifsShare', 'NfsShare', 'NfsClient', 'MappingView', 'PortGroup', 'FibreChannelInitiator', 'IscsiInitiator', 'NvmeInitiator')) {
@@ -93,7 +96,7 @@ try {
     Write-Host "A credential prompt will open for validation of $Hostname. No credentials are read from or written to the configuration file."
     Write-ValidationProgress -Name 'Connect-deviceManager' -Category 'Session'
     $connectionStartedAt = Get-Date
-    $session = Connect-deviceManager -Hostname $Hostname -Return $true -Secure
+    $session = Connect-deviceManager -Hostname $Hostname -PassThru -Secure
     $connectionDurationMs = [math]::Round(((Get-Date) - $connectionStartedAt).TotalMilliseconds, 2)
     $checks.Add([pscustomobject]@{
         Name         = 'Connect-deviceManager'
@@ -112,6 +115,9 @@ try {
     Write-ValidationReport
 }
 finally {
+    if ($session -and -not $sessionDisconnected) {
+        try { Disconnect-deviceManager -WebSession $session } catch { Write-Verbose "Session cleanup failed: $_" }
+    }
     if (-not $NoProgress) {
         Write-Progress -Id 1 -Activity "Validating OceanStor $Hostname" -Completed
     }

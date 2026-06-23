@@ -34,6 +34,8 @@
     Filename: Get-DMFiberChannelInitiator.ps1
 #>
 function Get-DMFiberChannelInitiator {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
     [CmdletBinding(DefaultParameterSetName = 'All')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
@@ -48,7 +50,7 @@ function Get-DMFiberChannelInitiator {
                 else {
                     $deviceManager
                 }
-                $hosts = @(Get-DMhosts -WebSession $session)
+                $hosts = @(Get-DMhost -WebSession $session)
                 $matchingItems = @($hosts | Where-Object Name -EQ $candidate)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -66,7 +68,7 @@ function Get-DMFiberChannelInitiator {
                 else {
                     $deviceManager
                 }
-                (Get-DMhosts -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMhost -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$HostName,
 
@@ -81,11 +83,11 @@ function Get-DMFiberChannelInitiator {
         $deviceManager
     }
     if ($HostName) {
-        $hostObject = @(Get-DMhosts -WebSession $session | Where-Object Name -EQ $HostName)[0]
-        return @(Get-DMHostInitiators -WebSession $session -InitiatorType FibreChannel -HostId $hostObject.Id)
+        $hostObject = @(Get-DMhost -WebSession $session | Where-Object Name -EQ $HostName)[0]
+        return @(Get-DMHostInitiator -WebSession $session -InitiatorType FibreChannel -HostId $hostObject.Id)
     }
     if ($FreeInitiators) {
-        return @(Get-DMHostInitiators -WebSession $session -InitiatorType FibreChannel -FreeInitiators)
+        return @(Get-DMHostInitiator -WebSession $session -InitiatorType FibreChannel -FreeInitiators)
     }
-    return @(Get-DMHostInitiators -WebSession $session -InitiatorType FibreChannel -All)
+    return @(Get-DMHostInitiator -WebSession $session -InitiatorType FibreChannel -All)
 }

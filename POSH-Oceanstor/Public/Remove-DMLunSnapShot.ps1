@@ -10,7 +10,7 @@
     Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
 
 .PARAMETER SnapShotName
-    Name of the LUN snapshot to remove. Valid values are checked against Get-DMLunSnapshots and support tab completion.
+    Name of the LUN snapshot to remove. Valid values are checked against Get-DMLunSnapshot and support tab completion.
 
 .INPUTS
     System.Management.Automation.PSCustomObject
@@ -33,6 +33,8 @@
     Filename: Remove-DMLunSnapShot.ps1
 #>
 function Remove-DMLunSnapShot {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
@@ -47,7 +49,7 @@ function Remove-DMLunSnapShot {
                     $session = $deviceManager
                 }
 
-                $snapshots = @(Get-DMLunSnapshots -WebSession $session)
+                $snapshots = @(Get-DMLunSnapshot -WebSession $session)
                 $matchingSnapshots = @($snapshots | Where-Object Name -EQ $_)
 
                 if ($matchingSnapshots.Count -eq 1) {
@@ -70,7 +72,7 @@ function Remove-DMLunSnapShot {
                     $session = $deviceManager
                 }
 
-                (Get-DMLunSnapshots -WebSession $session).Name |
+                (Get-DMLunSnapshot -WebSession $session).Name |
                     Sort-Object -Unique |
                     Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -84,7 +86,7 @@ function Remove-DMLunSnapShot {
         $session = $deviceManager
     }
 
-    $snapshot = @(Get-DMLunSnapshots -WebSession $session | Where-Object Name -EQ $SnapShotName)[0]
+    $snapshot = @(Get-DMLunSnapshot -WebSession $session | Where-Object Name -EQ $SnapShotName)[0]
 
     if ($PSCmdlet.ShouldProcess($SnapShotName, 'Remove LUN snapshot')) {
         $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource "snapshot/$($snapshot.Id)"

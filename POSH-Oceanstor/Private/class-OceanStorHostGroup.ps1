@@ -1,3 +1,4 @@
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingCmdletAliases', '')]
 class OceanStorHostGroup{
 	#Define Properties
 	hidden [pscustomobject]${Session}

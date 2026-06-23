@@ -73,7 +73,7 @@ class OceanStorLunGroup{
 
 	[array] GetLuns()
 	{
-		return @(Get-DMlunsbyLunGroup -WebSession $this.Session -LunGroup $this)
+		return @(Get-DMlunbyLunGroup -WebSession $this.Session -LunGroup $this)
 	}
 
 	[psobject] Rename([string]$NewName)

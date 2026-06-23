@@ -31,6 +31,8 @@
     Filename: Restore-DMSnapshotConsistencyGroup.ps1
 #>
 function Restore-DMSnapshotConsistencyGroup {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

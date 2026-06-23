@@ -1,14 +1,14 @@
 BeforeAll {
     function global:New-DMLunSnapshot {}
     function global:New-DMLunSnapshotCopy {}
-    function global:Get-DMLunSnapshots {}
+    function global:Get-DMLunSnapshot {}
     function global:Remove-DMLunSnapShot {}
     function global:Enable-DMLunSnapshot {}
     function global:Restart-DMLunSnapshot {}
     function global:Resize-DMLunSnapshot {}
     function global:Restore-DMLunSnapshot {}
     function global:New-DMFileSystemSnapshot {}
-    function global:Get-DMFileSystemSnapshots {}
+    function global:Get-DMFileSystemSnapshot {}
     function global:Remove-DMFileSystemSnapshot {}
     function global:Restore-DMFileSystemSnapshot {}
     function global:Set-DMLun {
@@ -37,7 +37,7 @@ BeforeAll {
         }
         [pscustomobject]@{ Code = 0 }
     }
-    function global:ConvertTo-DMCapacityBlocks {
+    function global:ConvertTo-DMCapacityBlock {
         param([object]$Capacity, [string]$UnitlessUnit)
         switch ([string]$Capacity) {
             '512MB' { return 1048576 }
@@ -104,19 +104,19 @@ BeforeAll {
 AfterAll {
     Remove-Item -LiteralPath 'Function:\global:New-DMLunSnapshot' -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath 'Function:\global:New-DMLunSnapshotCopy' -ErrorAction SilentlyContinue
-    Remove-Item -LiteralPath 'Function:\global:Get-DMLunSnapshots' -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:Get-DMLunSnapshot' -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath 'Function:\global:Remove-DMLunSnapShot' -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath 'Function:\global:Enable-DMLunSnapshot' -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath 'Function:\global:Restart-DMLunSnapshot' -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath 'Function:\global:Resize-DMLunSnapshot' -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath 'Function:\global:Restore-DMLunSnapshot' -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath 'Function:\global:New-DMFileSystemSnapshot' -ErrorAction SilentlyContinue
-    Remove-Item -LiteralPath 'Function:\global:Get-DMFileSystemSnapshots' -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:Get-DMFileSystemSnapshot' -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath 'Function:\global:Remove-DMFileSystemSnapshot' -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath 'Function:\global:Restore-DMFileSystemSnapshot' -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath 'Function:\global:Set-DMLun' -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath 'Function:\global:Set-DMFileSystem' -ErrorAction SilentlyContinue
-    Remove-Item -LiteralPath 'Function:\global:ConvertTo-DMCapacityBlocks' -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:ConvertTo-DMCapacityBlock' -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath 'Function:\global:Rename-DMLun' -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath 'Function:\global:Rename-DMFileSystem' -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath 'Function:\global:Rename-DMHost' -ErrorAction SilentlyContinue
@@ -173,7 +173,7 @@ Describe 'Storage and share model classes' {
             }
             [pscustomobject]@{ Id = 'fs-snap-01' }
         }
-        function global:Get-DMFileSystemSnapshots {
+        function global:Get-DMFileSystemSnapshot {
             param([pscustomobject]$WebSession, [string]$FileSystemName)
             $global:FileSystemSnapshotQuery = [pscustomobject]@{
                 WebSession = $WebSession; FileSystemName = $FileSystemName
@@ -388,7 +388,7 @@ Describe 'Storage and share model classes' {
     }
 
     It 'retrieves snapshots for a version 6 LUN object' {
-        function global:Get-DMLunSnapshots {
+        function global:Get-DMLunSnapshot {
             param(
                 [pscustomobject]$WebSession,
                 [string]$LunName
@@ -483,9 +483,6 @@ Describe 'Storage and share model classes' {
         $global:LunSnapshotAction.Action | Should -Be 'Activate'
         $global:LunSnapshotAction.WebSession | Should -Be $script:session
         $global:LunSnapshotAction.SnapShotName | Should -Be 'before-patch'
-
-        $snapshot.Activacate().Code | Should -Be 0
-        $global:LunSnapshotAction.Action | Should -Be 'Activate'
     }
 
     It 'reactivates a LUN snapshot object' {

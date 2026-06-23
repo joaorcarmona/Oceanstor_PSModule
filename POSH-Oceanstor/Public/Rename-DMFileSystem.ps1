@@ -2,6 +2,20 @@ function Rename-DMFileSystem {
     <#
     .SYNOPSIS
         Renames an OceanStor file system through Set-DMFileSystem.
+
+    .DESCRIPTION
+        Renames an OceanStor file system by resolving the current name and issuing a PUT with the new name.
+        Validates that the new name does not conflict with an existing object.
+
+    .PARAMETER WebSession
+        Optional session returned by Connect-deviceManager. The global deviceManager session is used by default.
+
+    .PARAMETER FileSystemName
+        Current name of the file system to rename.
+
+    .PARAMETER NewName
+        New name to assign to the file system.
+
     .INPUTS
         System.Management.Automation.PSCustomObject
 

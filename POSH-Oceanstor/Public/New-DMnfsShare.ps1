@@ -22,7 +22,7 @@ function New-DMnfsShare {
         The type of the share. Default is "normal share"
 
     .PARAMETER dTree
-        The ID of the DTree to be used by the share
+        Optional DTree ID. When specified, the NFS share is scoped to the given DTree within the file system.
 
 	.INPUTS
 		System.Management.Automation.PSCustomObject
@@ -50,7 +50,9 @@ function New-DMnfsShare {
 
 	.LINK
 	#>
-    [Cmdletbinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession,
@@ -124,14 +126,16 @@ function New-DMnfsShare {
         $body.Add("DTREEID", $dTree)
     }
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "POST" -Resource "NFSSHARE" -BodyData $body
+    if ($PSCmdlet.ShouldProcess($sharepath, 'Create NFS share')) {
+        $response = Invoke-DeviceManager -WebSession $session -Method "POST" -Resource "NFSSHARE" -BodyData $body
 
-    if ($response.error.Code -eq 0) {
-        $result = [OceanStorNFSShare]::new($response.data, $session)
-    }
-    else {
-        $result = $response.error
-    }
+        if ($response.error.Code -eq 0) {
+            $result = [OceanStorNFSShare]::new($response.data, $session)
+        }
+        else {
+            $result = $response.error
+        }
 
-    return $result
+        return $result
+    }
 }

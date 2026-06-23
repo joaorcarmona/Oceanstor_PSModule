@@ -2,7 +2,7 @@ BeforeDiscovery {
     $script:newSnapshotModule = New-Module -Name NewDMLunSnapshotTestModule -ArgumentList $PSScriptRoot -ScriptBlock {
         param($testRoot)
 
-        function Get-DMluns {
+        function Get-DMlun {
             param([pscustomobject]$WebSession)
         }
 
@@ -32,7 +32,7 @@ InModuleScope NewDMLunSnapshotTestModule {
 Describe 'New-DMLunSnapshot' {
     BeforeEach {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
-        Mock Get-DMluns {
+        Mock Get-DMlun {
             @([pscustomobject]@{ Id = 'lun-01'; Name = 'data-lun' })
         }
         Mock Invoke-DeviceManager {
@@ -84,7 +84,7 @@ Describe 'New-DMLunSnapshot' {
     }
 
     It 'rejects a source LUN name that is not unique' {
-        Mock Get-DMluns {
+        Mock Get-DMlun {
             @(
                 [pscustomobject]@{ Id = 'lun-01'; Name = 'data-lun' }
                 [pscustomobject]@{ Id = 'lun-02'; Name = 'data-lun' }

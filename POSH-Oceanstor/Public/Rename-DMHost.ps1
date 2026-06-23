@@ -2,6 +2,23 @@ function Rename-DMHost {
     <#
     .SYNOPSIS
         Renames an OceanStor host through Set-DMHost.
+
+    .DESCRIPTION
+        Renames an OceanStor host by resolving the current name and issuing a PUT with the new name.
+        Validates that the new name does not conflict with an existing object.
+
+    .PARAMETER WebSession
+        Optional session returned by Connect-deviceManager. The global deviceManager session is used by default.
+
+    .PARAMETER HostName
+        Current name of the host to rename.
+
+    .PARAMETER NewName
+        New name to assign to the host.
+
+    .PARAMETER VstoreId
+        Optional vStore ID used to scope the operation.
+
     .INPUTS
         System.Management.Automation.PSCustomObject
 

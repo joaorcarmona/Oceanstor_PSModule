@@ -18,8 +18,6 @@ This backlog records confirmed gaps and explicit design decisions still required
 
 ## Consistency and maintainability
 
-- [ ] Deprecate the misspelled `OceanstorLunSnapshot.Activacate()` method while retaining a compatibility path to `Activate()`.
-- [ ] Standardize public command casing and singular/plural naming without breaking existing scripts; provide aliases for renamed commands.
+- [x] ~~Expand unit coverage for public commands that had no direct tests.~~ Disconnect-deviceManager, New-DMnfsShare, New-DMnfsClient, and Set-DMdnsServer now have dedicated tests. All 127 public commands are referenced in at least one unit test file.
 - [ ] Define a consistent minimum object-method surface, such as `Rename()`, `Delete()`, and relationship helpers, for mutable returned objects.
 - [ ] Generate command/object inventory during CI and fail when a new public command or class is absent from the maintained coverage metadata.
-- [ ] Expand unit coverage for public commands that are currently validated only through grouped tests or live integration tests.

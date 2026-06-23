@@ -54,14 +54,16 @@
     Filename: New-DMFiberChannelInitiator.ps1
 #>
 function New-DMFiberChannelInitiator {
-    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
 
         [Parameter(Mandatory = $true, Position = 1)]
         [ValidateScript({
-                if (Validate-WWNAddress -WWN $_) {
+                if (Test-WWNAddress -WWN $_) {
                     return $true
                 }
                 throw 'WWN must contain 16 hexadecimal characters and cannot be all zeros or all Fs.'
@@ -79,7 +81,7 @@ function New-DMFiberChannelInitiator {
                 else {
                     $deviceManager
                 }
-                $hosts = @(Get-DMhosts -WebSession $session)
+                $hosts = @(Get-DMhost -WebSession $session)
                 $matchingItems = @($hosts | Where-Object Name -EQ $candidate)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -97,7 +99,7 @@ function New-DMFiberChannelInitiator {
                 else {
                     $deviceManager
                 }
-                (Get-DMhosts -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                (Get-DMhost -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$HostName,
 
@@ -130,7 +132,7 @@ function New-DMFiberChannelInitiator {
         $body.NAME = $Name
     }
     if ($HostName) {
-        $hostObject = @(Get-DMhosts -WebSession $session | Where-Object Name -EQ $HostName)[0]
+        $hostObject = @(Get-DMhost -WebSession $session | Where-Object Name -EQ $HostName)[0]
         $body.PARENTTYPE = 21
         $body.PARENTID = $hostObject.Id
     }
@@ -145,9 +147,11 @@ function New-DMFiberChannelInitiator {
         $body.vstoreId = $VstoreId
     }
 
-    $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'fc_initiator' -BodyData $body
-    if ($response.error.Code -eq 0) {
-        return [OceanstorHostinitiatorFC]::new($response.data, $session)
+    if ($PSCmdlet.ShouldProcess($WWN, 'Create Fibre Channel initiator')) {
+        $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'fc_initiator' -BodyData $body
+        if ($response.error.Code -eq 0) {
+            return [OceanstorHostinitiatorFC]::new($response.data, $session)
+        }
+        return $response.error
     }
-    return $response.error
 }
