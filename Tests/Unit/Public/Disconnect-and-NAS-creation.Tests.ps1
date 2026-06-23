@@ -18,7 +18,7 @@ BeforeDiscovery {
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Test-IPv4Address.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
-        . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorNFSShare.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorNFSShare.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorNFSclient.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Disconnect-deviceManager.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\New-DMnfsShare.ps1"
