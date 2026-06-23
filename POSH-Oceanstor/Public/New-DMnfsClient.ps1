@@ -18,15 +18,6 @@ function New-DMnfsClient {
     .PARAMETER Permission
         The permission of the client on the share. Default is "read-only"
 
-    .PARAMETER accessKrb5
-        The permission of the client on the share. Default is "no-permission"
-
-    .PARAMETER accessKrb5i
-        The permission of the client on the share. Default is "no-permission"
-
-    .PARAMETER accessKrb5p
-        The permission of the client on the share. Default is "no-permission"
-
     .PARAMETER permissionContraint
         The permission constraint of the client on the share. Default is "no_all_squash"
 
@@ -102,18 +93,6 @@ function New-DMnfsClient {
         [ValidateSet("read-only", "read-write", "no-permission")]
         [string]$Permission = "read-only",
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
-        [ValidateSet("read-only", "read-write", "no-permission")]
-        [string]$accessKrb5 = "no-permission",
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
-        [ValidateSet("read-only", "read-write", "no-permission")]
-        [string]$accessKrb5i = "no-permission",
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
-        [ValidateSet("read-only", "read-write", "no-permission")]
-        [string]$accessKrb5p = "no-permission",
-        #[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
-        #    [ValidateSet("synchronous","asynchronous")]
-        #    [string]$writeMode = "no-permission",
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [ValidateSet("all_squash", "no_all_squash")]
         [string]$permissionContraint = "no_all_squash",
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
@@ -144,45 +123,6 @@ function New-DMnfsClient {
             $accessval = 5
         }
     }
-    switch ($accessKrb5) {
-        "read-only" {
-            $Krb5Access = 0
-        }
-        "read-write" {
-            $Krb5Access = 1
-        }
-        "no-permission" {
-            $Krb5Access = 5
-        }
-    }
-    switch ($accessKrb5i) {
-        "read-only" {
-            $Krb5iAccess = 0
-        }
-        "read-write" {
-            $Krb5iAccess = 1
-        }
-        "no-permission" {
-            $Krb5iAccess = 5
-        }
-    }
-    switch ($accessKrb5p) {
-        "read-only" {
-            $Krb5pAccess = 0
-        }
-        "read-write" {
-            $Krb5pAccess = 1
-        }
-        "no-permission" {
-            $Krb5pAccess = 5
-        }
-    }
-
-    #switch ($writeMode){
-    #    "synchronous" {$writeMode = 0}
-    #    "asynchronous" {$writeMode = 1}
-    #}
-
     switch ($permissionContraint) {
         "all_squash" {
             $allsquash = 0
@@ -214,9 +154,6 @@ function New-DMnfsClient {
         NAME       = $clientName;
         PARENTID   = $shareId;
         ACCESSVAL  = $accessval;
-        #ACCESSKRB5 = $Krb5Access;
-        #ACCESSKRB5I = $Krb5iAccess;
-        #ACCESSKRB5P = $Krb5pAccess;
         ALLSQUASH  = $allsquash;
         ROOTSQUASH = $rootSquash;
         SECURE     = $secure;
