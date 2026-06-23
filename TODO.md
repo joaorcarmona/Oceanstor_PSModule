@@ -16,6 +16,10 @@ This backlog records confirmed gaps and explicit design decisions still required
 - [ ] Decide whether initiator objects need action methods or should remain command-only objects.
 - [ ] Decide whether network objects (LIFs, VLANs, physical ports, bonds, and vStores) should remain read-only or gain supported mutation commands.
 
+## CI and cross-platform
+
+- [ ] Add Ubuntu and macOS to the CI test matrix. PowerShell class constructors resolve functions from the session scope on Linux rather than the module scope, causing Pester mocks to be bypassed inside `OceanstorSession::new()`. The `Connect-deviceManager.Tests.ps1` test needs refactoring so the class constructor works reliably with mocks on all platforms.
+
 ## Consistency and maintainability
 
 - [x] ~~Expand unit coverage for public commands that had no direct tests.~~ Disconnect-deviceManager, New-DMnfsShare, New-DMnfsClient, and Set-DMdnsServer now have dedicated tests. All 127 public commands are referenced in at least one unit test file.
