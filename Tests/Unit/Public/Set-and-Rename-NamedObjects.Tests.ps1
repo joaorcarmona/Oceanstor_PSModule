@@ -45,7 +45,7 @@ Describe 'Named object Set commands' {
         $runnerPath = Join-Path $PSScriptRoot '..\..\Integration\Invoke-GetterIntegrityValidation.ps1'
         $runnerSource = Get-Content -LiteralPath $runnerPath -Raw
         $runnerSource | Should -Match "'New-DMNamedObjectUpdate\.ps1'"
-        $runnerSource | Should -Match "'ConvertTo-DMCapacityBlocks\.ps1'"
+        $runnerSource | Should -Match "'ConvertTo-DMCapacityBlock\.ps1'"
     }
 
     BeforeEach {

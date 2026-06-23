@@ -62,7 +62,7 @@ function Get-DMhost {
         [void]$hosts.Add($hostobj)
     }
 
-    $hosts = @(Set-DMHostInitiators -InputObject $hosts -WebSession $session)
+    $hosts = @(Set-DMHostInitiator -InputObject $hosts -WebSession $session)
 
     $hosts | ForEach-Object {
         $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force

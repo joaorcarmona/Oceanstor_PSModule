@@ -1,4 +1,4 @@
-function Set-DMHostInitiators {
+function Set-DMHostInitiator {
     [CmdletBinding()]
     Param(
         [Parameter(Mandatory=$true)]

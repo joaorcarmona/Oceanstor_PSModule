@@ -19,7 +19,7 @@ BeforeDiscovery {
             )
         }
 
-        . "$testRoot\..\..\..\POSH-Oceanstor\Private\ConvertTo-DMCapacityBlocks.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\ConvertTo-DMCapacityBlock.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Set-DMLun.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Set-DMFileSystem.ps1"
 

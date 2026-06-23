@@ -37,7 +37,7 @@ BeforeAll {
         }
         [pscustomobject]@{ Code = 0 }
     }
-    function global:ConvertTo-DMCapacityBlocks {
+    function global:ConvertTo-DMCapacityBlock {
         param([object]$Capacity, [string]$UnitlessUnit)
         switch ([string]$Capacity) {
             '512MB' { return 1048576 }
@@ -116,7 +116,7 @@ AfterAll {
     Remove-Item -LiteralPath 'Function:\global:Restore-DMFileSystemSnapshot' -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath 'Function:\global:Set-DMLun' -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath 'Function:\global:Set-DMFileSystem' -ErrorAction SilentlyContinue
-    Remove-Item -LiteralPath 'Function:\global:ConvertTo-DMCapacityBlocks' -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:ConvertTo-DMCapacityBlock' -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath 'Function:\global:Rename-DMLun' -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath 'Function:\global:Rename-DMFileSystem' -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath 'Function:\global:Rename-DMHost' -ErrorAction SilentlyContinue
