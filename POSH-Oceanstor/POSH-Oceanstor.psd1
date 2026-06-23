@@ -216,8 +216,39 @@ CmdletsToExport = @()
 # Variables to export from this module
 VariablesToExport = @()
 
-# Aliases to export from this module
-AliasesToExport = @()
+# Aliases to export from this module (backward-compatibility names for renamed commands)
+AliasesToExport = @(
+    'Get-DMAlarms'
+    'Get-DMbbus'
+    'Get-DMcofferDisks'
+    'Get-DMControllers'
+    'Get-DMdisks'
+    'Get-DMdisksbyPoolId'
+    'Get-DMdisksbyPoolName'
+    'Get-DMEnclosures'
+    'Get-DMFileSystemSnapshots'
+    'Get-DMfreeDisks'
+    'Get-DMhostGroups'
+    'Get-DMHostInitiators'
+    'Get-DMHostLinks'
+    'Get-DMhosts'
+    'Get-DMhostsbyHostGroupId'
+    'Get-DMhostsbyHostGroupName'
+    'Get-DMhostsbyId'
+    'Get-DMhostsbyName'
+    'Get-DMInterfaceModules'
+    'Get-DMLifs'
+    'Get-DMlunGroups'
+    'Get-DMluns'
+    'Get-DMlunsbyLunGroup'
+    'Get-DMlunsByWWN'
+    'Get-DMLunSnapshots'
+    'Get-DMShares'
+    'Get-DMstoragePools'
+    'Get-DMvLans'
+    'Get-DMWorkLoadTypes'
+    'Get-DMWorkLoadTypesbyFilter'
+)
 
 # DSC resources to export from this module
 # DscResourcesToExport = @()
