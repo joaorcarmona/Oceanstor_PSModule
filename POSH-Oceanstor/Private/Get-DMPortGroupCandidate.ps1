@@ -1,4 +1,4 @@
-function Get-DMPortGroupCandidates {
+function Get-DMPortGroupCandidate {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]

@@ -1,4 +1,4 @@
-function ConvertTo-DMCapacityBlocks {
+function ConvertTo-DMCapacityBlock {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]

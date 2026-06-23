@@ -86,7 +86,7 @@ function Add-DMPortToPortGroup {
                 else {
                     $deviceManager
                 }
-                $ports = @(Get-DMPortGroupCandidates -WebSession $session -PortType $PortType)
+                $ports = @(Get-DMPortGroupCandidate -WebSession $session -PortType $PortType)
                 $matchingItems = @($ports | Where-Object Name -EQ $candidate)
                 if ($matchingItems.Count -eq 1) {
                     return $true
@@ -107,7 +107,7 @@ function Add-DMPortToPortGroup {
                 else {
                     $deviceManager
                 }
-                (Get-DMPortGroupCandidates -WebSession $session -PortType $fakeBoundParameters.PortType).Name |
+                (Get-DMPortGroupCandidate -WebSession $session -PortType $fakeBoundParameters.PortType).Name |
                     Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$PortName,
@@ -122,7 +122,7 @@ function Add-DMPortToPortGroup {
         $deviceManager
     }
     $group = @(Get-DMPortGroup -WebSession $session | Where-Object Name -EQ $PortGroupName)[0]
-    $port = @(Get-DMPortGroupCandidates -WebSession $session -PortType $PortType | Where-Object Name -EQ $PortName)[0]
+    $port = @(Get-DMPortGroupCandidate -WebSession $session -PortType $PortType | Where-Object Name -EQ $PortName)[0]
     $body = @{
         ID               = $group.Id
         ASSOCIATEOBJTYPE = $port.ObjectType

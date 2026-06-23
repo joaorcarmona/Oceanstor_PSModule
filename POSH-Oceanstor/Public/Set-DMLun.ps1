@@ -108,7 +108,7 @@ function Set-DMLun {
 
     $newCapacityBlocks = $null
     if ($hasCapacityChange) {
-        $newCapacityBlocks = ConvertTo-DMCapacityBlocks -Capacity $Capacity -UnitlessUnit Blocks
+        $newCapacityBlocks = ConvertTo-DMCapacityBlock -Capacity $Capacity -UnitlessUnit Blocks
         $currentCapacityBlocks = if ($null -ne $lun.PSObject.Properties['RealCapacity']) {
             [long]$lun.RealCapacity
         }

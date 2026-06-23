@@ -100,7 +100,7 @@ function Set-DMFileSystem {
         $body.DESCRIPTION = $Description
     }
     if ($PSBoundParameters.ContainsKey('Capacity')) {
-        $newCapacityBlocks = ConvertTo-DMCapacityBlocks -Capacity $Capacity -UnitlessUnit GB
+        $newCapacityBlocks = ConvertTo-DMCapacityBlock -Capacity $Capacity -UnitlessUnit GB
         if ($null -ne $fileSystem.PSObject.Properties['RealCapacity'] -and
             $newCapacityBlocks -eq [long]$fileSystem.RealCapacity) {
             throw "Requested capacity is already the current file-system capacity ($newCapacityBlocks blocks)."
