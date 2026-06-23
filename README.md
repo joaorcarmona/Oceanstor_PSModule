@@ -1,4 +1,7 @@
 # Huawei Oceanstor_PSModule
+
+[![PowerShell CI](https://github.com/joaorcarmona/Oceanstor_PSModule/actions/workflows/powershell.yml/badge.svg)](https://github.com/joaorcarmona/Oceanstor_PSModule/actions/workflows/powershell.yml)
+
 Oceanstor PowerShell Module, is a module to operate with Huawei Oceanstor devices (v6) - Previous versions should work in limited way. Please report any bugs.
 
 Current module version: 0.9.3
