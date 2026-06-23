@@ -33,9 +33,10 @@ jobs:
         uses: microsoft/psscriptanalyzer-action@2044ae068e37d0161fa2127de04c19633882f061
         with:
           # Check https://github.com/microsoft/action-psscriptanalyzer for more info about the options.
-          # No includeRule — runs the full default rule set.
+          # Full default rule set minus excluded rules in the settings file.
           path: ./POSH-Oceanstor
           recurse: true
+          settings: ./PSScriptAnalyzerSettings.psd1
           output: results.sarif
       # Upload the SARIF file generated in the previous step
       - name: Upload SARIF results file
