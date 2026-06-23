@@ -70,14 +70,14 @@ function Set-DMFileSystem {
     }
 
     $fileSystems = @(Get-DMFileSystem -WebSession $session)
-    $matches = @($fileSystems | Where-Object Name -CEQ $FileSystemName)
-    if ($matches.Count -ne 1) {
-        if ($matches.Count -gt 1) {
+    $matchingItems = @($fileSystems | Where-Object Name -CEQ $FileSystemName)
+    if ($matchingItems.Count -ne 1) {
+        if ($matchingItems.Count -gt 1) {
             throw "FileSystemName '$FileSystemName' is ambiguous."
         }
         throw "Invalid FileSystemName '$FileSystemName'. Valid values are: $($fileSystems.Name -join ', ')"
     }
-    $fileSystem = $matches[0]
+    $fileSystem = $matchingItems[0]
 
     if ($PSBoundParameters.ContainsKey('NewName') -and $NewName -cne $FileSystemName -and $fileSystems.Name -contains $NewName) {
         throw "A file system named '$NewName' already exists."
