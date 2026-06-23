@@ -1,6 +1,10 @@
 # Huawei Oceanstor_PSModule
 
 [![PowerShell CI](https://github.com/joaorcarmona/Oceanstor_PSModule/actions/workflows/powershell.yml/badge.svg)](https://github.com/joaorcarmona/Oceanstor_PSModule/actions/workflows/powershell.yml)
+[![License: GPL v3](https://img.shields.io/github/license/joaorcarmona/Oceanstor_PSModule)](https://github.com/joaorcarmona/Oceanstor_PSModule/blob/master/LICENSE)
+[![Latest Release](https://img.shields.io/github/v/release/joaorcarmona/Oceanstor_PSModule?include_prereleases&sort=semver)](https://github.com/joaorcarmona/Oceanstor_PSModule/releases)
+[![PowerShell 7+](https://img.shields.io/badge/PowerShell-7%2B-5391FE?logo=powershell&logoColor=white)](https://github.com/PowerShell/PowerShell)
+[![Last Commit](https://img.shields.io/github/last-commit/joaorcarmona/Oceanstor_PSModule)](https://github.com/joaorcarmona/Oceanstor_PSModule/commits/master)
 
 Oceanstor PowerShell Module, is a module to operate with Huawei Oceanstor devices (v6) - Previous versions should work in limited way. Please report any bugs.
 
