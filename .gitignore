@@ -13,3 +13,4 @@ pipeline-report.json
 Reports/
 temp-doc-*
 .codegraph/
+.vscode/
