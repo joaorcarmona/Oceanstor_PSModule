@@ -37,6 +37,10 @@
         # Leave as 0 to automatically expand the generated snapshot by 2048
         # sectors, or set a larger explicit sector capacity for that test.
         ExpandedSnapshotCapacitySectors = 0
+
+        # Leave as 0 to automatically expand the test-owned LUN by 1024 MB
+        # over CapacityMB, or set a larger explicit target capacity in MB.
+        ExpandedCapacityMB = 0
     }
 
     LunGroup = @{
@@ -58,6 +62,11 @@
     Nas = @{
         Enabled = $true
         FileSystemCapacityGB = 1
+
+        # Leave as 0 to automatically expand the test-owned file system by
+        # 1 GB over FileSystemCapacityGB, or set a larger explicit target
+        # capacity in GB.
+        ExpandedFileSystemCapacityGB = 0
         EnableDTree = $true
         EnableFileSystemSnapshot = $true
         EnableNfs = $true

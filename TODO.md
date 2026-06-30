@@ -4,9 +4,9 @@ This backlog records confirmed gaps and explicit design decisions still required
 
 ## Correctness
 
-- [ ] Add integration checks for actual LUN and file-system capacity expansion. Current Set workflows validate description changes and renaming, but do not exercise their capacity parameters.
-- [ ] Verify Set operations by reading back the changed description/properties, not only the renamed identity.
-- [ ] Add direct tests for mutation ownership transfer after rename, including cleanup after a read-back or dependent-operation failure.
+- [x] ~~Add integration checks for actual LUN and file-system capacity expansion.~~ `Set-DMLun -Capacity` and `Set-DMFileSystem -Capacity` are now exercised in the mutation workflows (`Lun.ps1`, `Nas.ps1`), with read-back verification that `RealCapacity` matches the expanded value. A unit test also covers the case where capacity expansion is skipped after a failed property modification.
+- [x] ~~Verify Set operations by reading back the changed description/properties, not only the renamed identity.~~ `Set-DMHost`, `Set-DMHostGroup`, `Set-DMLunGroup`, `Set-DMPortGroup`, `Set-DMLun`, and `Set-DMFileSystem` each now re-fetch the object after modification and assert the description text actually persisted, not just that the object still exists.
+- [x] ~~Add direct tests for mutation ownership transfer after rename, including cleanup after a read-back or dependent-operation failure.~~ `Tests/Unit/Private/ValidationHelpers.Tests.ps1` directly tests `Update-TestOwnedResourceIdentity` and `Invoke-OwnedRemoval`, including an end-to-end scenario where a read-back failure occurs between a rename and cleanup, confirming cleanup still targets the renamed identity and ownership isn't lost when a removal fails.
 
 ## Command coverage decisions
 

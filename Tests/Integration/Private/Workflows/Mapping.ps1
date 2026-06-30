@@ -20,6 +20,13 @@ $script:MappingMutationWorkflow = {
                     Set-DMPortGroup -WebSession $session -PortGroupName $portGroupName `
                         -Description "Integrity validation updated $runId" -Confirm:$false
                 } | Out-Null
+                Add-MutationReadVerification -Name 'Set-DMPortGroup:ReadBack' -ExpectedType 'OceanstorPortGroup' -Action {
+                    $updated = @(Get-DMPortGroup -WebSession $session | Where-Object Name -EQ $portGroupName)
+                    if ($updated.Count -gt 0 -and $updated[0].Description -ne "Integrity validation updated $runId") {
+                        throw "Set-DMPortGroup description mismatch: expected 'Integrity validation updated $runId', got '$($updated[0].Description)'."
+                    }
+                    $updated
+                } | Out-Null
                 $renameResult = @(Invoke-MutationStep -Name 'Rename-DMPortGroup' -Action {
                     Assert-TestOwnedResource -Kind PortGroup -Identity $portGroupName
                     if (@(Get-DMPortGroup -WebSession $session | Where-Object Name -EQ $renamedPortGroupName).Count -gt 0) {
