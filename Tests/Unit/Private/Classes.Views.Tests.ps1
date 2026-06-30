@@ -33,10 +33,10 @@ AfterAll {
 }
 
 Describe 'Session and view classes' {
-    It 'creates a session and resolves the system version' {
-        Mock Get-DMSystem {
-            [pscustomobject]@{ version = 'V600R001' }
-        }
+    It 'creates a session without resolving the system version' {
+        # The constructor itself must not call Get-DMSystem: Connect-deviceManager
+        # resolves Version after construction instead, so this test stays
+        # mock-free and platform-independent. See class-OceanstorSession.ps1.
         $logon = [pscustomobject]@{ data = [pscustomobject]@{ deviceid = 'device-01'; iBaseToken = 'token-01' } }
         $headers = @{ iBaseToken = 'token-01' }
         $webRequestSession = [Microsoft.PowerShell.Commands.WebRequestSession]::new()
@@ -45,8 +45,7 @@ Describe 'Session and view classes' {
 
         $result.DeviceId | Should -Be 'device-01'
         $result.Hostname | Should -Be 'oceanstor.test'
-        $result.Version | Should -Be 'V600R001'
-        Should -Invoke Get-DMSystem -Times 1 -Exactly
+        $result.Version | Should -BeNullOrEmpty
     }
 
     It 'creates a host view with retrieved paths' {

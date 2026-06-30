@@ -46,7 +46,17 @@ jobs:
 
   pester-test:
     name: Pester Unit Tests
-    runs-on: windows-latest
+    # Cross-platform trial: Ubuntu's real CI run is confirmed green after the
+    # OceanstorSession constructor fix (Get-DMSystem no longer called from
+    # inside the class constructor, which previously bypassed Pester mocks on
+    # Linux due to session-scope vs module-scope function resolution).
+    # macOS shares PowerShell's Linux runtime, so it's added now on the same
+    # basis - there's no way to pre-verify it locally since Docker on Windows
+    # cannot run macOS containers.
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -63,7 +73,7 @@ jobs:
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
-          name: pester-test-results
+          name: pester-test-results-${{ matrix.os }}
           path: |
             TestResults/Pester.xml
             TestResults/Coverage.xml
