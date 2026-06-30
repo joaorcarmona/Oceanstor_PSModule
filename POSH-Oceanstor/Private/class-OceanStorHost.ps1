@@ -114,6 +114,11 @@ class OceanStorHost{
 		}
 		return $result
 	}
+
+	[psobject] Delete()
+	{
+		return Remove-DMHost -WebSession $this.Session -HostName $this.Name -Confirm:$false
+	}
 }
 
 

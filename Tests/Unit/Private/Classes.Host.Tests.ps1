@@ -1,5 +1,17 @@
 BeforeAll {
     function global:Get-DMHostLink {}
+    function global:Remove-DMHost {
+        [CmdletBinding(SupportsShouldProcess = $true)]
+        param([pscustomobject]$WebSession, [string]$HostName)
+        $global:HostRemovalInvocation = [pscustomobject]@{ Type = 'Host'; Name = $HostName; WebSession = $WebSession }
+        [pscustomobject]@{ Code = 0 }
+    }
+    function global:Remove-DMHostGroup {
+        [CmdletBinding(SupportsShouldProcess = $true)]
+        param([pscustomobject]$WebSession, [string]$HostGroupName)
+        $global:HostRemovalInvocation = [pscustomobject]@{ Type = 'HostGroup'; Name = $HostGroupName; WebSession = $WebSession }
+        [pscustomobject]@{ Code = 0 }
+    }
 
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorHost.ps1"
@@ -13,7 +25,10 @@ BeforeAll {
 
 AfterAll {
     Remove-Item function:global:Get-DMHostLink -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:Remove-DMHost' -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:Remove-DMHostGroup' -ErrorAction SilentlyContinue
     Remove-Variable -Name HostPathsCall -Scope Global -ErrorAction SilentlyContinue
+    Remove-Variable -Name HostRemovalInvocation -Scope Global -ErrorAction SilentlyContinue
 }
 
 Describe 'Host model classes' {
@@ -96,5 +111,29 @@ Describe 'Host model classes' {
         $result.Type | Should -Be 'ISCSI Initiator'
         $result.'Use CHAP' | Should -BeTrue
         $result.'vStore ID' | Should -Be 4294967295
+    }
+
+    It 'deletes host and host-group objects through their Remove-DM* commands' {
+        $cases = @(
+            @{
+                Type   = 'OceanStorHost'
+                Source = [pscustomobject]@{ ID = 'host-01'; NAME = 'server01'; TYPE = 21 }
+                ExpectedType = 'Host'
+            },
+            @{
+                Type   = 'OceanStorHostGroup'
+                Source = [pscustomobject]@{ ID = 1; NAME = 'cluster'; TYPE = 0; ISADD2MAPPINGVIEW = 'false' }
+                ExpectedType = 'HostGroup'
+            }
+        )
+
+        foreach ($case in $cases) {
+            $object = New-Object -TypeName $case.Type -ArgumentList @($case.Source, $script:session)
+
+            $object.Delete().Code | Should -Be 0
+            $global:HostRemovalInvocation.Type | Should -Be $case.ExpectedType
+            $global:HostRemovalInvocation.Name | Should -Be $case.Source.NAME
+            $global:HostRemovalInvocation.WebSession | Should -Be $script:session
+        }
     }
 }

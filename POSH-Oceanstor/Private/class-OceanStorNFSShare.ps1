@@ -63,6 +63,10 @@ class OceanStorNFSShare
         $this.{vStore Name} = $NFSShare.vstoreName
 
     }
+
+    [psobject] Delete() {
+        return Remove-DMNfsShare -WebSession $this.Session -SharePath $this.'Share Path' -Confirm:$false
+    }
 }
 
 

@@ -56,6 +56,11 @@ class OceanStorHostGroup{
 		}
 		return $result
 	}
+
+	[psobject] Delete()
+	{
+		return Remove-DMHostGroup -WebSession $this.Session -HostGroupName $this.Name -Confirm:$false
+	}
 }
 
 

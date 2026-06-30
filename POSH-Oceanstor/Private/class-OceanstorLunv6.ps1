@@ -381,5 +381,10 @@ class OceanstorLunv6{
 		}
 		return $result
 	}
+
+	[psobject] Delete()
+	{
+		return Remove-DMLun -WebSession $this.Session -LunName $this.Name -Confirm:$false
+	}
 }
 
