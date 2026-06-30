@@ -99,7 +99,7 @@ Describe 'Invoke-DeviceManager' {
         Should -Invoke Invoke-RestMethod -Times 0 -Exactly
     }
 
-    It 'falls back to Invoke-WebRequest and normalises case-conflicting JSON keys' {
+    It 'falls back to Invoke-WebRequest and normalises case-conflicting JSON keys (message path)' {
         Mock Invoke-RestMethod {
             throw [System.ArgumentException]::new(
                 "Cannot convert the JSON string because it contains keys with different casing. " +
@@ -118,6 +118,30 @@ Describe 'Invoke-DeviceManager' {
         $result.data[0].SNAPTYPE | Should -Be 2
         $result.data[0].ID       | Should -Be 'snap-01'
         $result.error.code       | Should -Be 0
+        Should -Invoke Invoke-WebRequest -Times 1 -Exactly
+    }
+
+    It 'falls back to Invoke-WebRequest when FullyQualifiedErrorId matches WebCmdletCannotConvertContentException' {
+        Mock Invoke-RestMethod {
+            $ex = [System.Exception]::new('The content could not be converted.')
+            $er = [System.Management.Automation.ErrorRecord]::new(
+                $ex,
+                'WebCmdletCannotConvertContentException,Microsoft.PowerShell.Commands.InvokeRestMethodCommand',
+                [System.Management.Automation.ErrorCategory]::InvalidArgument,
+                $null
+            )
+            throw $er
+        }
+        Mock Invoke-WebRequest {
+            [pscustomobject]@{
+                Content = '{"data":{"snapType":1,"SNAPTYPE":2,"ID":"snap-02"},"error":{"code":0}}'
+            }
+        }
+
+        $result = Invoke-DeviceManager -WebSession $script:session -Method GET -Resource 'fssnapshot/42'
+
+        $result.data.SNAPTYPE | Should -Be 2
+        $result.data.ID       | Should -Be 'snap-02'
         Should -Invoke Invoke-WebRequest -Times 1 -Exactly
     }
 

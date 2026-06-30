@@ -204,7 +204,15 @@ function Invoke-DeviceManager{
 		# (e.g. "snapType" and "SNAPTYPE"). Invoke-RestMethod cannot parse these; fall back
 		# to Invoke-WebRequest + ConvertFrom-Json -AsHashtable, which uses a case-sensitive
 		# hashtable, then normalize to a PSCustomObject preferring the uppercase key.
-		if ($_.Exception.Message -like '*keys with different casing*') {
+		# PS7 may surface the duplicate-key parse error in different ways depending on version.
+		# Check the FullyQualifiedErrorId (most stable), the exception message, and the full
+		# ErrorRecord string representation as a belt-and-suspenders guard.
+		$isDuplicateKeyParseError = (
+			$_.FullyQualifiedErrorId -like '*CannotConvertContent*' -or
+			$_.Exception.Message     -like '*keys with different casing*' -or
+			"$_"                     -like '*keys with different casing*'
+		)
+		if ($isDuplicateKeyParseError) {
 			try {
 				$rawResponse = Invoke-WebRequest @invokeParams
 				$result = ConvertFrom-DMCasedHashtable ($rawResponse.Content | ConvertFrom-Json -AsHashtable)
