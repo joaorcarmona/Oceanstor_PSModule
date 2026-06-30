@@ -21,6 +21,9 @@ class OceanstorSession{
 	#Define iBaseToken Property
 	hidden [string]$iBaseToken
 
+	#Define TLS validation compatibility switch
+	hidden [bool]$SkipCertificateCheck
+
 	#Define Software Version
 	[string]$Version
 

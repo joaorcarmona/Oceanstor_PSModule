@@ -50,6 +50,11 @@ AUTHENTICATION
 
     Avoid storing plain-text passwords in scripts.
 
+    TLS certificates are validated by default. For lab or test arrays that use
+    self-signed certificates, use SkipCertificateCheck explicitly:
+
+        $session = Connect-deviceManager -Hostname 10.0.0.1 -PassThru -Credential $credential -SkipCertificateCheck
+
 COMMAND AREAS
     Discovery and inventory:
 

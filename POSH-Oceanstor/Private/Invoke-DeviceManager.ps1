@@ -147,12 +147,23 @@ function Invoke-DeviceManager{
 
 	$startedAt = Get-Date
 	try {
+		# Preserve the certificate validation choice made when the session was created.
+		$invokeParams = @{
+			Method      = $Method
+			Uri         = $RestURI
+			Headers     = $session.Headers
+			WebSession  = $session.WebSession
+			ContentType = 'application/json'
+		}
+		if ($session.SkipCertificateCheck) {
+			$invokeParams.SkipCertificateCheck = $true
+		}
+
 		if ($BodyData){
 			$JsonBody = ConvertTo-Json $BodyData
-			$result = Invoke-RestMethod -Method $Method -uri $RestURI -Headers $session.Headers -WebSession $session.WebSession -ContentType "application/json" -SkipCertificateCheck -Body $JsonBody
-		} else {
-			$result = Invoke-RestMethod -Method $Method -uri $RestURI -Headers $session.Headers -WebSession $session.WebSession -ContentType "application/json" -SkipCertificateCheck
+			$invokeParams.Body = $JsonBody
 		}
+		$result = Invoke-RestMethod @invokeParams
 
 		Write-DMRequestTrace -StartedAt $startedAt -Method $Method -Resource $Resource -Uri $RestURI `
 			-BodyData $BodyData -ApiV2:$ApiV2 -Response $result

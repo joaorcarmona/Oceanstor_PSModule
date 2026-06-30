@@ -67,7 +67,7 @@ Describe 'Connect-deviceManager' {
         Should -Invoke Invoke-RestMethod -Times 1 -Exactly -ParameterFilter {
             $Method -eq 'Post' -and
             $Uri -eq 'https://oceanstor.test:8088/deviceManager/rest/xxxxx/sessions' -and
-            $SkipCertificateCheck -and
+            -not $SkipCertificateCheck -and
             ($Body | ConvertFrom-Json).username -eq 'secure-user' -and
             ($Body | ConvertFrom-Json).password -eq 'secure-pass'
         }
@@ -94,7 +94,20 @@ Describe 'Connect-deviceManager' {
         Should -Invoke Invoke-RestMethod -Times 1 -Exactly -ParameterFilter {
             ($Body | ConvertFrom-Json).username -eq 'api-user' -and
             ($Body | ConvertFrom-Json).password -eq 'api-pass' -and
-            ($Body | ConvertFrom-Json).scope -eq 0
+            ($Body | ConvertFrom-Json).scope -eq 0 -and
+            -not $SkipCertificateCheck
+        }
+    }
+
+    It 'records and uses SkipCertificateCheck only when explicitly requested' {
+        $securePassword = ConvertTo-SecureString -String 'api-pass' -AsPlainText -Force
+        $credential = [pscredential]::new('api-user', $securePassword)
+
+        $result = Connect-deviceManager -Hostname 'oceanstor.test' -PassThru -Credential $credential -SkipCertificateCheck
+
+        $result.SkipCertificateCheck | Should -BeTrue
+        Should -Invoke Invoke-RestMethod -Times 1 -Exactly -ParameterFilter {
+            $SkipCertificateCheck
         }
     }
 
@@ -125,6 +138,7 @@ Describe 'Connect-deviceManager' {
 
         $global:deviceManager.GetType().Name | Should -Be 'OceanstorSession'
         $global:deviceManager.DeviceId | Should -Be 'device-01'
+        $global:deviceManager.SkipCertificateCheck | Should -BeFalse
     }
 
     It 'closes the previous global session before replacing it' {

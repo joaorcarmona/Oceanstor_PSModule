@@ -5,10 +5,11 @@ BeforeAll {
 Describe 'Invoke-DeviceManager' {
     BeforeEach {
         $script:session = [pscustomobject]@{
-            Hostname   = 'oceanstor.test'
-            DeviceId   = 'device-01'
-            Headers    = @{ iBaseToken = 'Test-token' }
-            WebSession = [Microsoft.PowerShell.Commands.WebRequestSession]::new()
+            Hostname             = 'oceanstor.test'
+            DeviceId             = 'device-01'
+            Headers              = @{ iBaseToken = 'Test-token' }
+            WebSession           = [Microsoft.PowerShell.Commands.WebRequestSession]::new()
+            SkipCertificateCheck = $false
         }
 
         $script:successResult = [pscustomobject]@{
@@ -37,8 +38,18 @@ Describe 'Invoke-DeviceManager' {
             $Headers.iBaseToken -eq 'Test-token' -and
             $WebSession -eq $script:session.WebSession -and
             $ContentType -eq 'application/json' -and
-            $SkipCertificateCheck -and
+            -not $SkipCertificateCheck -and
             -not $Body
+        }
+    }
+
+    It 'passes SkipCertificateCheck only when the session opts in' {
+        $script:session.SkipCertificateCheck = $true
+
+        $null = Invoke-DeviceManager -WebSession $script:session -Method GET -Resource 'lun'
+
+        Should -Invoke Invoke-RestMethod -Times 1 -Exactly -ParameterFilter {
+            $SkipCertificateCheck
         }
     }
 
