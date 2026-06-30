@@ -18,7 +18,7 @@ This backlog records confirmed gaps and explicit design decisions still required
 
 ## CI and cross-platform
 
-- [ ] Add Ubuntu and macOS to the CI test matrix. PowerShell class constructors resolve functions from the session scope on Linux rather than the module scope, causing Pester mocks to be bypassed inside `OceanstorSession::new()`. The `Connect-deviceManager.Tests.ps1` test needs refactoring so the class constructor works reliably with mocks on all platforms.
+- [x] ~~Add Ubuntu and macOS to the CI test matrix.~~ Fixed by removing the `Get-DMSystem` call from inside the `OceanstorSession` constructor instead of working around it in test scaffolding. PowerShell class constructors resolve function calls from the session scope rather than the module scope on Linux/macOS, which bypassed the Pester mock inside `OceanstorSession::new()`; `Connect-deviceManager` now resolves `Version` itself after construction, where mocks apply normally. `windows-latest`, `ubuntu-latest`, and `macos-latest` all pass in the Pester matrix.
 
 ## Consistency and maintainability
 
