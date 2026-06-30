@@ -104,4 +104,21 @@ Describe 'Invoke-DMPagedRequest' {
         $result.Count | Should -Be 0
         Should -Invoke Invoke-DeviceManager -Times 1 -Exactly
     }
+
+    It 'throws a descriptive error when the API reports a failure' {
+        Mock Invoke-DeviceManager {
+            [pscustomobject]@{ error = [pscustomobject]@{ Code = 1077939726; description = 'session expired' } }
+        }
+
+        { Invoke-DMPagedRequest -WebSession $script:session -Resource 'lun' } |
+            Should -Throw '*1077939726*session expired*'
+    }
+
+    It 'does not throw when the response has no error property at all' {
+        Mock Invoke-DeviceManager {
+            [pscustomobject]@{ data = @([pscustomobject]@{ Id = '1' }) }
+        }
+
+        { Invoke-DMPagedRequest -WebSession $script:session -Resource 'lun' } | Should -Not -Throw
+    }
 }

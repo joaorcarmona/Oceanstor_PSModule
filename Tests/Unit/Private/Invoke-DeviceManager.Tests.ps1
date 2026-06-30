@@ -80,6 +80,14 @@ Describe 'Invoke-DeviceManager' {
         }
     }
 
+    It 'throws a clear error when no session is available' {
+        Remove-Variable -Name deviceManager -Scope Global -ErrorAction SilentlyContinue
+
+        { Invoke-DeviceManager -Method GET -Resource 'lun' } | Should -Throw '*Connect-deviceManager*'
+
+        Should -Invoke Invoke-RestMethod -Times 0 -Exactly
+    }
+
     It 'returns REST error responses so callers can report failures and perform cleanup' {
         $errorResult = [pscustomobject]@{
             error = [pscustomobject]@{ code = 1077948996; description = 'request rejected' }

@@ -63,6 +63,14 @@ Describe 'Public getter functions' {
             $result[1].initiators | Should -BeNullOrEmpty
         }
 
+        It 'throws a descriptive error when the API reports a failure retrieving hosts' {
+            Mock Invoke-DeviceManager {
+                [pscustomobject]@{ error = [pscustomobject]@{ Code = 1077939726; description = 'session expired' } }
+            }
+
+            { Get-DMhost -WebSession $script:session } | Should -Throw '*1077939726*session expired*'
+        }
+
         It 'gets hosts by id through the filtered endpoint' {
             Mock Invoke-DeviceManager { [pscustomobject]@{ data = @($script:hostRecords[0]) } }
 

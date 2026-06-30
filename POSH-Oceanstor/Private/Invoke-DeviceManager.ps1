@@ -135,6 +135,10 @@ function Invoke-DeviceManager{
         $session = $deviceManager
     }
 
+    if ($null -eq $session) {
+        throw 'No OceanStor session available. Call Connect-deviceManager first, or pass a session via -WebSession.'
+    }
+
 	if ($ApiV2) {
 		$RestURI = "https://$($session.hostname):8088/api/v2/$resource"
 	} else {

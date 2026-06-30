@@ -4,7 +4,9 @@ function Connect-deviceManager {
 		Connects to a Huawei OceanStor array by REST.
 
 	.DESCRIPTION
-		Starts a REST session to a Huawei OceanStor DeviceManager endpoint.
+		Starts a REST session to a Huawei OceanStor DeviceManager endpoint. When replacing the
+		global $deviceManager session (PassThru not specified), any existing global session is
+		closed first on a best-effort basis to avoid leaking a connection slot on the array.
 
 	.PARAMETER Hostname
 		Mandatory hostname or IP address of the Huawei OceanStor array.
@@ -107,6 +109,14 @@ function Connect-deviceManager {
         return $connection
     }
     else {
+        if ($global:deviceManager) {
+            try {
+                Disconnect-deviceManager -WebSession $global:deviceManager
+            }
+            catch {
+                Write-Warning "Failed to close the previous OceanStor session on '$($global:deviceManager.Hostname)': $($_.Exception.Message)"
+            }
+        }
         $global:deviceManager = $connection
     }
 }

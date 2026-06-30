@@ -43,6 +43,10 @@ function Invoke-DMPagedRequest {
         $pagedResource = "${Resource}${separator}range=[$start,$end]"
 
         $response = Invoke-DeviceManager -WebSession $WebSession -Method 'GET' -Resource $pagedResource
+        $errorProperty = if ($null -ne $response) { $response.PSObject.Properties['error'] } else { $null }
+        if ($null -ne $errorProperty -and $errorProperty.Value.Code -ne 0) {
+            throw "OceanStor API error $($errorProperty.Value.Code) for resource '$pagedResource': $($errorProperty.Value.description)"
+        }
         $dataProperty = if ($null -ne $response) { $response.PSObject.Properties['data'] } else { $null }
         $page = if ($null -ne $dataProperty) { @($dataProperty.Value) } else { @() }
 

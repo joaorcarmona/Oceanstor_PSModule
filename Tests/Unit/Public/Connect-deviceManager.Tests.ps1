@@ -7,11 +7,12 @@ BeforeDiscovery {
         # (a regular function call, not from inside the class constructor), so
         # the Pester mock below intercepts it reliably on every platform.
         function Get-DMSystem { param($WebSession) }
+        function Disconnect-deviceManager { param([pscustomobject]$WebSession) }
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Connect-deviceManager.ps1"
 
-        Export-ModuleMember -Function Connect-deviceManager, Get-DMSystem
+        Export-ModuleMember -Function Connect-deviceManager, Get-DMSystem, Disconnect-deviceManager
     }
 
     Import-Module $script:testModule -Force
@@ -124,6 +125,45 @@ Describe 'Connect-deviceManager' {
 
         $global:deviceManager.GetType().Name | Should -Be 'OceanstorSession'
         $global:deviceManager.DeviceId | Should -Be 'device-01'
+    }
+
+    It 'closes the previous global session before replacing it' {
+        $script:previousSession = [pscustomobject]@{ Hostname = 'previous.test' }
+        $global:deviceManager = $script:previousSession
+        Mock Disconnect-deviceManager { }
+
+        $securePassword = ConvertTo-SecureString -String 'api-pass' -AsPlainText -Force
+        $credential = [pscredential]::new('api-user', $securePassword)
+
+        $null = Connect-deviceManager -Hostname 'oceanstor.test' -Credential $credential
+
+        Should -Invoke Disconnect-deviceManager -Times 1 -Exactly -ParameterFilter {
+            $WebSession -eq $script:previousSession
+        }
+        $global:deviceManager.Hostname | Should -Be 'oceanstor.test'
+    }
+
+    It 'still replaces the global session when closing the previous one fails' {
+        $global:deviceManager = [pscustomobject]@{ Hostname = 'previous.test' }
+        Mock Disconnect-deviceManager { throw 'previous session already expired' }
+
+        $securePassword = ConvertTo-SecureString -String 'api-pass' -AsPlainText -Force
+        $credential = [pscredential]::new('api-user', $securePassword)
+
+        { Connect-deviceManager -Hostname 'oceanstor.test' -Credential $credential } | Should -Not -Throw
+
+        $global:deviceManager.Hostname | Should -Be 'oceanstor.test'
+    }
+
+    It 'does not attempt to close a session when none exists yet' {
+        Mock Disconnect-deviceManager { }
+
+        $securePassword = ConvertTo-SecureString -String 'api-pass' -AsPlainText -Force
+        $credential = [pscredential]::new('api-user', $securePassword)
+
+        $null = Connect-deviceManager -Hostname 'oceanstor.test' -Credential $credential
+
+        Should -Invoke Disconnect-deviceManager -Times 0 -Exactly
     }
 }
 }
