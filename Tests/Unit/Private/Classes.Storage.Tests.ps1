@@ -363,6 +363,49 @@ Describe 'Storage and share model classes' {
         $lun.Name | Should -Be 'modern-prod'
     }
 
+    It 'updates Name on a version 6 LUN object when Rename-DMLun returns a List (production shape)' {
+        function global:Rename-DMLun {
+            [CmdletBinding(SupportsShouldProcess = $true)]
+            param([pscustomobject]$WebSession, [string]$LunName, [string]$NewName)
+            # Matches the real return type: Set-DMLun returns List[object]
+            $list = [System.Collections.Generic.List[object]]::new()
+            $list.Add([pscustomobject]@{ Code = 0 })
+            return $list
+        }
+        $source = [pscustomobject]@{ ID = 'lun-v6'; NAME = 'modern'; TYPE = 11; SECTORSIZE = 512; CAPACITY = 2097152; ALLOCCAPACITY = 1048576; HEALTHSTATUS = 1; RUNNINGSTATUS = 27; ALLOCTYPE = 1 }
+        $lun = New-Object -TypeName OceanstorLunv6 -ArgumentList @($source, $script:session)
+
+        $lun.Rename('modern-prod') | Out-Null
+
+        $lun.Name | Should -Be 'modern-prod'
+    }
+
+    It 'maps workload type name from a version 6 LUN that has a workload type assigned' {
+        $source = [pscustomobject]@{
+            ID = 'lun-v6'; NAME = 'db'; TYPE = 11; SECTORSIZE = 512; CAPACITY = 2097152; ALLOCCAPACITY = 1048576
+            HEALTHSTATUS = 1; RUNNINGSTATUS = 27; ALLOCTYPE = 1
+            WORKLOADTYPEID = '5'; WORKLOADTYPENAME = 'Oracle'
+        }
+
+        $result = New-Object -TypeName OceanstorLunv6 -ArgumentList @($source, $script:session)
+
+        $result.'Workload Type Id' | Should -Be '5'
+        $result.'Workload Type Name' | Should -Be 'Oracle'
+    }
+
+    It 'leaves workload type name null on a version 6 LUN without a workload type' {
+        $source = [pscustomobject]@{
+            ID = 'lun-v6'; NAME = 'db'; TYPE = 11; SECTORSIZE = 512; CAPACITY = 2097152; ALLOCCAPACITY = 1048576
+            HEALTHSTATUS = 1; RUNNINGSTATUS = 27; ALLOCTYPE = 1
+            WORKLOADTYPEID = $null; WORKLOADTYPENAME = $null
+        }
+
+        $result = New-Object -TypeName OceanstorLunv6 -ArgumentList @($source, $script:session)
+
+        $result.'Workload Type Id' | Should -BeNullOrEmpty
+        $result.'Workload Type Name' | Should -BeNullOrEmpty
+    }
+
     It 'exposes unsupported modification methods on a version 3 LUN object' {
         $source = [pscustomobject]@{ ID = 'lun-v3'; NAME = 'legacy'; TYPE = 11; SECTORSIZE = 512; CAPACITY = 2097152; ALLOCCAPACITY = 1048576; HEALTHSTATUS = 1; RUNNINGSTATUS = 27; ALLOCTYPE = 1 }
         $lun = New-Object -TypeName OceanstorLunv3 -ArgumentList @($source, $script:session)
