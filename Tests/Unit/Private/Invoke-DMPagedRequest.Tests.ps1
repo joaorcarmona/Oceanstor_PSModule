@@ -114,6 +114,34 @@ Describe 'Invoke-DMPagedRequest' {
             Should -Throw '*1077939726*session expired*'
     }
 
+    It 'falls back to an unpaged request when the array rejects the range parameter' {
+        $global:PagedCalls = [System.Collections.Generic.List[string]]::new()
+        Mock Invoke-DeviceManager {
+            $global:PagedCalls.Add($Resource)
+            if ($Resource -like '*range=*') {
+                [pscustomobject]@{ error = [pscustomobject]@{ Code = 50331651; description = 'The entered parameter is incorrect.' } }
+            }
+            else {
+                [pscustomobject]@{ data = @([pscustomobject]@{ Id = '1' }) }
+            }
+        }
+
+        $result = Invoke-DMPagedRequest -WebSession $script:session -Resource 'lun'
+
+        $result.Count | Should -Be 1
+        $global:PagedCalls[0] | Should -Be 'lun?range=[0,99]'
+        $global:PagedCalls[1] | Should -Be 'lun'
+    }
+
+    It 'throws the unpaged error when the range fallback also fails' {
+        Mock Invoke-DeviceManager {
+            [pscustomobject]@{ error = [pscustomobject]@{ Code = 50331651; description = 'The entered parameter is incorrect.' } }
+        }
+
+        { Invoke-DMPagedRequest -WebSession $script:session -Resource 'lun' } |
+            Should -Throw '*50331651*'
+    }
+
     It 'does not throw when the response has no error property at all' {
         Mock Invoke-DeviceManager {
             [pscustomobject]@{ data = @([pscustomobject]@{ Id = '1' }) }
