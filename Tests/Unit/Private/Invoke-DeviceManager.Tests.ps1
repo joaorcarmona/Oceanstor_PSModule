@@ -99,6 +99,28 @@ Describe 'Invoke-DeviceManager' {
         Should -Invoke Invoke-RestMethod -Times 0 -Exactly
     }
 
+    It 'falls back to Invoke-WebRequest and normalises case-conflicting JSON keys' {
+        Mock Invoke-RestMethod {
+            throw [System.ArgumentException]::new(
+                "Cannot convert the JSON string because it contains keys with different casing. " +
+                "Please use the -AsHashTable switch instead. The key that was attempted to be " +
+                "added to the existing key 'snapType' was 'SNAPTYPE'."
+            )
+        }
+        Mock Invoke-WebRequest {
+            [pscustomobject]@{
+                Content = '{"data":[{"snapType":1,"SNAPTYPE":2,"ID":"snap-01"}],"error":{"code":0}}'
+            }
+        }
+
+        $result = Invoke-DeviceManager -WebSession $script:session -Method GET -Resource 'fssnapshot'
+
+        $result.data[0].SNAPTYPE | Should -Be 2
+        $result.data[0].ID       | Should -Be 'snap-01'
+        $result.error.code       | Should -Be 0
+        Should -Invoke Invoke-WebRequest -Times 1 -Exactly
+    }
+
     It 'returns REST error responses so callers can report failures and perform cleanup' {
         $errorResult = [pscustomobject]@{
             error = [pscustomobject]@{ code = 1077948996; description = 'request rejected' }

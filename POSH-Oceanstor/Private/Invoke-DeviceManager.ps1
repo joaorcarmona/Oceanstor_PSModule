@@ -1,3 +1,32 @@
+function ConvertFrom-DMCasedHashtable {
+    # Recursively converts a Hashtable (e.g. from ConvertFrom-Json -AsHashtable) to PSCustomObject,
+    # deduplicating case-conflicting keys by preferring the all-uppercase variant.
+    param([object]$InputObject)
+    if ($InputObject -is [System.Collections.IDictionary]) {
+        $seen   = @{}
+        $result = [ordered]@{}
+        foreach ($key in @($InputObject.Keys)) {
+            $lower = $key.ToLowerInvariant()
+            if ($seen.ContainsKey($lower)) {
+                if ($key -ceq $key.ToUpperInvariant()) {
+                    $existing = $seen[$lower]
+                    $result.Remove($existing)
+                    $result[$key] = ConvertFrom-DMCasedHashtable $InputObject[$key]
+                    $seen[$lower] = $key
+                }
+            } else {
+                $seen[$lower] = $key
+                $result[$key] = ConvertFrom-DMCasedHashtable $InputObject[$key]
+            }
+        }
+        return [pscustomobject]$result
+    }
+    if ($InputObject -is [System.Collections.IEnumerable] -and $InputObject -isnot [string]) {
+        return @($InputObject | ForEach-Object { ConvertFrom-DMCasedHashtable $_ })
+    }
+    return $InputObject
+}
+
 function Copy-DMTraceValue {
 	param(
 		[Parameter(ValueFromPipeline = $true)]
@@ -170,8 +199,24 @@ function Invoke-DeviceManager{
 		return $result
 	}
 	catch {
+		$originalError = $_
+		# Some OceanStor endpoints return JSON bodies with the same key in different cases
+		# (e.g. "snapType" and "SNAPTYPE"). Invoke-RestMethod cannot parse these; fall back
+		# to Invoke-WebRequest + ConvertFrom-Json -AsHashtable, which uses a case-sensitive
+		# hashtable, then normalize to a PSCustomObject preferring the uppercase key.
+		if ($_.Exception.Message -like '*keys with different casing*') {
+			try {
+				$rawResponse = Invoke-WebRequest @invokeParams
+				$result = ConvertFrom-DMCasedHashtable ($rawResponse.Content | ConvertFrom-Json -AsHashtable)
+				Write-DMRequestTrace -StartedAt $startedAt -Method $Method -Resource $Resource -Uri $RestURI `
+					-BodyData $BodyData -ApiV2:$ApiV2 -Response $result
+				return $result
+			} catch {
+				Write-Verbose "Invoke-WebRequest fallback also failed for '$RestURI': $($_.Exception.Message)"
+			}
+		}
 		Write-DMRequestTrace -StartedAt $startedAt -Method $Method -Resource $Resource -Uri $RestURI `
-			-BodyData $BodyData -ApiV2:$ApiV2 -Exception $_.Exception.Message
-		throw
+			-BodyData $BodyData -ApiV2:$ApiV2 -Exception $originalError.Exception.Message
+		throw $originalError
 	}
 }
