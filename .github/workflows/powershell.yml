@@ -46,7 +46,15 @@ jobs:
 
   pester-test:
     name: Pester Unit Tests
-    runs-on: windows-latest
+    # Cross-platform trial: Ubuntu confirmed clean locally via a Linux
+    # PowerShell container (312/312 passed) before adding it here.
+    # macOS is deliberately not in the matrix yet - it's added in a
+    # follow-up commit once Ubuntu's real CI run is confirmed green,
+    # since Docker on Windows cannot run macOS containers to pre-verify it.
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -63,7 +71,7 @@ jobs:
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
-          name: pester-test-results
+          name: pester-test-results-${{ matrix.os }}
           path: |
             TestResults/Pester.xml
             TestResults/Coverage.xml
