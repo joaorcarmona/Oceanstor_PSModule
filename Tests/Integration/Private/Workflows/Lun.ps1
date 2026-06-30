@@ -24,6 +24,34 @@ $script:LunMutationWorkflow = {
                         Set-DMLun -WebSession $session -LunName $lunName `
                             -Description "Integrity validation updated $runId" -Confirm:$false
                     } | Out-Null
+                    Add-MutationReadVerification -Name 'Set-DMLun:ReadBack' -Action {
+                        $updated = @(Get-DMlun -WebSession $session | Where-Object Name -EQ $lunName)
+                        if ($updated.Count -gt 0 -and $updated[0].Description -ne "Integrity validation updated $runId") {
+                            throw "Set-DMLun description mismatch: expected 'Integrity validation updated $runId', got '$($updated[0].Description)'."
+                        }
+                        $updated
+                    } | Out-Null
+
+                    $expandedLunCapacityMB = if ($configuration.Lun.ExpandedCapacityMB -gt 0) {
+                        $configuration.Lun.ExpandedCapacityMB
+                    }
+                    else {
+                        $configuration.Lun.CapacityMB + 1024
+                    }
+                    Invoke-MutationStep -Name 'Set-DMLun:Expand' -Action {
+                        Assert-TestOwnedResource -Kind Lun -Identity $lunName
+                        Set-DMLun -WebSession $session -LunName $lunName `
+                            -Capacity "${expandedLunCapacityMB}MB" -Confirm:$false
+                    } | Out-Null
+                    $expectedLunCapacityBlocks = ConvertTo-DMCapacityBlock -Capacity "${expandedLunCapacityMB}MB" -UnitlessUnit Blocks
+                    Add-MutationReadVerification -Name 'Set-DMLun:Expand:ReadBack' -Action {
+                        $updated = @(Get-DMlun -WebSession $session | Where-Object Name -EQ $lunName)
+                        if ($updated.Count -gt 0 -and [long]$updated[0].RealCapacity -ne $expectedLunCapacityBlocks) {
+                            throw "Set-DMLun capacity mismatch: expected $expectedLunCapacityBlocks blocks, got $($updated[0].RealCapacity)."
+                        }
+                        $updated
+                    } | Out-Null
+
                     $renameResult = @(Invoke-MutationStep -Name 'Rename-DMLun' -Action {
                         Assert-TestOwnedResource -Kind Lun -Identity $lunName
                         if (@(Get-DMlun -WebSession $session | Where-Object Name -EQ $renamedLunName).Count -gt 0) {

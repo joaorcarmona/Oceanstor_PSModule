@@ -20,6 +20,13 @@ $script:HostMutationWorkflow = {
                     Set-DMHostGroup -WebSession $session -HostGroupName $hostGroupName `
                         -Description "Integrity validation updated $runId" -Confirm:$false
                 } | Out-Null
+                Add-MutationReadVerification -Name 'Set-DMHostGroup:ReadBack' -ExpectedType 'OceanStorHostGroup' -Action {
+                    $updated = @(Get-DMhostGroup -WebSession $session | Where-Object Name -EQ $hostGroupName)
+                    if ($updated.Count -gt 0 -and $updated[0].Description -ne "Integrity validation updated $runId") {
+                        throw "Set-DMHostGroup description mismatch: expected 'Integrity validation updated $runId', got '$($updated[0].Description)'."
+                    }
+                    $updated
+                } | Out-Null
                 $renameResult = @(Invoke-MutationStep -Name 'Rename-DMHostGroup' -Action {
                     Assert-TestOwnedResource -Kind HostGroup -Identity $hostGroupName
                     if (@(Get-DMhostGroup -WebSession $session | Where-Object Name -EQ $renamedHostGroupName).Count -gt 0) {
@@ -56,6 +63,13 @@ $script:HostMutationWorkflow = {
                     Assert-TestOwnedResource -Kind Host -Identity $testHostName
                     Set-DMHost -WebSession $session -HostName $testHostName `
                         -Description "Integrity validation updated $runId" -Confirm:$false
+                } | Out-Null
+                Add-MutationReadVerification -Name 'Set-DMHost:ReadBack' -ExpectedType 'OceanStorHost' -Action {
+                    $updated = @(Get-DMhost -WebSession $session | Where-Object Name -EQ $testHostName)
+                    if ($updated.Count -gt 0 -and $updated[0].Description -ne "Integrity validation updated $runId") {
+                        throw "Set-DMHost description mismatch: expected 'Integrity validation updated $runId', got '$($updated[0].Description)'."
+                    }
+                    $updated
                 } | Out-Null
                 $renameResult = @(Invoke-MutationStep -Name 'Rename-DMHost' -Action {
                     Assert-TestOwnedResource -Kind Host -Identity $testHostName

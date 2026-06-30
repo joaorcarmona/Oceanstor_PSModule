@@ -21,6 +21,13 @@ $script:LunGroupMutationWorkflow = {
                     Set-DMLunGroup -WebSession $session -LunGroupName $lunGroupName `
                         -Description "Integrity validation updated $runId" -Confirm:$false
                 } | Out-Null
+                Add-MutationReadVerification -Name 'Set-DMLunGroup:ReadBack' -ExpectedType 'OceanStorLunGroup' -Action {
+                    $updated = @(Get-DMlunGroup -WebSession $session | Where-Object Name -EQ $lunGroupName)
+                    if ($updated.Count -gt 0 -and $updated[0].Description -ne "Integrity validation updated $runId") {
+                        throw "Set-DMLunGroup description mismatch: expected 'Integrity validation updated $runId', got '$($updated[0].Description)'."
+                    }
+                    $updated
+                } | Out-Null
                 $renameResult = @(Invoke-MutationStep -Name 'Rename-DMLunGroup' -Action {
                     Assert-TestOwnedResource -Kind LunGroup -Identity $lunGroupName
                     if (@(Get-DMlunGroup -WebSession $session | Where-Object Name -EQ $renamedLunGroupName).Count -gt 0) {

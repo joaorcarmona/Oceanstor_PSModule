@@ -23,6 +23,34 @@ $script:NasMutationWorkflow = {
                     Set-DMFileSystem -WebSession $session -FileSystemName $fileSystemName `
                         -Description "Integrity validation updated $runId" -Confirm:$false
                 } | Out-Null
+                Add-MutationReadVerification -Name 'Set-DMFileSystem:ReadBack' -ExpectedType 'OceanstorFileSystem' -Action {
+                    $updated = @(Get-DMFileSystem -WebSession $session | Where-Object Name -EQ $fileSystemName)
+                    if ($updated.Count -gt 0 -and $updated[0].Description -ne "Integrity validation updated $runId") {
+                        throw "Set-DMFileSystem description mismatch: expected 'Integrity validation updated $runId', got '$($updated[0].Description)'."
+                    }
+                    $updated
+                } | Out-Null
+
+                $expandedFileSystemCapacityGB = if ($configuration.Nas.ExpandedFileSystemCapacityGB -gt 0) {
+                    $configuration.Nas.ExpandedFileSystemCapacityGB
+                }
+                else {
+                    $configuration.Nas.FileSystemCapacityGB + 1
+                }
+                Invoke-MutationStep -Name 'Set-DMFileSystem:Expand' -Action {
+                    Assert-TestOwnedResource -Kind FileSystem -Identity $fileSystemName
+                    Set-DMFileSystem -WebSession $session -FileSystemName $fileSystemName `
+                        -Capacity "${expandedFileSystemCapacityGB}GB" -Confirm:$false
+                } | Out-Null
+                $expectedFileSystemCapacityBlocks = ConvertTo-DMCapacityBlock -Capacity "${expandedFileSystemCapacityGB}GB" -UnitlessUnit GB
+                Add-MutationReadVerification -Name 'Set-DMFileSystem:Expand:ReadBack' -ExpectedType 'OceanstorFileSystem' -Action {
+                    $updated = @(Get-DMFileSystem -WebSession $session | Where-Object Name -EQ $fileSystemName)
+                    if ($updated.Count -gt 0 -and [long]$updated[0].RealCapacity -ne $expectedFileSystemCapacityBlocks) {
+                        throw "Set-DMFileSystem capacity mismatch: expected $expectedFileSystemCapacityBlocks blocks, got $($updated[0].RealCapacity)."
+                    }
+                    $updated
+                } | Out-Null
+
                 $renameResult = @(Invoke-MutationStep -Name 'Rename-DMFileSystem' -Action {
                     Assert-TestOwnedResource -Kind FileSystem -Identity $fileSystemName
                     if (@(Get-DMFileSystem -WebSession $session | Where-Object Name -EQ $renamedFileSystemName).Count -gt 0) {

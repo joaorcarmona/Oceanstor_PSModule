@@ -91,6 +91,25 @@ Describe 'Set-DMLun' {
         $script:requests[1].Body.CAPACITY | Should -Be 5242880
     }
 
+    It 'does not expand capacity when the property modification fails' {
+        Mock Invoke-DeviceManager {
+            $script:requests.Add([pscustomobject]@{
+                Method = $Method
+                Resource = $Resource
+                Body = $BodyData
+            })
+            [pscustomobject]@{ error = [pscustomobject]@{ Code = 1; Description = 'simulated failure' } }
+        }
+
+        $result = Set-DMLun -WebSession $script:session -LunName 'database' -NewName 'database-prod' `
+            -Capacity '2GB' -Confirm:$false
+
+        $result.Count | Should -Be 1
+        $result[0].Code | Should -Be 1
+        $script:requests.Count | Should -Be 1
+        $script:requests[0].Resource | Should -Be 'lun/lun-01'
+    }
+
     It 'rejects LUN reduction' {
         { Set-DMLun -WebSession $script:session -LunName 'database' -Capacity '512MB' -Confirm:$false } |
             Should -Throw '*only be expanded*'
