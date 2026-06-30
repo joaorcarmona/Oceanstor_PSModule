@@ -25,6 +25,11 @@ class OceanstorSession{
 	[string]$Version
 
     # Constructor
+    # Deliberately does not call Get-DMSystem here. On Linux/macOS, PowerShell
+    # class constructors resolve function calls from the session scope rather
+    # than the module scope, which bypasses Pester mocks set up inside the
+    # module under test. Version is resolved by Connect-deviceManager after
+    # construction instead, where normal function-scope mocking applies.
     OceanstorSession ([PSCustomObject] $logonSession, [System.Collections.IDictionary]$SessionHeader, [Microsoft.PowerShell.Commands.WebRequestSession]$WebSession, [string] $hostname)
     {
         $this.DeviceId = $logonsession.data.deviceid
@@ -35,9 +40,5 @@ class OceanstorSession{
         $this.iBaseToken = $logonsession.data.iBaseToken
         #$this.Credentials = $credentials
         $this.Hostname = $hostname
-
-		$getDeviceManager = Get-DMSystem -WebSession $this
-
-		$this.Version = $getDeviceManager.version
     }
 }

@@ -3,9 +3,12 @@ BeforeDiscovery {
         param($testRoot)
 
         function Write-DMError { param($SessionError) }
+        # Plain stub: Get-DMSystem is now called by Connect-deviceManager itself
+        # (a regular function call, not from inside the class constructor), so
+        # the Pester mock below intercepts it reliably on every platform.
+        function Get-DMSystem { param($WebSession) }
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
-        . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMSystem.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Connect-deviceManager.ps1"
 
         Export-ModuleMember -Function Connect-deviceManager, Get-DMSystem
@@ -55,9 +58,11 @@ Describe 'Connect-deviceManager' {
         $result.GetType().Name | Should -Be 'OceanstorSession'
         $result.Hostname | Should -Be 'oceanstor.test'
         $result.DeviceId | Should -Be 'device-01'
+        $result.Version | Should -Be 'V600R001'
         $result.Headers.Authorization | Should -Be 'Basic c2VjdXJlLXVzZXI6c2VjdXJlLXBhc3M='
         $result.Headers.iBaseToken | Should -Be 'token-01'
         Should -Invoke Get-Credential -Times 1 -Exactly
+        Should -Invoke Get-DMSystem -Times 1 -Exactly
         Should -Invoke Invoke-RestMethod -Times 1 -Exactly -ParameterFilter {
             $Method -eq 'Post' -and
             $Uri -eq 'https://oceanstor.test:8088/deviceManager/rest/xxxxx/sessions' -and

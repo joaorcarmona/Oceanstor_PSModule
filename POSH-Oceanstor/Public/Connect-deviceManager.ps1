@@ -101,6 +101,7 @@ function Connect-deviceManager {
     $SessionHeader.Add("iBaseToken", $logonsession.data.iBaseToken)
 
     $connection = [OceanstorSession]::new($logonSession, $SessionHeader, $webSession, $Hostname)
+    $connection.Version = (Get-DMSystem -WebSession $connection).version
 
     if ($PassThru) {
         return $connection
