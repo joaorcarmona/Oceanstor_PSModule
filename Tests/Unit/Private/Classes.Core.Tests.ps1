@@ -1,4 +1,17 @@
 BeforeAll {
+    function global:Get-DMFileSystem {
+        param([pscustomobject]$WebSession)
+        @([pscustomobject]@{ Id = 'fs-01'; Name = 'documents' })
+    }
+    function global:Remove-DMDTree {
+        [CmdletBinding(SupportsShouldProcess = $true)]
+        param([pscustomobject]$WebSession, [string]$FileSystemName, [string]$DTreeName)
+        $global:DTreeRemovalInvocation = [pscustomobject]@{
+            FileSystemName = $FileSystemName; DTreeName = $DTreeName; WebSession = $WebSession
+        }
+        [pscustomobject]@{ Code = 0 }
+    }
+
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorAlarm.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
@@ -8,6 +21,12 @@ BeforeAll {
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorvStore.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorWorkload.ps1"
+}
+
+AfterAll {
+    Remove-Item -LiteralPath 'Function:\global:Get-DMFileSystem' -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:Remove-DMDTree' -ErrorAction SilentlyContinue
+    Remove-Variable -Name DTreeRemovalInvocation -Scope Global -ErrorAction SilentlyContinue
 }
 
 Describe 'Core model classes' {
@@ -33,6 +52,16 @@ Describe 'Core model classes' {
         $result = New-Object -TypeName OceanStorDtree -ArgumentList @([pscustomobject]@{ ID = 'dtree-01' }, $script:session)
 
         $result.GetType().Name | Should -Be 'OceanStorDtree'
+    }
+
+    It 'deletes a dtree through Remove-DMDTree resolving the parent file system by ID' {
+        $source = [pscustomobject]@{ ID = 'dtree-01'; NAME = 'project-a'; PARENTID = 'fs-01' }
+        $dtree = New-Object -TypeName OceanStorDtree -ArgumentList @($source, $script:session)
+
+        $dtree.Delete().Code | Should -Be 0
+        $global:DTreeRemovalInvocation.FileSystemName | Should -Be 'documents'
+        $global:DTreeRemovalInvocation.DTreeName | Should -Be 'project-a'
+        $global:DTreeRemovalInvocation.WebSession | Should -Be $script:session
     }
 
     It 'maps storage pool status and converts capacity to GB' {

@@ -36,6 +36,10 @@ class OceanstorPortGroup {
         }
         return $result
     }
+
+    [psobject] Delete() {
+        return Remove-DMPortGroup -WebSession $this.Session -PortGroupName $this.Name -Confirm:$false
+    }
 }
 
 

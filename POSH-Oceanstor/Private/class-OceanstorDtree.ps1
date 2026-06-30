@@ -37,6 +37,10 @@ class OceanStorDtree {
         $this.{Locking Policy} = $dtree.nasLockingPolicy
     }
 
+    [psobject] Delete() {
+        $fs = @(Get-DMFileSystem -WebSession $this.Session | Where-Object Id -EQ $this.parentId)[0]
+        return Remove-DMDTree -WebSession $this.Session -FileSystemName $fs.Name -DTreeName $this.Name -Confirm:$false
+    }
 }
 
 

@@ -84,6 +84,11 @@ class OceanStorLunGroup{
 		}
 		return $result
 	}
+
+	[psobject] Delete()
+	{
+		return Remove-DMLunGroup -WebSession $this.Session -LunGroupName $this.Name -Confirm:$false
+	}
 }
 
 

@@ -27,6 +27,10 @@ class OceanStorMappingView {
         $this.{vStore Id} = $MappingViewReceived.vstoreId
         $this.{vStore Name} = $MappingViewReceived.vstoreName
     }
+
+    [psobject] Delete() {
+        return Remove-DMMappingView -WebSession $this.Session -MappingViewName $this.Name -Confirm:$false
+    }
 }
 
 

@@ -537,6 +537,10 @@ class OceanstorFileSystem{
         }
         return $result
     }
+
+    [psobject] Delete() {
+        return Remove-DMFileSystem -WebSession $this.Session -FileSystemName $this.Name -Confirm:$false
+    }
 }
 
 

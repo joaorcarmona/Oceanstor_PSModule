@@ -382,5 +382,12 @@ class OceanstorLunv3{
 			'Renaming a LUN through its object is supported only for OceanStor Dorado V6 API sessions.'
 		)
 	}
+
+	[psobject] Delete()
+	{
+		throw [System.NotSupportedException]::new(
+			'Deleting a LUN through its object is supported only for OceanStor Dorado V6 API sessions.'
+		)
+	}
 }
 

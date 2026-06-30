@@ -85,6 +85,54 @@ BeforeAll {
         $global:NamedObjectRenameInvocation = [pscustomobject]@{ Type = 'PortGroup'; Name = $PortGroupName; NewName = $NewName; WebSession = $WebSession }
         [pscustomobject]@{ Code = 0 }
     }
+    function global:Remove-DMLun {
+        [CmdletBinding(SupportsShouldProcess = $true)]
+        param([pscustomobject]$WebSession, [string]$LunName)
+        $global:RemovalInvocation = [pscustomobject]@{ Type = 'Lun'; Name = $LunName; WebSession = $WebSession }
+        [pscustomobject]@{ Code = 0 }
+    }
+    function global:Remove-DMFileSystem {
+        [CmdletBinding(SupportsShouldProcess = $true)]
+        param([pscustomobject]$WebSession, [string]$FileSystemName)
+        $global:RemovalInvocation = [pscustomobject]@{ Type = 'FileSystem'; Name = $FileSystemName; WebSession = $WebSession }
+        [pscustomobject]@{ Code = 0 }
+    }
+    function global:Remove-DMHostGroup {
+        [CmdletBinding(SupportsShouldProcess = $true)]
+        param([pscustomobject]$WebSession, [string]$HostGroupName)
+        $global:RemovalInvocation = [pscustomobject]@{ Type = 'HostGroup'; Name = $HostGroupName; WebSession = $WebSession }
+        [pscustomobject]@{ Code = 0 }
+    }
+    function global:Remove-DMLunGroup {
+        [CmdletBinding(SupportsShouldProcess = $true)]
+        param([pscustomobject]$WebSession, [string]$LunGroupName)
+        $global:RemovalInvocation = [pscustomobject]@{ Type = 'LunGroup'; Name = $LunGroupName; WebSession = $WebSession }
+        [pscustomobject]@{ Code = 0 }
+    }
+    function global:Remove-DMPortGroup {
+        [CmdletBinding(SupportsShouldProcess = $true)]
+        param([pscustomobject]$WebSession, [string]$PortGroupName)
+        $global:RemovalInvocation = [pscustomobject]@{ Type = 'PortGroup'; Name = $PortGroupName; WebSession = $WebSession }
+        [pscustomobject]@{ Code = 0 }
+    }
+    function global:Remove-DMMappingView {
+        [CmdletBinding(SupportsShouldProcess = $true)]
+        param([pscustomobject]$WebSession, [string]$MappingViewName)
+        $global:RemovalInvocation = [pscustomobject]@{ Type = 'MappingView'; Name = $MappingViewName; WebSession = $WebSession }
+        [pscustomobject]@{ Code = 0 }
+    }
+    function global:Remove-DMNfsShare {
+        [CmdletBinding(SupportsShouldProcess = $true)]
+        param([pscustomobject]$WebSession, [string]$SharePath)
+        $global:RemovalInvocation = [pscustomobject]@{ Type = 'NfsShare'; Name = $SharePath; WebSession = $WebSession }
+        [pscustomobject]@{ Code = 0 }
+    }
+    function global:Remove-DMCifsShare {
+        [CmdletBinding(SupportsShouldProcess = $true)]
+        param([pscustomobject]$WebSession, [string]$ShareName)
+        $global:RemovalInvocation = [pscustomobject]@{ Type = 'CifsShare'; Name = $ShareName; WebSession = $WebSession }
+        [pscustomobject]@{ Code = 0 }
+    }
 
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorCIFSShare.ps1"
@@ -105,6 +153,8 @@ BeforeAll {
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorNFSShare.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorLIF.ps1"
+    . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
+    . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorMappingView.ps1"
 }
 
 AfterAll {
@@ -140,6 +190,15 @@ AfterAll {
     Remove-Variable -Name LunModificationInvocation -Scope Global -ErrorAction SilentlyContinue
     Remove-Variable -Name FileSystemModificationInvocation -Scope Global -ErrorAction SilentlyContinue
     Remove-Variable -Name NamedObjectRenameInvocation -Scope Global -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:Remove-DMLun' -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:Remove-DMFileSystem' -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:Remove-DMHostGroup' -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:Remove-DMLunGroup' -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:Remove-DMPortGroup' -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:Remove-DMMappingView' -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:Remove-DMNfsShare' -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath 'Function:\global:Remove-DMCifsShare' -ErrorAction SilentlyContinue
+    Remove-Variable -Name RemovalInvocation -Scope Global -ErrorAction SilentlyContinue
 }
 
 Describe 'Storage and share model classes' {
@@ -629,5 +688,86 @@ Describe 'Storage and share model classes' {
         $result.Id | Should -Be 'lif-01'
         $result.'Address Family' | Should -Be 'IPv4'
         $result.'Support Protocol' | Should -Be 'NFS+CIFS'
+    }
+
+    It 'deletes a version 6 LUN through Remove-DMLun' {
+        $source = [pscustomobject]@{ ID = 'lun-v6'; NAME = 'modern'; TYPE = 11; SECTORSIZE = 512; CAPACITY = 2097152; ALLOCCAPACITY = 1048576; HEALTHSTATUS = 1; RUNNINGSTATUS = 27; ALLOCTYPE = 1 }
+        $lun = New-Object -TypeName OceanstorLunv6 -ArgumentList @($source, $script:session)
+
+        $lun.Delete().Code | Should -Be 0
+        $global:RemovalInvocation.Type | Should -Be 'Lun'
+        $global:RemovalInvocation.Name | Should -Be 'modern'
+        $global:RemovalInvocation.WebSession | Should -Be $script:session
+    }
+
+    It 'throws when calling Delete() on a version 3 LUN object' {
+        $source = [pscustomobject]@{ ID = 'lun-v3'; NAME = 'legacy'; TYPE = 11; SECTORSIZE = 512; CAPACITY = 2097152; ALLOCCAPACITY = 1048576; HEALTHSTATUS = 1; RUNNINGSTATUS = 27; ALLOCTYPE = 1 }
+        $lun = New-Object -TypeName OceanstorLunv3 -ArgumentList @($source, $script:session)
+
+        { $lun.Delete() } | Should -Throw '*only for OceanStor Dorado V6*'
+    }
+
+    It 'deletes a file system through Remove-DMFileSystem' {
+        $source = [pscustomobject]@{ ID = 'fs-01'; NAME = 'documents'; SECTORSIZE = 512; CAPACITY = 2097152; ALLOCCAPACITY = '0' }
+        $fileSystem = New-Object -TypeName OceanstorFileSystem -ArgumentList @($source, $script:session)
+
+        $fileSystem.Delete().Code | Should -Be 0
+        $global:RemovalInvocation.Type | Should -Be 'FileSystem'
+        $global:RemovalInvocation.Name | Should -Be 'documents'
+        $global:RemovalInvocation.WebSession | Should -Be $script:session
+    }
+
+    It 'deletes named objects through their Remove-DM* commands' {
+        $cases = @(
+            @{
+                Type   = 'OceanStorHostGroup'
+                Source = [pscustomobject]@{ ID = 1; NAME = 'cluster'; TYPE = 0; ISADD2MAPPINGVIEW = 'false' }
+                ExpectedType = 'HostGroup'
+            },
+            @{
+                Type   = 'OceanStorLunGroup'
+                Source = [pscustomobject]@{ ID = 2; NAME = 'application-luns'; GROUPTYPE = 0; CAPCITY = 0 }
+                ExpectedType = 'LunGroup'
+            },
+            @{
+                Type   = 'OceanstorPortGroup'
+                Source = [pscustomobject]@{ ID = 'pg-01'; NAME = 'front-end-ports'; portType = 0; isAddToMappingView = $false }
+                ExpectedType = 'PortGroup'
+            },
+            @{
+                Type   = 'OceanStorMappingView'
+                Source = [pscustomobject]@{ ID = 'mv-01'; NAME = 'production-map' }
+                ExpectedType = 'MappingView'
+            }
+        )
+
+        foreach ($case in $cases) {
+            $object = New-Object -TypeName $case.Type -ArgumentList @($case.Source, $script:session)
+
+            $object.Delete().Code | Should -Be 0
+            $global:RemovalInvocation.Type | Should -Be $case.ExpectedType
+            $global:RemovalInvocation.Name | Should -Be $case.Source.NAME
+            $global:RemovalInvocation.WebSession | Should -Be $script:session
+        }
+    }
+
+    It 'deletes an NFS share through Remove-DMNfsShare using its share path' {
+        $source = [pscustomobject]@{ ID = 'nfs-01'; NAME = 'exports'; SHAREPATH = '/documents/'; CHARACTERENCODING = 0; ENABLESHOWSNAPSHOT = $false; LOCKPOLICY = 0 }
+        $share = New-Object -TypeName OceanStorNFSShare -ArgumentList @($source, $script:session)
+
+        $share.Delete().Code | Should -Be 0
+        $global:RemovalInvocation.Type | Should -Be 'NfsShare'
+        $global:RemovalInvocation.Name | Should -Be '/documents/'
+        $global:RemovalInvocation.WebSession | Should -Be $script:session
+    }
+
+    It 'deletes a CIFS share through Remove-DMCifsShare' {
+        $source = [pscustomobject]@{ ID = 'cifs-01'; NAME = 'share'; subType = 0; ABEENABLE = $false; ENABLEOPLOCK = $false; OFFLINEFILEMODE = 0 }
+        $share = New-Object -TypeName OceanStorCIFSShare -ArgumentList @($source, $script:session)
+
+        $share.Delete().Code | Should -Be 0
+        $global:RemovalInvocation.Type | Should -Be 'CifsShare'
+        $global:RemovalInvocation.Name | Should -Be 'share'
+        $global:RemovalInvocation.WebSession | Should -Be $script:session
     }
 }

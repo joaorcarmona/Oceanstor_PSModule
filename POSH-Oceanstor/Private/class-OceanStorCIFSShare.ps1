@@ -109,6 +109,10 @@ class OceanStorCIFSShare
         $this.{vStore Name} = $cifsShare.vstoreName
 
     }
+
+    [psobject] Delete() {
+        return Remove-DMCifsShare -WebSession $this.Session -ShareName $this.Name -Confirm:$false
+    }
 }
 
 
