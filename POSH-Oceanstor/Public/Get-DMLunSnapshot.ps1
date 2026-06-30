@@ -104,8 +104,7 @@ function Get-DMLunSnapshot {
         $resource = "snapshot?filter=SOURCELUNID:$($sourceLun.Id)"
     }
 
-    $response = Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource $resource |
-        Select-Object -ExpandProperty data
+    $response = Invoke-DMPagedRequest -WebSession $session -Resource $resource
     $snapshots = [System.Collections.ArrayList]::new()
 
     foreach ($snapshotData in @($response)) {

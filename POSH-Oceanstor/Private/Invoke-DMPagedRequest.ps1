@@ -1,0 +1,57 @@
+function Invoke-DMPagedRequest {
+    <#
+    .SYNOPSIS
+        Retrieves all pages of a collection resource from the OceanStor REST API.
+
+    .DESCRIPTION
+        Calls Invoke-DeviceManager in a loop, appending range=[start,end] query parameters
+        until the API returns fewer results than the requested page size, indicating the last
+        page has been reached. Returns the combined raw data array from all pages.
+
+        The OceanStor API returns at most PageSize objects per request when no range is
+        specified, silently truncating larger collections. This helper ensures every object
+        in a collection is retrieved regardless of size.
+
+    .PARAMETER WebSession
+        Optional session returned by Connect-deviceManager. The global deviceManager session
+        is used when omitted.
+
+    .PARAMETER Resource
+        REST resource path to page through. If the path already contains query parameters
+        (i.e. contains '?'), range parameters are appended with '&'; otherwise '?' is used.
+
+    .PARAMETER PageSize
+        Number of results to request per page. Defaults to 100, the OceanStor maximum per
+        single request.
+    #>
+    param(
+        [pscustomobject]$WebSession,
+
+        [Parameter(Mandatory)]
+        [string]$Resource,
+
+        [ValidateRange(1, 100)]
+        [int]$PageSize = 100
+    )
+
+    $allData = [System.Collections.Generic.List[object]]::new()
+    $start = 0
+    $separator = if ($Resource -match '\?') { '&' } else { '?' }
+
+    do {
+        $end = $start + $PageSize - 1
+        $pagedResource = "${Resource}${separator}range=[$start,$end]"
+
+        $response = Invoke-DeviceManager -WebSession $WebSession -Method 'GET' -Resource $pagedResource
+        $dataProperty = if ($null -ne $response) { $response.PSObject.Properties['data'] } else { $null }
+        $page = if ($null -ne $dataProperty) { @($dataProperty.Value) } else { @() }
+
+        foreach ($item in $page) {
+            $allData.Add($item)
+        }
+
+        $start += $PageSize
+    } while ($page.Count -eq $PageSize)
+
+    return $allData.ToArray()
+}

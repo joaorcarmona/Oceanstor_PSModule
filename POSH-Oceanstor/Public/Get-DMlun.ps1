@@ -56,7 +56,7 @@ function Get-DMlun {
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "lun" | Select-Object -ExpandProperty data
+    $response = Invoke-DMPagedRequest -WebSession $session -Resource 'lun'
     $StorageLuns = New-Object System.Collections.ArrayList
 
     $StorageVersion = $session.version.Substring(0, 2)

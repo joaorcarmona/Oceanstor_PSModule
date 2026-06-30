@@ -12,6 +12,7 @@ BeforeDiscovery {
             )
         }
 
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Invoke-DMPagedRequest.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorFileSystemSnapshot.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\New-DMFileSystemSnapshot.ps1"
@@ -89,7 +90,7 @@ Describe 'File-system snapshot commands' {
         $result[0].PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
             Should -Be @('Id', 'Name', 'Source File System Name', 'Health Status', 'Snapshot Type', 'Timestamp')
         $script:method | Should -Be 'GET'
-        $script:resource | Should -Be 'fssnapshot?PARENTID=5'
+        $script:resource | Should -BeLike 'fssnapshot?PARENTID=5*'
     }
 
     It 'returns no file-system snapshots when the API contains no data property' {
@@ -98,16 +99,24 @@ Describe 'File-system snapshot commands' {
         @(Get-DMFileSystemSnapshot -WebSession $script:session -FileSystemName 'documents') | Should -BeNullOrEmpty
     }
 
-    It 'parses file-system snapshots returned as JSON text' {
+    It 'pages through all file-system snapshots when the first page is full' {
+        $script:getCallCount = 0
         Mock Invoke-DeviceManager {
-            '{"data":[{"ID":"5@checkpoint","NAME":"checkpoint","PARENTID":"5","PARENTNAME":"documents","HEALTHSTATUS":"1","snapType":"0","SNAPTYPE":"1","TIMESTAMP":"1594990822"}],"error":{"code":0}}'
+            $script:getCallCount++
+            if ($script:getCallCount -eq 1) {
+                [pscustomobject]@{ data = @(1..100 | ForEach-Object {
+                    [pscustomobject]@{ ID = "5@snap-$_"; NAME = "snap-$_"; PARENTID = '5'; PARENTNAME = 'documents'; HEALTHSTATUS = '1'; SNAPTYPE = '1'; TIMESTAMP = '1594990822' }
+                }) }
+            }
+            else {
+                [pscustomobject]@{ data = @([pscustomobject]@{ ID = '5@snap-101'; NAME = 'snap-101'; PARENTID = '5'; PARENTNAME = 'documents'; HEALTHSTATUS = '1'; SNAPTYPE = '1'; TIMESTAMP = '1594990822' }) }
+            }
         }
 
         $result = Get-DMFileSystemSnapshot -WebSession $script:session -FileSystemName 'documents'
 
-        $result[0].Name | Should -Be 'checkpoint'
-        $result[0].GetType().Name | Should -Be 'OceanstorFileSystemSnapshot'
-        $result[0].'Snapshot Type' | Should -Be 'Manual'
+        $result.Count | Should -Be 101
+        Should -Invoke Invoke-DeviceManager -Times 2 -Exactly
     }
 
     It 'deletes a selected file-system snapshot by ID' {

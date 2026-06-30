@@ -54,7 +54,7 @@ function Get-DMFileSystem {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "filesystem" | Select-Object -ExpandProperty data
+    $response = Invoke-DMPagedRequest -WebSession $session -Resource 'filesystem'
     $FileSystems = New-Object System.Collections.ArrayList
 
     foreach ($fs in $response) {

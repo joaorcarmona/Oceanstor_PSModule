@@ -83,24 +83,7 @@ function Get-DMFileSystemSnapshot {
         $deviceManager
     }
     $fileSystem = @(Get-DMFileSystem -WebSession $session | Where-Object Name -EQ $FileSystemName)[0]
-    $resource = "fssnapshot?PARENTID=$($fileSystem.Id)"
-    $queryResult = Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource $resource
-    $response = @()
-    if ($queryResult -is [string] -and -not [string]::IsNullOrWhiteSpace($queryResult)) {
-        $parsedResult = $queryResult | ConvertFrom-Json -AsHashtable -ErrorAction Stop
-        $response = @(
-            foreach ($snapshotData in @($parsedResult.data)) {
-                $normalizedData = [ordered]@{}
-                foreach ($key in $snapshotData.Keys) {
-                    $normalizedData[[string]$key] = $snapshotData[$key]
-                }
-                [pscustomobject]$normalizedData
-            }
-        )
-    }
-    elseif ($null -ne $queryResult -and $null -ne $queryResult.PSObject.Properties['data']) {
-        $response = @($queryResult.data)
-    }
+    $response = Invoke-DMPagedRequest -WebSession $session -Resource "fssnapshot?PARENTID=$($fileSystem.Id)"
     $defaultDisplaySet = 'Id', 'Name', 'Source File System Name', 'Health Status', 'Snapshot Type', 'Timestamp'
     $displayPropertySet = New-Object System.Management.Automation.PSPropertySet('DefaultDisplayPropertySet', [string[]]$defaultDisplaySet)
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
