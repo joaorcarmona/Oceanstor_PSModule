@@ -105,6 +105,15 @@ Hide interactive progress when redirecting console output:
     -NoProgress
 ```
 
+For lab arrays with self-signed certificates, opt out of TLS certificate
+validation explicitly:
+
+```powershell
+./Tests/Integration/Invoke-GetterIntegrityValidation.ps1 `
+    -Hostname 'IP_or_FQDN' `
+    -SkipCertificateCheck
+```
+
 ## Mutation Integration
 
 Mutation mode is opt-in twice:
@@ -128,6 +137,7 @@ Run the full configured create, verify, and cleanup workflow:
 ./Tests/Integration/Invoke-GetterIntegrityValidation.ps1 `
     -Hostname 'IP_or_FQDN' `
     -RunMutatingTests `
+    -SkipCertificateCheck `
     -ShowTestExecution
 ```
 
