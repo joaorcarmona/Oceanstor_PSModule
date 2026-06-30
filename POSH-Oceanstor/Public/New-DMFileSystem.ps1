@@ -100,9 +100,9 @@ function New-DMFileSystem {
     param(
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $true)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 1, Mandatory = $true)]
         [string]$FileSystemName,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $true)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 2, Mandatory = $true)]
         [ValidateScript({
                 $session = if ($WebSession) {
                     $WebSession
@@ -127,42 +127,42 @@ function New-DMFileSystem {
                 (Get-DMstoragePool -WebSession $session).Id | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [Int16]$StoragePoolID,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Mandatory = $false)]
         [string]$description,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Mandatory = $false)]
         [bool]$Worm = $false,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [object]$capacity,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Mandatory = $false)]
         [Int32]$snapShotReserve = 20,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Mandatory = $false)]
         [string]$autoDeleteSnap = $false,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Mandatory = $false)]
         [int64]$AlarmThresold = 90,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Mandatory = $false)]
         [ValidateSet("database", "VM", "user-defined")]
         [string]$usage = "user-defined",
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Mandatory = $false)]
         [bool]$checkSumEnable = $true,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Mandatory = $false)]
         [bool]$accessTime = $false,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Mandatory = $false)]
         [ValidateSet("Hourly", "Daily", "disabled")]
         [string]$accessTimeUpdateMode = "disabled",
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Mandatory = $false)]
         [bool]$readOnly = $false,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Mandatory = $false)]
         [ValidateSet("low", "medium", "high")]
         [string]$FileSystemIOpriority = "low",
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Mandatory = $false)]
         [bool]$Compression = $false,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Mandatory = $false)]
         [ValidateSet("rapid", "deep")]
         [string]$CompressionAlgorithm = "rapid",
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Mandatory = $false)]
         [bool]$Dedupe = $false,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Mandatory = $false)]
         [bool]$Autogrow = $false
     )
 

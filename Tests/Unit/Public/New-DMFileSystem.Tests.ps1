@@ -64,6 +64,13 @@ Describe 'New-DMFileSystem' {
         $script:fileSystemRequest.ContainsKey('CAPACITY') | Should -BeFalse
     }
 
+    It 'accepts FileSystemName and StoragePoolID as positional arguments' {
+        $null = New-DMFileSystem $script:session 'documents' 0
+
+        $script:fileSystemRequest.NAME | Should -Be 'documents'
+        $script:fileSystemRequest.PARENTID | Should -Be 0
+    }
+
     It 'rejects invalid capacity <Capacity>' -ForEach @(
         @{ Capacity = '10XB' }
         @{ Capacity = '0MB' }
