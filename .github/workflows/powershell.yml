@@ -46,14 +46,16 @@ jobs:
 
   pester-test:
     name: Pester Unit Tests
-    # Cross-platform trial: Ubuntu confirmed clean locally via a Linux
-    # PowerShell container (312/312 passed) before adding it here.
-    # macOS is deliberately not in the matrix yet - it's added in a
-    # follow-up commit once Ubuntu's real CI run is confirmed green,
-    # since Docker on Windows cannot run macOS containers to pre-verify it.
+    # Cross-platform trial: Ubuntu's real CI run is confirmed green after the
+    # OceanstorSession constructor fix (Get-DMSystem no longer called from
+    # inside the class constructor, which previously bypassed Pester mocks on
+    # Linux due to session-scope vs module-scope function resolution).
+    # macOS shares PowerShell's Linux runtime, so it's added now on the same
+    # basis - there's no way to pre-verify it locally since Docker on Windows
+    # cannot run macOS containers.
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-latest]
+        os: [windows-latest, ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repository
