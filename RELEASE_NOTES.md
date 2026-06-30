@@ -2,6 +2,144 @@
 
 ---
 
+# v0.9.4
+
+Date: 2026-06-23
+Branch: `todo-v0.9.3`
+Status: Released to `master`
+
+## Summary
+
+This release renames 30 plural-noun getter commands to their singular canonical
+forms and exports backward-compatibility aliases for all renamed commands, adds
+`Disconnect-deviceManager` for explicit session teardown, standardizes
+state-modifying commands with `-PassThru` and full `ShouldProcess` support,
+enforces the full PSScriptAnalyzer rule set with all false positives suppressed,
+and upgrades the CI pipeline with cross-platform testing and code coverage.
+
+## Changes
+
+- Added `Disconnect-deviceManager` for explicit session teardown: issues the
+  DELETE call, removes global session state, and guards against double-disconnect.
+- Renamed 30 plural-noun getter commands to singular (e.g. `Get-DMLuns` →
+  `Get-DMLun`) and exported 30 backward-compatibility aliases so existing
+  scripts continue to work without modification.
+- Replaced the `-Return [boolean]` convention with a standard `-PassThru
+  [switch]` on state-modifying commands that can return the modified object.
+- Added `ShouldProcess` support (`-WhatIf` / `-Confirm`) to all state-changing
+  public commands.
+- Replaced wildcard module exports with an explicit function list in the
+  manifest, making the exported surface intentional and auditable.
+- Pushed LUN filter queries server-side in `Get-DMLun` and tightened its
+  parameter types.
+- Renamed three private helpers to use the approved `Test-` verb:
+  `Validate-Ipv4Address` → `Test-IPv4Address`,
+  `Validate-WWNAddress` → `Test-WWNAddress`, and
+  `Validate-ModuleRequirements` → `Test-ModuleRequirements`.
+- Renamed three additional private helper files to singular nouns for
+  consistency.
+- Fixed a misspelled `Activacate()` method in the session class.
+- Fixed `$matches` variable shadowing PowerShell's automatic `$Matches`.
+- Replaced `Write-Host` with `Write-Warning` throughout the module source.
+- Fixed a literal hashtable initialization issue in `Set-DMdnsServer`.
+- Replaced `exit` with `throw` to prevent unintended PSSession termination.
+- Removed dead Kerberos parameters from `New-DMnfsClient`.
+- Suppressed justified PSScriptAnalyzer false positives across 63 functions and
+  class files; upgraded CI to run the full rule set.
+- Upgraded CI with a cross-platform test matrix (Windows, Ubuntu, macOS),
+  Pester code coverage upload, and a `.psscriptanalyzerrc` settings file.
+- Added `.gitattributes` to normalize line endings across platforms.
+- Added README badges: license, release, PowerShell version, and last commit.
+- Completed help documentation for all `Set-DM*` and `Rename-DM*` commands.
+- Added inline documentation and `[OutputType([long])]` to
+  `ConvertTo-DMCapacityBlock`.
+- Expanded the unit suite to 312 passing tests.
+
+## Commit History
+
+- `da81536` - Add inline documentation to ConvertTo-DMCapacityBlock
+- `656966e` - Revert cross-platform CI matrix to Windows-only
+- `02c16fb` - Fix case-sensitive path and class resolution for Linux/macOS CI
+- `85a37b6` - Fix cross-platform test failures for Connect and Disconnect
+- `6c3fa68` - Fix OceanstorSession class preload in test modules
+- `fafe87d` - Bump module version to 0.9.4
+- `3b456fb` - Complete help documentation for Set and Rename commands
+- `6db07d8` - Add license, release, PowerShell, and last-commit badges to README
+- `542cd60` - Add cross-platform test matrix (Windows, Ubuntu, macOS)
+- `0832a3a` - Export 30 backward-compatibility aliases in module manifest
+- `386416c` - Fix OceanstorSession class load order
+- `cdbb80c` - Add .gitattributes to normalize line endings
+- `58f574c` - Add CI status badge to README
+- `64bd51e` - Add PSScriptAnalyzer settings file to exclude pipeline rule
+- `9ef09c8` - Add Pester code coverage to CI workflow
+- `04087ee` - Suppress PSAvoidGlobalVars for intentional module-level state
+- `9ef5f12` - Suppress PSAvoidUsingPlainTextForPassword on ChapPassword
+- `aeac9dc` - Remove dead Kerberos parameters from New-DMnfsClient
+- `20a5402` - Rename `$matches` variable to avoid shadowing automatic variable
+- `b9bc640` - Fix literal hashtable initializer in Set-DMdnsServer
+- `85a8877` - Replace Write-Host with Write-Warning in module source
+- `b7c336d` - Suppress false-positive PSReviewUnusedParameter in 63 functions
+- `15baf6a` - Suppress false-positive PSAvoidUsingCmdletAliases in class files
+- `10665cd` - Add ShouldProcess support to all state-changing commands
+- `80b872e` - Rename 3 private helpers to singular nouns
+- `5540ab9` - Run full PSScriptAnalyzer rule set in CI
+- `50e2e23` - Add unit tests for Disconnect, NFS creation, and DNS commands
+- `9afc362` - Remove misspelled Activacate() method
+- `90923d1` - Update documentation for singular-noun and PassThru renames
+- `d54a9b1` - Rename 30 plural-noun getter commands to singular
+- `f88ee9f` - Replace -Return [boolean] with -PassThru [switch]
+- `ef23962` - Rename Validate- private helpers to approved Test- verb
+- `7ef6831` - Push LUN filter queries server-side and tighten parameter types
+- `7c3902b` - Replace wildcard exports with explicit function list in manifest
+- `b6ad41e` - Add Disconnect-deviceManager and session cleanup guard
+- `0b04544` - Replace exit with throw to prevent session termination
+
+## Highlights
+
+- Added `Disconnect-deviceManager`, a new public command that explicitly
+  closes the DeviceManager session by issuing a DELETE request, clearing the
+  global session variable, and guarding against re-entry if the session is
+  already gone.
+- Renamed 30 plural-noun getter commands to their singular canonical forms
+  (`Get-DMLuns` → `Get-DMLun`, `Get-DMHosts` → `Get-DMHost`, etc.) to conform
+  to the PowerShell noun-singular naming convention. All 30 renamed commands
+  retain backward-compatibility aliases in the module manifest so existing
+  scripts continue to work without modification.
+- Replaced the project-specific `-Return [boolean]` pattern with the standard
+  PowerShell `-PassThru [switch]` on all state-modifying commands that can emit
+  the modified storage object.
+- Added `ShouldProcess` support to all state-changing commands, enabling
+  `-WhatIf` and `-Confirm` on `New-DM*`, `Set-DM*`, `Rename-DM*`, and
+  `Remove-DM*` commands.
+- Replaced wildcard exports (`FunctionsToExport = '*'`) with a full explicit
+  function list in the module manifest.
+- Renamed three private helpers from the non-standard `Validate-` verb prefix
+  to the approved `Test-` verb: `Test-IPv4Address`, `Test-WWNAddress`, and
+  `Test-ModuleRequirements`.
+- Enforced the full PSScriptAnalyzer rule set in CI, audited every finding, and
+  suppressed all justified false positives with
+  `[Diagnostics.CodeAnalysis.SuppressMessageAttribute]` annotations across
+  63 functions and the class files.
+- Upgraded the CI workflow with a cross-platform test matrix covering Windows,
+  Ubuntu, and macOS, Pester code coverage upload, and a `.psscriptanalyzerrc`
+  settings file to configure the pipeline-input rule. The cross-platform matrix
+  was subsequently reverted to Windows-only due to class-loading differences on
+  non-Windows platforms.
+- Added `.gitattributes` to enforce consistent LF line endings across platforms.
+- Updated the module manifest version to `0.9.4`.
+
+## Validation
+
+- Unit tests: 312 passed, 0 failed (14 new tests added for `Disconnect-deviceManager`,
+  `New-DMnfsShare`, `New-DMnfsClient`, and `Set-DMdnsServer`).
+- PSScriptAnalyzer: zero findings under the full rule set after justified
+  suppressions.
+- Backward-compatibility aliases: 30 plural-noun aliases exported and verified.
+- Parser validation: changed PowerShell scripts parsed successfully.
+- Diff validation: staged whitespace checks passed before commit.
+
+---
+
 # v0.9.3
 
 Date: 2026-06-23
