@@ -44,18 +44,23 @@ function Get-DMdnsServer {
         $session = $deviceManager
     }
 
-    $response = $(Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "dns_server" | Select-Object -ExpandProperty data | Select-Object -ExpandProperty ADDRESS).ToString()
+    $addressData = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "dns_server" |
+        Select-Object -ExpandProperty data |
+        Select-Object -ExpandProperty ADDRESS
+
+    # OceanStor returns ADDRESS as a JSON-encoded array string, e.g. '["10.0.0.1","10.0.0.2"]'.
+    $addresses = if ($addressData -is [string]) {
+        @(ConvertFrom-Json -InputObject $addressData -ErrorAction Stop)
+    }
+    else {
+        @($addressData)
+    }
 
     $DnsServers = @{}
-
-    $splitResponse = $($response.Substring(0, $response.Length - 1)).substring(1).Split(",")
-
     $i = 1
-
-    foreach ($dnsS in $splitResponse) {
-        $dnstoAdd = $($dnsS.Substring(0, $dnsS.Length - 1)).substring(1).Split(",")
-        if ($dnstoAdd -ne "") {
-            $DnsServers.add("DNS Server $i", $dnstoAdd)
+    foreach ($address in $addresses) {
+        if ($address) {
+            $DnsServers.add("DNS Server $i", $address)
             $i = $i + 1
         }
     }

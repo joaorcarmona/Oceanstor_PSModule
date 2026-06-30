@@ -177,15 +177,16 @@ Describe 'Set-DMdnsServer' {
             $script:dnsBody = $BodyData
             [pscustomobject]@{ error = [pscustomobject]@{ code = 0 } }
         }
-        Mock Get-DMdnsServer { @([pscustomobject]@{ Address = '8.8.8.8' }) }
     }
 
-    It 'sends a PUT with the DNS address array' {
-        Set-DMdnsServer -WebSession $script:session -DNSserver @('8.8.8.8', '1.1.1.1')
+    It 'sends a PUT with the DNS address array and returns the API error object' {
+        $result = Set-DMdnsServer -WebSession $script:session -DNSserver @('8.8.8.8', '1.1.1.1')
 
         $script:dnsMethod | Should -Be 'PUT'
         $script:dnsResource | Should -Be 'dns_server'
         $script:dnsBody.ADDRESS | Should -Be @('8.8.8.8', '1.1.1.1')
+        $result.code | Should -Be 0
+        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly
     }
 
     It 'throws on an invalid IP address' {
@@ -195,14 +196,14 @@ Describe 'Set-DMdnsServer' {
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 
-    It 'returns an error string when the API reports failure' {
+    It 'returns the API error object when the update fails' {
         Mock Invoke-DeviceManager {
             [pscustomobject]@{ error = [pscustomobject]@{ code = -1 } }
         }
 
         $result = Set-DMdnsServer -WebSession $script:session -DNSserver @('8.8.8.8')
 
-        $result | Should -Be 'error setting DNS Server'
+        $result.code | Should -Be -1
     }
 }
 }

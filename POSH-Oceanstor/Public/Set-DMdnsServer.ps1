@@ -19,10 +19,9 @@ function Set-DMdnsServer {
         You can pipe an OceanStor session object to WebSession and provide DNS server addresses by property name.
 
     .OUTPUTS
-		System.Collections.Hashtable
-		System.String
+		System.Management.Automation.PSCustomObject
 
-		Returns the configured DNS server table on success. Returns an error string when the update fails.
+		Returns the OceanStor API error object indicating success or failure of the modification.
 
     .EXAMPLE
         PS C:\> Set-DMdnsServer -webSession $session -DNSserver 8.8.8.8,1.1.1.1
@@ -58,15 +57,7 @@ function Set-DMdnsServer {
 
     $PostData = @{ ADDRESS = $DNSserver }
     if ($PSCmdlet.ShouldProcess(($DNSserver -join ', '), 'Configure DNS servers')) {
-        $SetConfig = Invoke-DeviceManager -WebSession $session -Method "PUT" -Resource "dns_server" -BodyData $PostData
-
-        if ($SetConfig.error.code -eq 0) {
-            $result = Get-DMdnsServer -WebSession $session
-        }
-        else {
-            $result = "error setting DNS Server"
-        }
-
-        return $result
+        $response = Invoke-DeviceManager -WebSession $session -Method "PUT" -Resource "dns_server" -BodyData $PostData
+        return $response.error
     }
 }
