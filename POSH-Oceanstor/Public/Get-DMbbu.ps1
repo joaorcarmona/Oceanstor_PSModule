@@ -46,7 +46,7 @@ function Get-DMbbu {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "backup_power" | Select-Object -ExpandProperty data
+    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "backup_power" | Select-DMResponseData
     $bbus = New-Object System.Collections.ArrayList
 
     foreach ($bbu in $response) {

@@ -54,7 +54,7 @@ function Get-DMPortSAS {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "sas_port" | Select-Object -ExpandProperty data
+    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "sas_port" | Select-DMResponseData
     $sasPorts = New-Object System.Collections.ArrayList
 
     foreach ($psas in $response) {

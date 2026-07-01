@@ -54,7 +54,7 @@ function Get-DMController {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "controller" | Select-Object -ExpandProperty data
+    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "controller" | Select-DMResponseData
     $controllers = New-Object System.Collections.ArrayList
 
     foreach ($tcont in $response) {

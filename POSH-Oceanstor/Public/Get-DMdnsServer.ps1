@@ -45,7 +45,7 @@ function Get-DMdnsServer {
     }
 
     $addressData = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "dns_server" |
-        Select-Object -ExpandProperty data |
+        Select-DMResponseData |
         Select-Object -ExpandProperty ADDRESS
 
     # OceanStor returns ADDRESS as a JSON-encoded array string, e.g. '["10.0.0.1","10.0.0.2"]'.

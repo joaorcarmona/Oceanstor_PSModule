@@ -54,7 +54,7 @@ function Get-DMPortETH {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "eth_port" | Select-Object -ExpandProperty data
+    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "eth_port" | Select-DMResponseData
     $ethPorts = New-Object System.Collections.ArrayList
 
     foreach ($peth in $response) {

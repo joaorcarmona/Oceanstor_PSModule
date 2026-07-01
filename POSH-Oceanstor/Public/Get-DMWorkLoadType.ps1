@@ -54,7 +54,7 @@ function Get-DMWorkLoadType {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "workload_type?isDetailInfo=true" | Select-Object -ExpandProperty data
+    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "workload_type?isDetailInfo=true" | Select-DMResponseData
     $workloads = New-Object System.Collections.ArrayList
 
     foreach ($tworkload in $response) {

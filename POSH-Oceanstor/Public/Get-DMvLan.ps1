@@ -54,7 +54,7 @@ function Get-DMvLan {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "vlan" | Select-Object -ExpandProperty data
+    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "vlan" | Select-DMResponseData
     $vlans = New-Object System.Collections.ArrayList
 
     foreach ($tvlan in $response) {

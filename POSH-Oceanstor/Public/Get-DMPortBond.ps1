@@ -54,7 +54,7 @@ function Get-DMPortBond {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "bond_port" | Select-Object -ExpandProperty data
+    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "bond_port" | Select-DMResponseData
     $bonds = New-Object System.Collections.ArrayList
 
     foreach ($tbond in $response) {

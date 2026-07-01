@@ -54,7 +54,7 @@ function Get-DMstoragePool {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "storagepool" | Select-Object -ExpandProperty data
+    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "storagepool" | Select-DMResponseData
     $storagePools = New-Object System.Collections.ArrayList
 
     foreach ($spool in $response) {

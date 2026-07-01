@@ -70,7 +70,7 @@ function Get-DMShare {
         }
     }
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource $resourceQuery | Select-Object -ExpandProperty data
+    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource $resourceQuery | Select-DMResponseData
     $shares = New-Object System.Collections.ArrayList
 
     foreach ($tshare in $response) {

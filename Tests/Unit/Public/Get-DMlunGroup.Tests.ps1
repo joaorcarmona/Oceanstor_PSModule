@@ -6,6 +6,7 @@ BeforeDiscovery {
             param([pscustomobject]$WebSession, [string]$Method, [string]$Resource)
         }
 
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Select-DMResponseData.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMlunGroup.ps1"
 
         Export-ModuleMember -Function Get-DMlunGroup

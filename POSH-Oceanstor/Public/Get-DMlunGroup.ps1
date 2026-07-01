@@ -65,7 +65,7 @@ function Get-DMlunGroup {
     if ($VstoreId) {
         $resource += "?vstoreId=$VstoreId"
     }
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource $resource | Select-Object -ExpandProperty data
+    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource $resource | Select-DMResponseData
     $lunGroups = New-Object System.Collections.ArrayList
 
     foreach ($lgroup in $response) {

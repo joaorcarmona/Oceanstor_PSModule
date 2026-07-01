@@ -134,7 +134,7 @@ function Remove-DMPortFromPortGroup {
     }
 
     $associations = @(Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource $associationResource |
-            Select-Object -ExpandProperty data)
+            Select-DMResponseData)
     if (-not @($associations | Where-Object ID -EQ $group.Id)) {
         throw "Port '$PortName' is not a member of port group '$PortGroupName'."
     }

@@ -54,7 +54,7 @@ function Get-DMdisk {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "disk" | Select-Object -ExpandProperty data
+    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "disk" | Select-DMResponseData
     $Storagedisks = New-Object System.Collections.ArrayList
 
     foreach ($tdisk in $response) {

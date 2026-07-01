@@ -60,7 +60,7 @@ function Get-DMhostGroup {
     if ($VstoreId) {
         $resource += "?vstoreId=$VstoreId"
     }
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource $resource | Select-Object -ExpandProperty data
+    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource $resource | Select-DMResponseData
     $hostgroups = New-Object System.Collections.ArrayList
 
     foreach ($hgroup in $response) {

@@ -54,7 +54,7 @@ function Get-DMPortFc {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "fc_port" | Select-Object -ExpandProperty data
+    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "fc_port" | Select-DMResponseData
     $fcPorts = New-Object System.Collections.ArrayList
 
     foreach ($pfc in $response) {
