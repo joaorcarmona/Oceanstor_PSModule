@@ -110,8 +110,15 @@ function Connect-deviceManager {
         throw "Login failed for host '$Hostname': $($SessionError.description)"
     }
 
-    $CredentialsBytes = [System.Text.Encoding]::UTF8.GetBytes( -join ("{0}:{1}" -f $username, $password))
+    $CredentialsBytes   = [System.Text.Encoding]::UTF8.GetBytes( -join ("{0}:{1}" -f $username, $password))
     $EncodedCredentials = [Convert]::ToBase64String($CredentialsBytes)
+
+    # Wipe plaintext credentials from memory — they are no longer needed.
+    $username = $null
+    $password = $null
+    [Array]::Clear($CredentialsBytes, 0, $CredentialsBytes.Length)
+    $CredentialsBytes = $null
+    $body             = $null
 
     $SessionHeader = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
     $SessionHeader.Add("Authorization", "Basic $EncodedCredentials")
