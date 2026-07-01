@@ -88,6 +88,11 @@ function Remove-DMLun {
         $deviceManager
     }
     $lun = @(Get-DMlun -WebSession $session | Where-Object Name -EQ $LunName)[0]
+
+    if ($lun.'is Mapped' -eq 'mapped') {
+        throw "Cannot remove LUN '$LunName': it is currently mapped to a host. Remove the mapping view first."
+    }
+
     $parameters = @()
     if ($ImmediateDelete) {
         $parameters += 'isDelayDelete=false'
