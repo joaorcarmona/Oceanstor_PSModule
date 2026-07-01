@@ -72,7 +72,7 @@ function Get-DMLunsbyFilter {
 
     $apiField = $PropertyToApiField[$Filter]
     if ($apiField) {
-        $resource = "lun?filter=$($apiField):$Keyword"
+        $resource = "lun?filter=$($apiField):$([uri]::EscapeDataString($Keyword))"
     }
     else {
         $resource = "lun"

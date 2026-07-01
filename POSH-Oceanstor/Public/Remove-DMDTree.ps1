@@ -80,7 +80,6 @@ function Remove-DMDTree {
                     $deviceManager
                 }
                 $fileSystem = @(Get-DMFileSystem -WebSession $session | Where-Object Name -EQ $FileSystemName)[0]
-                if ($null -eq $fileSystem) { throw "Could not resolve 'fileSystem' — the object may have been removed since parameter validation." }
                 $dtrees = @((Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource "QUOTATREE?PARENTID=$($fileSystem.Id)").data)
                 $matchingItems = @($dtrees | Where-Object NAME -EQ $_)
                 if ($matchingItems.Count -eq 1) {

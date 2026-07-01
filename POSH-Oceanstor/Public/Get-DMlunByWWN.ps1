@@ -62,7 +62,7 @@ function Get-DMlunByWWN {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "lun?filter=WWN:$WWN" | Select-Object -ExpandProperty data
+    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "lun?filter=WWN:$([uri]::EscapeDataString($WWN))" | Select-Object -ExpandProperty data
     $StorageLuns = New-Object System.Collections.ArrayList
 
     $StorageVersion = $session.version.Substring(0, 2)

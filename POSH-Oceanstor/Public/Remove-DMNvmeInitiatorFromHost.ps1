@@ -83,7 +83,6 @@ function Remove-DMNvmeInitiatorFromHost {
                 }
                 $selectedHostName = [string]$HostName
                 $hostObject = @(Get-DMhost -WebSession $session | Where-Object Name -EQ $selectedHostName)[0]
-                if ($null -eq $hostObject) { throw "Could not resolve 'hostObject' — the object may have been removed since parameter validation." }
                 $resource = "NVMe_over_RoCE_initiator/associate?ASSOCIATEOBJTYPE=21&ASSOCIATEOBJID=$($hostObject.Id)"
                 $initiators = @((Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource $resource).data)
                 if ($initiators.ID -contains $candidate) {
