@@ -83,6 +83,7 @@ function Get-DMFileSystemSnapshot {
         $deviceManager
     }
     $fileSystem = @(Get-DMFileSystem -WebSession $session | Where-Object Name -EQ $FileSystemName)[0]
+    if ($null -eq $fileSystem) { throw "Could not resolve 'fileSystem' — the object may have been removed since parameter validation." }
 
     if ($SnapshotName) {
         $snapshotId = "$($fileSystem.Id)@$SnapshotName"

@@ -113,7 +113,9 @@ function Remove-DMLunFromLunGroup {
         $deviceManager
     }
     $lun = @(Get-DMlun -WebSession $session | Where-Object Name -EQ $LunName)[0]
+    if ($null -eq $lun) { throw "Could not resolve 'lun' — the object may have been removed since parameter validation." }
     $group = @(Get-DMlunGroup -WebSession $session | Where-Object Name -EQ $LunGroupName)[0]
+    if ($null -eq $group) { throw "Could not resolve 'group' — the object may have been removed since parameter validation." }
     $members = @(Get-DMlunbyLunGroup -WebSession $session -LunGroup $group)
     if ($members.Id -notcontains $lun.Id) {
         throw "LUN '$LunName' is not a member of LUN group '$LunGroupName'."

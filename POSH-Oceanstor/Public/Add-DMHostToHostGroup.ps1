@@ -113,7 +113,9 @@ function Add-DMHostToHostGroup {
         $deviceManager
     }
     $hostObject = @($script:_dmAddHostHosts | Where-Object Name -EQ $HostName)[0]
+    if ($null -eq $hostObject) { throw "Could not resolve 'hostObject' — the object may have been removed since parameter validation." }
     $group = @($script:_dmAddHostGroups | Where-Object Name -EQ $HostGroupName)[0]
+    if ($null -eq $group) { throw "Could not resolve 'group' — the object may have been removed since parameter validation." }
     $body = @{
         ID               = $group.Id
         ASSOCIATEOBJTYPE = 21

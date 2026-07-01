@@ -83,6 +83,7 @@ function Remove-DMFiberChannelInitiatorFromHost {
                 }
                 $selectedHostName = [string]$HostName
                 $hostObject = @(Get-DMhost -WebSession $session | Where-Object Name -EQ $selectedHostName)[0]
+                if ($null -eq $hostObject) { throw "Could not resolve 'hostObject' — the object may have been removed since parameter validation." }
                 $initiators = @(Get-DMHostInitiator -WebSession $session -InitiatorType FibreChannel -HostId $hostObject.Id)
                 if ($initiators.Id -contains $candidate) {
                     return $true

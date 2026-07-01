@@ -101,6 +101,7 @@ function Get-DMLunSnapshot {
     $resource = 'snapshot'
     if ($LunName) {
         $sourceLun = @(Get-DMlun -WebSession $session | Where-Object Name -EQ $LunName)[0]
+        if ($null -eq $sourceLun) { throw "Could not resolve 'sourceLun' — the object may have been removed since parameter validation." }
         $resource = "snapshot?filter=SOURCELUNID:$($sourceLun.Id)"
     }
 

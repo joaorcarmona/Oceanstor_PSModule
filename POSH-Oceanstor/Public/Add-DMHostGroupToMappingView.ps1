@@ -101,7 +101,9 @@ function Add-DMHostGroupToMappingView {
         $deviceManager
     }
     $view = @(Get-DMMappingView -WebSession $session | Where-Object Name -EQ $MappingViewName)[0]
+    if ($null -eq $view) { throw "Could not resolve 'view' — the object may have been removed since parameter validation." }
     $group = @(Get-DMhostGroup -WebSession $session | Where-Object Name -EQ $HostGroupName)[0]
+    if ($null -eq $group) { throw "Could not resolve 'group' — the object may have been removed since parameter validation." }
     $body = @{ TYPE = 245; ID = $view.Id; ASSOCIATEOBJTYPE = 14; ASSOCIATEOBJID = $group.Id }
     if ($VstoreId) {
         $body.vstoreId = $VstoreId

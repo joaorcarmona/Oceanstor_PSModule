@@ -111,10 +111,12 @@ function Remove-DMHostGroupFromMappingView {
         $deviceManager
     }
     $view = @(Get-DMMappingView -WebSession $session | Where-Object Name -EQ $MappingViewName)[0]
+    if ($null -eq $view) { throw "Could not resolve 'view' — the object may have been removed since parameter validation." }
     if (-not $view) {
         throw "Mapping view '$MappingViewName' was not found."
     }
     $group = @(Get-DMhostGroup -WebSession $session | Where-Object Name -EQ $HostGroupName)[0]
+    if ($null -eq $group) { throw "Could not resolve 'group' — the object may have been removed since parameter validation." }
     if (-not $group) {
         throw "Host group '$HostGroupName' was not found."
     }

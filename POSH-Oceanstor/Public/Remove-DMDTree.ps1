@@ -80,6 +80,7 @@ function Remove-DMDTree {
                     $deviceManager
                 }
                 $fileSystem = @(Get-DMFileSystem -WebSession $session | Where-Object Name -EQ $FileSystemName)[0]
+                if ($null -eq $fileSystem) { throw "Could not resolve 'fileSystem' — the object may have been removed since parameter validation." }
                 $dtrees = @((Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource "QUOTATREE?PARENTID=$($fileSystem.Id)").data)
                 $matchingItems = @($dtrees | Where-Object NAME -EQ $_)
                 if ($matchingItems.Count -eq 1) {
@@ -102,6 +103,7 @@ function Remove-DMDTree {
                     $deviceManager
                 }
                 $fileSystem = @(Get-DMFileSystem -WebSession $session | Where-Object Name -EQ $fakeBoundParameters.FileSystemName)[0]
+                if ($null -eq $fileSystem) { throw "Could not resolve 'fileSystem' — the object may have been removed since parameter validation." }
                 if (-not $fileSystem) {
                     return
                 }
@@ -120,8 +122,10 @@ function Remove-DMDTree {
         $deviceManager
     }
     $fileSystem = @(Get-DMFileSystem -WebSession $session | Where-Object Name -EQ $FileSystemName)[0]
+    if ($null -eq $fileSystem) { throw "Could not resolve 'fileSystem' — the object may have been removed since parameter validation." }
     $dtrees = @((Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource "QUOTATREE?PARENTID=$($fileSystem.Id)").data)
     $dtree = @($dtrees | Where-Object NAME -EQ $DTreeName)[0]
+    if ($null -eq $dtree) { throw "Could not resolve 'dtree' — the object may have been removed since parameter validation." }
     $resource = "QUOTATREE/$($dtree.ID)"
     if ($VstoreId) {
         $resource += "?vstoreId=$VstoreId"

@@ -89,6 +89,7 @@ function Resize-DMLunSnapshot {
     }
 
     $snapshot = @(Get-DMLunSnapshot -WebSession $session | Where-Object Name -EQ $SnapShotName)[0]
+    if ($null -eq $snapshot) { throw "Could not resolve 'snapshot' — the object may have been removed since parameter validation." }
 
     if ($null -ne $snapshot.'User Capacity' -and $UserCapacity -le [uint64]$snapshot.'User Capacity') {
         throw "UserCapacity must be greater than the current snapshot capacity of $($snapshot.'User Capacity') sectors."

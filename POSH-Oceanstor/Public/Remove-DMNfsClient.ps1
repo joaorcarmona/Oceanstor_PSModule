@@ -78,6 +78,7 @@ function Remove-DMNfsClient {
         $deviceManager
     }
     $client = @(Get-DMnfsFileClient -WebSession $session | Where-Object Name -EQ $ClientName)[0]
+    if ($null -eq $client) { throw "Could not resolve 'client' — the object may have been removed since parameter validation." }
     $resource = "NFS_SHARE_AUTH_CLIENT/$($client.Id)"
     if ($VstoreId) {
         $resource += "?vstoreId=$VstoreId"

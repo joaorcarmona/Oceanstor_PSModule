@@ -75,6 +75,7 @@ function Remove-DMMappingView {
         $deviceManager
     }
     $view = @(Get-DMMappingView -WebSession $session | Where-Object Name -EQ $MappingViewName)[0]
+    if ($null -eq $view) { throw "Could not resolve 'view' — the object may have been removed since parameter validation." }
     $resource = "mappingview/$($view.Id)"
     if ($VstoreId) {
         $resource += "?vstoreId=$VstoreId"

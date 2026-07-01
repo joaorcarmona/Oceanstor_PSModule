@@ -84,6 +84,7 @@ function Remove-DMSnapshotConsistencyGroup {
         $deviceManager
     }
     $group = @(Get-DMSnapshotConsistencyGroup -WebSession $session | Where-Object Name -EQ $Name)[0]
+    if ($null -eq $group) { throw "Could not resolve 'group' — the object may have been removed since parameter validation." }
     $resource = "SNAPSHOT_CONSISTENCY_GROUP/$($group.Id)"
     if ($DeleteDestinationLuns.IsPresent) {
         $resource = "$resource?isDeleteDstLun=1"

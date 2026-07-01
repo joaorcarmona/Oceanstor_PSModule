@@ -82,6 +82,7 @@ function Restart-DMLunSnapshot {
     }
 
     $snapshot = @(Get-DMLunSnapshot -WebSession $session | Where-Object Name -EQ $SnapShotName)[0]
+    if ($null -eq $snapshot) { throw "Could not resolve 'snapshot' — the object may have been removed since parameter validation." }
 
     if ($PSCmdlet.ShouldProcess($SnapShotName, 'Reactivate LUN snapshot')) {
         $body = @{ ID = $snapshot.Id }

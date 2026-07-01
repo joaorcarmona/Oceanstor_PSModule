@@ -103,6 +103,7 @@ function New-DMLunSnapshotCopy {
     }
 
     $sourceSnapshot = @(Get-DMLunSnapshot -WebSession $session | Where-Object Name -EQ $SourceSnapShotName)[0]
+    if ($null -eq $sourceSnapshot) { throw "Could not resolve 'sourceSnapshot' — the object may have been removed since parameter validation." }
 
     $resolvedCopyName = $SnapshotCopyName
     if (-not $resolvedCopyName) {

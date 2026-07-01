@@ -105,6 +105,7 @@ function New-DMLunSnapshot {
     }
 
     $sourceLun = @(Get-DMlun -WebSession $session | Where-Object Name -EQ $SourceLunName)[0]
+    if ($null -eq $sourceLun) { throw "Could not resolve 'sourceLun' — the object may have been removed since parameter validation." }
 
     $body = @{
         TYPE       = 27

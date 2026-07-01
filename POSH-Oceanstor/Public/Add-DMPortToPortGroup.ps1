@@ -124,7 +124,9 @@ function Add-DMPortToPortGroup {
         $deviceManager
     }
     $group = @($script:_dmAddPortGroups | Where-Object Name -EQ $PortGroupName)[0]
+    if ($null -eq $group) { throw "Could not resolve 'group' — the object may have been removed since parameter validation." }
     $port = @($script:_dmAddPorts | Where-Object Name -EQ $PortName)[0]
+    if ($null -eq $port) { throw "Could not resolve 'port' — the object may have been removed since parameter validation." }
     $body = @{
         ID               = $group.Id
         ASSOCIATEOBJTYPE = $port.ObjectType

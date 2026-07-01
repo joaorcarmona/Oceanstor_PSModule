@@ -93,6 +93,7 @@ function Remove-DMFileSystem {
         $deviceManager
     }
     $fileSystem = @(Get-DMFileSystem -WebSession $session | Where-Object Name -EQ $FileSystemName)[0]
+    if ($null -eq $fileSystem) { throw "Could not resolve 'fileSystem' — the object may have been removed since parameter validation." }
     $parameters = @()
     if ($Force) {
         $parameters += 'forceDeleteFs=true'

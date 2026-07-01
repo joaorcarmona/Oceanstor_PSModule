@@ -78,6 +78,7 @@ function Remove-DMHostGroup {
         $deviceManager
     }
     $group = @(Get-DMhostGroup -WebSession $session | Where-Object Name -EQ $HostGroupName)[0]
+    if ($null -eq $group) { throw "Could not resolve 'group' — the object may have been removed since parameter validation." }
     $resource = "hostgroup/$($group.Id)"
     if ($VstoreId) {
         $resource += "?vstoreId=$VstoreId"

@@ -150,6 +150,7 @@ function Get-DMMappingView {
     switch ($PSCmdlet.ParameterSetName) {
         'HostGroup' {
             $group = @(Get-DMhostGroup -WebSession $session | Where-Object Name -EQ $HostGroupName)[0]
+            if ($null -eq $group) { throw "Could not resolve 'group' — the object may have been removed since parameter validation." }
             if (-not $group) {
                 throw "Host group '$HostGroupName' was not found."
             }
@@ -157,6 +158,7 @@ function Get-DMMappingView {
         }
         'LunGroup' {
             $group = @(Get-DMlunGroup -WebSession $session | Where-Object Name -EQ $LunGroupName)[0]
+            if ($null -eq $group) { throw "Could not resolve 'group' — the object may have been removed since parameter validation." }
             if (-not $group) {
                 throw "LUN group '$LunGroupName' was not found."
             }
@@ -164,6 +166,7 @@ function Get-DMMappingView {
         }
         'PortGroup' {
             $group = @(Get-DMPortGroup -WebSession $session | Where-Object Name -EQ $PortGroupName)[0]
+            if ($null -eq $group) { throw "Could not resolve 'group' — the object may have been removed since parameter validation." }
             if (-not $group) {
                 throw "Port group '$PortGroupName' was not found."
             }

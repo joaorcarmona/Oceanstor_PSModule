@@ -113,7 +113,9 @@ function Remove-DMHostFromHostGroup {
         $deviceManager
     }
     $hostObject = @($script:_dmRemoveHostHosts | Where-Object Name -EQ $HostName)[0]
+    if ($null -eq $hostObject) { throw "Could not resolve 'hostObject' — the object may have been removed since parameter validation." }
     $group = @($script:_dmRemoveHostGroups | Where-Object Name -EQ $HostGroupName)[0]
+    if ($null -eq $group) { throw "Could not resolve 'group' — the object may have been removed since parameter validation." }
     $members = @(Get-DMhostbyHostGroupId -WebSession $session -HostGroupId $group.Id)
     if ($members.Id -notcontains $hostObject.Id) {
         throw "Host '$HostName' is not a member of host group '$HostGroupName'."

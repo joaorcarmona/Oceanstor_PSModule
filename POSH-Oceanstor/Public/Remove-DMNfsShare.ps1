@@ -89,6 +89,7 @@ function Remove-DMNfsShare {
         $deviceManager
     }
     $share = @(Get-DMShare -WebSession $session -ShareType NFS | Where-Object 'Share Path' -EQ $SharePath)[0]
+    if ($null -eq $share) { throw "Could not resolve 'share' — the object may have been removed since parameter validation." }
     $parameters = @()
     if ($PrivateShare) {
         $parameters += 'sharePrivate=1'

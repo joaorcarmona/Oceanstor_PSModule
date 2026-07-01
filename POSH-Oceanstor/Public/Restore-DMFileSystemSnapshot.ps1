@@ -111,6 +111,7 @@ function Restore-DMFileSystemSnapshot {
         $deviceManager
     }
     $snapshot = @(Get-DMFileSystemSnapshot -WebSession $session -FileSystemName $FileSystemName -SnapshotName $SnapshotName)[0]
+    if ($null -eq $snapshot) { throw "Could not resolve 'snapshot' — the object may have been removed since parameter validation." }
 
     if ($PSCmdlet.ShouldProcess("$FileSystemName/$SnapshotName", 'Roll back file system snapshot')) {
         $body = @{ ID = $snapshot.Id }
