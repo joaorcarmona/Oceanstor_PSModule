@@ -60,7 +60,7 @@ Describe 'Connect-deviceManager' {
         $result.Hostname | Should -Be 'oceanstor.test'
         $result.DeviceId | Should -Be 'device-01'
         $result.Version | Should -Be 'V600R001'
-        $result.Headers.Authorization | Should -Be 'Basic c2VjdXJlLXVzZXI6c2VjdXJlLXBhc3M='
+        $result.Headers.ContainsKey('Authorization') | Should -BeFalse
         $result.Headers.iBaseToken | Should -Be 'token-01'
         Should -Invoke Get-Credential -Times 1 -Exactly
         Should -Invoke Get-DMSystem -Times 1 -Exactly
@@ -89,7 +89,7 @@ Describe 'Connect-deviceManager' {
         $result = Connect-deviceManager -Hostname 'oceanstor.test' -PassThru -Credential $credential
 
         $result.GetType().Name | Should -Be 'OceanstorSession'
-        $result.Headers.Authorization | Should -Be 'Basic YXBpLXVzZXI6YXBpLXBhc3M='
+        $result.Headers.ContainsKey('Authorization') | Should -BeFalse
         Should -Invoke Get-Credential -Times 0 -Exactly
         Should -Invoke Invoke-RestMethod -Times 1 -Exactly -ParameterFilter {
             ($Body | ConvertFrom-Json).username -eq 'api-user' -and
@@ -117,7 +117,7 @@ Describe 'Connect-deviceManager' {
         $result = Connect-deviceManager -Hostname 'oceanstor.test' -PassThru -LoginUser 'api-user' -LoginPwd $securePassword
 
         $result.GetType().Name | Should -Be 'OceanstorSession'
-        $result.Headers.Authorization | Should -Be 'Basic YXBpLXVzZXI6YXBpLXBhc3M='
+        $result.Headers.ContainsKey('Authorization') | Should -BeFalse
         Should -Invoke Get-Credential -Times 0 -Exactly
     }
 

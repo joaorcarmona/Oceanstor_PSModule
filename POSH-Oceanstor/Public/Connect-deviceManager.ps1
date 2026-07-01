@@ -110,18 +110,14 @@ function Connect-deviceManager {
         throw "Login failed for host '$Hostname': $($SessionError.description)"
     }
 
-    $CredentialsBytes   = [System.Text.Encoding]::UTF8.GetBytes( -join ("{0}:{1}" -f $username, $password))
-    $EncodedCredentials = [Convert]::ToBase64String($CredentialsBytes)
-
-    # Wipe plaintext credentials from memory — they are no longer needed.
+    # Wipe plaintext credentials from memory now that the login body has been sent.
+    # The Basic Auth header is not carried into the session — iBaseToken alone
+    # authenticates all subsequent calls, so the credential strings are not needed again.
     $username = $null
     $password = $null
-    [Array]::Clear($CredentialsBytes, 0, $CredentialsBytes.Length)
-    $CredentialsBytes = $null
-    $body             = $null
+    $body     = $null
 
     $SessionHeader = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
-    $SessionHeader.Add("Authorization", "Basic $EncodedCredentials")
     $SessionHeader.Add("iBaseToken", $logonsession.data.iBaseToken)
 
     $connection = [OceanstorSession]::new($logonSession, $SessionHeader, $webSession, $Hostname)
