@@ -220,52 +220,7 @@ function New-DMFileSystem {
 
     $capacityInBlocks = $null
     if ($PSBoundParameters.ContainsKey('capacity')) {
-        # OceanStor expects file-system capacity as a count of 512-byte blocks.
-        # Unitless integers retain the command's historical gigabyte behavior.
-        $capacityText = ([string]$capacity).Trim()
-        if ($capacityText -match '^(?<Value>(?:\d+(?:[.,]\d+)?|[.,]\d+))\s*(?<Unit>MB|GB|TB)$') {
-            $size = [decimal]0
-            $normalizedValue = $Matches.Value.Replace(',', '.')
-            $parsed = [decimal]::TryParse(
-                $normalizedValue,
-                [Globalization.NumberStyles]::AllowDecimalPoint,
-                [Globalization.CultureInfo]::InvariantCulture,
-                [ref]$size
-            )
-            if (-not $parsed -or $size -le 0) {
-                throw "Capacity must be greater than zero. Received '$capacityText'."
-            }
-
-            $blocksPerUnit = switch ($Matches.Unit.ToUpperInvariant()) {
-                'MB' { [decimal]2048 }
-                'GB' { [decimal]2097152 }
-                'TB' { [decimal]2147483648 }
-            }
-            $blockCount = $size * $blocksPerUnit
-        }
-        else {
-            $sizeInGB = [long]0
-            if (-not [long]::TryParse(
-                    $capacityText,
-                    [Globalization.NumberStyles]::Integer,
-                    [Globalization.CultureInfo]::InvariantCulture,
-                    [ref]$sizeInGB
-                )) {
-                throw "Invalid capacity '$capacityText'. Use a positive value followed by MB, GB, or TB (for example, 10GB)."
-            }
-            if ($sizeInGB -le 0) {
-                throw "Capacity must be greater than zero. Received '$capacityText'."
-            }
-            $blockCount = [decimal]$sizeInGB * [decimal]2097152
-        }
-
-        if ($blockCount -gt [long]::MaxValue) {
-            throw "Capacity '$capacityText' exceeds the supported maximum."
-        }
-        if ([decimal]::Truncate($blockCount) -ne $blockCount) {
-            throw "Capacity '$capacityText' does not resolve to a whole number of 512-byte blocks."
-        }
-        $capacityInBlocks = [long]$blockCount
+        $capacityInBlocks = ConvertTo-DMCapacityBlock -Capacity $capacity -UnitlessUnit GB
     }
 
     $body = @{

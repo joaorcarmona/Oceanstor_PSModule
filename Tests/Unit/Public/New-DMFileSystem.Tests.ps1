@@ -17,6 +17,7 @@ BeforeDiscovery {
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorFileSystem.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\ConvertTo-DMCapacityBlock.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\New-DMFileSystem.ps1"
 
         Export-ModuleMember -Function New-DMFileSystem
