@@ -104,8 +104,7 @@ Describe 'Set-DMLun' {
         $result = Set-DMLun -WebSession $script:session -LunName 'database' -NewName 'database-prod' `
             -Capacity '2GB' -Confirm:$false
 
-        $result.Count | Should -Be 1
-        $result[0].Code | Should -Be 1
+        $result.Code | Should -Be 1
         $script:requests.Count | Should -Be 1
         $script:requests[0].Resource | Should -Be 'lun/lun-01'
     }
