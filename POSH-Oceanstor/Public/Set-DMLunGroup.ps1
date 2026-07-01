@@ -50,7 +50,7 @@ function Set-DMLunGroup {
     )
 
     $session = if ($WebSession) { $WebSession } else { $deviceManager }
-    $update = New-DMNamedObjectUpdate -Objects @(Get-DMlunGroup -WebSession $session) `
+    $update = New-DMNamedObjectUpdate -Objects @(Get-DMlunGroup -WebSession $session -VstoreId $VstoreId) `
         -CurrentName $LunGroupName -EntityName 'LUN group' -ResourceBase 'lungroup' -NewName $NewName `
         -NewNameSpecified:$($PSBoundParameters.ContainsKey('NewName')) -Description $Description `
         -DescriptionSpecified:$($PSBoundParameters.ContainsKey('Description')) -ApiProperties $ApiProperties -VstoreId $VstoreId

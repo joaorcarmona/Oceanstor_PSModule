@@ -35,7 +35,9 @@ function Get-DMhostGroup {
     [Cmdletbinding()]
     param(
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
-        [pscustomobject]$WebSession
+        [pscustomobject]$WebSession,
+
+        [string]$VstoreId
     )
 
     if ($WebSession) {
@@ -54,7 +56,11 @@ function Get-DMhostGroup {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "hostgroup" | Select-Object -ExpandProperty data
+    $resource = 'hostgroup'
+    if ($VstoreId) {
+        $resource += "?vstoreId=$VstoreId"
+    }
+    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource $resource | Select-Object -ExpandProperty data
     $hostgroups = New-Object System.Collections.ArrayList
 
     foreach ($hgroup in $response) {

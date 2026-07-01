@@ -40,7 +40,9 @@ function Get-DMlunGroup {
     [Cmdletbinding()]
     param(
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
-        [pscustomobject]$WebSession
+        [pscustomobject]$WebSession,
+
+        [string]$VstoreId
     )
 
     if ($WebSession) {
@@ -59,7 +61,11 @@ function Get-DMlunGroup {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "lungroup" | Select-Object -ExpandProperty data
+    $resource = 'lungroup'
+    if ($VstoreId) {
+        $resource += "?vstoreId=$VstoreId"
+    }
+    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource $resource | Select-Object -ExpandProperty data
     $lunGroups = New-Object System.Collections.ArrayList
 
     foreach ($lgroup in $response) {
