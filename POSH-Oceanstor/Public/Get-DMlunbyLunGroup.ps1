@@ -77,7 +77,10 @@ function Get-DMlunbyLunGroup {
             $associatedLunIds = @(ConvertFrom-Json -InputObject $associatedLunIdList -ErrorAction Stop)
         }
         catch {
-            $associatedLunIds = @($associatedLunIdList -split ',')
+            # Strip surrounding JSON-array brackets before splitting so that both
+            # "[1,2,3]" and "1,2,3" produce the same clean id list.
+            $stripped = $associatedLunIdList.Trim().TrimStart('[').TrimEnd(']')
+            $associatedLunIds = @($stripped -split ',')
         }
     }
     else {
