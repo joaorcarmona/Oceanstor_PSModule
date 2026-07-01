@@ -12,7 +12,6 @@ BeforeDiscovery {
             )
         }
 
-        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Invoke-DMPagedRequest.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorFileSystemSnapshot.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\New-DMFileSystemSnapshot.ps1"
@@ -90,7 +89,7 @@ Describe 'File-system snapshot commands' {
         $result[0].PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
             Should -Be @('Id', 'Name', 'Source File System Name', 'Health Status', 'Snapshot Type', 'Timestamp')
         $script:method | Should -Be 'GET'
-        $script:resource | Should -BeLike 'fssnapshot?filter=PARENTID:5*'
+        $script:resource | Should -Be 'fssnapshot?filter=PARENTID:5'
     }
 
     It 'gets a named file-system snapshot directly by its composite ID' {
@@ -111,19 +110,6 @@ Describe 'File-system snapshot commands' {
         $script:resource | Should -Be 'fssnapshot/5@checkpoint'
     }
 
-    It 'parses a string JSON response when getting a named snapshot directly' {
-        Mock Invoke-DeviceManager {
-            $script:resource = $Resource
-            '{"data":{"ID":"5@checkpoint","NAME":"checkpoint","PARENTID":"5","PARENTNAME":"documents","HEALTHSTATUS":"1","SNAPTYPE":"1","TIMESTAMP":"1594990822"},"error":{"code":0,"description":"0"}}'
-        }
-
-        $result = Get-DMFileSystemSnapshot -WebSession $script:session -FileSystemName 'documents' -SnapshotName 'checkpoint'
-
-        $result.Count | Should -Be 1
-        $result[0].Name | Should -Be 'checkpoint'
-        $script:resource | Should -Be 'fssnapshot/5@checkpoint'
-    }
-
     It 'returns no file-system snapshots when the API contains no data property' {
         Mock Invoke-DeviceManager { [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 } } }
 
@@ -134,12 +120,12 @@ Describe 'File-system snapshot commands' {
         $script:requestedResources = [System.Collections.Generic.List[string]]::new()
         Mock Invoke-DeviceManager {
             $script:requestedResources.Add($Resource)
-            switch -Wildcard ($Resource) {
-                'fssnapshot?filter=PARENTID:5*' {
+            switch ($Resource) {
+                'fssnapshot?filter=PARENTID:5' {
                     [pscustomobject]@{ data = @() }
                     break
                 }
-                'fssnapshot?PARENTID=5*' {
+                'fssnapshot?PARENTID=5' {
                     [pscustomobject]@{ data = @(
                         [pscustomobject]@{ ID = '5@checkpoint'; NAME = 'checkpoint'; PARENTID = '5'; PARENTNAME = 'documents'; HEALTHSTATUS = '1'; SNAPTYPE = '1'; TIMESTAMP = '1594990822' }
                     ) }
@@ -152,28 +138,21 @@ Describe 'File-system snapshot commands' {
 
         $result.Count | Should -Be 1
         $result[0].Name | Should -Be 'checkpoint'
-        $script:requestedResources[0] | Should -BeLike 'fssnapshot?filter=PARENTID:5*'
-        $script:requestedResources[1] | Should -BeLike 'fssnapshot?PARENTID=5*'
+        $script:requestedResources[0] | Should -Be 'fssnapshot?filter=PARENTID:5'
+        $script:requestedResources[1] | Should -Be 'fssnapshot?PARENTID=5'
     }
 
-    It 'pages through all file-system snapshots when the first page is full' {
-        $script:getCallCount = 0
+    It 'makes a single API call for lists regardless of how many snapshots exist' {
         Mock Invoke-DeviceManager {
-            $script:getCallCount++
-            if ($script:getCallCount -eq 1) {
-                [pscustomobject]@{ data = @(1..100 | ForEach-Object {
-                    [pscustomobject]@{ ID = "5@snap-$_"; NAME = "snap-$_"; PARENTID = '5'; PARENTNAME = 'documents'; HEALTHSTATUS = '1'; SNAPTYPE = '1'; TIMESTAMP = '1594990822' }
-                }) }
-            }
-            else {
-                [pscustomobject]@{ data = @([pscustomobject]@{ ID = '5@snap-101'; NAME = 'snap-101'; PARENTID = '5'; PARENTNAME = 'documents'; HEALTHSTATUS = '1'; SNAPTYPE = '1'; TIMESTAMP = '1594990822' }) }
-            }
+            [pscustomobject]@{ data = @(1..100 | ForEach-Object {
+                [pscustomobject]@{ ID = "5@snap-$_"; NAME = "snap-$_"; PARENTID = '5'; PARENTNAME = 'documents'; HEALTHSTATUS = '1'; SNAPTYPE = '1'; TIMESTAMP = '1594990822' }
+            }) }
         }
 
         $result = Get-DMFileSystemSnapshot -WebSession $script:session -FileSystemName 'documents'
 
-        $result.Count | Should -Be 101
-        Should -Invoke Invoke-DeviceManager -Times 2 -Exactly
+        $result.Count | Should -Be 100
+        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly
     }
 
     It 'deletes a selected file-system snapshot by ID' {

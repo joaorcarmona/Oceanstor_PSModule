@@ -194,6 +194,18 @@ function Invoke-DeviceManager{
 		}
 		$result = Invoke-RestMethod @invokeParams
 
+		# Some PS7 builds fall back to returning the raw JSON string instead of throwing when
+		# the response body contains case-conflicting duplicate keys (e.g. 'snapType'/'SNAPTYPE'
+		# on the fssnapshot endpoint). Convert to PSCustomObject using the case-aware helper so
+		# callers always receive a consistent object type.
+		if ($result -is [string] -and $result) {
+			try {
+				$result = ConvertFrom-DMCasedHashtable ($result | ConvertFrom-Json -AsHashtable)
+			} catch {
+				Write-Verbose "String response from '$RestURI' could not be re-parsed: $($_.Exception.Message)"
+			}
+		}
+
 		Write-DMRequestTrace -StartedAt $startedAt -Method $Method -Resource $Resource -Uri $RestURI `
 			-BodyData $BodyData -ApiV2:$ApiV2 -Response $result
 		return $result

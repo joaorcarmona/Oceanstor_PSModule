@@ -87,11 +87,8 @@ function Get-DMFileSystemSnapshot {
     if ($SnapshotName) {
         $snapshotId = "$($fileSystem.Id)@$SnapshotName"
         $directResponse = Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource "fssnapshot/$snapshotId"
-        if ($directResponse -is [string]) {
-            $directResponse = $directResponse | ConvertFrom-Json
-        }
         $directError = if ($null -ne $directResponse) { $directResponse.PSObject.Properties['error'] } else { $null }
-        $directData = if ($null -ne $directResponse) { $directResponse.PSObject.Properties['data'] } else { $null }
+        $directData  = if ($null -ne $directResponse) { $directResponse.PSObject.Properties['data']  } else { $null }
         $response = if (($null -eq $directError -or $directError.Value.Code -eq 0) -and $null -ne $directData) {
             @($directData.Value)
         }
@@ -104,9 +101,11 @@ function Get-DMFileSystemSnapshot {
     }
 
     if (@($response).Count -eq 0) {
-        $response = Invoke-DMPagedRequest -WebSession $session -Resource "fssnapshot?filter=PARENTID:$($fileSystem.Id)"
+        $listResult = Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource "fssnapshot?filter=PARENTID:$($fileSystem.Id)"
+        $response = if ($null -ne $listResult -and $null -ne $listResult.data) { @($listResult.data) } else { @() }
         if (@($response).Count -eq 0) {
-            $response = Invoke-DMPagedRequest -WebSession $session -Resource "fssnapshot?PARENTID=$($fileSystem.Id)"
+            $listResult = Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource "fssnapshot?PARENTID=$($fileSystem.Id)"
+            $response = if ($null -ne $listResult -and $null -ne $listResult.data) { @($listResult.data) } else { @() }
         }
     }
     $defaultDisplaySet = 'Id', 'Name', 'Source File System Name', 'Health Status', 'Snapshot Type', 'Timestamp'

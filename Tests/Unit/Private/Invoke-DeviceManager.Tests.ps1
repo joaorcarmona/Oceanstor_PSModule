@@ -99,6 +99,21 @@ Describe 'Invoke-DeviceManager' {
         Should -Invoke Invoke-RestMethod -Times 0 -Exactly
     }
 
+    It 'converts a raw string response with case-conflicting JSON keys to a PSCustomObject' {
+        Mock Invoke-RestMethod {
+            # Simulate PS7 builds that return the raw body string instead of throwing when
+            # Invoke-RestMethod encounters duplicate case-insensitive keys.
+            '{"data":{"snapType":1,"SNAPTYPE":2,"ID":"snap-01"},"error":{"code":0}}'
+        }
+
+        $result = Invoke-DeviceManager -WebSession $script:session -Method GET -Resource 'fssnapshot/42'
+
+        $result | Should -BeOfType [pscustomobject]
+        $result.data.SNAPTYPE | Should -Be 2
+        $result.data.ID       | Should -Be 'snap-01'
+        $result.error.code    | Should -Be 0
+    }
+
     It 'falls back to Invoke-WebRequest and normalises case-conflicting JSON keys (message path)' {
         Mock Invoke-RestMethod {
             throw [System.ArgumentException]::new(
