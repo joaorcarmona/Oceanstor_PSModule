@@ -2,6 +2,136 @@
 
 ---
 
+# v0.9.5
+
+Date: 2026-07-01
+Branch: `fix/analysis-findings`
+Status: Released to `master`
+
+## Summary
+
+This release is a focused hardening pass driven by a systematic analysis of the
+module's security, reliability, and correctness surface (`ANALYSIS.md`). It
+closes 14 open findings across five categories: security, correctness, reliability,
+performance, and code quality.
+
+## Security Fixes
+
+- **S1 — Certificate validation opt-in:** `-SkipCertificateCheck` on
+  `Connect-deviceManager` is now opt-in; the integration test runner forwards
+  the flag correctly.
+- **S2 — Credential wipe:** Plaintext password and username variables are
+  cleared from memory immediately after the login call returns.
+- **S3 — Session auth header cleanup:** The `Authorization: Basic …` header is
+  removed from the session after login; all subsequent calls authenticate with
+  `iBaseToken` only, so the Base64-encoded credential is not sent with every
+  REST request.
+- **S4 — URI encoding:** Every user-supplied value interpolated into a REST
+  query string is now wrapped with `[uri]::EscapeDataString()` across five
+  commands (`Get-DMhostbyName`, `Get-DMhostbyId`, `Get-DMlunByWWN`,
+  `Get-DMLunsbyFilter`, `Remove-DMFiberChannelInitiator`), preventing callers
+  from injecting characters that alter the OceanStor filter expression.
+- **S5 — Redundant credential copy removed:** The `hidden [string]$iBaseToken`
+  field on `OceanstorSession` was written in the constructor but never read by
+  any production code. The field and its assignment have been removed, reducing
+  the token's in-memory footprint.
+
+## Correctness Fixes
+
+- **C1 — Null-dereference after `@(...)[0]`:** Added an explicit null-check
+  guard immediately after every body-level `$var = @(...)[0]` dereference
+  across 51 Public commands (70 insertion points). A clear `throw` now fires
+  before any property access reaches the API instead of silently sending a
+  malformed resource path.
+- **C2 / C3 — `OceanstorLunv6` class fixes:** Corrected the inverted
+  `WorkloadTypeName` branch (LUNs with a workload type were showing `"invalid"`;
+  those without were reading from an empty field). Fixed `Rename()` so
+  `$this.Name` is updated to reflect the new name after a successful call.
+- **C4 — Null session guard:** Added a guard inside `Invoke-DeviceManager` that
+  throws `"No OceanStor session available. Call Connect-deviceManager first"` when
+  neither `-WebSession` nor the global `$deviceManager` is set, replacing a
+  cryptic null-property error.
+- **C5 — API error surfacing on GET commands:** Added private helper
+  `Select-DMResponseData` that checks `error.Code` before returning `.data`,
+  throwing a descriptive `"OceanStor API error N: …"` message on non-zero codes.
+  Replaced all 38 occurrences of `| Select-Object -ExpandProperty data` in
+  Public `Get-DM*` commands and `Remove-DMPortFromPortGroup`.
+- **C6 — Session leak on reconnect:** `Connect-deviceManager` now calls
+  `Disconnect-deviceManager` on the existing global session (best-effort, with
+  `Write-Warning` on failure) before overwriting it, preventing orphaned
+  authenticated sessions on the array.
+- **C7 — Pre-flight mapping check:** `Remove-DMLun` now throws before issuing
+  the DELETE call when the LUN is currently mapped to a host, surfacing a clear
+  error instead of letting the API reject the request with a generic code.
+- **C8 — Redundant API round-trips:** `Add-DMHostToHostGroup`,
+  `Remove-DMHostFromHostGroup`, and `Add-DMPortToPortGroup` now cache the
+  `Get-DM*` result from `ValidateScript` in a `$script:`-scoped variable and
+  reuse it in the function body, eliminating the duplicate lookup that previously
+  fired once for validation and once for execution.
+- **C9 — Deterministic bracket-strip fallback:** `Get-DMlunbyLunGroup` now
+  uses `TrimStart('[').TrimEnd(']')` in its `ConvertFrom-Json` fallback path
+  instead of a fragile regex, preventing a silent empty-result when the API
+  returns a non-standard format.
+
+## Quality Improvements
+
+- **Q1 — `New-DMFileSystem` positional parameters:** Fixed incorrect positional
+  parameter ordering that caused capacity to be read from the wrong binding.
+- **Q3 — vStore scope leak:** `Get-DMhost`, `Get-DMhostGroup`, and
+  `Get-DMlunGroup` now accept a `-VstoreId` parameter (appended as
+  `?vstoreId=X` to the resource URL). `Set-DMHost`, `Set-DMHostGroup`, and
+  `Set-DMLunGroup` forward their `-VstoreId` to the inner getter call,
+  preventing cross-vStore object resolution.
+- **Q4 — Capacity parsing consolidation:** Replaced the ~44-line inline capacity
+  parsing blocks in `New-DMLun` and `New-DMFileSystem` with calls to the
+  existing `ConvertTo-DMCapacityBlock` private helper, eliminating the
+  maintenance split between three copies of the same logic.
+- **Q5 — `Set-DMLun` return type alignment:** `Set-DMLun` now returns a single
+  `PSCustomObject` (`$response.error`) matching every other `Set-DM*` command,
+  eliminating the `List[object]` that required callers to use a different code
+  path.
+- **Q6 / Q7 — `Set-DMdnsServer` / `Get-DMdnsServer` cleanup:** `Set-DMdnsServer`
+  now returns `$response.error` (was returning a `Hashtable` or `[string]`);
+  the unconditional read-back call was removed. `Get-DMdnsServer` replaces
+  manual bracket-stripping with `ConvertFrom-Json`.
+- **Q9 — Pagination:** `Get-DMlun`, `Get-DMFileSystem`, and other collection
+  commands route through `Invoke-DMPagedRequest` to retrieve all pages from the
+  OceanStor API instead of truncating at the default page size.
+
+## Test Suite
+
+- 409 unit tests — 0 failures.
+- 10 affected test modules updated to dot-source `Select-DMResponseData`.
+- Integration test private-helper allow-list updated to include
+  `Select-DMResponseData`.
+- New test files added for `Remove-DMLun`, `Add-DMHostToHostGroup`,
+  `Remove-DMHostFromHostGroup`, `Add-DMPortToPortGroup`,
+  `Get-DMlunbyLunGroup`, `Get-DMhost`, `Get-DMhostGroup`, and `Get-DMlunGroup`.
+
+## Commit History
+
+- `578028d` - fix(Q5): Set-DMLun returns single PSCustomObject
+- `c0e04d7` - fix: add Select-DMResponseData to integration test allow-list
+- `cf693b2` - fix(C5): replace Select-Object -ExpandProperty data with error-aware helper
+- `2b8029c` - fix(S4,C1): URI-encode user input in REST paths; remove misplaced null guards
+- `18d2f96` - fix(C1): add null-check guards after every @(...)[0] dereference
+- `fbc348b` - refactor(Q4): replace inline capacity parsing with ConvertTo-DMCapacityBlock
+- `5874d88` - fix(Q3): forward VstoreId through getter commands
+- `f570da9` - fix(C9): deterministic bracket-strip fallback in Get-DMlunbyLunGroup
+- `ac5be5f` - perf(C8): eliminate redundant API round-trips in membership commands
+- `85c3d45` - fix(C7): pre-flight mapped-LUN check in Remove-DMLun
+- `ed32ec9` - fix(S5): remove redundant plaintext iBaseToken field
+- `34551fd` - fix(S3): remove Basic Auth header from post-login session
+- `40d2201` - fix(S2): wipe plaintext credentials from memory after login
+- `1c1ceba` - fix(S1): make certificate validation opt-in
+- `2a516c7` - fix(C4,C5,C6): session null guard, error surfacing, session-leak on reconnect
+- `ffe8319` - fix(Q6,Q7): align Set-DMdnsServer return type and harden Get-DMdnsServer
+- `89e9f18` - feat(Q9): add pagination to Get-DM* collection commands
+- `e8719d1` - fix(Q1): correct New-DMFileSystem parameter positions
+- `b1d00f2` - fix(C2,C3): correct OceanstorLunv6 Rename() and WorkloadType mapping
+
+---
+
 # v0.9.4
 
 Date: 2026-06-23
