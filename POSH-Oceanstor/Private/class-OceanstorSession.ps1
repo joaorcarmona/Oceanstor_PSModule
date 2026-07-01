@@ -18,8 +18,8 @@ class OceanstorSession{
 	#Define Headers Array Property
 	hidden [System.Collections.IDictionary]$Headers
 
-	#Define iBaseToken Property
-	hidden [string]$iBaseToken
+	#Define TLS validation compatibility switch
+	hidden [bool]$SkipCertificateCheck
 
 	#Define Software Version
 	[string]$Version
@@ -37,7 +37,6 @@ class OceanstorSession{
         $this.Session = $WebSession
 		$this.WebSession = $WebSession
         $this.Headers = $SessionHeader
-        $this.iBaseToken = $logonsession.data.iBaseToken
         #$this.Credentials = $credentials
         $this.Hostname = $hostname
     }

@@ -133,6 +133,7 @@ function New-DMFiberChannelInitiator {
     }
     if ($HostName) {
         $hostObject = @(Get-DMhost -WebSession $session | Where-Object Name -EQ $HostName)[0]
+        if ($null -eq $hostObject) { throw "Could not resolve 'hostObject' — the object may have been removed since parameter validation." }
         $body.PARENTTYPE = 21
         $body.PARENTID = $hostObject.Id
     }

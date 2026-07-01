@@ -40,7 +40,7 @@ $script:MutationReadBackWorkflow = {
         }
         if ($owned.FileSystemSnapshot.Contains($fileSystemSnapshotName)) {
             Add-MutationReadVerification -Name 'Get-DMFileSystemSnapshot:Created' -ExpectedType 'OceanstorFileSystemSnapshot' -Action {
-                Get-DMFileSystemSnapshot -WebSession $session -FileSystemName $fileSystemName | Where-Object Name -EQ $fileSystemSnapshotName
+                Get-DMFileSystemSnapshot -WebSession $session -FileSystemName $fileSystemName -SnapshotName $fileSystemSnapshotName
             } | Out-Null
         }
         if ($owned.NfsShare.Contains($nfsSharePath)) {

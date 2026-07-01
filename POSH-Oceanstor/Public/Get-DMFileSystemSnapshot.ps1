@@ -83,23 +83,31 @@ function Get-DMFileSystemSnapshot {
         $deviceManager
     }
     $fileSystem = @(Get-DMFileSystem -WebSession $session | Where-Object Name -EQ $FileSystemName)[0]
-    $resource = "fssnapshot?PARENTID=$($fileSystem.Id)"
-    $queryResult = Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource $resource
-    $response = @()
-    if ($queryResult -is [string] -and -not [string]::IsNullOrWhiteSpace($queryResult)) {
-        $parsedResult = $queryResult | ConvertFrom-Json -AsHashtable -ErrorAction Stop
-        $response = @(
-            foreach ($snapshotData in @($parsedResult.data)) {
-                $normalizedData = [ordered]@{}
-                foreach ($key in $snapshotData.Keys) {
-                    $normalizedData[[string]$key] = $snapshotData[$key]
-                }
-                [pscustomobject]$normalizedData
-            }
-        )
+    if ($null -eq $fileSystem) { throw "Could not resolve 'fileSystem' — the object may have been removed since parameter validation." }
+
+    if ($SnapshotName) {
+        $snapshotId = "$($fileSystem.Id)@$SnapshotName"
+        $directResponse = Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource "fssnapshot/$snapshotId"
+        $directError = if ($null -ne $directResponse) { $directResponse.PSObject.Properties['error'] } else { $null }
+        $directData  = if ($null -ne $directResponse) { $directResponse.PSObject.Properties['data']  } else { $null }
+        $response = if (($null -eq $directError -or $directError.Value.Code -eq 0) -and $null -ne $directData) {
+            @($directData.Value)
+        }
+        else {
+            @()
+        }
     }
-    elseif ($null -ne $queryResult -and $null -ne $queryResult.PSObject.Properties['data']) {
-        $response = @($queryResult.data)
+    else {
+        $response = @()
+    }
+
+    if (@($response).Count -eq 0) {
+        $listResult = Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource "fssnapshot?filter=PARENTID:$($fileSystem.Id)"
+        $response = if ($null -ne $listResult -and $null -ne $listResult.data) { @($listResult.data) } else { @() }
+        if (@($response).Count -eq 0) {
+            $listResult = Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource "fssnapshot?PARENTID=$($fileSystem.Id)"
+            $response = if ($null -ne $listResult -and $null -ne $listResult.data) { @($listResult.data) } else { @() }
+        }
     }
     $defaultDisplaySet = 'Id', 'Name', 'Source File System Name', 'Health Status', 'Snapshot Type', 'Timestamp'
     $displayPropertySet = New-Object System.Management.Automation.PSPropertySet('DefaultDisplayPropertySet', [string[]]$defaultDisplaySet)

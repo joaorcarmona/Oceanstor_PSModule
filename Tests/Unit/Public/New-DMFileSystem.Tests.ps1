@@ -17,6 +17,7 @@ BeforeDiscovery {
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorFileSystem.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\ConvertTo-DMCapacityBlock.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\New-DMFileSystem.ps1"
 
         Export-ModuleMember -Function New-DMFileSystem
@@ -62,6 +63,13 @@ Describe 'New-DMFileSystem' {
         $null = New-DMFileSystem -WebSession $script:session -FileSystemName 'documents' -StoragePoolID 0
 
         $script:fileSystemRequest.ContainsKey('CAPACITY') | Should -BeFalse
+    }
+
+    It 'accepts FileSystemName and StoragePoolID as positional arguments' {
+        $null = New-DMFileSystem $script:session 'documents' 0
+
+        $script:fileSystemRequest.NAME | Should -Be 'documents'
+        $script:fileSystemRequest.PARENTID | Should -Be 0
     }
 
     It 'rejects invalid capacity <Capacity>' -ForEach @(

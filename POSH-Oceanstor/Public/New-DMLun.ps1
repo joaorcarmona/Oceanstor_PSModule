@@ -181,50 +181,7 @@ function New-DMLun {
         $StoragePoolID = $PSBoundParameters['StoragePoolID']
     }
 
-    # OceanStor expects LUN capacity as a count of 512-byte blocks. Accept a
-    # human-readable binary size while retaining legacy raw-block input.
-    $capacityText = ([string]$capacity).Trim()
-    $capacityInBlocks = [long]0
-    if ($capacityText -match '^(?<Value>(?:\d+(?:[.,]\d+)?|[.,]\d+))\s*(?<Unit>MB|GB|TB)$') {
-        $size = [decimal]0
-        $normalizedValue = $Matches.Value.Replace(',', '.')
-        $parsed = [decimal]::TryParse(
-            $normalizedValue,
-            [Globalization.NumberStyles]::AllowDecimalPoint,
-            [Globalization.CultureInfo]::InvariantCulture,
-            [ref]$size
-        )
-        if (-not $parsed -or $size -le 0) {
-            throw "Capacity must be greater than zero. Received '$capacityText'."
-        }
-
-        $blocksPerUnit = switch ($Matches.Unit.ToUpperInvariant()) {
-            'MB' { [decimal]2048 }
-            'GB' { [decimal]2097152 }
-            'TB' { [decimal]2147483648 }
-        }
-        $blockCount = $size * $blocksPerUnit
-        if ($blockCount -gt [long]::MaxValue) {
-            throw "Capacity '$capacityText' exceeds the supported maximum."
-        }
-        if ([decimal]::Truncate($blockCount) -ne $blockCount) {
-            throw "Capacity '$capacityText' does not resolve to a whole number of 512-byte blocks."
-        }
-        $capacityInBlocks = [long]$blockCount
-    }
-    elseif ([long]::TryParse(
-            $capacityText,
-            [Globalization.NumberStyles]::Integer,
-            [Globalization.CultureInfo]::InvariantCulture,
-            [ref]$capacityInBlocks
-        )) {
-        if ($capacityInBlocks -le 0) {
-            throw "Capacity must be greater than zero. Received '$capacityText'."
-        }
-    }
-    else {
-        throw "Invalid capacity '$capacityText'. Use a positive value followed by MB, GB, or TB (for example, 10GB)."
-    }
+    $capacityInBlocks = ConvertTo-DMCapacityBlock -Capacity $capacity -UnitlessUnit Blocks
 
     # Convert allocation type to Huawei API value
     switch ($allocType) {

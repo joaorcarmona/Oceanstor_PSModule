@@ -96,6 +96,7 @@ function Get-DMNvmeInitiator {
 
     if ($HostName) {
         $hostObject = @(Get-DMhost -WebSession $session | Where-Object Name -EQ $HostName)[0]
+        if ($null -eq $hostObject) { throw "Could not resolve 'hostObject' — the object may have been removed since parameter validation." }
         $parameters = @('ASSOCIATEOBJTYPE=21', "ASSOCIATEOBJID=$($hostObject.Id)")
         if ($VstoreId) {
             $parameters += "vstoreId=$VstoreId"

@@ -16,6 +16,7 @@ BeforeDiscovery {
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorMappingView.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Select-DMResponseData.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\New-DMMappingView.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMMappingView.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Remove-DMMappingView.ps1"

@@ -4,7 +4,9 @@ function Connect-deviceManager {
 		Connects to a Huawei OceanStor array by REST.
 
 	.DESCRIPTION
-		Starts a REST session to a Huawei OceanStor DeviceManager endpoint.
+		Starts a REST session to a Huawei OceanStor DeviceManager endpoint. When replacing the
+		global $deviceManager session (PassThru not specified), any existing global session is
+		closed first on a best-effort basis to avoid leaking a connection slot on the array.
 
 	.PARAMETER Hostname
 		Mandatory hostname or IP address of the Huawei OceanStor array.
@@ -21,6 +23,9 @@ function Connect-deviceManager {
 		is a mandatory string when LoginPwd is provided. Is the login username to be used in the connection.
 	.PARAMETER LoginPWD
 		is a mandatory SecureString when LoginUser is provided.
+	.PARAMETER SkipCertificateCheck
+		When supplied, disables TLS certificate validation for the login request and all requests made with the returned session.
+		This should only be used for lab/test arrays or environments with self-signed certificates.
 	.INPUTS
 		System.String
 		System.Management.Automation.PSCredential
@@ -59,7 +64,8 @@ function Connect-deviceManager {
         [Parameter(Mandatory = $true, ParameterSetName = 'SecurePassword')]
         [String]$LoginUser,
         [Parameter(Mandatory = $true, ParameterSetName = 'SecurePassword')]
-        [securestring]$LoginPwd
+        [securestring]$LoginPwd,
+        [switch]$SkipCertificateCheck
     )
 
     switch ($PSCmdlet.ParameterSetName) {
@@ -84,7 +90,18 @@ function Connect-deviceManager {
 
     $webSession = New-Object Microsoft.PowerShell.Commands.WebRequestSession
 
-    $logonsession = Invoke-RestMethod -Method Post -Uri "https://$($Hostname):8088/deviceManager/rest/xxxxx/sessions" -Body (ConvertTo-Json $body) -SkipCertificateCheck -SessionVariable WebSession
+    # Keep certificate validation enabled unless the caller explicitly opts out.
+    $invokeParams = @{
+        Method          = 'Post'
+        Uri             = "https://$($Hostname):8088/deviceManager/rest/xxxxx/sessions"
+        Body            = ConvertTo-Json $body
+        SessionVariable = 'WebSession'
+    }
+    if ($SkipCertificateCheck) {
+        $invokeParams.SkipCertificateCheck = $true
+    }
+
+    $logonsession = Invoke-RestMethod @invokeParams
 
     if ($logonsession.error.code -ne 0) {
         $SessionError = $logonsession.error
@@ -93,20 +110,32 @@ function Connect-deviceManager {
         throw "Login failed for host '$Hostname': $($SessionError.description)"
     }
 
-    $CredentialsBytes = [System.Text.Encoding]::UTF8.GetBytes( -join ("{0}:{1}" -f $username, $password))
-    $EncodedCredentials = [Convert]::ToBase64String($CredentialsBytes)
+    # Wipe plaintext credentials from memory now that the login body has been sent.
+    # The Basic Auth header is not carried into the session — iBaseToken alone
+    # authenticates all subsequent calls, so the credential strings are not needed again.
+    $username = $null
+    $password = $null
+    $body     = $null
 
     $SessionHeader = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
-    $SessionHeader.Add("Authorization", "Basic $EncodedCredentials")
     $SessionHeader.Add("iBaseToken", $logonsession.data.iBaseToken)
 
     $connection = [OceanstorSession]::new($logonSession, $SessionHeader, $webSession, $Hostname)
+    $connection.SkipCertificateCheck = [bool]$SkipCertificateCheck
     $connection.Version = (Get-DMSystem -WebSession $connection).version
 
     if ($PassThru) {
         return $connection
     }
     else {
+        if ($global:deviceManager) {
+            try {
+                Disconnect-deviceManager -WebSession $global:deviceManager
+            }
+            catch {
+                Write-Warning "Failed to close the previous OceanStor session on '$($global:deviceManager.Hostname)': $($_.Exception.Message)"
+            }
+        }
         $global:deviceManager = $connection
     }
 }

@@ -4,8 +4,10 @@ BeforeDiscovery {
 
         function Invoke-DeviceManager {}
 
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Invoke-DMPagedRequest.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Get-DMparsedElabel.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Set-DMHostInitiator.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Select-DMResponseData.ps1"
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
         Get-ChildItem -LiteralPath "$testRoot\..\..\..\POSH-Oceanstor\Private" -Filter 'class-*.ps1' |
@@ -81,11 +83,11 @@ Describe 'Public getter functions' {
             Mock Invoke-DeviceManager {
                 param($WebSession, $Method, $Resource)
 
-                switch ($Resource) {
-                    'lungroup' { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 12; NAME = 'luns'; GROUPTYPE = 0; CAPCITY = 1GB }) } }
-                    'lungroup/12' { [pscustomobject]@{ data = [pscustomobject]@{ ASSOCIATELUNIDLIST = '["lun-02"]' } } }
-                    'lun' { [pscustomobject]@{ data = @((New-TestLun -Id 'lun-01' -Name 'database'), (New-TestLun -Id 'lun-02' -Name 'archive')) } }
-                    default { [pscustomobject]@{ data = @() } }
+                switch -Wildcard ($Resource) {
+                    'lungroup/12'  { [pscustomobject]@{ data = [pscustomobject]@{ ASSOCIATELUNIDLIST = '["lun-02"]' } }; break }
+                    'lungroup*'    { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 12; NAME = 'luns'; GROUPTYPE = 0; CAPCITY = 1GB }) }; break }
+                    'lun*'         { [pscustomobject]@{ data = @((New-TestLun -Id 'lun-01' -Name 'database'), (New-TestLun -Id 'lun-02' -Name 'archive')) }; break }
+                    default        { [pscustomobject]@{ data = @() } }
                 }
             }
 
@@ -142,16 +144,16 @@ Describe 'Public getter functions' {
                 Should -Be @('Id', 'Name', 'Source Lun Name', 'Health Status', 'Running Status')
             $script:snapshotGetSession | Should -Be $script:session
             $script:snapshotGetMethod | Should -Be 'GET'
-            $script:snapshotGetResource | Should -Be 'snapshot'
+            $script:snapshotGetResource | Should -BeLike 'snapshot*'
         }
 
         It 'gets LUN snapshots filtered by source LUN name' {
             Mock Invoke-DeviceManager {
                 param($WebSession, $Method, $Resource)
 
-                switch ($Resource) {
-                    'lun' { [pscustomobject]@{ data = @(New-TestLun) } }
-                    'snapshot?filter=SOURCELUNID:lun-01' {
+                switch -Wildcard ($Resource) {
+                    'lun*' { [pscustomobject]@{ data = @(New-TestLun) } }
+                    'snapshot?filter=SOURCELUNID:lun-01*' {
                         $script:snapshotFilterResource = $Resource
                         [pscustomobject]@{ data = @(New-TestLunSnapshot) }
                     }
@@ -162,7 +164,7 @@ Describe 'Public getter functions' {
             $result = Get-DMLunSnapshot -WebSession $script:session -LunName 'data-lun'
 
             $result[0].Id | Should -Be 'snap-01'
-            $script:snapshotFilterResource | Should -Be 'snapshot?filter=SOURCELUNID:lun-01'
+            $script:snapshotFilterResource | Should -BeLike 'snapshot?filter=SOURCELUNID:lun-01*'
         }
 
         It 'rejects an invalid source LUN name for snapshot filtering' {

@@ -59,7 +59,7 @@ function Get-DMhostbyName {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "host?filter=NAME:$Name" | Select-Object -ExpandProperty data
+    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "host?filter=NAME:$([uri]::EscapeDataString($Name))" | Select-DMResponseData
     $hosts = New-Object System.Collections.ArrayList
 
     foreach ($thost in $response) {

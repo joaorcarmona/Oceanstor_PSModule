@@ -137,12 +137,10 @@ function Set-DMLun {
         return
     }
 
-    $results = [System.Collections.Generic.List[object]]::new()
     if ($hasPropertyChanges) {
         $response = Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource "lun/$($lun.Id)" -BodyData $propertyBody
-        $results.Add($response.error)
-        if ($response.error.Code -ne 0) {
-            return $results
+        if ($response.error.Code -ne 0 -or -not $hasCapacityChange) {
+            return $response.error
         }
     }
     if ($hasCapacityChange) {
@@ -150,8 +148,6 @@ function Set-DMLun {
             ID       = $lun.Id
             CAPACITY = $newCapacityBlocks
         }
-        $results.Add($response.error)
+        return $response.error
     }
-
-    return $results
 }

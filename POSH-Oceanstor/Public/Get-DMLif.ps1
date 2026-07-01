@@ -54,7 +54,7 @@ function Get-DMLif {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "lif" | Select-Object -ExpandProperty data
+    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "lif" | Select-DMResponseData
     $lifs = New-Object System.Collections.ArrayList
 
     foreach ($tlif in $response) {

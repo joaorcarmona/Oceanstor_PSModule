@@ -84,6 +84,7 @@ function Get-DMIscsiInitiator {
     }
     if ($HostName) {
         $hostObject = @(Get-DMhost -WebSession $session | Where-Object Name -EQ $HostName)[0]
+        if ($null -eq $hostObject) { throw "Could not resolve 'hostObject' — the object may have been removed since parameter validation." }
         return @(Get-DMHostInitiator -WebSession $session -InitiatorType ISCSI -HostId $hostObject.Id)
     }
     if ($FreeInitiators) {

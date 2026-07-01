@@ -87,6 +87,7 @@ function Remove-DMLunSnapShot {
     }
 
     $snapshot = @(Get-DMLunSnapshot -WebSession $session | Where-Object Name -EQ $SnapShotName)[0]
+    if ($null -eq $snapshot) { throw "Could not resolve 'snapshot' — the object may have been removed since parameter validation." }
 
     if ($PSCmdlet.ShouldProcess($SnapShotName, 'Remove LUN snapshot')) {
         $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource "snapshot/$($snapshot.Id)"

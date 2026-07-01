@@ -72,7 +72,7 @@ function Get-DMLunsbyFilter {
 
     $apiField = $PropertyToApiField[$Filter]
     if ($apiField) {
-        $resource = "lun?filter=$($apiField):$Keyword"
+        $resource = "lun?filter=$($apiField):$([uri]::EscapeDataString($Keyword))"
     }
     else {
         $resource = "lun"
@@ -87,7 +87,7 @@ function Get-DMLunsbyFilter {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource $resource | Select-Object -ExpandProperty data
+    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource $resource | Select-DMResponseData
     $StorageLuns = New-Object System.Collections.ArrayList
 
     $StorageVersion = $session.version.Substring(0, 2)

@@ -79,6 +79,7 @@ function Remove-DMCifsShare {
         $deviceManager
     }
     $share = @(Get-DMShare -WebSession $session -ShareType CIFS | Where-Object Name -EQ $ShareName)[0]
+    if ($null -eq $share) { throw "Could not resolve 'share' — the object may have been removed since parameter validation." }
     $resource = "CIFSSHARE/$($share.Id)"
     if ($VstoreId) {
         $resource += "?vstoreId=$VstoreId"

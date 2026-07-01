@@ -80,6 +80,7 @@ function Restore-DMSnapshotConsistencyGroup {
         $deviceManager
     }
     $group = @(Get-DMSnapshotConsistencyGroup -WebSession $session | Where-Object Name -EQ $Name)[0]
+    if ($null -eq $group) { throw "Could not resolve 'group' — the object may have been removed since parameter validation." }
     $speedValue = @{ Low = 1; Medium = 2; High = 3; Highest = 4 }[$RestoreSpeed]
     $body = @{ ID = $group.Id; RESTORESPEED = $speedValue }
     if ($group.'vStore ID') {

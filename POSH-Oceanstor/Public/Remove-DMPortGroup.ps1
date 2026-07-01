@@ -79,6 +79,7 @@ function Remove-DMPortGroup {
         $deviceManager
     }
     $group = @(Get-DMPortGroup -WebSession $session | Where-Object Name -EQ $PortGroupName)[0]
+    if ($null -eq $group) { throw "Could not resolve 'group' — the object may have been removed since parameter validation." }
     $resource = "portgroup/$($group.Id)"
     if ($VstoreId) {
         $resource += "?vstoreId=$VstoreId"

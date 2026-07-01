@@ -5,10 +5,11 @@ BeforeAll {
 Describe 'Invoke-DeviceManager' {
     BeforeEach {
         $script:session = [pscustomobject]@{
-            Hostname   = 'oceanstor.test'
-            DeviceId   = 'device-01'
-            Headers    = @{ iBaseToken = 'Test-token' }
-            WebSession = [Microsoft.PowerShell.Commands.WebRequestSession]::new()
+            Hostname             = 'oceanstor.test'
+            DeviceId             = 'device-01'
+            Headers              = @{ iBaseToken = 'Test-token' }
+            WebSession           = [Microsoft.PowerShell.Commands.WebRequestSession]::new()
+            SkipCertificateCheck = $false
         }
 
         $script:successResult = [pscustomobject]@{
@@ -37,8 +38,18 @@ Describe 'Invoke-DeviceManager' {
             $Headers.iBaseToken -eq 'Test-token' -and
             $WebSession -eq $script:session.WebSession -and
             $ContentType -eq 'application/json' -and
-            $SkipCertificateCheck -and
+            -not $SkipCertificateCheck -and
             -not $Body
+        }
+    }
+
+    It 'passes SkipCertificateCheck only when the session opts in' {
+        $script:session.SkipCertificateCheck = $true
+
+        $null = Invoke-DeviceManager -WebSession $script:session -Method GET -Resource 'lun'
+
+        Should -Invoke Invoke-RestMethod -Times 1 -Exactly -ParameterFilter {
+            $SkipCertificateCheck
         }
     }
 
@@ -78,6 +89,75 @@ Describe 'Invoke-DeviceManager' {
             $Method -eq 'GET' -and
             $Uri -eq 'https://oceanstor.test:8088/api/v2/protectgroup'
         }
+    }
+
+    It 'throws a clear error when no session is available' {
+        Remove-Variable -Name deviceManager -Scope Global -ErrorAction SilentlyContinue
+
+        { Invoke-DeviceManager -Method GET -Resource 'lun' } | Should -Throw '*Connect-deviceManager*'
+
+        Should -Invoke Invoke-RestMethod -Times 0 -Exactly
+    }
+
+    It 'converts a raw string response with case-conflicting JSON keys to a PSCustomObject' {
+        Mock Invoke-RestMethod {
+            # Simulate PS7 builds that return the raw body string instead of throwing when
+            # Invoke-RestMethod encounters duplicate case-insensitive keys.
+            '{"data":{"snapType":1,"SNAPTYPE":2,"ID":"snap-01"},"error":{"code":0}}'
+        }
+
+        $result = Invoke-DeviceManager -WebSession $script:session -Method GET -Resource 'fssnapshot/42'
+
+        $result | Should -BeOfType [pscustomobject]
+        $result.data.SNAPTYPE | Should -Be 2
+        $result.data.ID       | Should -Be 'snap-01'
+        $result.error.code    | Should -Be 0
+    }
+
+    It 'falls back to Invoke-WebRequest and normalises case-conflicting JSON keys (message path)' {
+        Mock Invoke-RestMethod {
+            throw [System.ArgumentException]::new(
+                "Cannot convert the JSON string because it contains keys with different casing. " +
+                "Please use the -AsHashTable switch instead. The key that was attempted to be " +
+                "added to the existing key 'snapType' was 'SNAPTYPE'."
+            )
+        }
+        Mock Invoke-WebRequest {
+            [pscustomobject]@{
+                Content = '{"data":[{"snapType":1,"SNAPTYPE":2,"ID":"snap-01"}],"error":{"code":0}}'
+            }
+        }
+
+        $result = Invoke-DeviceManager -WebSession $script:session -Method GET -Resource 'fssnapshot'
+
+        $result.data[0].SNAPTYPE | Should -Be 2
+        $result.data[0].ID       | Should -Be 'snap-01'
+        $result.error.code       | Should -Be 0
+        Should -Invoke Invoke-WebRequest -Times 1 -Exactly
+    }
+
+    It 'falls back to Invoke-WebRequest when FullyQualifiedErrorId matches WebCmdletCannotConvertContentException' {
+        Mock Invoke-RestMethod {
+            $ex = [System.Exception]::new('The content could not be converted.')
+            $er = [System.Management.Automation.ErrorRecord]::new(
+                $ex,
+                'WebCmdletCannotConvertContentException,Microsoft.PowerShell.Commands.InvokeRestMethodCommand',
+                [System.Management.Automation.ErrorCategory]::InvalidArgument,
+                $null
+            )
+            throw $er
+        }
+        Mock Invoke-WebRequest {
+            [pscustomobject]@{
+                Content = '{"data":{"snapType":1,"SNAPTYPE":2,"ID":"snap-02"},"error":{"code":0}}'
+            }
+        }
+
+        $result = Invoke-DeviceManager -WebSession $script:session -Method GET -Resource 'fssnapshot/42'
+
+        $result.data.SNAPTYPE | Should -Be 2
+        $result.data.ID       | Should -Be 'snap-02'
+        Should -Invoke Invoke-WebRequest -Times 1 -Exactly
     }
 
     It 'returns REST error responses so callers can report failures and perform cleanup' {

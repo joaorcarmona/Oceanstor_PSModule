@@ -54,7 +54,7 @@ function Get-DMnfsFileClient {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "NFS_SHARE_AUTH_CLIENT" | Select-Object -ExpandProperty data
+    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "NFS_SHARE_AUTH_CLIENT" | Select-DMResponseData
     $exports = New-Object System.Collections.ArrayList
 
     foreach ($fs in $response) {

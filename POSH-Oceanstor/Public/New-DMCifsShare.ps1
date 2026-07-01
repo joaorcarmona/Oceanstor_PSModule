@@ -165,6 +165,7 @@ function New-DMCifsShare {
         $deviceManager
     }
     $fileSystem = @(Get-DMFileSystem -WebSession $session | Where-Object Name -EQ $FileSystemName)[0]
+    if ($null -eq $fileSystem) { throw "Could not resolve 'fileSystem' — the object may have been removed since parameter validation." }
     $subTypeValue = @{ Normal = 0; HomeDir = 1; All = 2 }[$SubType]
     $offlineFileModeValue = @{ None = 0; Manual = 1; Documents = 2; Programs = 3 }[$OfflineFileMode]
     $body = @{

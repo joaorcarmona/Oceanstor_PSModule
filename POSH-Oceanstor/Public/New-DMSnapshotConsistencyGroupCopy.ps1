@@ -92,6 +92,7 @@ function New-DMSnapshotConsistencyGroupCopy {
         $deviceManager
     }
     $source = @(Get-DMSnapshotConsistencyGroup -WebSession $session | Where-Object Name -EQ $SourceName)[0]
+    if ($null -eq $source) { throw "Could not resolve 'source' — the object may have been removed since parameter validation." }
     $body = @{
         COPYSOURCEID = $source.Id
         NAME         = if ($Name) {

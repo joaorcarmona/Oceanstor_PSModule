@@ -73,6 +73,7 @@ function Restart-DMSnapshotConsistencyGroup {
         $deviceManager
     }
     $group = @(Get-DMSnapshotConsistencyGroup -WebSession $session | Where-Object Name -EQ $Name)[0]
+    if ($null -eq $group) { throw "Could not resolve 'group' — the object may have been removed since parameter validation." }
     $body = @{ ID = $group.Id }
     if ($group.'vStore ID') {
         $body.vstoreId = $group.'vStore ID'

@@ -77,7 +77,7 @@ function Get-DMHostLink {
         }
     }
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "host_link?INITIATOR_TYPE=$LinkType&PARENTID=$HostId" | Select-Object -ExpandProperty data
+    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "host_link?INITIATOR_TYPE=$LinkType&PARENTID=$HostId" | Select-DMResponseData
     $hostLinks = New-Object System.Collections.ArrayList
 
     foreach ($hlinks in $response) {

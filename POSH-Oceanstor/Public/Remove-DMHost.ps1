@@ -78,6 +78,7 @@ function Remove-DMHost {
         $deviceManager
     }
     $hostObject = @(Get-DMhost -WebSession $session | Where-Object Name -EQ $HostName)[0]
+    if ($null -eq $hostObject) { throw "Could not resolve 'hostObject' — the object may have been removed since parameter validation." }
     $resource = "host/$($hostObject.Id)"
     if ($VstoreId) {
         $resource += "?vstoreId=$VstoreId"

@@ -45,7 +45,7 @@ function Get-DMSystem {
         $session = $deviceManager
     }
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "system/" | Select-Object -ExpandProperty data
+    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "system/" | Select-DMResponseData
     $response = $response -replace "[@{}]"
     [array]$systemArray = $response.Split(";")
 

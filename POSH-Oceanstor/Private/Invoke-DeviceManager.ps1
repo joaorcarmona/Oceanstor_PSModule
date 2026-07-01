@@ -1,3 +1,32 @@
+function ConvertFrom-DMCasedHashtable {
+    # Recursively converts a Hashtable (e.g. from ConvertFrom-Json -AsHashtable) to PSCustomObject,
+    # deduplicating case-conflicting keys by preferring the all-uppercase variant.
+    param([object]$InputObject)
+    if ($InputObject -is [System.Collections.IDictionary]) {
+        $seen   = @{}
+        $result = [ordered]@{}
+        foreach ($key in @($InputObject.Keys)) {
+            $lower = $key.ToLowerInvariant()
+            if ($seen.ContainsKey($lower)) {
+                if ($key -ceq $key.ToUpperInvariant()) {
+                    $existing = $seen[$lower]
+                    $result.Remove($existing)
+                    $result[$key] = ConvertFrom-DMCasedHashtable $InputObject[$key]
+                    $seen[$lower] = $key
+                }
+            } else {
+                $seen[$lower] = $key
+                $result[$key] = ConvertFrom-DMCasedHashtable $InputObject[$key]
+            }
+        }
+        return [pscustomobject]$result
+    }
+    if ($InputObject -is [System.Collections.IEnumerable] -and $InputObject -isnot [string]) {
+        return @($InputObject | ForEach-Object { ConvertFrom-DMCasedHashtable $_ })
+    }
+    return $InputObject
+}
+
 function Copy-DMTraceValue {
 	param(
 		[Parameter(ValueFromPipeline = $true)]
@@ -135,6 +164,10 @@ function Invoke-DeviceManager{
         $session = $deviceManager
     }
 
+    if ($null -eq $session) {
+        throw 'No OceanStor session available. Call Connect-deviceManager first, or pass a session via -WebSession.'
+    }
+
 	if ($ApiV2) {
 		$RestURI = "https://$($session.hostname):8088/api/v2/$resource"
 	} else {
@@ -143,11 +176,34 @@ function Invoke-DeviceManager{
 
 	$startedAt = Get-Date
 	try {
+		# Preserve the certificate validation choice made when the session was created.
+		$invokeParams = @{
+			Method      = $Method
+			Uri         = $RestURI
+			Headers     = $session.Headers
+			WebSession  = $session.WebSession
+			ContentType = 'application/json'
+		}
+		if ($session.SkipCertificateCheck) {
+			$invokeParams.SkipCertificateCheck = $true
+		}
+
 		if ($BodyData){
 			$JsonBody = ConvertTo-Json $BodyData
-			$result = Invoke-RestMethod -Method $Method -uri $RestURI -Headers $session.Headers -WebSession $session.WebSession -ContentType "application/json" -SkipCertificateCheck -Body $JsonBody
-		} else {
-			$result = Invoke-RestMethod -Method $Method -uri $RestURI -Headers $session.Headers -WebSession $session.WebSession -ContentType "application/json" -SkipCertificateCheck
+			$invokeParams.Body = $JsonBody
+		}
+		$result = Invoke-RestMethod @invokeParams
+
+		# Some PS7 builds fall back to returning the raw JSON string instead of throwing when
+		# the response body contains case-conflicting duplicate keys (e.g. 'snapType'/'SNAPTYPE'
+		# on the fssnapshot endpoint). Convert to PSCustomObject using the case-aware helper so
+		# callers always receive a consistent object type.
+		if ($result -is [string] -and $result) {
+			try {
+				$result = ConvertFrom-DMCasedHashtable ($result | ConvertFrom-Json -AsHashtable)
+			} catch {
+				Write-Verbose "String response from '$RestURI' could not be re-parsed: $($_.Exception.Message)"
+			}
 		}
 
 		Write-DMRequestTrace -StartedAt $startedAt -Method $Method -Resource $Resource -Uri $RestURI `
@@ -155,8 +211,32 @@ function Invoke-DeviceManager{
 		return $result
 	}
 	catch {
+		$originalError = $_
+		# Some OceanStor endpoints return JSON bodies with the same key in different cases
+		# (e.g. "snapType" and "SNAPTYPE"). Invoke-RestMethod cannot parse these; fall back
+		# to Invoke-WebRequest + ConvertFrom-Json -AsHashtable, which uses a case-sensitive
+		# hashtable, then normalize to a PSCustomObject preferring the uppercase key.
+		# PS7 may surface the duplicate-key parse error in different ways depending on version.
+		# Check the FullyQualifiedErrorId (most stable), the exception message, and the full
+		# ErrorRecord string representation as a belt-and-suspenders guard.
+		$isDuplicateKeyParseError = (
+			$_.FullyQualifiedErrorId -like '*CannotConvertContent*' -or
+			$_.Exception.Message     -like '*keys with different casing*' -or
+			"$_"                     -like '*keys with different casing*'
+		)
+		if ($isDuplicateKeyParseError) {
+			try {
+				$rawResponse = Invoke-WebRequest @invokeParams
+				$result = ConvertFrom-DMCasedHashtable ($rawResponse.Content | ConvertFrom-Json -AsHashtable)
+				Write-DMRequestTrace -StartedAt $startedAt -Method $Method -Resource $Resource -Uri $RestURI `
+					-BodyData $BodyData -ApiV2:$ApiV2 -Response $result
+				return $result
+			} catch {
+				Write-Verbose "Invoke-WebRequest fallback also failed for '$RestURI': $($_.Exception.Message)"
+			}
+		}
 		Write-DMRequestTrace -StartedAt $startedAt -Method $Method -Resource $Resource -Uri $RestURI `
-			-BodyData $BodyData -ApiV2:$ApiV2 -Exception $_.Exception.Message
-		throw
+			-BodyData $BodyData -ApiV2:$ApiV2 -Exception $originalError.Exception.Message
+		throw $originalError
 	}
 }

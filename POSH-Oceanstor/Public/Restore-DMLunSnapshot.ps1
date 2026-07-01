@@ -89,6 +89,7 @@ function Restore-DMLunSnapshot {
     }
 
     $snapshot = @(Get-DMLunSnapshot -WebSession $session | Where-Object Name -EQ $SnapShotName)[0]
+    if ($null -eq $snapshot) { throw "Could not resolve 'snapshot' — the object may have been removed since parameter validation." }
     $speedValue = @{
         Low     = 1
         Medium  = 2

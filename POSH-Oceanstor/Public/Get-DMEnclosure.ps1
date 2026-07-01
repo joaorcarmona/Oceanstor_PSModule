@@ -54,7 +54,7 @@ function Get-DMEnclosure {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "enclosure" | Select-Object -ExpandProperty data
+    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "enclosure" | Select-DMResponseData
     $enclosures = New-Object System.Collections.ArrayList
 
     foreach ($tenc in $response) {

@@ -54,7 +54,7 @@ function Get-DMvStore {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "vstore" | Select-Object -ExpandProperty data
+    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "vstore" | Select-DMResponseData
     $vStores = New-Object System.Collections.ArrayList
 
     foreach ($tvstore in $response) {

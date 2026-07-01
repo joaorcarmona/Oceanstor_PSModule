@@ -50,15 +50,15 @@ function Remove-DMHostFromHostGroup {
                 else {
                     $deviceManager
                 }
-                $hosts = @(Get-DMhost -WebSession $session)
-                $matchingItems = @($hosts | Where-Object Name -EQ $candidate)
+                $script:_dmRemoveHostHosts = @(Get-DMhost -WebSession $session)
+                $matchingItems = @($script:_dmRemoveHostHosts | Where-Object Name -EQ $candidate)
                 if ($matchingItems.Count -eq 1) {
                     return $true
                 }
                 if ($matchingItems.Count -gt 1) {
                     throw "HostName is ambiguous because more than one host is named '$candidate'."
                 }
-                throw "Invalid HostName. Valid values are: $($hosts.Name -join ', ')"
+                throw "Invalid HostName. Valid values are: $($script:_dmRemoveHostHosts.Name -join ', ')"
             })]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
@@ -81,15 +81,15 @@ function Remove-DMHostFromHostGroup {
                 else {
                     $deviceManager
                 }
-                $groups = @(Get-DMhostGroup -WebSession $session)
-                $matchingItems = @($groups | Where-Object Name -EQ $candidate)
+                $script:_dmRemoveHostGroups = @(Get-DMhostGroup -WebSession $session)
+                $matchingItems = @($script:_dmRemoveHostGroups | Where-Object Name -EQ $candidate)
                 if ($matchingItems.Count -eq 1) {
                     return $true
                 }
                 if ($matchingItems.Count -gt 1) {
                     throw "HostGroupName is ambiguous because more than one host group is named '$candidate'."
                 }
-                throw "Invalid HostGroupName. Valid values are: $($groups.Name -join ', ')"
+                throw "Invalid HostGroupName. Valid values are: $($script:_dmRemoveHostGroups.Name -join ', ')"
             })]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
@@ -112,8 +112,10 @@ function Remove-DMHostFromHostGroup {
     else {
         $deviceManager
     }
-    $hostObject = @(Get-DMhost -WebSession $session | Where-Object Name -EQ $HostName)[0]
-    $group = @(Get-DMhostGroup -WebSession $session | Where-Object Name -EQ $HostGroupName)[0]
+    $hostObject = @($script:_dmRemoveHostHosts | Where-Object Name -EQ $HostName)[0]
+    if ($null -eq $hostObject) { throw "Could not resolve 'hostObject' — the object may have been removed since parameter validation." }
+    $group = @($script:_dmRemoveHostGroups | Where-Object Name -EQ $HostGroupName)[0]
+    if ($null -eq $group) { throw "Could not resolve 'group' — the object may have been removed since parameter validation." }
     $members = @(Get-DMhostbyHostGroupId -WebSession $session -HostGroupId $group.Id)
     if ($members.Id -notcontains $hostObject.Id) {
         throw "Host '$HostName' is not a member of host group '$HostGroupName'."

@@ -100,9 +100,9 @@ function New-DMFileSystem {
     param(
         [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $true)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 1, Mandatory = $true)]
         [string]$FileSystemName,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $true)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 2, Mandatory = $true)]
         [ValidateScript({
                 $session = if ($WebSession) {
                     $WebSession
@@ -127,42 +127,42 @@ function New-DMFileSystem {
                 (Get-DMstoragePool -WebSession $session).Id | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [Int16]$StoragePoolID,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Mandatory = $false)]
         [string]$description,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Mandatory = $false)]
         [bool]$Worm = $false,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [object]$capacity,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Mandatory = $false)]
         [Int32]$snapShotReserve = 20,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Mandatory = $false)]
         [string]$autoDeleteSnap = $false,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Mandatory = $false)]
         [int64]$AlarmThresold = 90,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Mandatory = $false)]
         [ValidateSet("database", "VM", "user-defined")]
         [string]$usage = "user-defined",
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Mandatory = $false)]
         [bool]$checkSumEnable = $true,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Mandatory = $false)]
         [bool]$accessTime = $false,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Mandatory = $false)]
         [ValidateSet("Hourly", "Daily", "disabled")]
         [string]$accessTimeUpdateMode = "disabled",
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Mandatory = $false)]
         [bool]$readOnly = $false,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Mandatory = $false)]
         [ValidateSet("low", "medium", "high")]
         [string]$FileSystemIOpriority = "low",
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Mandatory = $false)]
         [bool]$Compression = $false,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Mandatory = $false)]
         [ValidateSet("rapid", "deep")]
         [string]$CompressionAlgorithm = "rapid",
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Mandatory = $false)]
         [bool]$Dedupe = $false,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Mandatory = $false)]
         [bool]$Autogrow = $false
     )
 
@@ -220,52 +220,7 @@ function New-DMFileSystem {
 
     $capacityInBlocks = $null
     if ($PSBoundParameters.ContainsKey('capacity')) {
-        # OceanStor expects file-system capacity as a count of 512-byte blocks.
-        # Unitless integers retain the command's historical gigabyte behavior.
-        $capacityText = ([string]$capacity).Trim()
-        if ($capacityText -match '^(?<Value>(?:\d+(?:[.,]\d+)?|[.,]\d+))\s*(?<Unit>MB|GB|TB)$') {
-            $size = [decimal]0
-            $normalizedValue = $Matches.Value.Replace(',', '.')
-            $parsed = [decimal]::TryParse(
-                $normalizedValue,
-                [Globalization.NumberStyles]::AllowDecimalPoint,
-                [Globalization.CultureInfo]::InvariantCulture,
-                [ref]$size
-            )
-            if (-not $parsed -or $size -le 0) {
-                throw "Capacity must be greater than zero. Received '$capacityText'."
-            }
-
-            $blocksPerUnit = switch ($Matches.Unit.ToUpperInvariant()) {
-                'MB' { [decimal]2048 }
-                'GB' { [decimal]2097152 }
-                'TB' { [decimal]2147483648 }
-            }
-            $blockCount = $size * $blocksPerUnit
-        }
-        else {
-            $sizeInGB = [long]0
-            if (-not [long]::TryParse(
-                    $capacityText,
-                    [Globalization.NumberStyles]::Integer,
-                    [Globalization.CultureInfo]::InvariantCulture,
-                    [ref]$sizeInGB
-                )) {
-                throw "Invalid capacity '$capacityText'. Use a positive value followed by MB, GB, or TB (for example, 10GB)."
-            }
-            if ($sizeInGB -le 0) {
-                throw "Capacity must be greater than zero. Received '$capacityText'."
-            }
-            $blockCount = [decimal]$sizeInGB * [decimal]2097152
-        }
-
-        if ($blockCount -gt [long]::MaxValue) {
-            throw "Capacity '$capacityText' exceeds the supported maximum."
-        }
-        if ([decimal]::Truncate($blockCount) -ne $blockCount) {
-            throw "Capacity '$capacityText' does not resolve to a whole number of 512-byte blocks."
-        }
-        $capacityInBlocks = [long]$blockCount
+        $capacityInBlocks = ConvertTo-DMCapacityBlock -Capacity $capacity -UnitlessUnit GB
     }
 
     $body = @{

@@ -53,15 +53,15 @@ function Add-DMPortToPortGroup {
                 else {
                     $deviceManager
                 }
-                $groups = @(Get-DMPortGroup -WebSession $session)
-                $matchingItems = @($groups | Where-Object Name -EQ $candidate)
+                $script:_dmAddPortGroups = @(Get-DMPortGroup -WebSession $session)
+                $matchingItems = @($script:_dmAddPortGroups | Where-Object Name -EQ $candidate)
                 if ($matchingItems.Count -eq 1) {
                     return $true
                 }
                 if ($matchingItems.Count -gt 1) {
                     throw "PortGroupName is ambiguous because more than one port group is named '$candidate'."
                 }
-                throw "Invalid PortGroupName. Valid values are: $($groups.Name -join ', ')"
+                throw "Invalid PortGroupName. Valid values are: $($script:_dmAddPortGroups.Name -join ', ')"
             })]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
@@ -88,15 +88,15 @@ function Add-DMPortToPortGroup {
                 else {
                     $deviceManager
                 }
-                $ports = @(Get-DMPortGroupCandidate -WebSession $session -PortType $PortType)
-                $matchingItems = @($ports | Where-Object Name -EQ $candidate)
+                $script:_dmAddPorts = @(Get-DMPortGroupCandidate -WebSession $session -PortType $PortType)
+                $matchingItems = @($script:_dmAddPorts | Where-Object Name -EQ $candidate)
                 if ($matchingItems.Count -eq 1) {
                     return $true
                 }
                 if ($matchingItems.Count -gt 1) {
                     throw "PortName is ambiguous because more than one $PortType port is named '$candidate'."
                 }
-                throw "Invalid PortName for $PortType. Valid values are: $($ports.Name -join ', ')"
+                throw "Invalid PortName for $PortType. Valid values are: $($script:_dmAddPorts.Name -join ', ')"
             })]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
@@ -123,8 +123,10 @@ function Add-DMPortToPortGroup {
     else {
         $deviceManager
     }
-    $group = @(Get-DMPortGroup -WebSession $session | Where-Object Name -EQ $PortGroupName)[0]
-    $port = @(Get-DMPortGroupCandidate -WebSession $session -PortType $PortType | Where-Object Name -EQ $PortName)[0]
+    $group = @($script:_dmAddPortGroups | Where-Object Name -EQ $PortGroupName)[0]
+    if ($null -eq $group) { throw "Could not resolve 'group' — the object may have been removed since parameter validation." }
+    $port = @($script:_dmAddPorts | Where-Object Name -EQ $PortName)[0]
+    if ($null -eq $port) { throw "Could not resolve 'port' — the object may have been removed since parameter validation." }
     $body = @{
         ID               = $group.Id
         ASSOCIATEOBJTYPE = $port.ObjectType

@@ -54,7 +54,7 @@ function Get-DMInterfaceModule {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "intf_module" | Select-Object -ExpandProperty data
+    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "intf_module" | Select-DMResponseData
     $interfaceModules = New-Object System.Collections.ArrayList
 
     foreach ($imodule in $response) {

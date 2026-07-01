@@ -125,14 +125,16 @@ function Remove-DMPortFromPortGroup {
         $deviceManager
     }
     $group = @(Get-DMPortGroup -WebSession $session | Where-Object Name -EQ $PortGroupName)[0]
+    if ($null -eq $group) { throw "Could not resolve 'group' — the object may have been removed since parameter validation." }
     $port = @(Get-DMPortGroupCandidate -WebSession $session -PortType $PortType | Where-Object Name -EQ $PortName)[0]
+    if ($null -eq $port) { throw "Could not resolve 'port' — the object may have been removed since parameter validation." }
     $associationResource = "portgroup/associate?ASSOCIATEOBJTYPE=$($port.ObjectType)&ASSOCIATEOBJID=$($port.Id)"
     if ($VstoreId) {
         $associationResource += "&vstoreId=$VstoreId"
     }
 
     $associations = @(Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource $associationResource |
-            Select-Object -ExpandProperty data)
+            Select-DMResponseData)
     if (-not @($associations | Where-Object ID -EQ $group.Id)) {
         throw "Port '$PortName' is not a member of port group '$PortGroupName'."
     }

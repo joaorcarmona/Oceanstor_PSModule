@@ -156,7 +156,9 @@ function Add-DMLunToLunGroup {
     }
 
     $lun = @(Get-DMlun -WebSession $session | Where-Object Name -EQ $resolvedLunName)[0]
+    if ($null -eq $lun) { throw "Could not resolve 'lun' — the object may have been removed since parameter validation." }
     $group = @(Get-DMlunGroup -WebSession $session | Where-Object Name -EQ $LunGroupName)[0]
+    if ($null -eq $group) { throw "Could not resolve 'group' — the object may have been removed since parameter validation." }
     $body = @{
         ID               = $group.Id
         ASSOCIATEOBJTYPE = 11

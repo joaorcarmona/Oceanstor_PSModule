@@ -3,6 +3,8 @@ param(
     [Parameter(Mandatory)]
     [string]$Hostname,
 
+    [switch]$SkipCertificateCheck,
+
     [string]$ReportPath = (Join-Path $PSScriptRoot 'getter-integrity-last-result.json'),
 
     [string]$MutationLogPath = (Join-Path $PSScriptRoot 'mutation-trace-last-result.json'),
@@ -36,7 +38,9 @@ $validationModule = New-Module -Name OceanstorLiveGetterValidation -ArgumentList
         'Get-DMparsedElabel.ps1',
         'Get-DMPortGroupCandidate.ps1',
         'Invoke-DeviceManager.ps1',
+        'Invoke-DMPagedRequest.ps1',
         'New-DMNamedObjectUpdate.ps1',
+        'Select-DMResponseData.ps1',
         'Set-DMHostInitiator.ps1',
         'Test-WWNAddress.ps1',
         'Write-DMError.ps1'
@@ -96,7 +100,7 @@ try {
     Write-Host "A credential prompt will open for validation of $Hostname. No credentials are read from or written to the configuration file."
     Write-ValidationProgress -Name 'Connect-deviceManager' -Category 'Session'
     $connectionStartedAt = Get-Date
-    $session = Connect-deviceManager -Hostname $Hostname -PassThru -Secure
+    $session = Connect-deviceManager -Hostname $Hostname -PassThru -Secure -SkipCertificateCheck:$SkipCertificateCheck
     $connectionDurationMs = [math]::Round(((Get-Date) - $connectionStartedAt).TotalMilliseconds, 2)
     $checks.Add([pscustomobject]@{
         Name         = 'Connect-deviceManager'

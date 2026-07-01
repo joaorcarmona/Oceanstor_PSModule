@@ -6,6 +6,7 @@ BeforeDiscovery {
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Get-DMparsedElabel.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Set-DMHostInitiator.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Select-DMResponseData.ps1"
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
         Get-ChildItem -LiteralPath "$testRoot\..\..\..\POSH-Oceanstor\Private" -Filter 'class-*.ps1' |
@@ -61,6 +62,14 @@ Describe 'Public getter functions' {
             $result[0].'Parent Id' | Should -Be 'group-01'
             $result[0].initiators.Id | Should -Be @('fc-01', 'iscsi-01')
             $result[1].initiators | Should -BeNullOrEmpty
+        }
+
+        It 'throws a descriptive error when the API reports a failure retrieving hosts' {
+            Mock Invoke-DeviceManager {
+                [pscustomobject]@{ error = [pscustomobject]@{ Code = 1077939726; description = 'session expired' } }
+            }
+
+            { Get-DMhost -WebSession $script:session } | Should -Throw '*1077939726*session expired*'
         }
 
         It 'gets hosts by id through the filtered endpoint' {

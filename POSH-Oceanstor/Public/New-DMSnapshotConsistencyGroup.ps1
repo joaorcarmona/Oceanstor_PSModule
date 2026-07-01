@@ -92,6 +92,7 @@ function New-DMSnapshotConsistencyGroup {
         $deviceManager
     }
     $protectionGroup = @(Get-DMProtectionGroup -WebSession $session | Where-Object Name -EQ $ProtectionGroupName)[0]
+    if ($null -eq $protectionGroup) { throw "Could not resolve 'protectionGroup' — the object may have been removed since parameter validation." }
     $body = @{ NAME = $Name; PARENTID = $protectionGroup.Id }
     if ($Description) {
         $body.DESCRIPTION = $Description

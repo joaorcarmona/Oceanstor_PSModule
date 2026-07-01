@@ -125,6 +125,7 @@ function New-DMProtectionGroup {
         $deviceManager
     }
     $lunGroup = @(Get-DMlunGroup -WebSession $session | Where-Object Name -EQ $LunGroupName)[0]
+    if ($null -eq $lunGroup) { throw "Could not resolve 'lunGroup' — the object may have been removed since parameter validation." }
     $body = @{
         protectGroupName = $Name
         lunGroupId       = $lunGroup.Id
@@ -132,6 +133,7 @@ function New-DMProtectionGroup {
 
     if ($Vstore) {
         $vstoreObject = @(Get-DMvStore -WebSession $session | Where-Object Name -EQ $Vstore)[0]
+        if ($null -eq $vstoreObject) { throw "Could not resolve 'vstoreObject' — the object may have been removed since parameter validation." }
         $body.vstoreId = $vstoreObject.Id
     }
     if ($Description) {

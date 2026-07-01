@@ -244,9 +244,9 @@ class OceanstorLunv6{
 		$this.{Workload Type Id} = $lunReceived.WORKLOADTYPEID
 
 		if ($lunReceived.WORKLOADTYPEID){
-			$this.{Workload Type Name} = "invalid"
-		} else {
 			$this.{Workload Type Name} = $lunReceived.WORKLOADTYPENAME
+		} else {
+			$this.{Workload Type Name} = $null
 		}
 
 		$this.{Takeover Lun WWN} = $lunReceived.takeOverLunWwn
@@ -376,7 +376,9 @@ class OceanstorLunv6{
 	[psobject] Rename([string]$NewName)
 	{
 		$result = Rename-DMLun -WebSession $this.Session -LunName $this.Name -NewName $NewName -Confirm:$false
-		if ($result.Code -eq 0) {
+		# Rename-DMLun delegates to Set-DMLun which returns List[object]; index [0] to reach the error object.
+		# Indexing a plain PSCustomObject with [0] returns the object itself, so this is safe in both cases.
+		if ($result[0].Code -eq 0) {
 			$this.Name = $NewName
 		}
 		return $result

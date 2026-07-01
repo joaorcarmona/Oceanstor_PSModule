@@ -7,11 +7,12 @@ BeforeDiscovery {
         # (a regular function call, not from inside the class constructor), so
         # the Pester mock below intercepts it reliably on every platform.
         function Get-DMSystem { param($WebSession) }
+        function Disconnect-deviceManager { param([pscustomobject]$WebSession) }
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Connect-deviceManager.ps1"
 
-        Export-ModuleMember -Function Connect-deviceManager, Get-DMSystem
+        Export-ModuleMember -Function Connect-deviceManager, Get-DMSystem, Disconnect-deviceManager
     }
 
     Import-Module $script:testModule -Force
@@ -59,14 +60,14 @@ Describe 'Connect-deviceManager' {
         $result.Hostname | Should -Be 'oceanstor.test'
         $result.DeviceId | Should -Be 'device-01'
         $result.Version | Should -Be 'V600R001'
-        $result.Headers.Authorization | Should -Be 'Basic c2VjdXJlLXVzZXI6c2VjdXJlLXBhc3M='
+        $result.Headers.ContainsKey('Authorization') | Should -BeFalse
         $result.Headers.iBaseToken | Should -Be 'token-01'
         Should -Invoke Get-Credential -Times 1 -Exactly
         Should -Invoke Get-DMSystem -Times 1 -Exactly
         Should -Invoke Invoke-RestMethod -Times 1 -Exactly -ParameterFilter {
             $Method -eq 'Post' -and
             $Uri -eq 'https://oceanstor.test:8088/deviceManager/rest/xxxxx/sessions' -and
-            $SkipCertificateCheck -and
+            -not $SkipCertificateCheck -and
             ($Body | ConvertFrom-Json).username -eq 'secure-user' -and
             ($Body | ConvertFrom-Json).password -eq 'secure-pass'
         }
@@ -88,12 +89,25 @@ Describe 'Connect-deviceManager' {
         $result = Connect-deviceManager -Hostname 'oceanstor.test' -PassThru -Credential $credential
 
         $result.GetType().Name | Should -Be 'OceanstorSession'
-        $result.Headers.Authorization | Should -Be 'Basic YXBpLXVzZXI6YXBpLXBhc3M='
+        $result.Headers.ContainsKey('Authorization') | Should -BeFalse
         Should -Invoke Get-Credential -Times 0 -Exactly
         Should -Invoke Invoke-RestMethod -Times 1 -Exactly -ParameterFilter {
             ($Body | ConvertFrom-Json).username -eq 'api-user' -and
             ($Body | ConvertFrom-Json).password -eq 'api-pass' -and
-            ($Body | ConvertFrom-Json).scope -eq 0
+            ($Body | ConvertFrom-Json).scope -eq 0 -and
+            -not $SkipCertificateCheck
+        }
+    }
+
+    It 'records and uses SkipCertificateCheck only when explicitly requested' {
+        $securePassword = ConvertTo-SecureString -String 'api-pass' -AsPlainText -Force
+        $credential = [pscredential]::new('api-user', $securePassword)
+
+        $result = Connect-deviceManager -Hostname 'oceanstor.test' -PassThru -Credential $credential -SkipCertificateCheck
+
+        $result.SkipCertificateCheck | Should -BeTrue
+        Should -Invoke Invoke-RestMethod -Times 1 -Exactly -ParameterFilter {
+            $SkipCertificateCheck
         }
     }
 
@@ -103,7 +117,7 @@ Describe 'Connect-deviceManager' {
         $result = Connect-deviceManager -Hostname 'oceanstor.test' -PassThru -LoginUser 'api-user' -LoginPwd $securePassword
 
         $result.GetType().Name | Should -Be 'OceanstorSession'
-        $result.Headers.Authorization | Should -Be 'Basic YXBpLXVzZXI6YXBpLXBhc3M='
+        $result.Headers.ContainsKey('Authorization') | Should -BeFalse
         Should -Invoke Get-Credential -Times 0 -Exactly
     }
 
@@ -124,6 +138,46 @@ Describe 'Connect-deviceManager' {
 
         $global:deviceManager.GetType().Name | Should -Be 'OceanstorSession'
         $global:deviceManager.DeviceId | Should -Be 'device-01'
+        $global:deviceManager.SkipCertificateCheck | Should -BeFalse
+    }
+
+    It 'closes the previous global session before replacing it' {
+        $script:previousSession = [pscustomobject]@{ Hostname = 'previous.test' }
+        $global:deviceManager = $script:previousSession
+        Mock Disconnect-deviceManager { }
+
+        $securePassword = ConvertTo-SecureString -String 'api-pass' -AsPlainText -Force
+        $credential = [pscredential]::new('api-user', $securePassword)
+
+        $null = Connect-deviceManager -Hostname 'oceanstor.test' -Credential $credential
+
+        Should -Invoke Disconnect-deviceManager -Times 1 -Exactly -ParameterFilter {
+            $WebSession -eq $script:previousSession
+        }
+        $global:deviceManager.Hostname | Should -Be 'oceanstor.test'
+    }
+
+    It 'still replaces the global session when closing the previous one fails' {
+        $global:deviceManager = [pscustomobject]@{ Hostname = 'previous.test' }
+        Mock Disconnect-deviceManager { throw 'previous session already expired' }
+
+        $securePassword = ConvertTo-SecureString -String 'api-pass' -AsPlainText -Force
+        $credential = [pscredential]::new('api-user', $securePassword)
+
+        { Connect-deviceManager -Hostname 'oceanstor.test' -Credential $credential } | Should -Not -Throw
+
+        $global:deviceManager.Hostname | Should -Be 'oceanstor.test'
+    }
+
+    It 'does not attempt to close a session when none exists yet' {
+        Mock Disconnect-deviceManager { }
+
+        $securePassword = ConvertTo-SecureString -String 'api-pass' -AsPlainText -Force
+        $credential = [pscredential]::new('api-user', $securePassword)
+
+        $null = Connect-deviceManager -Hostname 'oceanstor.test' -Credential $credential
+
+        Should -Invoke Disconnect-deviceManager -Times 0 -Exactly
     }
 }
 }
