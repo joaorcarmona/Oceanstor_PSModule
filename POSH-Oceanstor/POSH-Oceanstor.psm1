@@ -9,13 +9,13 @@
         Where-Object Name -ne 'class-OceanstorSession.ps1' )
 
 #Dot source the files
-    Foreach($import in @($Public + $Private))
+    foreach($import in @($Public + $Private))
     {
-        Try
+        try
         {
             . $import.fullname
         }
-        Catch
+        catch
         {
             Write-Error -Message "Failed to import function $($import.fullname): $_"
         }

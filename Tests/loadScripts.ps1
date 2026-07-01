@@ -7,13 +7,13 @@ $Private  = @( Get-ChildItem -Path $workDir\POSH-Oceanstor\Private\*.ps1 -ErrorA
 
 
 #Dot source the files
-Foreach($import in @($Public + $Private))
+foreach($import in @($Public + $Private))
 {
-    Try
+    try
     {
         . $import.fullname
     }
-    Catch
+    catch
     {
         Write-Error -Message "Failed to import function $($import.fullname): $_"
     }

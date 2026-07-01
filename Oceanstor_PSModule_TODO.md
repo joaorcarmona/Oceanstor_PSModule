@@ -19,7 +19,7 @@ Detailed audit findings live in `ANALYSIS.md`. Release-facing summaries live in 
 ### Code Quality & Linting Compliance
 
 - [ ] **Enforce Strict PascalCase/lowercase Standards**
-  - Standardize keywords (`if`, `else`, `foreach`, `try`, `catch`) to lowercase.
+  - [x] Standardize keywords (`if`, `else`, `foreach`, `try`, `catch`) to lowercase.
   - Standardize logical constants (`$true`, `$false`) to lowercase across all `.psm1` and helper script files.
 - [ ] **Automate PSScriptAnalyzer Integration**
   - Embed `Invoke-ScriptAnalyzer` checks into the local testing loop.
