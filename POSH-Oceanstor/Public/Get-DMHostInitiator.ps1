@@ -61,7 +61,7 @@ function Get-DMHostInitiator {
 
     [Cmdletbinding(DefaultParameterSetName = "AllInitiators")]
     param(
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession,
         [Parameter(Position = 1, Mandatory = $true)]
         [ValidateSet("FibreChannel", "ISCSI")]

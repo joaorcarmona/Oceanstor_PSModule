@@ -44,12 +44,12 @@ function Get-DMLunsbyFilter {
     #>
     [Cmdletbinding()]
     param(
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession,
-        [Parameter(ValueFromPipelineByPropertyName = $True, Position = 1, Mandatory = $true)]
+        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 1, Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$Filter,
-        [Parameter(ValueFromPipelineByPropertyName = $True, Position = 2, Mandatory = $true)]
+        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 2, Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$Keyword
     )

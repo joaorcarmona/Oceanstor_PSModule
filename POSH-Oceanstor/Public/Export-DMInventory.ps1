@@ -38,11 +38,11 @@ function Export-DMInventory {
 	#>
     [Cmdletbinding()]
     param(
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $true, ParameterSetName = "NewConnection")]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0, Mandatory = $true, ParameterSetName = "NewConnection")]
         [String]$Hostname,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $true, ParameterSetName = "CurrentConnection")]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0, Mandatory = $true, ParameterSetName = "CurrentConnection")]
         [PSCustomObject]$OceanStor,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $true)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0, Mandatory = $true)]
         [string]$ReportFile
     )
 

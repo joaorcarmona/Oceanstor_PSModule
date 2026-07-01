@@ -63,11 +63,11 @@ function New-DMdTree {
 
     [CmdletBinding(SupportsShouldProcess = $true, DefaultParameterSetName = 'byId')]
     param(
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 1, Mandatory = $true)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 1, Mandatory = $true)]
         [string]$dTreeName,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 2, Mandatory = $true, ParameterSetName = "byName")]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 2, Mandatory = $true, ParameterSetName = "byName")]
         [ValidateScript({
                 $session = if ($WebSession) {
                     $WebSession
@@ -96,7 +96,7 @@ function New-DMdTree {
                 (Get-DMFileSystem -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$fileSystemName,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $true, ParameterSetName = "byId")]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $true, ParameterSetName = "byId")]
         [ValidateScript({
                 $session = if ($WebSession) {
                     $WebSession
@@ -121,17 +121,17 @@ function New-DMdTree {
                 (Get-DMFileSystem -WebSession $session).Id | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$fileSystemId,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
         [ValidateSet("enabled", "disabled")]
         [string]$quotaSwitch,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
         [string]$vStoreId,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
         [string]$path,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
         [ValidateSet("Native", "NTFS", "UNIX", "Mixed")]
         [string]$securityStyle,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
         [ValidateSet("Mandatory", "Advisory")]
         [string]$lockingPolicy
     )

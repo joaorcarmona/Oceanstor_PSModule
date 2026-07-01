@@ -1,7 +1,7 @@
 function Test-IPv4Address {
     [Cmdletbinding()]
     Param(
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$true)]
+    [Parameter(ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,Position=0,Mandatory=$true)]
         [string]$IPv4
     )
 
@@ -10,7 +10,7 @@ function Test-IPv4Address {
     $result = $false
     if ($IPv4 -match $pattern)
     {
-        $result = $True
+        $result = $true
     }
 
     Return $result

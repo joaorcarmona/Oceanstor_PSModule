@@ -32,7 +32,7 @@ function Export-DeviceManager {
 	#>
     [Cmdletbinding()]
     param(
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $true)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0, Mandatory = $true)]
         [String]$Hostname
     )
 

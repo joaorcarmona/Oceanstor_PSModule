@@ -48,7 +48,7 @@ function Export-DMStorageToExcel {
             HelpMessage = 'Enter a Storage IP or FQDN.')]
         [Alias("Storage")]
         [String]$Hostname,
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 1, Mandatory = $true, ParameterSetName = "CurrentConnection")]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 1, Mandatory = $true, ParameterSetName = "CurrentConnection")]
         [PSCustomObject]$OceanStor,
         [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $false, Position = 2, Mandatory = $true)]
         [ValidateSet("luns", "system", "hostgroups", "lungroups", "disks", "hosts", "vstores", "storagepools", "full")]
@@ -69,39 +69,39 @@ function Export-DMStorageToExcel {
     #TODO Use SaveFileDialog Form to select file
 
     if ($IncludeObject -eq "full") {
-        $IncludeLuns = $True
-        $IncludeHosts = $True
-        $IncludeSystem = $True
-        $IncludeDisks = $True
+        $IncludeLuns = $true
+        $IncludeHosts = $true
+        $IncludeSystem = $true
+        $IncludeDisks = $true
         $IncludeStoragePools = $true
-        $IncludeLunGroups = $True
-        $IncludeHostGroups = $True
-        $IncludevStore = $True
+        $IncludeLunGroups = $true
+        $IncludeHostGroups = $true
+        $IncludevStore = $true
     }
     else {
         $reportObject = $IncludeObject | Get-Unique
         foreach ($reportObj in $reportObject) {
             switch ($reportObj) {
                 luns {
-                    $IncludeLuns = $True
+                    $IncludeLuns = $true
                 }
                 lungroups {
-                    $IncludeLunGroups = $True
+                    $IncludeLunGroups = $true
                 }
                 system {
-                    $IncludeSystem = $True
+                    $IncludeSystem = $true
                 }
                 hosts {
-                    $IncludeHosts = $True
+                    $IncludeHosts = $true
                 }
                 hostgroups {
-                    $IncludeHostGroups = $True
+                    $IncludeHostGroups = $true
                 }
                 disks {
-                    $IncludeDisks = $True
+                    $IncludeDisks = $true
                 }
                 vstores {
-                    $IncludevStore = $True
+                    $IncludevStore = $true
                 }
                 storagepools {
                     $IncludeStoragePools = $true
@@ -112,29 +112,29 @@ function Export-DMStorageToExcel {
 
 
     #1) Adding System Report
-    if ($IncludeSystem -eq $True) {
+    if ($IncludeSystem -eq $true) {
         Export-Excel $ReportFile -AutoSize -TableName System -InputObject $storage.system -WorksheetName "Basic System"
     }
 
     #2) adding Disks
-    if ($IncludeDisks -eq $True) {
+    if ($IncludeDisks -eq $true) {
         $DiskReport = New-DMObjectReport -Object $storage.disks -ReportType disks
         Export-Excel $ReportFile -AutoSize -TableName Disks -InputObject $DiskReport -WorksheetName "System Disks"
     }
 
     #3) Adding Storage Pools
-    if ($IncludeStoragePools -eq $True) {
+    if ($IncludeStoragePools -eq $true) {
         Export-Excel $ReportFile -AutoSize -TableName StoragePools -InputObject $storage.StoragePools -WorksheetName "Storage Pools"
     }
 
     #4) Adding Lun Groups
-    if ($IncludeLunGroups -eq $True) {
+    if ($IncludeLunGroups -eq $true) {
         $LunGroupsReport = New-DMObjectReport -Object $storage.LunGroups -ReportType lungroups
         Export-Excel $ReportFile -AutoSize -TableName LunGroups -InputObject $LunGroupsReport -WorksheetName "Lun Groups"
     }
 
     #5) Adding LUNs
-    if ($IncludeLuns -eq $True) {
+    if ($IncludeLuns -eq $true) {
         if ($storageVersion -eq "V3") {
             $reportLunsVersion = "lunsv3"
         }
@@ -147,13 +147,13 @@ function Export-DMStorageToExcel {
     }
 
     #6) Adding LUN Groups
-    if ($IncludeHostGroups -eq $True) {
+    if ($IncludeHostGroups -eq $true) {
         $hostGroupsReport = New-DMObjectReport -Object $storage.hostgroups -ReportType hostgroups
         Export-Excel $ReportFile -AutoSize -TableName HostGroups -InputObject $hostGroupsReport -WorksheetName "Host Groups"
     }
 
     #7) Adding Hosts
-    if ($IncludeHosts -eq $True) {
+    if ($IncludeHosts -eq $true) {
         $hostsReport = New-DMObjectReport -Object $storage.hosts -ReportType hosts
         Export-Excel $ReportFile -AutoSize -TableName Hosts -InputObject $hostsReport -WorksheetName "Hosts"
     }

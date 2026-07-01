@@ -2,12 +2,12 @@ function New-DMObjectReport{
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '')]
     [Cmdletbinding()]
     Param(
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$true)]
+    [Parameter(ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,Position=0,Mandatory=$true)]
         [pscustomobject]$Object,
-        [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=1,Mandatory=$false)]
+        [Parameter(ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,Position=1,Mandatory=$false)]
     [ValidateSet("lunsv3","lunsv6","hosts","hostgroups","lungroups","disks")]
         [string]$ReportType,
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=2,Mandatory=$false)]
+    [Parameter(ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,Position=2,Mandatory=$false)]
         [xml]$ReportTemplate
     )
 

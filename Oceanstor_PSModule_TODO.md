@@ -20,7 +20,7 @@ Detailed audit findings live in `ANALYSIS.md`. Release-facing summaries live in 
 
 - [ ] **Enforce Strict PascalCase/lowercase Standards**
   - [x] Standardize keywords (`if`, `else`, `foreach`, `try`, `catch`) to lowercase.
-  - Standardize logical constants (`$true`, `$false`) to lowercase across all `.psm1` and helper script files.
+  - [x] Standardize logical constants (`$true`, `$false`) to lowercase across all `.psm1` and helper script files.
 - [ ] **Automate PSScriptAnalyzer Integration**
   - Embed `Invoke-ScriptAnalyzer` checks into the local testing loop.
   - Resolve all remaining Severity: Warning / Information items.

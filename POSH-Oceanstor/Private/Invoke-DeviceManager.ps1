@@ -145,14 +145,14 @@ function Invoke-DeviceManager{
 	#>
     [Cmdletbinding()]
     Param(
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$false)]
+    [Parameter(ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,Position=0,Mandatory=$false)]
         [pscustomobject]$WebSession,
     [Parameter(Position=1,Mandatory=$true)]
         [ValidateSet("GET","POST","PUT","DELETE")]
         [string]$Method,
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=2,Mandatory=$true)]
+    [Parameter(ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,Position=2,Mandatory=$true)]
         [String]$Resource,
-	[Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Mandatory=$false)]
+	[Parameter(ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,Mandatory=$false)]
 		[System.Collections.Hashtable]$BodyData,
 	[Parameter(Mandatory=$false)]
 		[switch]$ApiV2

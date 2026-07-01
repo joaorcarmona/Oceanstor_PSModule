@@ -40,11 +40,11 @@ function Get-DMWorkLoadTypebyFilter {
 	#>
     [Cmdletbinding()]
     param(
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession,
-        [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $True, Position = 1, Mandatory = $true)]
+        [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $true, Position = 1, Mandatory = $true)]
         [pscustomobject]$filter,
-        [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $True, Position = 2, Mandatory = $true)]
+        [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $true, Position = 2, Mandatory = $true)]
         [pscustomobject]$keyword
     )
 

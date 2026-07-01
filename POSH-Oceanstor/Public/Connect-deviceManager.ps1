@@ -53,7 +53,7 @@ function Connect-deviceManager {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidGlobalVars', '')]
     [Cmdletbinding(DefaultParameterSetName = 'Prompt')]
     param(
-        [Parameter(ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True, Position = 0, Mandatory = $true)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0, Mandatory = $true)]
         [String]$Hostname,
         [Alias('Return')]
         [switch]$PassThru,

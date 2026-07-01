@@ -1,7 +1,7 @@
 function Write-DMError {
     [Cmdletbinding()]
     Param(
-    [Parameter(ValueFromPipeline=$True,ValueFromPipelineByPropertyName=$True,Position=0,Mandatory=$true)]
+    [Parameter(ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,Position=0,Mandatory=$true)]
         [PSCustomObject]$SessionError
     )
 
