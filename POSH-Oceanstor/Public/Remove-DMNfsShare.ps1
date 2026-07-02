@@ -104,6 +104,7 @@ function Remove-DMNfsShare {
 
     if ($PSCmdlet.ShouldProcess($SharePath, 'Remove NFS share')) {
         $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
+        $response = $response | Assert-DMApiSuccess
         return $response.error
     }
 }

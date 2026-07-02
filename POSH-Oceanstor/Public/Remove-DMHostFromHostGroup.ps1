@@ -131,6 +131,6 @@ function Remove-DMHostFromHostGroup {
     }
 
     if ($PSCmdlet.ShouldProcess("$HostName <- $HostGroupName", 'Remove host from host group')) {
-        return (Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource 'host/associate' -BodyData $body).error
+        return ((Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource 'host/associate' -BodyData $body) | Assert-DMApiSuccess).error
     }
 }

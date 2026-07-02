@@ -165,6 +165,7 @@ function New-DMnfsClient {
 
     if ($PSCmdlet.ShouldProcess($clientName, 'Create NFS client')) {
         $response = Invoke-DeviceManager -WebSession $session -Method "POST" -Resource "NFS_SHARE_AUTH_CLIENT" -BodyData $body
+        $response = $response | Assert-DMApiSuccess
 
         if ($response.error.Code -eq 0) {
             $result = [OceanstorNFSclient]::new($response.data, $session)

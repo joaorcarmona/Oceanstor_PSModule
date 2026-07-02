@@ -87,6 +87,7 @@ function Restart-DMLunSnapshot {
     if ($PSCmdlet.ShouldProcess($SnapShotName, 'Reactivate LUN snapshot')) {
         $body = @{ ID = $snapshot.Id }
         $response = Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'snapshot/reactive' -BodyData $body
+        $response = $response | Assert-DMApiSuccess
         return $response.error
     }
 }

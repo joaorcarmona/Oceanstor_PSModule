@@ -126,6 +126,6 @@ function Add-DMHostToHostGroup {
     }
 
     if ($PSCmdlet.ShouldProcess("$HostName -> $HostGroupName", 'Associate host with host group')) {
-        return (Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'hostgroup/associate' -BodyData $body).error
+        return ((Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'hostgroup/associate' -BodyData $body) | Assert-DMApiSuccess).error
     }
 }

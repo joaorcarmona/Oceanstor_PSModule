@@ -118,6 +118,6 @@ function Remove-DMFiberChannelInitiatorFromHost {
         $body.vstoreId = $VstoreId
     }
     if ($PSCmdlet.ShouldProcess("$HostName/$WWN", 'Remove Fibre Channel initiator from host')) {
-        return (Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'fc_initiator/remove_fc_from_host' -BodyData $body).error
+        return ((Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'fc_initiator/remove_fc_from_host' -BodyData $body) | Assert-DMApiSuccess).error
     }
 }

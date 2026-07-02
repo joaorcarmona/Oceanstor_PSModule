@@ -94,6 +94,7 @@ function New-DMHost {
 
     if ($PSCmdlet.ShouldProcess($Name, 'Create host')) {
         $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'host' -BodyData $body
+        $response = $response | Assert-DMApiSuccess
         if ($response.error.Code -eq 0) {
             return [OceanStorHost]::new($response.data, $session)
         }

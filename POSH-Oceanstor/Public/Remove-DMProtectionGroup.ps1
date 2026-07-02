@@ -77,6 +77,7 @@ function Remove-DMProtectionGroup {
 
     if ($PSCmdlet.ShouldProcess($Name, 'Remove protection group')) {
         $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource "protectgroup/$($group.Id)" -ApiV2
+        $response = $response | Assert-DMApiSuccess
         return $response.error
     }
 }

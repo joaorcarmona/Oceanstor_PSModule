@@ -86,6 +86,7 @@ function Remove-DMHost {
 
     if ($PSCmdlet.ShouldProcess($HostName, 'Remove host')) {
         $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
+        $response = $response | Assert-DMApiSuccess
         return $response.error
     }
 }

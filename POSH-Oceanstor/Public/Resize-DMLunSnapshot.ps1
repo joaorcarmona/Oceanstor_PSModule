@@ -101,6 +101,7 @@ function Resize-DMLunSnapshot {
             USERCAPACITY = $UserCapacity
         }
         $response = Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'snapshot/expand' -BodyData $body
+        $response = $response | Assert-DMApiSuccess
         return $response.error
     }
 }

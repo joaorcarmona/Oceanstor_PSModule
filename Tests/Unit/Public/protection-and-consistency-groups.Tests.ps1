@@ -19,6 +19,7 @@ BeforeDiscovery {
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSnapshotConsistencyGroup.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Select-DMResponseData.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Assert-DMApiSuccess.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\New-DMProtectionGroup.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMProtectionGroup.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Remove-DMProtectionGroup.ps1"

@@ -21,6 +21,7 @@ BeforeDiscovery {
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorNFSShare.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorNFSclient.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Disconnect-deviceManager.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Assert-DMApiSuccess.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\New-DMnfsShare.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\New-DMnfsClient.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Set-DMdnsServer.ps1"
@@ -115,14 +116,13 @@ Describe 'New-DMnfsShare' {
         $script:nfsBody.DTREEID | Should -Be 'dtree-01'
     }
 
-    It 'returns the API error on failure' {
+    It 'throws a descriptive error on failure' {
         Mock Invoke-DeviceManager {
             [pscustomobject]@{ error = [pscustomobject]@{ Code = -1; Description = 'Share exists' } }
         }
 
-        $result = New-DMnfsShare -WebSession $script:session -sharepath '/documents/' -FileSystemId 'fs-01'
-
-        $result.Code | Should -Be -1
+        { New-DMnfsShare -WebSession $script:session -sharepath '/documents/' -FileSystemId 'fs-01' } |
+            Should -Throw '*Share exists*'
     }
 }
 
@@ -195,14 +195,13 @@ Describe 'Set-DMdnsServer' {
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 
-    It 'returns the API error object when the update fails' {
+    It 'throws a descriptive error when the update fails' {
         Mock Invoke-DeviceManager {
             [pscustomobject]@{ error = [pscustomobject]@{ code = -1 } }
         }
 
-        $result = Set-DMdnsServer -WebSession $script:session -DNSserver @('8.8.8.8')
-
-        $result.code | Should -Be -1
+        { Set-DMdnsServer -WebSession $script:session -DNSserver @('8.8.8.8') } |
+            Should -Throw '*-1*'
     }
 }
 }

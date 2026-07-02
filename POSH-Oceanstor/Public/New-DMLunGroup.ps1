@@ -86,6 +86,7 @@ function New-DMLunGroup {
 
     if ($PSCmdlet.ShouldProcess($Name, 'Create LUN group')) {
         $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'lungroup' -BodyData $body
+        $response = $response | Assert-DMApiSuccess
         if ($response.error.Code -eq 0) {
             return [OceanStorLunGroup]::new($response.data, $session)
         }

@@ -31,6 +31,7 @@ BeforeDiscovery {
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMFiberChannelInitiator.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMIscsiInitiator.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMNvmeInitiator.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Assert-DMApiSuccess.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\New-DMFiberChannelInitiator.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\New-DMIscsiInitiator.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\New-DMNvmeInitiator.ps1"

@@ -21,6 +21,7 @@ BeforeDiscovery {
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorCIFSShare.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorDtree.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Assert-DMApiSuccess.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Remove-DMLun.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Remove-DMLunGroup.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Remove-DMHost.ps1"

@@ -18,6 +18,7 @@ BeforeDiscovery {
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorFileSystem.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\ConvertTo-DMCapacityBlock.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Assert-DMApiSuccess.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\New-DMFileSystem.ps1"
 
         Export-ModuleMember -Function New-DMFileSystem
@@ -40,7 +41,11 @@ Describe 'New-DMFileSystem' {
         Mock Invoke-DeviceManager {
             $script:fileSystemRequest = $BodyData
             [pscustomobject]@{
-                error = [pscustomobject]@{ Code = 1; Description = 'Test response' }
+                error = [pscustomobject]@{ Code = 0; Description = '' }
+                data  = [pscustomobject]@{
+                    ID = 'fs-01'; NAME = 'documents'; SECTORSIZE = 512
+                    CAPACITY = 2097152; ALLOCCAPACITY = '0'; HEALTHSTATUS = 1; RUNNINGSTATUS = 27
+                }
             }
         }
     }

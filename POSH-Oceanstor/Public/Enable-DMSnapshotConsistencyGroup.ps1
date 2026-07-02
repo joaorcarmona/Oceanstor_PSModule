@@ -81,6 +81,7 @@ function Enable-DMSnapshotConsistencyGroup {
 
     if ($PSCmdlet.ShouldProcess($Name, 'Activate snapshot consistency group')) {
         $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'snapshot_consistency_group/activate' -BodyData $body
+        $response = $response | Assert-DMApiSuccess
         return $response.error
     }
 }

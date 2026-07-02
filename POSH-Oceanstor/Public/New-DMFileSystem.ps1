@@ -252,6 +252,7 @@ function New-DMFileSystem {
 
     if ($PSCmdlet.ShouldProcess($FileSystemName, 'Create file system')) {
         $response = Invoke-DeviceManager -WebSession $session -Method "POST" -Resource "filesystem" -BodyData $body
+        $response = $response | Assert-DMApiSuccess
 
         if ($response.error.Code -eq 0) {
             $result = [OceanstorFileSystem]::new($response.data, $session)

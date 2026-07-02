@@ -199,6 +199,7 @@ function New-DMCifsShare {
 
     if ($PSCmdlet.ShouldProcess($sharePath, 'Create CIFS share')) {
         $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'CIFSSHARE' -BodyData $body
+        $response = $response | Assert-DMApiSuccess
         if ($response.error.Code -eq 0) {
             return [OceanStorCIFSShare]::new($response.data, $session)
         }

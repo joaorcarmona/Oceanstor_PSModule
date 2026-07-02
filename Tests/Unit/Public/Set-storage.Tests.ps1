@@ -20,6 +20,7 @@ BeforeDiscovery {
         }
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\ConvertTo-DMCapacityBlock.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Assert-DMApiSuccess.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Set-DMLun.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Set-DMFileSystem.ps1"
 
@@ -101,10 +102,9 @@ Describe 'Set-DMLun' {
             [pscustomobject]@{ error = [pscustomobject]@{ Code = 1; Description = 'simulated failure' } }
         }
 
-        $result = Set-DMLun -WebSession $script:session -LunName 'database' -NewName 'database-prod' `
-            -Capacity '2GB' -Confirm:$false
+        { Set-DMLun -WebSession $script:session -LunName 'database' -NewName 'database-prod' `
+            -Capacity '2GB' -Confirm:$false } | Should -Throw '*simulated failure*'
 
-        $result.Code | Should -Be 1
         $script:requests.Count | Should -Be 1
         $script:requests[0].Resource | Should -Be 'lun/lun-01'
     }

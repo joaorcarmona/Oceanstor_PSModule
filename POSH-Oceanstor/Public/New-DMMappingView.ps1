@@ -65,6 +65,7 @@ function New-DMMappingView {
 
     if ($PSCmdlet.ShouldProcess($Name, 'Create mapping view')) {
         $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'mappingview' -BodyData $body
+        $response = $response | Assert-DMApiSuccess
         if ($response.error.Code -eq 0) {
             return [OceanStorMappingView]::new($response.data, $session)
         }

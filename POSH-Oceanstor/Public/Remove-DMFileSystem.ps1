@@ -111,6 +111,7 @@ function Remove-DMFileSystem {
 
     if ($PSCmdlet.ShouldProcess($FileSystemName, 'Remove file system and its data')) {
         $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
+        $response = $response | Assert-DMApiSuccess
         return $response.error
     }
 }

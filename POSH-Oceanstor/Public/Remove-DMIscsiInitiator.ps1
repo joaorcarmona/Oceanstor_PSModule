@@ -79,6 +79,6 @@ function Remove-DMIscsiInitiator {
         $resource += "?vstoreId=$VstoreId"
     }
     if ($PSCmdlet.ShouldProcess($Identifier, 'Remove free iSCSI initiator')) {
-        return (Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource).error
+        return ((Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource) | Assert-DMApiSuccess).error
     }
 }

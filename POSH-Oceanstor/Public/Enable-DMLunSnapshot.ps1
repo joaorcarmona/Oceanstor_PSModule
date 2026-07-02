@@ -87,6 +87,7 @@ function Enable-DMLunSnapshot {
     if ($PSCmdlet.ShouldProcess($SnapShotName, 'Activate LUN snapshot')) {
         $body = @{ SNAPSHOTLIST = @($snapshot.Id) }
         $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'snapshot/activate' -BodyData $body
+        $response = $response | Assert-DMApiSuccess
         return $response.error
     }
 }

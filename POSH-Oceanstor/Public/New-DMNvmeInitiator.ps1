@@ -64,6 +64,7 @@ function New-DMNvmeInitiator {
 
     if ($PSCmdlet.ShouldProcess($Nqn, 'Create NVMe initiator')) {
         $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'NVMe_over_RoCE_initiator' -BodyData $body
+        $response = $response | Assert-DMApiSuccess
         if ($response.error.Code -eq 0) {
             return [OceanstorHostinitiatorNVMe]::new($response.data, $session)
         }

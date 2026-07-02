@@ -131,6 +131,6 @@ function Remove-DMHostGroupFromMappingView {
     }
 
     if ($PSCmdlet.ShouldProcess("$HostGroupName <- $MappingViewName", 'Remove host group from mapping view')) {
-        return (Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'mappingview/REMOVE_ASSOCIATE' -BodyData $body).error
+        return ((Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'mappingview/REMOVE_ASSOCIATE' -BodyData $body) | Assert-DMApiSuccess).error
     }
 }

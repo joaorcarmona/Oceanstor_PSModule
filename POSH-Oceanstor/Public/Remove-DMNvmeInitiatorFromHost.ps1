@@ -125,6 +125,6 @@ function Remove-DMNvmeInitiatorFromHost {
         $body.vstoreId = $VstoreId
     }
     if ($PSCmdlet.ShouldProcess("$HostName/$Nqn", 'Remove NVMe over RoCE initiator from host')) {
-        return (Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'host/remove_associate' -BodyData $body).error
+        return ((Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'host/remove_associate' -BodyData $body) | Assert-DMApiSuccess).error
     }
 }

@@ -118,6 +118,6 @@ function Remove-DMIscsiInitiatorFromHost {
         $body.vstoreId = $VstoreId
     }
     if ($PSCmdlet.ShouldProcess("$HostName/$Identifier", 'Remove iSCSI initiator from host')) {
-        return (Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'iscsi_initiator/remove_iscsi_from_host' -BodyData $body).error
+        return ((Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'iscsi_initiator/remove_iscsi_from_host' -BodyData $body) | Assert-DMApiSuccess).error
     }
 }

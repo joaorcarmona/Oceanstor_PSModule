@@ -103,6 +103,7 @@ function New-DMSnapshotConsistencyGroup {
 
     if ($PSCmdlet.ShouldProcess($Name, 'Create snapshot consistency group')) {
         $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'SNAPSHOT_CONSISTENCY_GROUP' -BodyData $body
+        $response = $response | Assert-DMApiSuccess
         if ($response.error.Code -eq 0) {
             return [OceanstorSnapshotConsistencyGroup]::new($response.data, $session)
         }

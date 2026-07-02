@@ -142,6 +142,7 @@ function New-DMProtectionGroup {
 
     if ($PSCmdlet.ShouldProcess($Name, 'Create protection group')) {
         $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'protectgroup' -BodyData $body -ApiV2
+        $response = $response | Assert-DMApiSuccess
         if ($response.error.Code -eq 0) {
             return [OceanstorProtectionGroup]::new($response.data, $session)
         }

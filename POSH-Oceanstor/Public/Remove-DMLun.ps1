@@ -108,6 +108,7 @@ function Remove-DMLun {
 
     if ($PSCmdlet.ShouldProcess($LunName, 'Remove LUN and its data')) {
         $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
+        $response = $response | Assert-DMApiSuccess
         return $response.error
     }
 }

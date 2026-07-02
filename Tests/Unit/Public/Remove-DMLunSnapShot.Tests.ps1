@@ -14,6 +14,7 @@ BeforeDiscovery {
             )
         }
 
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Assert-DMApiSuccess.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Remove-DMLunSnapShot.ps1"
 
         Export-ModuleMember -Function Remove-DMLunSnapShot

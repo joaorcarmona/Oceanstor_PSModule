@@ -139,6 +139,7 @@ function Set-DMLun {
 
     if ($hasPropertyChanges) {
         $response = Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource "lun/$($lun.Id)" -BodyData $propertyBody
+        $response = $response | Assert-DMApiSuccess
         if ($response.error.Code -ne 0 -or -not $hasCapacityChange) {
             return $response.error
         }
@@ -148,6 +149,7 @@ function Set-DMLun {
             ID       = $lun.Id
             CAPACITY = $newCapacityBlocks
         }
+        $response = $response | Assert-DMApiSuccess
         return $response.error
     }
 }

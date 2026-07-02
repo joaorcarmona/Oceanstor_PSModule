@@ -119,6 +119,7 @@ function Restore-DMFileSystemSnapshot {
             $body.vstoreId = $snapshot.'vStore ID'
         }
         $response = Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'fssnapshot/rollback_fssnapshot' -BodyData $body
+        $response = $response | Assert-DMApiSuccess
         return $response.error
     }
 }

@@ -86,6 +86,7 @@ function Remove-DMLunGroup {
 
     if ($PSCmdlet.ShouldProcess($LunGroupName, 'Remove LUN group')) {
         $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
+        $response = $response | Assert-DMApiSuccess
         return $response.error
     }
 }

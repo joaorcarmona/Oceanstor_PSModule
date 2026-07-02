@@ -128,5 +128,6 @@ function Set-DMFileSystem {
     }
 
     $response = Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource "filesystem/$($fileSystem.Id)" -BodyData $body
+    $response = $response | Assert-DMApiSuccess
     return $response.error
 }

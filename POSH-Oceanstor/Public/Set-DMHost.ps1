@@ -56,6 +56,6 @@ function Set-DMHost {
         -DescriptionSpecified:$($PSBoundParameters.ContainsKey('Description')) -ApiProperties $ApiProperties -VstoreId $VstoreId
 
     if ($PSCmdlet.ShouldProcess($HostName, $update.Action)) {
-        return (Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource $update.Resource -BodyData $update.Body).error
+        return ((Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource $update.Resource -BodyData $update.Body) | Assert-DMApiSuccess).error
     }
 }

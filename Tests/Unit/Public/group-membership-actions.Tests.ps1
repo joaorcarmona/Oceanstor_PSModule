@@ -17,6 +17,7 @@ BeforeDiscovery {
             )
         }
 
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Assert-DMApiSuccess.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Add-DMHostToHostGroup.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Remove-DMHostFromHostGroup.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Add-DMLunToLunGroup.ps1"

@@ -91,6 +91,7 @@ function Remove-DMLunSnapShot {
 
     if ($PSCmdlet.ShouldProcess($SnapShotName, 'Remove LUN snapshot')) {
         $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource "snapshot/$($snapshot.Id)"
+        $response = $response | Assert-DMApiSuccess
         return $response.error
     }
 }

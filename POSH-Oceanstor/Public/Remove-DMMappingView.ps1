@@ -82,6 +82,6 @@
     }
 
     if ($PSCmdlet.ShouldProcess($MappingViewName, 'Remove mapping view')) {
-        return (Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource).error
+        return ((Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource) | Assert-DMApiSuccess).error
     }
 }

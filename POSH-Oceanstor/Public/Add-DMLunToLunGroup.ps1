@@ -178,6 +178,6 @@ function Add-DMLunToLunGroup {
     }
 
     if ($PSCmdlet.ShouldProcess("$resolvedLunName -> $LunGroupName", 'Associate LUN with LUN group')) {
-        return (Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'lungroup/associate' -BodyData $body).error
+        return ((Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'lungroup/associate' -BodyData $body) | Assert-DMApiSuccess).error
     }
 }

@@ -120,6 +120,7 @@ function New-DMFileSystemSnapshot {
 
     if ($PSCmdlet.ShouldProcess($SnapshotName, 'Create file-system snapshot')) {
         $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'fssnapshot' -BodyData $body
+        $response = $response | Assert-DMApiSuccess
         if ($response.error.Code -eq 0) {
             return [OceanstorFileSystemSnapshot]::new($response.data, $session)
         }

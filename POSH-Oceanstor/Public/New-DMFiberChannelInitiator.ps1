@@ -150,6 +150,7 @@ function New-DMFiberChannelInitiator {
 
     if ($PSCmdlet.ShouldProcess($WWN, 'Create Fibre Channel initiator')) {
         $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'fc_initiator' -BodyData $body
+        $response = $response | Assert-DMApiSuccess
         if ($response.error.Code -eq 0) {
             return [OceanstorHostinitiatorFC]::new($response.data, $session)
         }

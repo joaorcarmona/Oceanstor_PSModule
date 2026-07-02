@@ -131,6 +131,6 @@ function Remove-DMLunGroupFromMappingView {
     }
 
     if ($PSCmdlet.ShouldProcess("$LunGroupName <- $MappingViewName", 'Remove LUN group from mapping view')) {
-        return (Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'mappingview/REMOVE_ASSOCIATE' -BodyData $body).error
+        return ((Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'mappingview/REMOVE_ASSOCIATE' -BodyData $body) | Assert-DMApiSuccess).error
     }
 }

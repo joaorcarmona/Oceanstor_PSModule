@@ -15,6 +15,7 @@ BeforeDiscovery {
             )
         }
 
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Assert-DMApiSuccess.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Enable-DMLunSnapshot.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Restart-DMLunSnapshot.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Resize-DMLunSnapshot.ps1"

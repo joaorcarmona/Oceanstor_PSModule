@@ -58,6 +58,7 @@ function Set-DMdnsServer {
     $PostData = @{ ADDRESS = $DNSserver }
     if ($PSCmdlet.ShouldProcess(($DNSserver -join ', '), 'Configure DNS servers')) {
         $response = Invoke-DeviceManager -WebSession $session -Method "PUT" -Resource "dns_server" -BodyData $PostData
+        $response = $response | Assert-DMApiSuccess
         return $response.error
     }
 }

@@ -171,6 +171,7 @@ function New-DMIscsiInitiator {
 
     if ($PSCmdlet.ShouldProcess($Identifier, 'Create iSCSI initiator')) {
         $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'iscsi_initiator' -BodyData $body
+        $response = $response | Assert-DMApiSuccess
         if ($response.error.Code -eq 0) {
             return [OceanstorHostinitiatorISCSI]::new($response.data, $session)
         }

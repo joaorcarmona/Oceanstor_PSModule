@@ -19,6 +19,7 @@ BeforeDiscovery {
         }
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\New-DMNamedObjectUpdate.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Assert-DMApiSuccess.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Set-DMHost.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Set-DMHostGroup.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Set-DMLunGroup.ps1"

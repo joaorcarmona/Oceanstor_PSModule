@@ -279,6 +279,7 @@ function New-DMLun {
     if ($PSCmdlet.ShouldProcess($LunName, 'Create LUN')) {
         # Make the REST API call
         $response = Invoke-DeviceManager -WebSession $session -Method "POST" -Resource "lun" -BodyData $body
+        $response = $response | Assert-DMApiSuccess
 
         # Check if the operation was successful and create the appropriate object
         if ($response.error.Code -eq 0) {

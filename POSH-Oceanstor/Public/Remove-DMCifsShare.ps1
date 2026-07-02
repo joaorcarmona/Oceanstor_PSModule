@@ -87,6 +87,7 @@ function Remove-DMCifsShare {
 
     if ($PSCmdlet.ShouldProcess($ShareName, 'Remove CIFS share')) {
         $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
+        $response = $response | Assert-DMApiSuccess
         return $response.error
     }
 }

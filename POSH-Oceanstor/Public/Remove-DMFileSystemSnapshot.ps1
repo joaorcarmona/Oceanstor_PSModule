@@ -114,6 +114,7 @@ function Remove-DMFileSystemSnapshot {
 
     if ($PSCmdlet.ShouldProcess("$FileSystemName/$SnapshotName", 'Remove file-system snapshot')) {
         $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource "fssnapshot/$($snapshot.Id)"
+        $response = $response | Assert-DMApiSuccess
         return $response.error
     }
 }

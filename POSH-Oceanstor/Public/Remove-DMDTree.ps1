@@ -132,6 +132,7 @@ function Remove-DMDTree {
 
     if ($PSCmdlet.ShouldProcess("$FileSystemName/$DTreeName", 'Remove dTree and its data')) {
         $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
+        $response = $response | Assert-DMApiSuccess
         return $response.error
     }
 }

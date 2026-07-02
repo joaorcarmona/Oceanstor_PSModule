@@ -128,6 +128,6 @@ function Remove-DMLunFromLunGroup {
     $resource = "lungroup/associate?$($parameters -join '&')"
 
     if ($PSCmdlet.ShouldProcess("$LunName <- $LunGroupName", 'Remove LUN from LUN group')) {
-        return (Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource).error
+        return ((Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource) | Assert-DMApiSuccess).error
     }
 }

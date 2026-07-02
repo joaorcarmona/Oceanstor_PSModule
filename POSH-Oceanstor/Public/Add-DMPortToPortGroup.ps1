@@ -137,6 +137,6 @@ function Add-DMPortToPortGroup {
     }
 
     if ($PSCmdlet.ShouldProcess("$PortName -> $PortGroupName", 'Associate port with port group')) {
-        return (Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'port/associate/portgroup' -BodyData $body).error
+        return ((Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'port/associate/portgroup' -BodyData $body) | Assert-DMApiSuccess).error
     }
 }

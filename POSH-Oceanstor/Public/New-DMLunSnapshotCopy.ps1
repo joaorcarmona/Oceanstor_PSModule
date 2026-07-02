@@ -124,6 +124,7 @@ function New-DMLunSnapshotCopy {
 
     if ($PSCmdlet.ShouldProcess($resolvedCopyName, 'Create LUN snapshot copy')) {
         $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'snapshot/createcopy' -BodyData $body
+        $response = $response | Assert-DMApiSuccess
 
         if ($response.error.Code -eq 0) {
             return [OceanstorLunSnapshot]::new($response.data, $session)

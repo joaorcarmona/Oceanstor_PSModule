@@ -8,6 +8,7 @@ BeforeDiscovery {
             param([pscustomobject]$WebSession, [string]$Method, [string]$Resource, [hashtable]$BodyData)
         }
 
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Assert-DMApiSuccess.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Add-DMPortToPortGroup.ps1"
 
         Export-ModuleMember -Function Add-DMPortToPortGroup

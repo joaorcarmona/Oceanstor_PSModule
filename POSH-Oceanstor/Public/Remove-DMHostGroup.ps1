@@ -86,6 +86,7 @@ function Remove-DMHostGroup {
 
     if ($PSCmdlet.ShouldProcess($HostGroupName, 'Remove host group')) {
         $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
+        $response = $response | Assert-DMApiSuccess
         return $response.error
     }
 }

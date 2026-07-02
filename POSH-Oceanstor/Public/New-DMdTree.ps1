@@ -197,6 +197,7 @@ function New-DMdTree {
 
     if ($PSCmdlet.ShouldProcess($dTreeName, 'Create dTree')) {
         $response = Invoke-DeviceManager -WebSession $session -Method "POST" -Resource "QUOTATREE" -BodyData $body
+        $response = $response | Assert-DMApiSuccess
 
         if ($response.error.Code -eq 0) {
             $result = [OceanStorDtree]::new($response.data, $session)

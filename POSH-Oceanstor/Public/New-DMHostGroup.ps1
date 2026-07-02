@@ -70,6 +70,7 @@ function New-DMHostGroup {
 
     if ($PSCmdlet.ShouldProcess($Name, 'Create host group')) {
         $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'hostgroup' -BodyData $body
+        $response = $response | Assert-DMApiSuccess
         if ($response.error.Code -eq 0) {
             return [OceanStorHostGroup]::new($response.data, $session)
         }

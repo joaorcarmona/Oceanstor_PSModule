@@ -128,6 +128,7 @@ function New-DMnfsShare {
 
     if ($PSCmdlet.ShouldProcess($sharepath, 'Create NFS share')) {
         $response = Invoke-DeviceManager -WebSession $session -Method "POST" -Resource "NFSSHARE" -BodyData $body
+        $response = $response | Assert-DMApiSuccess
 
         if ($response.error.Code -eq 0) {
             $result = [OceanStorNFSShare]::new($response.data, $session)

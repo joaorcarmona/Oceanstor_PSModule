@@ -103,6 +103,7 @@ function Restore-DMLunSnapshot {
             ROLLBACKSPEED = $speedValue
         }
         $response = Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'snapshot/rollback' -BodyData $body
+        $response = $response | Assert-DMApiSuccess
         return $response.error
     }
 }

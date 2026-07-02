@@ -149,6 +149,6 @@ function Remove-DMPortFromPortGroup {
     }
 
     if ($PSCmdlet.ShouldProcess("$PortName <- $PortGroupName", 'Remove port from port group')) {
-        return (Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource 'port/associate/portgroup' -BodyData $body).error
+        return ((Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource 'port/associate/portgroup' -BodyData $body) | Assert-DMApiSuccess).error
     }
 }

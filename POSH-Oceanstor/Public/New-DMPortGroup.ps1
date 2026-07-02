@@ -59,6 +59,7 @@ function New-DMPortGroup {
 
     if ($PSCmdlet.ShouldProcess($Name, 'Create port group')) {
         $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'portgroup' -BodyData $body
+        $response = $response | Assert-DMApiSuccess
         if ($response.error.Code -eq 0) {
             return [OceanstorPortGroup]::new($response.data, $session)
         }

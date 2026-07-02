@@ -17,6 +17,7 @@ BeforeDiscovery {
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorHostGroup.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorLunGroup.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Assert-DMApiSuccess.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\New-DMHost.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\New-DMHostGroup.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\New-DMLunGroup.ps1"
@@ -113,15 +114,13 @@ Describe 'Create host and group commands' {
         $script:request.vstoreId | Should -Be '7'
     }
 
-    It 'returns a REST error when host creation fails' {
+    It 'throws a descriptive error when host creation fails' {
         Mock Invoke-DeviceManager {
             [pscustomobject]@{ error = [pscustomobject]@{ Code = 1; Description = 'duplicate name' } }
         }
 
-        $result = New-DMHost -WebSession $script:session -Name 'server01'
-
-        $result.Code | Should -Be 1
-        $result.Description | Should -Be 'duplicate name'
+        { New-DMHost -WebSession $script:session -Name 'server01' } |
+            Should -Throw '*duplicate name*'
     }
 }
 }
