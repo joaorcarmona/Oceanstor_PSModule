@@ -8,6 +8,7 @@ BeforeDiscovery {
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Set-DMHostInitiator.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Get-DMApiErrorMessage.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Select-DMResponseData.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Assert-DMValidFilterProperty.ps1"
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
         Get-ChildItem -LiteralPath "$testRoot\..\..\..\POSH-Oceanstor\Private" -Filter 'class-*.ps1' |
@@ -94,6 +95,13 @@ Describe 'Public getter functions' {
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
                 Should -Be @('Id', 'Name', 'Health Status', 'Operation System', 'Parent Name')
             $result.'Parent Id' | Should -Be 'group-01'
+        }
+
+        It 'rejects a Filter that is not a real host property, before making any REST call' {
+            { Get-DMhostbyFilter -WebSession $script:session -Filter 'Bogus' -Keyword 'x' } |
+                Should -Throw "*Invalid Filter 'Bogus'*"
+
+            Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
         }
 
         It 'filters hosts by a known field through an exact server-side filter' {

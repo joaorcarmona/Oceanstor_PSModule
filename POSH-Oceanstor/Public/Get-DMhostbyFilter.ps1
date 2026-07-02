@@ -28,7 +28,7 @@ function Get-DMhostbyFilter {
         Optional parameter to define the session to be use on the REST call. If not defined, the module's cached $script:CurrentOceanstorSession session will be used
 
     .PARAMETER Filter
-        Mandatory property name to filter against. The value must be a valid host object property.
+        Mandatory property name to filter against. Validated against OceanStorHost's actual properties before any REST call is made; an unrecognized name throws immediately.
 
     .PARAMETER Keyword
         Mandatory value to match against the chosen property. Supports PowerShell wildcards (*, ?, [...]); without one, the comparison is an exact match.
@@ -79,6 +79,8 @@ function Get-DMhostbyFilter {
     else {
         $session = $script:CurrentOceanstorSession
     }
+
+    Assert-DMValidFilterProperty -Type ([OceanStorHost]) -Filter $Filter
 
     # Map friendly property names to API field names for server-side filtering,
     # used only to narrow the candidate set transferred from the array. The

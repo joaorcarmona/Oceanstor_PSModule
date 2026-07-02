@@ -28,7 +28,7 @@ function Get-DMLunbyFilter {
         Optional parameter to define the session to be use on the REST call. If not defined, the module's cached $script:CurrentOceanstorSession session will be used
 
     .PARAMETER Filter
-        Mandatory property name to filter against. The value must be a valid LUN object property.
+        Mandatory property name to filter against. Validated against the connected array's LUN class properties (OceanstorLunv3 or OceanstorLunv6, depending on array version) before any REST call is made; an unrecognized name throws immediately.
 
     .PARAMETER Keyword
         Mandatory value to match against the chosen property. Supports PowerShell wildcards (*, ?, [...]); without one, the comparison is an exact match.
@@ -81,6 +81,11 @@ function Get-DMLunbyFilter {
         $session = $script:CurrentOceanstorSession
     }
 
+    $StorageVersion = $session.version.Substring(0, 2)
+    $LunObjectClass = if ($StorageVersion -eq "V6") { [OceanstorLunv6] } else { [OceanstorLunv3] }
+
+    Assert-DMValidFilterProperty -Type $LunObjectClass -Filter $Filter
+
     # Map friendly property names to API field names for server-side filtering,
     # used only to narrow the candidate set transferred from the array. The
     # exact requested pattern is always re-verified client-side below, so an
@@ -123,17 +128,8 @@ function Get-DMLunbyFilter {
     $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource $resource | Select-DMResponseData
     $StorageLuns = New-Object System.Collections.ArrayList
 
-    $StorageVersion = $session.version.Substring(0, 2)
-
-    if ($storageVersion -eq "V6") {
-        $LunObjectClass = "OceanstorLunv6"
-    }
-    else {
-        $LunObjectClass = "OceanstorLunv3"
-    }
-
     foreach ($tlun in $response) {
-        $lun = New-Object -TypeName $LunObjectClass -ArgumentList $tlun, $session
+        $lun = $LunObjectClass::new($tlun, $session)
         [void]$StorageLuns.Add($lun)
     }
 

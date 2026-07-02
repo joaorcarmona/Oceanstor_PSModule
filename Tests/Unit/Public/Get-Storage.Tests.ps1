@@ -8,6 +8,7 @@ BeforeDiscovery {
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Get-DMparsedElabel.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Set-DMHostInitiator.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Select-DMResponseData.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Assert-DMValidFilterProperty.ps1"
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
         Get-ChildItem -LiteralPath "$testRoot\..\..\..\POSH-Oceanstor\Private" -Filter 'class-*.ps1' |
@@ -230,6 +231,18 @@ Describe 'Public getter functions' {
 
             { Get-DMLunSnapshot -WebSession $script:session -LunName 'missing' } |
                 Should -Throw '*Invalid LunName*'
+        }
+
+        It 'rejects a Filter that is not a real LUN property, before making any REST call' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                [pscustomobject]@{ data = @(New-TestLun) }
+            }
+
+            { Get-DMLunbyFilter -WebSession $script:session -Filter 'Bogus' -Keyword 'x' } |
+                Should -Throw "*Invalid Filter 'Bogus'*"
+
+            Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
         }
 
         It 'gets LUNs by filter using an exact server-side query for known fields' {
