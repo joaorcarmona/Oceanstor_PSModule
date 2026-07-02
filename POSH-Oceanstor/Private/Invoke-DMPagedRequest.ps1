@@ -4,13 +4,19 @@ function Invoke-DMPagedRequest {
         Retrieves all pages of a collection resource from the OceanStor REST API.
 
     .DESCRIPTION
-        Calls Invoke-DeviceManager in a loop, appending range=[start,end] query parameters
+        Calls Invoke-DeviceManager in a loop, appending range=[start-end] query parameters
         until the API returns fewer results than the requested page size, indicating the last
         page has been reached. Returns the combined raw data array from all pages.
 
         The OceanStor API returns at most PageSize objects per request when no range is
         specified, silently truncating larger collections. This helper ensures every object
         in a collection is retrieved regardless of size.
+
+        If the array rejects the range parameter outright (error code 50331651, "The entered
+        parameter is incorrect") on the first page, this falls back to a single unpaged request
+        and warns, since an unpaged response on some firmware silently truncates to PageSize
+        instead of erroring -- there is no way to distinguish "returned everything" from
+        "silently truncated" from the response alone.
 
     .PARAMETER WebSession
         Optional session returned by Connect-deviceManager. The module's cached $script:CurrentOceanstorSession
@@ -40,12 +46,13 @@ function Invoke-DMPagedRequest {
 
     do {
         $end = $start + $PageSize - 1
-        $pagedResource = "${Resource}${separator}range=[$start,$end]"
+        $pagedResource = "${Resource}${separator}range=[$start-$end]"
 
         $response = Invoke-DeviceManager -WebSession $WebSession -Method 'GET' -Resource $pagedResource
         $errorProperty = if ($null -ne $response) { $response.PSObject.Properties['error'] } else { $null }
         if ($null -ne $errorProperty -and $errorProperty.Value.Code -ne 0) {
             if ($start -eq 0 -and $errorProperty.Value.Code -eq 50331651) {
+                Write-Warning "Resource '$Resource' rejected the range parameter (code 50331651); falling back to a single unpaged request. If the collection exceeds $PageSize items and the array's unpaged endpoint truncates rather than erroring, this may silently return an incomplete result."
                 $response = Invoke-DeviceManager -WebSession $WebSession -Method 'GET' -Resource $Resource
                 $errorProperty = if ($null -ne $response) { $response.PSObject.Properties['error'] } else { $null }
                 if ($null -eq $errorProperty -or $errorProperty.Value.Code -eq 0) {
