@@ -170,8 +170,11 @@ function Invoke-ReadValidation {
         Add-ValidationResult -Name 'Get-DMlunByWWN' -Action {
             Get-DMlunByWWN -WebSession $session -WWN $lun.WWN
         } | Out-Null
-        Add-ValidationResult -Name 'Get-DMLunsbyFilter' -Action {
-            Get-DMLunsbyFilter -WebSession $session -Filter Name -Keyword $lun.Name
+        Add-ValidationResult -Name 'Get-DMlunByName' -Action {
+            Get-DMlunByName -WebSession $session -Name $lun.Name
+        } | Out-Null
+        Add-ValidationResult -Name 'Get-DMLunbyFilter' -Action {
+            Get-DMLunbyFilter -WebSession $session -Filter Name -Keyword $lun.Name
         } | Out-Null
     }
 

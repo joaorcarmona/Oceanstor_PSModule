@@ -4,14 +4,15 @@ function Get-DMlunByWWN {
         Searches for a LUN by its WWN.
 
     .DESCRIPTION
-        Searches for a LUN whose WWN equals the supplied value. The filter is
-        pushed server-side so only the matching row is transferred from the array.
+        Searches for LUNs whose WWN matches the supplied value, via
+        Get-DMLunbyFilter. WWN supports PowerShell wildcards (*, ?, [...]);
+        without one, the comparison is an exact match.
 
     .PARAMETER WebSession
         Optional parameter to define the session to be use on the REST call. If not defined, the module's cached $script:CurrentOceanstorSession session will be used
 
     .PARAMETER WWN
-        Mandatory LUN WWN to search for. The comparison is an exact match.
+        Mandatory LUN WWN to search for. Supports PowerShell wildcards (*, ?, [...]); without one, the comparison is an exact match.
 
     .INPUTS
         System.Management.Automation.PSCustomObject
@@ -38,7 +39,7 @@ function Get-DMlunByWWN {
     .LINK
     #>
     [Cmdletbinding()]
-    [OutputType([System.Collections.ArrayList])]
+    [OutputType([System.Object[]])]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession,
@@ -47,44 +48,7 @@ function Get-DMlunByWWN {
         [string]$WWN
     )
 
-    if ($WebSession) {
-        $session = $WebSession
-    }
-    else {
-        $session = $script:CurrentOceanstorSession
-    }
-
-    $defaultDisplaySet = "Id", "Name", "Health Status", "Lun Size", "WWN"
-
-    $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
-        'DefaultDisplayPropertySet',
-        [string[]]$defaultDisplaySet
-    )
-
-    $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
-
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "lun?filter=WWN:$([uri]::EscapeDataString($WWN))" | Select-DMResponseData
-    $StorageLuns = New-Object System.Collections.ArrayList
-
-    $StorageVersion = $session.version.Substring(0, 2)
-
-    if ($storageVersion -eq "V6") {
-        $LunObjectClass = "OceanstorLunv6"
-    }
-    else {
-        $LunObjectClass = "OceanstorLunv3"
-    }
-
-    foreach ($tlun in $response) {
-        $lun = New-Object -TypeName $LunObjectClass -ArgumentList @($tlun, $session)
-        [void]$StorageLuns.Add($lun)
-    }
-
-    $StorageLuns | ForEach-Object {
-        $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
-    }
-
-    return $StorageLuns
+    Get-DMLunbyFilter -WebSession $WebSession -Filter 'WWN' -Keyword $WWN
 }
 
 Set-Alias -Name Get-DMlunsByWWN -Value Get-DMlunByWWN

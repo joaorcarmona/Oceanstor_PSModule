@@ -1,4 +1,4 @@
-function Get-DMLunsbyFilter {
+function Get-DMLunbyFilter {
     <#
     .SYNOPSIS
         Searches for LUNs by a property filter.
@@ -46,18 +46,18 @@ function Get-DMLunsbyFilter {
 
     .EXAMPLE
 
-        PS C:\> Get-DMLunsbyFilter -webSession $session -Filter WWN -Keyword "6a08cf810075766e1efc050700000005"
+        PS C:\> Get-DMLunbyFilter -webSession $session -Filter WWN -Keyword "6a08cf810075766e1efc050700000005"
 
         OR
 
-        PS C:\> $luns = Get-DMLunsbyFilter -Filter Name -Keyword "finance"
+        PS C:\> $luns = Get-DMLunbyFilter -Filter Name -Keyword "finance"
 
         OR
 
-        PS C:\> $luns = Get-DMLunsbyFilter -Filter Name -Keyword "finance*"
+        PS C:\> $luns = Get-DMLunbyFilter -Filter Name -Keyword "finance*"
 
     .NOTES
-        Filename: Get-DMLunsbyFilter.ps1
+        Filename: Get-DMLunbyFilter.ps1
 
     .LINK
     #>
@@ -148,3 +148,5 @@ function Get-DMLunsbyFilter {
 
     return $StorageLuns
 }
+
+Set-Alias -Name Get-DMLunsbyFilter -Value Get-DMLunbyFilter

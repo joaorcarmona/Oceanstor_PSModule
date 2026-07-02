@@ -30,4 +30,4 @@
 #used as the fallback for every command's -WebSession parameter when it is omitted.
     $script:CurrentOceanstorSession = $null
 
-Export-ModuleMember -Function $Public.Basename
+Export-ModuleMember -Function $Public.Basename -Alias *

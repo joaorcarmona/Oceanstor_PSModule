@@ -184,7 +184,7 @@ Describe 'Public getter functions' {
                 [pscustomobject]@{ data = @(New-TestLun -Id 'lun-01' -Name 'finance') }
             }
 
-            $result = (Get-DMLunsbyFilter -WebSession $script:session -Filter Name -Keyword finance)[0]
+            $result = (Get-DMLunbyFilter -WebSession $script:session -Filter Name -Keyword finance)[0]
 
             $result.Id | Should -Be 'lun-01'
             $script:filterResource | Should -Be 'lun?filter=NAME::finance'
@@ -203,7 +203,7 @@ Describe 'Public getter functions' {
                 [pscustomobject]@{ data = @() }
             }
 
-            $result = @(Get-DMLunsbyFilter -WebSession $script:session -Filter Name -Keyword 'fin*')
+            $result = @(Get-DMLunbyFilter -WebSession $script:session -Filter Name -Keyword 'fin*')
 
             $result.Count | Should -Be 1
             $result[0].Id | Should -Be 'lun-01'
@@ -217,13 +217,13 @@ Describe 'Public getter functions' {
                 [pscustomobject]@{ data = @((New-TestLun -Id 'lun-01' -Name 'finance'), (New-TestLun -Id 'lun-02' -Name 'archive')) }
             }
 
-            $result = @(Get-DMLunsbyFilter -WebSession $script:session -Filter 'Allocation Type' -Keyword 'Thin')
+            $result = @(Get-DMLunbyFilter -WebSession $script:session -Filter 'Allocation Type' -Keyword 'Thin')
 
             $script:filterResource | Should -Be 'lun'
             $result.Count | Should -Be 2
         }
 
-        It 'gets a LUN by WWN using server-side filter' {
+        It 'gets a LUN by WWN using an exact server-side filter' {
             Mock Invoke-DeviceManager {
                 param($WebSession, $Method, $Resource)
                 $script:wwnResource = $Resource
@@ -233,10 +233,60 @@ Describe 'Public getter functions' {
             $result = (Get-DMlunByWWN -WebSession $script:session -WWN 'wwn-b')[0]
 
             $result.Id | Should -Be 'lun-02'
-            $script:wwnResource | Should -Be 'lun?filter=WWN:wwn-b'
+            $script:wwnResource | Should -Be 'lun?filter=WWN::wwn-b'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
                 Should -Be @('Id', 'Name', 'Health Status', 'Lun Size', 'WWN')
             $result.'Allocation Type' | Should -Be 'Thin'
+        }
+
+        It 'gets a LUN by WWN using a fuzzy server-side hint for a wildcard keyword' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                $script:wwnResource = $Resource
+                if ($Resource -eq 'lun?filter=WWN:wwn-') {
+                    return [pscustomobject]@{ data = @(New-TestLun -Id 'lun-02' -WWN 'wwn-b') }
+                }
+                [pscustomobject]@{ data = @() }
+            }
+
+            $result = @(Get-DMlunByWWN -WebSession $script:session -WWN 'wwn-*')
+
+            $result.Count | Should -Be 1
+            $result[0].Id | Should -Be 'lun-02'
+            $script:wwnResource | Should -Be 'lun?filter=WWN:wwn-'
+        }
+
+        It 'gets a LUN by name using an exact server-side filter' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                $script:nameResource = $Resource
+                [pscustomobject]@{ data = @(New-TestLun -Id 'lun-01' -Name 'finance') }
+            }
+
+            $result = (Get-DMlunByName -WebSession $script:session -Name 'finance')[0]
+
+            $result.Id | Should -Be 'lun-01'
+            $script:nameResource | Should -Be 'lun?filter=NAME::finance'
+            $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
+                Should -Be @('Id', 'Name', 'Health Status', 'Lun Size', 'WWN')
+            $result.'Allocation Type' | Should -Be 'Thin'
+        }
+
+        It 'gets LUNs by name using a fuzzy server-side hint for a wildcard keyword' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                $script:nameResource = $Resource
+                if ($Resource -eq 'lun?filter=NAME:fin') {
+                    return [pscustomobject]@{ data = @(New-TestLun -Id 'lun-01' -Name 'finance') }
+                }
+                [pscustomobject]@{ data = @() }
+            }
+
+            $result = @(Get-DMlunByName -WebSession $script:session -Name 'fin*')
+
+            $result.Count | Should -Be 1
+            $result[0].Id | Should -Be 'lun-01'
+            $script:nameResource | Should -Be 'lun?filter=NAME:fin'
         }
 
         It 'gets NFS file clients' {
