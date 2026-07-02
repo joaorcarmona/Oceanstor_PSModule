@@ -7,7 +7,7 @@
     The cmdlet resolves candidate ports by PortType, validates the selected port and group, then calls the OceanStor API. It supports -WhatIf and -Confirm.
 
 .PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 .PARAMETER PortGroupName
     Name of the port group that will receive the port.
@@ -51,7 +51,7 @@ function Add-DMPortToPortGroup {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $script:_dmAddPortGroups = @(Get-DMPortGroup -WebSession $session)
                 $matchingItems = @($script:_dmAddPortGroups | Where-Object Name -EQ $candidate)
@@ -69,7 +69,7 @@ function Add-DMPortToPortGroup {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMPortGroup -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -86,7 +86,7 @@ function Add-DMPortToPortGroup {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $script:_dmAddPorts = @(Get-DMPortGroupCandidate -WebSession $session -PortType $PortType)
                 $matchingItems = @($script:_dmAddPorts | Where-Object Name -EQ $candidate)
@@ -107,7 +107,7 @@ function Add-DMPortToPortGroup {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMPortGroupCandidate -WebSession $session -PortType $fakeBoundParameters.PortType).Name |
                     Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
@@ -121,7 +121,7 @@ function Add-DMPortToPortGroup {
         $WebSession
     }
     else {
-        $deviceManager
+        $script:CurrentOceanstorSession
     }
     $group = @($script:_dmAddPortGroups | Where-Object Name -EQ $PortGroupName)[0]
     if ($null -eq $group) { throw "Could not resolve 'group' — the object may have been removed since parameter validation." }

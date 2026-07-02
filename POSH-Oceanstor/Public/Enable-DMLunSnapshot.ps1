@@ -7,7 +7,7 @@
     The cmdlet validates the snapshot name and supports -WhatIf and -Confirm.
 
 .PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 .PARAMETER SnapShotName
     Name of the snapshot to activate. Valid values are checked against Get-DMLunSnapshot and support tab completion.
@@ -41,7 +41,7 @@ function Enable-DMLunSnapshot {
                     $session = $WebSession
                 }
                 else {
-                    $session = $deviceManager
+                    $session = $script:CurrentOceanstorSession
                 }
 
                 $snapshots = @(Get-DMLunSnapshot -WebSession $session)
@@ -64,7 +64,7 @@ function Enable-DMLunSnapshot {
                     $session = $fakeBoundParameters.WebSession
                 }
                 else {
-                    $session = $deviceManager
+                    $session = $script:CurrentOceanstorSession
                 }
 
                 (Get-DMLunSnapshot -WebSession $session).Name |
@@ -78,7 +78,7 @@ function Enable-DMLunSnapshot {
         $session = $WebSession
     }
     else {
-        $session = $deviceManager
+        $session = $script:CurrentOceanstorSession
     }
 
     $snapshot = @(Get-DMLunSnapshot -WebSession $session | Where-Object Name -EQ $SnapShotName)[0]

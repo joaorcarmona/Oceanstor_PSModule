@@ -7,7 +7,7 @@ function Get-DMvStore {
 		Function to request Huawei Oceanstor Storage vStores configured in the system
 
 	.PARAMETER webSession
-		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
+		Optional parameter to define the session to be use on the REST call. If not defined, the module's cached $script:CurrentOceanstorSession session will be used
 
 	.INPUTS
 		System.Management.Automation.PSCustomObject
@@ -42,7 +42,7 @@ function Get-DMvStore {
         $session = $WebSession
     }
     else {
-        $session = $deviceManager
+        $session = $script:CurrentOceanstorSession
     }
 
     $defaultDisplaySet = "Id", "Name", "Running Status", "SAN Free Capacity Quota", "NAS Free Capacity Quota"

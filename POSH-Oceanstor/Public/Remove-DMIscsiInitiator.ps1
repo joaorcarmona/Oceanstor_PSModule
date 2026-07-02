@@ -7,7 +7,7 @@
     Associated initiators must be removed from their host before deletion. The cmdlet supports -WhatIf and -Confirm.
 
 .PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 .PARAMETER Identifier
     Identifier of the free iSCSI initiator to remove.
@@ -45,7 +45,7 @@ function Remove-DMIscsiInitiator {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $initiators = @(Get-DMIscsiInitiator -WebSession $session -FreeInitiators)
                 if ($initiators.Id -contains $candidate) {
@@ -59,7 +59,7 @@ function Remove-DMIscsiInitiator {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMIscsiInitiator -WebSession $session -FreeInitiators).Id | Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -72,7 +72,7 @@ function Remove-DMIscsiInitiator {
         $WebSession
     }
     else {
-        $deviceManager
+        $script:CurrentOceanstorSession
     }
     $resource = "iscsi_initiator/$Identifier"
     if ($VstoreId) {

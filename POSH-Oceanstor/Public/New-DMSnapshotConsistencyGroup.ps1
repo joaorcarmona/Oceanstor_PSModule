@@ -7,7 +7,7 @@
     The protection group is resolved by name and its vStore ID is passed through when available.
 
 .PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 .PARAMETER Name
     Name of the snapshot consistency group to create. The value may contain letters, numbers, underscores, periods, or hyphens.
@@ -56,7 +56,7 @@ function New-DMSnapshotConsistencyGroup {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $groups = @(Get-DMProtectionGroup -WebSession $session)
                 $matchingItems = @($groups | Where-Object Name -EQ $_)
@@ -74,7 +74,7 @@ function New-DMSnapshotConsistencyGroup {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMProtectionGroup -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -89,7 +89,7 @@ function New-DMSnapshotConsistencyGroup {
         $WebSession
     }
     else {
-        $deviceManager
+        $script:CurrentOceanstorSession
     }
     $protectionGroup = @(Get-DMProtectionGroup -WebSession $session | Where-Object Name -EQ $ProtectionGroupName)[0]
     if ($null -eq $protectionGroup) { throw "Could not resolve 'protectionGroup' — the object may have been removed since parameter validation." }

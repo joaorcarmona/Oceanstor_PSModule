@@ -8,7 +8,7 @@
     It supports -WhatIf and -Confirm.
 
 .PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 .PARAMETER PortGroupName
     Name of the port group from which the port will be removed.
@@ -52,7 +52,7 @@ function Remove-DMPortFromPortGroup {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $groups = @(Get-DMPortGroup -WebSession $session)
                 $matchingItems = @($groups | Where-Object Name -EQ $candidate)
@@ -70,7 +70,7 @@ function Remove-DMPortFromPortGroup {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMPortGroup -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -87,7 +87,7 @@ function Remove-DMPortFromPortGroup {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $ports = @(Get-DMPortGroupCandidate -WebSession $session -PortType $PortType)
                 $matchingItems = @($ports | Where-Object Name -EQ $candidate)
@@ -108,7 +108,7 @@ function Remove-DMPortFromPortGroup {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMPortGroupCandidate -WebSession $session -PortType $fakeBoundParameters.PortType).Name |
                     Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
@@ -122,7 +122,7 @@ function Remove-DMPortFromPortGroup {
         $WebSession
     }
     else {
-        $deviceManager
+        $script:CurrentOceanstorSession
     }
     $group = @(Get-DMPortGroup -WebSession $session | Where-Object Name -EQ $PortGroupName)[0]
     if ($null -eq $group) { throw "Could not resolve 'group' — the object may have been removed since parameter validation." }

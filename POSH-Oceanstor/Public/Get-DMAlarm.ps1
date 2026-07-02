@@ -7,7 +7,7 @@ function Get-DMAlarm {
 		Function to request Huawei Oceanstor Storage alarms (Unrecovered,Cleared,Recovered)
 
 	.PARAMETER webSession
-		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
+		Optional parameter to define the session to be use on the REST call. If not defined, the module's cached $script:CurrentOceanstorSession session will be used
 
 	.PARAMETER AlarmStatus
 		Optional alarm status filter. Valid values are Unrecovered, Cleared, and Recovered. If omitted, Unrecovered alarms are returned.
@@ -57,7 +57,7 @@ function Get-DMAlarm {
         $session = $WebSession
     }
     else {
-        $session = $deviceManager
+        $session = $script:CurrentOceanstorSession
     }
 
     $defaultDisplaySet = "Name", "Level", "Alarm Status", "Location", "Start time"

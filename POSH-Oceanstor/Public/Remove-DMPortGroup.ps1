@@ -7,7 +7,7 @@
     The port group name is validated against existing OceanStor port groups before the delete request is sent. The cmdlet supports -WhatIf and -Confirm.
 
 .PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 .PARAMETER PortGroupName
     Name of the port group to remove. The name is validated against existing OceanStor port groups.
@@ -45,7 +45,7 @@ function Remove-DMPortGroup {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $groups = @(Get-DMPortGroup -WebSession $session)
                 $matchingItems = @($groups | Where-Object Name -EQ $candidate)
@@ -63,7 +63,7 @@ function Remove-DMPortGroup {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMPortGroup -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -76,7 +76,7 @@ function Remove-DMPortGroup {
         $WebSession
     }
     else {
-        $deviceManager
+        $script:CurrentOceanstorSession
     }
     $group = @(Get-DMPortGroup -WebSession $session | Where-Object Name -EQ $PortGroupName)[0]
     if ($null -eq $group) { throw "Could not resolve 'group' — the object may have been removed since parameter validation." }

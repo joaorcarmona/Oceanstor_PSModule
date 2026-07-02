@@ -7,7 +7,7 @@
     The share path is validated against existing OceanStor NFS shares before the delete request is sent. The cmdlet supports -WhatIf and -Confirm.
 
 .PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 .PARAMETER SharePath
     Path of the NFS share to remove. The path is validated against existing OceanStor NFS shares.
@@ -52,7 +52,7 @@ function Remove-DMNfsShare {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $shares = @(Get-DMShare -WebSession $session -ShareType NFS)
                 $matchingItems = @($shares | Where-Object 'Share Path' -EQ $_)
@@ -70,7 +70,7 @@ function Remove-DMNfsShare {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMShare -WebSession $session -ShareType NFS).'Share Path' |
                     Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
@@ -86,7 +86,7 @@ function Remove-DMNfsShare {
         $WebSession
     }
     else {
-        $deviceManager
+        $script:CurrentOceanstorSession
     }
     $share = @(Get-DMShare -WebSession $session -ShareType NFS | Where-Object 'Share Path' -EQ $SharePath)[0]
     if ($null -eq $share) { throw "Could not resolve 'share' — the object may have been removed since parameter validation." }

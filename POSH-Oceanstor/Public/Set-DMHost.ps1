@@ -7,7 +7,7 @@ function Set-DMHost {
         additional Huawei host API fields through unchanged. ID and NAME are reserved ApiProperties keys.
 
     .PARAMETER WebSession
-        Optional session returned by Connect-deviceManager. The global deviceManager session is used by default.
+        Optional session returned by Connect-deviceManager. The module's cached $script:CurrentOceanstorSession session is used by default.
 
     .PARAMETER HostName
         Existing host name to modify.
@@ -49,7 +49,7 @@ function Set-DMHost {
         [string]$VstoreId
     )
 
-    $session = if ($WebSession) { $WebSession } else { $deviceManager }
+    $session = if ($WebSession) { $WebSession } else { $script:CurrentOceanstorSession }
     $update = New-DMNamedObjectUpdate -Objects @(Get-DMhost -WebSession $session -VstoreId $VstoreId) `
         -CurrentName $HostName -EntityName 'host' -ResourceBase 'host' -NewName $NewName `
         -NewNameSpecified:$($PSBoundParameters.ContainsKey('NewName')) -Description $Description `

@@ -9,10 +9,10 @@ function Disconnect-deviceManager {
         always disconnect when finished to avoid exhausting the session pool.
 
         When no WebSession parameter is supplied the function falls back to the
-        global $deviceManager variable and clears it after a successful logout.
+        module-scoped $script:CurrentOceanstorSession variable and clears it after a successful logout.
 
     .PARAMETER WebSession
-        Optional OceanStor session object. If not supplied, the global $deviceManager
+        Optional OceanStor session object. If not supplied, the module-scoped $script:CurrentOceanstorSession
         variable is used.
 
     .INPUTS
@@ -45,21 +45,20 @@ function Disconnect-deviceManager {
 
     .LINK
     #>
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidGlobalVars', '')]
     [Cmdletbinding()]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession
     )
 
-    $usingGlobal = $false
+    $usingCachedSession = $false
 
     if ($WebSession) {
         $session = $WebSession
     }
     else {
-        $session = $deviceManager
-        $usingGlobal = $true
+        $session = $script:CurrentOceanstorSession
+        $usingCachedSession = $true
     }
 
     if (-not $session) {
@@ -74,7 +73,7 @@ function Disconnect-deviceManager {
         throw "Logout failed for host '$($session.Hostname)': $($SessionError.description)"
     }
 
-    if ($usingGlobal) {
-        $global:deviceManager = $null
+    if ($usingCachedSession) {
+        $script:CurrentOceanstorSession = $null
     }
 }

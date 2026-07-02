@@ -8,7 +8,7 @@
     Use -WhatIf first when testing automation.
 
 .PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 .PARAMETER FileSystemName
     Name of the source file system that will be rolled back.
@@ -45,7 +45,7 @@ function Restore-DMFileSystemSnapshot {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $fileSystems = @(Get-DMFileSystem -WebSession $session)
                 $matchingItems = @($fileSystems | Where-Object Name -EQ $_)
@@ -63,7 +63,7 @@ function Restore-DMFileSystemSnapshot {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMFileSystem -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -75,7 +75,7 @@ function Restore-DMFileSystemSnapshot {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $snapshots = @(Get-DMFileSystemSnapshot -WebSession $session -FileSystemName $FileSystemName -SnapshotName $_)
                 $matchingItems = @($snapshots | Where-Object Name -EQ $_)
@@ -96,7 +96,7 @@ function Restore-DMFileSystemSnapshot {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMFileSystemSnapshot -WebSession $session -FileSystemName $fakeBoundParameters.FileSystemName).Name |
                     Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
@@ -108,7 +108,7 @@ function Restore-DMFileSystemSnapshot {
         $WebSession
     }
     else {
-        $deviceManager
+        $script:CurrentOceanstorSession
     }
     $snapshot = @(Get-DMFileSystemSnapshot -WebSession $session -FileSystemName $FileSystemName -SnapshotName $SnapshotName)[0]
     if ($null -eq $snapshot) { throw "Could not resolve 'snapshot' — the object may have been removed since parameter validation." }

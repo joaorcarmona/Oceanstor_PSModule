@@ -7,7 +7,7 @@ function Get-DMController {
     Function to request Huawei Oceanstor Controller in the system
 
 .PARAMETER webSession
-    Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
+    Optional parameter to define the session to be use on the REST call. If not defined, the module's cached $script:CurrentOceanstorSession session will be used
 
 .INPUTS
     System.Management.Automation.PSCustomObject
@@ -42,7 +42,7 @@ function Get-DMController {
         $session = $WebSession
     }
     else {
-        $session = $deviceManager
+        $session = $script:CurrentOceanstorSession
     }
 
     $defaultDisplaySet = "Id", "Location", "Health Status", "Running Status", "Is Master"

@@ -7,7 +7,7 @@
     Returned objects use the OceanstorSnapshotConsistencyGroup class and include a default display set for common consistency group properties.
 
 .PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 .PARAMETER Name
     Optional snapshot consistency group name to return. When omitted, all visible snapshot consistency groups are returned.
@@ -45,7 +45,7 @@ function Get-DMSnapshotConsistencyGroup {
         $WebSession
     }
     else {
-        $deviceManager
+        $script:CurrentOceanstorSession
     }
     $response = Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource 'SNAPSHOT_CONSISTENCY_GROUP' |
         Select-DMResponseData

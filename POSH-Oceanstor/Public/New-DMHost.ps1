@@ -7,7 +7,7 @@
     The cmdlet returns the created host object when the API call succeeds.
 
 .PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 .PARAMETER Name
     Name of the host to create. The value must be 1 to 255 characters and may contain letters, numbers, underscores, periods, or hyphens.
@@ -62,7 +62,7 @@ function New-DMHost {
         $WebSession
     }
     else {
-        $deviceManager
+        $script:CurrentOceanstorSession
     }
     $operatingSystemValue = @{
         'Linux'                      = 0

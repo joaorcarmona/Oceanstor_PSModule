@@ -7,7 +7,7 @@
     The LUN group name is validated against existing OceanStor LUN groups before the delete request is sent. The cmdlet supports -WhatIf and -Confirm.
 
 .PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 .PARAMETER LunGroupName
     Name of the LUN group to remove. The name is validated against existing OceanStor LUN groups.
@@ -44,7 +44,7 @@ function Remove-DMLunGroup {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $groups = @(Get-DMlunGroup -WebSession $session)
                 $matchingItems = @($groups | Where-Object Name -EQ $_)
@@ -62,7 +62,7 @@ function Remove-DMLunGroup {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMlunGroup -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -75,7 +75,7 @@ function Remove-DMLunGroup {
         $WebSession
     }
     else {
-        $deviceManager
+        $script:CurrentOceanstorSession
     }
     $group = @(Get-DMlunGroup -WebSession $session | Where-Object Name -EQ $LunGroupName)[0]
     if ($null -eq $group) { throw "Could not resolve 'group' — the object may have been removed since parameter validation." }

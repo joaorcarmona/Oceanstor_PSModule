@@ -7,7 +7,7 @@ function Get-DMHostLink {
 		Function to request Huawei Oceanstor Storage Host links
 
 	.PARAMETER webSession
-		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
+		Optional parameter to define the session to be use on the REST call. If not defined, the module's cached $script:CurrentOceanstorSession session will be used
 
 	.PARAMETER HostId
 		Host ID to Query the Host Links
@@ -53,7 +53,7 @@ function Get-DMHostLink {
         $session = $WebSession
     }
     else {
-        $session = $deviceManager
+        $session = $script:CurrentOceanstorSession
     }
 
     $defaultDisplaySet = "Id", "Host Name", "Initiator Type", "Target Type", "Running Status"

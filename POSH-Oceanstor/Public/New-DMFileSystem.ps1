@@ -7,7 +7,7 @@ function New-DMFileSystem {
 		Function to create a Huawei Oceanstor Storage FileSystem (requires the NAS license)
 
 	.PARAMETER webSession
-		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
+		Optional parameter to define the session to be use on the REST call. If not defined, the module's cached $script:CurrentOceanstorSession session will be used
 
     .PARAMETER FileSystemName
         Name of the FileSystem to be created
@@ -108,7 +108,7 @@ function New-DMFileSystem {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $storagePools = @(Get-DMstoragePool -WebSession $session)
                 if ($storagePools.Id -contains $_) {
@@ -122,7 +122,7 @@ function New-DMFileSystem {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMstoragePool -WebSession $session).Id | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -170,7 +170,7 @@ function New-DMFileSystem {
         $session = $WebSession
     }
     else {
-        $session = $deviceManager
+        $session = $script:CurrentOceanstorSession
     }
 
     switch ($usage) {

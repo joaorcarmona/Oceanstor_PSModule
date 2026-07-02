@@ -7,7 +7,7 @@ function New-DMdTree {
 		Function to create a Huawei Oceanstor Storage FileSystem (requires the NAS license)
 
 	.PARAMETER webSession
-		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
+		Optional parameter to define the session to be use on the REST call. If not defined, the module's cached $script:CurrentOceanstorSession session will be used
 
     .PARAMETER FileSystemName
         Name of the FileSystem to be used as parent of the dTree. This parameter is mandatory if the FileSystemID is not defined
@@ -73,7 +73,7 @@ function New-DMdTree {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $fileSystems = @(Get-DMFileSystem -WebSession $session)
                 $matchingItems = @($fileSystems | Where-Object Name -EQ $_)
@@ -91,7 +91,7 @@ function New-DMdTree {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMFileSystem -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -102,7 +102,7 @@ function New-DMdTree {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $fileSystems = @(Get-DMFileSystem -WebSession $session)
                 if ($fileSystems.Id -contains $_) {
@@ -116,7 +116,7 @@ function New-DMdTree {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMFileSystem -WebSession $session).Id | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -140,7 +140,7 @@ function New-DMdTree {
         $session = $WebSession
     }
     else {
-        $session = $deviceManager
+        $session = $script:CurrentOceanstorSession
     }
 
     $body = @{

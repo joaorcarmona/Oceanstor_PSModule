@@ -7,7 +7,7 @@ function New-DMnfsClient {
 		Function to create a Huawei Oceanstor Storage NFS Export (requires the NAS License)
 
 	.PARAMETER webSession
-		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
+		Optional parameter to define the session to be use on the REST call. If not defined, the module's cached $script:CurrentOceanstorSession session will be used
 
     .PARAMETER clientName
         The name of the NFS Client
@@ -70,7 +70,7 @@ function New-DMnfsClient {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $shares = @(Get-DMShare -WebSession $session -ShareType NFS)
                 if ($shares.Id -contains $_) {
@@ -84,7 +84,7 @@ function New-DMnfsClient {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMShare -WebSession $session -ShareType NFS).Id | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -109,7 +109,7 @@ function New-DMnfsClient {
         $session = $WebSession
     }
     else {
-        $session = $deviceManager
+        $session = $script:CurrentOceanstorSession
     }
 
     switch ($Permission) {

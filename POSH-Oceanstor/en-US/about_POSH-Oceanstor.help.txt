@@ -25,8 +25,8 @@ GETTING STARTED
         Import-Module POSH-Oceanstor
         Connect-deviceManager -Hostname 10.0.0.1
 
-    By default, Connect-deviceManager stores the session in the global
-    $deviceManager variable. Most commands use that session automatically when
+    By default, Connect-deviceManager caches the session in a module-scoped
+    variable. Most commands use that cached session automatically when
     WebSession is not specified.
 
     To work with more than one array, return the session object and pass it to

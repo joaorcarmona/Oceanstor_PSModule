@@ -7,7 +7,7 @@ function Get-DMWorkLoadTypebyFilter {
 		Function to request Huawei Oceanstor Storage workload Type configured
 
 	.PARAMETER webSession
-		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
+		Optional parameter to define the session to be use on the REST call. If not defined, the module's cached $script:CurrentOceanstorSession session will be used
 
 	.PARAMETER filter
 		Mandatory property name to filter against. The value must be a valid workload object property.
@@ -52,7 +52,7 @@ function Get-DMWorkLoadTypebyFilter {
         $session = $WebSession
     }
     else {
-        $session = $deviceManager
+        $session = $script:CurrentOceanstorSession
     }
 
     $defaultDisplaySet = "Id", "Name", "Workload Type", "Block Size", "Compression Enabled"

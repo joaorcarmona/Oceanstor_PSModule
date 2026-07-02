@@ -7,7 +7,7 @@
     The cmdlet validates that the host is currently a member of the group before calling the OceanStor API and supports -WhatIf and -Confirm.
 
 .PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 .PARAMETER HostName
     Name of the host to remove from the host group. The name is validated against existing OceanStor hosts.
@@ -48,7 +48,7 @@ function Remove-DMHostFromHostGroup {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $script:_dmRemoveHostHosts = @(Get-DMhost -WebSession $session)
                 $matchingItems = @($script:_dmRemoveHostHosts | Where-Object Name -EQ $candidate)
@@ -66,7 +66,7 @@ function Remove-DMHostFromHostGroup {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMhost -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -79,7 +79,7 @@ function Remove-DMHostFromHostGroup {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $script:_dmRemoveHostGroups = @(Get-DMhostGroup -WebSession $session)
                 $matchingItems = @($script:_dmRemoveHostGroups | Where-Object Name -EQ $candidate)
@@ -97,7 +97,7 @@ function Remove-DMHostFromHostGroup {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMhostGroup -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -110,7 +110,7 @@ function Remove-DMHostFromHostGroup {
         $WebSession
     }
     else {
-        $deviceManager
+        $script:CurrentOceanstorSession
     }
     $hostObject = @($script:_dmRemoveHostHosts | Where-Object Name -EQ $HostName)[0]
     if ($null -eq $hostObject) { throw "Could not resolve 'hostObject' — the object may have been removed since parameter validation." }

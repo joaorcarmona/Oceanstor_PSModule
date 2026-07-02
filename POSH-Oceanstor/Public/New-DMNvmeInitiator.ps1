@@ -6,7 +6,7 @@
     Adds an NVMe over RoCE initiator NQN to the storage system with an optional friendly name and vStore scope.
 
 .PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 .PARAMETER Nqn
     NQN of the NVMe over RoCE initiator to create.
@@ -52,7 +52,7 @@ function New-DMNvmeInitiator {
         $WebSession
     }
     else {
-        $deviceManager
+        $script:CurrentOceanstorSession
     }
     $body = @{ ID = $Nqn }
     if ($Name) {

@@ -7,7 +7,7 @@
     Reactivation refreshes the consistency point. The group vStore ID is passed through when available. The cmdlet supports -WhatIf and -Confirm.
 
 .PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 .PARAMETER Name
     Name of the snapshot consistency group to reactivate.
@@ -41,7 +41,7 @@ function Restart-DMSnapshotConsistencyGroup {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $groups = @(Get-DMSnapshotConsistencyGroup -WebSession $session)
                 $matchingItems = @($groups | Where-Object Name -EQ $_)
@@ -59,7 +59,7 @@ function Restart-DMSnapshotConsistencyGroup {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMSnapshotConsistencyGroup -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -70,7 +70,7 @@ function Restart-DMSnapshotConsistencyGroup {
         $WebSession
     }
     else {
-        $deviceManager
+        $script:CurrentOceanstorSession
     }
     $group = @(Get-DMSnapshotConsistencyGroup -WebSession $session | Where-Object Name -EQ $Name)[0]
     if ($null -eq $group) { throw "Could not resolve 'group' — the object may have been removed since parameter validation." }

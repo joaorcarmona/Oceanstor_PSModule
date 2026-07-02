@@ -7,7 +7,7 @@ function Get-DMMappingView {
         Returns mapping views for the whole system or filtered by host group, LUN group, port group, name, or vStore.
 
     .PARAMETER WebSession
-        Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+        Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
     .PARAMETER Name
         Optional mapping view name filter.
@@ -52,7 +52,7 @@ function Get-DMMappingView {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $groups = @(Get-DMhostGroup -WebSession $session)
                 $matchingItems = @($groups | Where-Object Name -EQ $_)
@@ -70,7 +70,7 @@ function Get-DMMappingView {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMhostGroup -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -82,7 +82,7 @@ function Get-DMMappingView {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $groups = @(Get-DMlunGroup -WebSession $session)
                 $matchingItems = @($groups | Where-Object Name -EQ $_)
@@ -100,7 +100,7 @@ function Get-DMMappingView {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMlunGroup -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -112,7 +112,7 @@ function Get-DMMappingView {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $groups = @(Get-DMPortGroup -WebSession $session)
                 $matchingItems = @($groups | Where-Object Name -EQ $_)
@@ -130,7 +130,7 @@ function Get-DMMappingView {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMPortGroup -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -143,7 +143,7 @@ function Get-DMMappingView {
         $WebSession
     }
     else {
-        $deviceManager
+        $script:CurrentOceanstorSession
     }
     $resource = 'mappingview'
 

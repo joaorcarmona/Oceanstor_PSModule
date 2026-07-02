@@ -8,7 +8,7 @@ function Get-DMlunByWWN {
         pushed server-side so only the matching row is transferred from the array.
 
     .PARAMETER WebSession
-        Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
+        Optional parameter to define the session to be use on the REST call. If not defined, the module's cached $script:CurrentOceanstorSession session will be used
 
     .PARAMETER WWN
         Mandatory LUN WWN to search for. The comparison is an exact match.
@@ -50,7 +50,7 @@ function Get-DMlunByWWN {
         $session = $WebSession
     }
     else {
-        $session = $deviceManager
+        $session = $script:CurrentOceanstorSession
     }
 
     $defaultDisplaySet = "Id", "Name", "Health Status", "Lun Size", "WWN"

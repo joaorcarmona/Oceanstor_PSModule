@@ -7,7 +7,7 @@
     The protection group name is validated before the delete request is sent. The cmdlet supports -WhatIf and -Confirm.
 
 .PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 .PARAMETER Name
     Name of the protection group to remove. The name is validated against existing OceanStor protection groups.
@@ -41,7 +41,7 @@ function Remove-DMProtectionGroup {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $groups = @(Get-DMProtectionGroup -WebSession $session)
                 $matchingItems = @($groups | Where-Object Name -EQ $_)
@@ -59,7 +59,7 @@ function Remove-DMProtectionGroup {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMProtectionGroup -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -70,7 +70,7 @@ function Remove-DMProtectionGroup {
         $WebSession
     }
     else {
-        $deviceManager
+        $script:CurrentOceanstorSession
     }
     $group = @(Get-DMProtectionGroup -WebSession $session | Where-Object Name -EQ $Name)[0]
     if ($null -eq $group) { throw "Could not resolve 'group' — the object may have been removed since parameter validation." }

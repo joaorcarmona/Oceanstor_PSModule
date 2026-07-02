@@ -7,7 +7,7 @@ function Get-DMhostbyHostGroupId {
     Function to request Huawei Oceanstor Storage configured Hosts querying by HostGroupId
 
 .PARAMETER webSession
-    Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
+    Optional parameter to define the session to be use on the REST call. If not defined, the module's cached $script:CurrentOceanstorSession session will be used
 
 .PARAMETER HostGroupId
 		Mandatory parameter [string], to set the HostGroup ID to look for.
@@ -47,7 +47,7 @@ function Get-DMhostbyHostGroupId {
         $session = $WebSession
     }
     else {
-        $session = $deviceManager
+        $session = $script:CurrentOceanstorSession
     }
 
     $defaultDisplaySet = "Id", "Name", "Health Status", "Operation System", "Parent Name"

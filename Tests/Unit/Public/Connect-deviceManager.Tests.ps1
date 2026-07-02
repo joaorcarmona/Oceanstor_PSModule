@@ -20,13 +20,12 @@ BeforeDiscovery {
 
 AfterAll {
     Remove-Module -Name ConnectDeviceManagerTestModule -Force -ErrorAction SilentlyContinue
-    Remove-Variable -Name deviceManager -Scope Global -ErrorAction SilentlyContinue
 }
 
 InModuleScope ConnectDeviceManagerTestModule {
 Describe 'Connect-deviceManager' {
     BeforeEach {
-        Remove-Variable -Name deviceManager -Scope Global -ErrorAction SilentlyContinue
+        $script:CurrentOceanstorSession = $null
 
         $script:logonResponse = [pscustomobject]@{
             error = [pscustomobject]@{ code = 0 }
@@ -130,20 +129,20 @@ Describe 'Connect-deviceManager' {
         $result.GetType().Name | Should -Be 'OceanstorSession'
     }
 
-    It 'stores the connection in the global deviceManager variable by default' {
+    It 'stores the connection in the module-scoped CurrentOceanstorSession variable by default' {
         $securePassword = ConvertTo-SecureString -String 'api-pass' -AsPlainText -Force
         $credential = [pscredential]::new('api-user', $securePassword)
 
         $null = Connect-deviceManager -Hostname 'oceanstor.test' -Credential $credential
 
-        $global:deviceManager.GetType().Name | Should -Be 'OceanstorSession'
-        $global:deviceManager.DeviceId | Should -Be 'device-01'
-        $global:deviceManager.SkipCertificateCheck | Should -BeFalse
+        $script:CurrentOceanstorSession.GetType().Name | Should -Be 'OceanstorSession'
+        $script:CurrentOceanstorSession.DeviceId | Should -Be 'device-01'
+        $script:CurrentOceanstorSession.SkipCertificateCheck | Should -BeFalse
     }
 
-    It 'closes the previous global session before replacing it' {
+    It 'closes the previous cached session before replacing it' {
         $script:previousSession = [pscustomobject]@{ Hostname = 'previous.test' }
-        $global:deviceManager = $script:previousSession
+        $script:CurrentOceanstorSession = $script:previousSession
         Mock Disconnect-deviceManager { }
 
         $securePassword = ConvertTo-SecureString -String 'api-pass' -AsPlainText -Force
@@ -154,11 +153,11 @@ Describe 'Connect-deviceManager' {
         Should -Invoke Disconnect-deviceManager -Times 1 -Exactly -ParameterFilter {
             $WebSession -eq $script:previousSession
         }
-        $global:deviceManager.Hostname | Should -Be 'oceanstor.test'
+        $script:CurrentOceanstorSession.Hostname | Should -Be 'oceanstor.test'
     }
 
-    It 'still replaces the global session when closing the previous one fails' {
-        $global:deviceManager = [pscustomobject]@{ Hostname = 'previous.test' }
+    It 'still replaces the cached session when closing the previous one fails' {
+        $script:CurrentOceanstorSession = [pscustomobject]@{ Hostname = 'previous.test' }
         Mock Disconnect-deviceManager { throw 'previous session already expired' }
 
         $securePassword = ConvertTo-SecureString -String 'api-pass' -AsPlainText -Force
@@ -166,7 +165,7 @@ Describe 'Connect-deviceManager' {
 
         { Connect-deviceManager -Hostname 'oceanstor.test' -Credential $credential } | Should -Not -Throw
 
-        $global:deviceManager.Hostname | Should -Be 'oceanstor.test'
+        $script:CurrentOceanstorSession.Hostname | Should -Be 'oceanstor.test'
     }
 
     It 'does not attempt to close a session when none exists yet' {

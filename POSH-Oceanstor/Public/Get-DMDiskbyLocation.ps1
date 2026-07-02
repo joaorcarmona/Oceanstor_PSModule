@@ -7,7 +7,7 @@ function Get-DMDiskbyLocation {
 		Function to request Huawei Oceanstor Storage disks by location
 
 	.PARAMETER webSession
-		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
+		Optional parameter to define the session to be use on the REST call. If not defined, the module's cached $script:CurrentOceanstorSession session will be used
 
 	.PARAMETER Location
 		Mandatory parameter Location Enclosure/Slot (String), to search for a disk
@@ -46,7 +46,7 @@ function Get-DMDiskbyLocation {
         $session = $WebSession
     }
     else {
-        $session = $deviceManager
+        $session = $script:CurrentOceanstorSession
     }
 
     $defaultDisplaySet = "Id", "Location", "Health Status", "Disk Usage", "PoolName"

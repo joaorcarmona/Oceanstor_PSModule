@@ -7,7 +7,7 @@
     The cmdlet validates the host name and initiator membership before calling the OceanStor API. It supports -WhatIf and -Confirm.
 
 .PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 .PARAMETER HostName
     Name of the host from which the NVMe over RoCE initiator should be removed.
@@ -48,7 +48,7 @@ function Remove-DMNvmeInitiatorFromHost {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $hosts = @(Get-DMhost -WebSession $session)
                 $matchingItems = @($hosts | Where-Object Name -EQ $candidate)
@@ -66,7 +66,7 @@ function Remove-DMNvmeInitiatorFromHost {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMhost -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -79,7 +79,7 @@ function Remove-DMNvmeInitiatorFromHost {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $selectedHostName = [string]$HostName
                 $hostObject = @(Get-DMhost -WebSession $session | Where-Object Name -EQ $selectedHostName)[0]
@@ -99,7 +99,7 @@ function Remove-DMNvmeInitiatorFromHost {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMNvmeInitiator -WebSession $session -HostName $fakeBoundParameters.HostName).Id | Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -112,7 +112,7 @@ function Remove-DMNvmeInitiatorFromHost {
         $WebSession
     }
     else {
-        $deviceManager
+        $script:CurrentOceanstorSession
     }
     $hostObject = @(Get-DMhost -WebSession $session | Where-Object Name -EQ $HostName)[0]
     if ($null -eq $hostObject) { throw "Could not resolve 'hostObject' — the object may have been removed since parameter validation." }

@@ -11,7 +11,7 @@ function Set-DMFileSystem {
         ID, NAME, and CAPACITY are reserved ApiProperties fields; use FileSystemName, NewName, and Capacity.
 
     .PARAMETER WebSession
-        Optional session returned by Connect-deviceManager. The global deviceManager session is used by default.
+        Optional session returned by Connect-deviceManager. The module's cached $script:CurrentOceanstorSession session is used by default.
 
     .PARAMETER FileSystemName
         Existing file-system name to modify.
@@ -70,7 +70,7 @@ function Set-DMFileSystem {
         [System.Collections.IDictionary]$ApiProperties
     )
 
-    $session = if ($WebSession) { $WebSession } else { $deviceManager }
+    $session = if ($WebSession) { $WebSession } else { $script:CurrentOceanstorSession }
     $hasChanges = $PSBoundParameters.ContainsKey('NewName') -or
         $PSBoundParameters.ContainsKey('Capacity') -or
         $PSBoundParameters.ContainsKey('Description') -or

@@ -7,7 +7,7 @@ function Get-DMhost {
     Function to request Huawei Oceanstor Storage configured Hosts
 
 .PARAMETER webSession
-    Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
+    Optional parameter to define the session to be use on the REST call. If not defined, the module's cached $script:CurrentOceanstorSession session will be used
 
 .INPUTS
     System.Management.Automation.PSCustomObject
@@ -44,7 +44,7 @@ function Get-DMhost {
         $session = $WebSession
     }
     else {
-        $session = $deviceManager
+        $session = $script:CurrentOceanstorSession
     }
 
     $defaultDisplaySet = "Id", "Name", "Health Status", "Operation System", "Parent Name"

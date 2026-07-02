@@ -39,10 +39,6 @@ Detailed audit findings live in `ANALYSIS.md`. Release-facing summaries live in 
 - [ ] **Implement Complete Pipeline Support**
   - Add `ValueFromPipeline` and `ValueFromPipelineByPropertyName` attributes to core parameters inside targeting commands.
   - Structure cmdlets with proper `begin {}`, `process {}`, and `end {}` blocks to prevent multi-object arrays from flattening or dropping records.
-- [ ] **Implement Module/Script-Scoped Session Fallback**
-  - Initialize an internal module variable: `$script:CurrentOceanstorSession`.
-  - Update `Connect-DeviceManager` to cache successful web sessions into this variable.
-  - Update all `Get-` and configuration cmdlets to fall back to `$script:CurrentOceanstorSession` when `-WebSession` is omitted.
 
 ### Resilient REST API Integration
 
@@ -95,3 +91,4 @@ Detailed audit findings live in `ANALYSIS.md`. Release-facing summaries live in 
 - [x] ~~Define a consistent minimum object-method surface, such as `Rename()`, `Delete()`, and relationship helpers, for mutable returned objects.~~ `Delete()` was added to all mutable classes that lacked it, including LUN, file system, host, group, mapping view, NAS share, and dTree classes. Each method is covered by the corresponding class tests.
 - [x] ~~Generate command/object inventory during CI and fail when a new public command or class is absent from maintained coverage metadata.~~ `Tests/ModuleCoverage.psd1` records all class names. `Tests/Unit/Private/ModuleInventory.Tests.ps1` cross-checks every `Public/*.ps1` file against `FunctionsToExport` and every `Private/class-*.ps1` file against `ModuleCoverage.psd1`.
 - [x] ~~Enforce explicit export controls.~~ `POSH-Oceanstor.psd1` explicitly lists all 127 public commands in `FunctionsToExport`; the list matches `POSH-Oceanstor/Public/*.ps1`, and `Test-ModuleManifest` validates the manifest.
+- [x] ~~Implement Module/Script-Scoped Session Fallback.~~ `POSH-Oceanstor.psm1` now initializes a module-private `$script:CurrentOceanstorSession` variable. `Connect-deviceManager` caches successful sessions into it (and clears/replaces it on reconnect/disconnect) instead of `$global:deviceManager`, and every other public/private cmdlet falls back to it when `-WebSession` is omitted. See `ANALYSIS.md` finding S6 for the narrowed security posture.

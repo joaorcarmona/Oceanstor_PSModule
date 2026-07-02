@@ -7,7 +7,7 @@
     Associated initiators must be removed from their host before deletion. The cmdlet supports -WhatIf and -Confirm.
 
 .PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 .PARAMETER WWN
     WWN of the free Fibre Channel initiator to remove.
@@ -45,7 +45,7 @@ function Remove-DMFiberChannelInitiator {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $initiators = @(Get-DMFiberChannelInitiator -WebSession $session -FreeInitiators)
                 if ($initiators.Id -contains $candidate) {
@@ -59,7 +59,7 @@ function Remove-DMFiberChannelInitiator {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMFiberChannelInitiator -WebSession $session -FreeInitiators).Id | Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -72,7 +72,7 @@ function Remove-DMFiberChannelInitiator {
         $WebSession
     }
     else {
-        $deviceManager
+        $script:CurrentOceanstorSession
     }
     $resource = "fc_initiator/$([uri]::EscapeDataString($WWN))"
     if ($VstoreId) {

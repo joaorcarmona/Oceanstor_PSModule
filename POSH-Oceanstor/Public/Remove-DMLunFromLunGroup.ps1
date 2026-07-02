@@ -7,7 +7,7 @@
     The cmdlet validates that the LUN is currently a member of the group before calling the OceanStor API and supports -WhatIf and -Confirm.
 
 .PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 .PARAMETER LunName
     Name of the LUN to remove from the LUN group. The name is validated against existing OceanStor LUNs.
@@ -48,7 +48,7 @@ function Remove-DMLunFromLunGroup {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $luns = @(Get-DMlun -WebSession $session)
                 $matchingItems = @($luns | Where-Object Name -EQ $candidate)
@@ -66,7 +66,7 @@ function Remove-DMLunFromLunGroup {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMlun -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -79,7 +79,7 @@ function Remove-DMLunFromLunGroup {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $groups = @(Get-DMlunGroup -WebSession $session)
                 $matchingItems = @($groups | Where-Object Name -EQ $candidate)
@@ -97,7 +97,7 @@ function Remove-DMLunFromLunGroup {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMlunGroup -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -110,7 +110,7 @@ function Remove-DMLunFromLunGroup {
         $WebSession
     }
     else {
-        $deviceManager
+        $script:CurrentOceanstorSession
     }
     $lun = @(Get-DMlun -WebSession $session | Where-Object Name -EQ $LunName)[0]
     if ($null -eq $lun) { throw "Could not resolve 'lun' — the object may have been removed since parameter validation." }

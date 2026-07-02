@@ -8,7 +8,7 @@ function Rename-DMFileSystem {
         Validates that the new name does not conflict with an existing object.
 
     .PARAMETER WebSession
-        Optional session returned by Connect-deviceManager. The global deviceManager session is used by default.
+        Optional session returned by Connect-deviceManager. The module's cached $script:CurrentOceanstorSession session is used by default.
 
     .PARAMETER FileSystemName
         Current name of the file system to rename.

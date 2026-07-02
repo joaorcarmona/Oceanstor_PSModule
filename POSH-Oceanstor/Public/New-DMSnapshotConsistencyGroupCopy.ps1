@@ -7,7 +7,7 @@
     The source group is resolved by name and its vStore ID is passed through when available. When Name is omitted, copy_<source name> is used.
 
 .PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 .PARAMETER SourceName
     Name of the source snapshot consistency group to copy.
@@ -52,7 +52,7 @@ function New-DMSnapshotConsistencyGroupCopy {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $groups = @(Get-DMSnapshotConsistencyGroup -WebSession $session)
                 $matchingItems = @($groups | Where-Object Name -EQ $_)
@@ -70,7 +70,7 @@ function New-DMSnapshotConsistencyGroupCopy {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMSnapshotConsistencyGroup -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -89,7 +89,7 @@ function New-DMSnapshotConsistencyGroupCopy {
         $WebSession
     }
     else {
-        $deviceManager
+        $script:CurrentOceanstorSession
     }
     $source = @(Get-DMSnapshotConsistencyGroup -WebSession $session | Where-Object Name -EQ $SourceName)[0]
     if ($null -eq $source) { throw "Could not resolve 'source' — the object may have been removed since parameter validation." }

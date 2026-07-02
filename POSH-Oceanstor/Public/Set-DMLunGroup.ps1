@@ -7,7 +7,7 @@ function Set-DMLunGroup {
         passes additional Huawei LUN-group API fields through unchanged.
 
     .PARAMETER WebSession
-        Optional session returned by Connect-deviceManager. The global deviceManager session is used by default.
+        Optional session returned by Connect-deviceManager. The module's cached $script:CurrentOceanstorSession session is used by default.
 
     .PARAMETER LunGroupName
         Existing LUN group name to modify.
@@ -49,7 +49,7 @@ function Set-DMLunGroup {
         [string]$VstoreId
     )
 
-    $session = if ($WebSession) { $WebSession } else { $deviceManager }
+    $session = if ($WebSession) { $WebSession } else { $script:CurrentOceanstorSession }
     $update = New-DMNamedObjectUpdate -Objects @(Get-DMlunGroup -WebSession $session -VstoreId $VstoreId) `
         -CurrentName $LunGroupName -EntityName 'LUN group' -ResourceBase 'lungroup' -NewName $NewName `
         -NewNameSpecified:$($PSBoundParameters.ContainsKey('NewName')) -Description $Description `

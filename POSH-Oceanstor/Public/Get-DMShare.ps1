@@ -7,7 +7,7 @@ function Get-DMShare {
 		Function to request Huawei Oceanstor Storage Shares
 
 	.PARAMETER webSession
-		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
+		Optional parameter to define the session to be use on the REST call. If not defined, the module's cached $script:CurrentOceanstorSession session will be used
 
 	.PARAMETER shareType
 		Mamdatory paramter to define the Share Type to Query ("NFS","CIFS")
@@ -49,7 +49,7 @@ function Get-DMShare {
         $session = $WebSession
     }
     else {
-        $session = $deviceManager
+        $session = $script:CurrentOceanstorSession
     }
 
     $defaultDisplaySet = "Id", "Name", "Share Path", "FileSystem ID", "vStore Name"

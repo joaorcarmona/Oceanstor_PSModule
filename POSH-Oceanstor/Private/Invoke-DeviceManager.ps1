@@ -116,7 +116,7 @@ function Invoke-DeviceManager{
 		Function to to invoke the Huawei Oceanstor REST API, by method "GET","PUT","POST","DELETE" for any of the resources.
 
 	.PARAMETER webSession
-		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
+		Optional parameter to define the session to be use on the REST call. If not defined, the module-scoped $script:CurrentOceanstorSession variable will be used
 	.PARAMETER method
 		Mandatory parameter to define the REST call method to be used. Acceptable Values "GET","PUT","POST","DELETE"
 	.PARAMETER resource
@@ -161,7 +161,7 @@ function Invoke-DeviceManager{
     if ($WebSession){
         $session = $WebSession
     } else {
-        $session = $deviceManager
+        $session = $script:CurrentOceanstorSession
     }
 
     if ($null -eq $session) {

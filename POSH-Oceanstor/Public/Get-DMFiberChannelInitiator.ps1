@@ -6,7 +6,7 @@
     Returns Fibre Channel initiators for all hosts, for a specific host, or for free initiators that are not yet attached to a host.
 
 .PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 .PARAMETER HostName
     Name of the host whose Fibre Channel initiators should be returned.
@@ -48,7 +48,7 @@ function Get-DMFiberChannelInitiator {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $hosts = @(Get-DMhost -WebSession $session)
                 $matchingItems = @($hosts | Where-Object Name -EQ $candidate)
@@ -66,7 +66,7 @@ function Get-DMFiberChannelInitiator {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMhost -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -80,7 +80,7 @@ function Get-DMFiberChannelInitiator {
         $WebSession
     }
     else {
-        $deviceManager
+        $script:CurrentOceanstorSession
     }
     if ($HostName) {
         $hostObject = @(Get-DMhost -WebSession $session | Where-Object Name -EQ $HostName)[0]

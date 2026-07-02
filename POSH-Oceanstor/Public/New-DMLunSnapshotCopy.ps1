@@ -7,7 +7,7 @@
     When SnapshotCopyName is omitted, copy_<source snapshot name> is used.
 
 .PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 .PARAMETER SourceSnapShotName
     Name of the source snapshot. Valid values are checked against Get-DMLunSnapshot and support tab completion.
@@ -52,7 +52,7 @@ function New-DMLunSnapshotCopy {
                     $session = $WebSession
                 }
                 else {
-                    $session = $deviceManager
+                    $session = $script:CurrentOceanstorSession
                 }
 
                 $snapshots = @(Get-DMLunSnapshot -WebSession $session)
@@ -75,7 +75,7 @@ function New-DMLunSnapshotCopy {
                     $session = $fakeBoundParameters.WebSession
                 }
                 else {
-                    $session = $deviceManager
+                    $session = $script:CurrentOceanstorSession
                 }
 
                 (Get-DMLunSnapshot -WebSession $session).Name |
@@ -99,7 +99,7 @@ function New-DMLunSnapshotCopy {
         $session = $WebSession
     }
     else {
-        $session = $deviceManager
+        $session = $script:CurrentOceanstorSession
     }
 
     $sourceSnapshot = @(Get-DMLunSnapshot -WebSession $session | Where-Object Name -EQ $SourceSnapShotName)[0]

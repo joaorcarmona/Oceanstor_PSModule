@@ -7,7 +7,7 @@
     LunGroupName and optional Vstore names are resolved to the IDs sent to the storage system.
 
 .PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 .PARAMETER Name
     Name of the protection group to create. The value must be 1 to 255 characters.
@@ -59,7 +59,7 @@ function New-DMProtectionGroup {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $lunGroups = @(Get-DMlunGroup -WebSession $session)
                 $matchingItems = @($lunGroups | Where-Object Name -EQ $_)
@@ -77,7 +77,7 @@ function New-DMProtectionGroup {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMlunGroup -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -89,7 +89,7 @@ function New-DMProtectionGroup {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $vstores = @(Get-DMvStore -WebSession $session)
                 $matchingItems = @($vstores | Where-Object Name -EQ $_)
@@ -107,7 +107,7 @@ function New-DMProtectionGroup {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMvStore -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -122,7 +122,7 @@ function New-DMProtectionGroup {
         $WebSession
     }
     else {
-        $deviceManager
+        $script:CurrentOceanstorSession
     }
     $lunGroup = @(Get-DMlunGroup -WebSession $session | Where-Object Name -EQ $LunGroupName)[0]
     if ($null -eq $lunGroup) { throw "Could not resolve 'lunGroup' — the object may have been removed since parameter validation." }

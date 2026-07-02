@@ -7,7 +7,7 @@ function Get-DMlunGroup {
 		Function to request Huawei Oceanstor Storage Lun Groups
 
 	.PARAMETER webSession
-		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
+		Optional parameter to define the session to be use on the REST call. If not defined, the module's cached $script:CurrentOceanstorSession session will be used
 
 	.INPUTS
 		System.Management.Automation.PSCustomObject
@@ -49,7 +49,7 @@ function Get-DMlunGroup {
         $session = $WebSession
     }
     else {
-        $session = $deviceManager
+        $session = $script:CurrentOceanstorSession
     }
 
     $defaultDisplaySet = "Id", "Name", "LunGroup Capacity", "Is Mapped", "Luns Members number"

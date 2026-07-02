@@ -7,7 +7,7 @@
     When SnapshotName is omitted, the cmdlet generates a name from the source LUN name and current timestamp.
 
 .PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 .PARAMETER SnapshotName
     Optional name of the snapshot to create.
@@ -58,7 +58,7 @@ function New-DMLunSnapshot {
                     $session = $WebSession
                 }
                 else {
-                    $session = $deviceManager
+                    $session = $script:CurrentOceanstorSession
                 }
 
                 $luns = Get-DMlun -WebSession $session
@@ -81,7 +81,7 @@ function New-DMLunSnapshot {
                     $session = $fakeBoundParameters.WebSession
                 }
                 else {
-                    $session = $deviceManager
+                    $session = $script:CurrentOceanstorSession
                 }
 
                 (Get-DMlun -WebSession $session).Name |
@@ -101,7 +101,7 @@ function New-DMLunSnapshot {
         $session = $WebSession
     }
     else {
-        $session = $deviceManager
+        $session = $script:CurrentOceanstorSession
     }
 
     $sourceLun = @(Get-DMlun -WebSession $session | Where-Object Name -EQ $SourceLunName)[0]

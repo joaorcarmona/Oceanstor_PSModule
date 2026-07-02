@@ -7,7 +7,7 @@
     Results can be filtered to snapshots for a specific source LUN.
 
 .PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 .PARAMETER LunName
     Optional name of the source LUN whose snapshots should be returned. Valid values are checked against Get-DMlun and support tab completion.
@@ -26,7 +26,7 @@
 .EXAMPLE
     PS> $snapshots = Get-DMLunSnapshot
 
-    Stores all visible LUN snapshots using the global deviceManager session.
+    Stores all visible LUN snapshots using the module's cached $script:CurrentOceanstorSession session.
 
 .EXAMPLE
     PS> Get-DMLunSnapshot -LunName 'production-db'
@@ -51,7 +51,7 @@ function Get-DMLunSnapshot {
                     $session = $WebSession
                 }
                 else {
-                    $session = $deviceManager
+                    $session = $script:CurrentOceanstorSession
                 }
 
                 $luns = Get-DMlun -WebSession $session
@@ -74,7 +74,7 @@ function Get-DMLunSnapshot {
                     $session = $fakeBoundParameters.WebSession
                 }
                 else {
-                    $session = $deviceManager
+                    $session = $script:CurrentOceanstorSession
                 }
 
                 (Get-DMlun -WebSession $session).Name |
@@ -88,7 +88,7 @@ function Get-DMLunSnapshot {
         $session = $WebSession
     }
     else {
-        $session = $deviceManager
+        $session = $script:CurrentOceanstorSession
     }
 
     $defaultDisplaySet = 'Id', 'Name', 'Source Lun Name', 'Health Status', 'Running Status'

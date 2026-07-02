@@ -7,7 +7,7 @@
     The client name is validated against existing OceanStor NFS file clients before the delete request is sent. The cmdlet supports -WhatIf and -Confirm.
 
 .PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 .PARAMETER ClientName
     Name of the NFS share client to remove. The name is validated against existing OceanStor NFS file clients.
@@ -44,7 +44,7 @@ function Remove-DMNfsClient {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $clients = @(Get-DMnfsFileClient -WebSession $session)
                 $matchingItems = @($clients | Where-Object Name -EQ $_)
@@ -62,7 +62,7 @@ function Remove-DMNfsClient {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMnfsFileClient -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -75,7 +75,7 @@ function Remove-DMNfsClient {
         $WebSession
     }
     else {
-        $deviceManager
+        $script:CurrentOceanstorSession
     }
     $client = @(Get-DMnfsFileClient -WebSession $session | Where-Object Name -EQ $ClientName)[0]
     if ($null -eq $client) { throw "Could not resolve 'client' — the object may have been removed since parameter validation." }

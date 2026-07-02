@@ -33,14 +33,13 @@ BeforeDiscovery {
 
 AfterAll {
     Remove-Module -Name DisconnectAndNasTestModule -Force -ErrorAction SilentlyContinue
-    Remove-Variable -Name deviceManager -Scope Global -ErrorAction SilentlyContinue
 }
 
 InModuleScope DisconnectAndNasTestModule {
 Describe 'Disconnect-deviceManager' {
     BeforeEach {
         $script:session = [pscustomobject]@{ Hostname = 'oceanstor.test'; version = 'V600R001' }
-        Remove-Variable -Name deviceManager -Scope Global -ErrorAction SilentlyContinue
+        $script:CurrentOceanstorSession = $null
         Mock Invoke-DeviceManager {
             [pscustomobject]@{ error = [pscustomobject]@{ code = 0; description = '0' } }
         }
@@ -54,21 +53,21 @@ Describe 'Disconnect-deviceManager' {
         }
     }
 
-    It 'clears the global deviceManager variable when no WebSession is supplied' {
-        $global:deviceManager = $script:session
+    It 'clears the module-scoped CurrentOceanstorSession variable when no WebSession is supplied' {
+        $script:CurrentOceanstorSession = $script:session
 
         Disconnect-deviceManager
 
-        $global:deviceManager | Should -BeNullOrEmpty
+        $script:CurrentOceanstorSession | Should -BeNullOrEmpty
     }
 
-    It 'does not clear the global variable when WebSession is supplied explicitly' {
-        $global:deviceManager = [pscustomobject]@{ Hostname = 'other.test'; version = 'V600R001' }
+    It 'does not clear the cached session when WebSession is supplied explicitly' {
+        $script:CurrentOceanstorSession = [pscustomobject]@{ Hostname = 'other.test'; version = 'V600R001' }
 
         Disconnect-deviceManager -WebSession $script:session
 
-        $global:deviceManager | Should -Not -BeNullOrEmpty
-        $global:deviceManager.Hostname | Should -Be 'other.test'
+        $script:CurrentOceanstorSession | Should -Not -BeNullOrEmpty
+        $script:CurrentOceanstorSession.Hostname | Should -Be 'other.test'
     }
 
     It 'throws when no session is available' {

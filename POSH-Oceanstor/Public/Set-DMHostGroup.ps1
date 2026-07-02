@@ -7,7 +7,7 @@ function Set-DMHostGroup {
         passes additional Huawei host-group API fields through unchanged.
 
     .PARAMETER WebSession
-        Optional session returned by Connect-deviceManager. The global deviceManager session is used by default.
+        Optional session returned by Connect-deviceManager. The module's cached $script:CurrentOceanstorSession session is used by default.
 
     .PARAMETER HostGroupName
         Existing host group name to modify.
@@ -49,7 +49,7 @@ function Set-DMHostGroup {
         [string]$VstoreId
     )
 
-    $session = if ($WebSession) { $WebSession } else { $deviceManager }
+    $session = if ($WebSession) { $WebSession } else { $script:CurrentOceanstorSession }
     $update = New-DMNamedObjectUpdate -Objects @(Get-DMhostGroup -WebSession $session -VstoreId $VstoreId) `
         -CurrentName $HostGroupName -EntityName 'host group' -ResourceBase 'hostgroup' -NewName $NewName `
         -NewNameSpecified:$($PSBoundParameters.ContainsKey('NewName')) -Description $Description `

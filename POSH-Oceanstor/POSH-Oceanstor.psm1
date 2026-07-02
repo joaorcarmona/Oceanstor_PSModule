@@ -26,4 +26,8 @@
     # Export Public functions ($Public.BaseName) for WIP modules
     # Set variables visible to the module and its functions only
 
+#Module-scoped cache of the active OceanStor session, set by Connect-deviceManager and
+#used as the fallback for every command's -WebSession parameter when it is omitted.
+    $script:CurrentOceanstorSession = $null
+
 Export-ModuleMember -Function $Public.Basename

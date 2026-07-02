@@ -5,13 +5,13 @@ function Connect-deviceManager {
 
 	.DESCRIPTION
 		Starts a REST session to a Huawei OceanStor DeviceManager endpoint. When replacing the
-		global $deviceManager session (PassThru not specified), any existing global session is
-		closed first on a best-effort basis to avoid leaking a connection slot on the array.
+		module-scoped $script:CurrentOceanstorSession session (PassThru not specified), any existing
+		cached session is closed first on a best-effort basis to avoid leaking a connection slot on the array.
 
 	.PARAMETER Hostname
 		Mandatory hostname or IP address of the Huawei OceanStor array.
 	.PARAMETER PassThru
-		When supplied, the connection object is returned instead of being assigned to the global $deviceManager variable.
+		When supplied, the connection object is returned instead of being cached in the module-scoped $script:CurrentOceanstorSession variable.
 		The legacy -Return switch is accepted as an alias for backward compatibility.
 		Note: callers using -Return $true must change to -Return (without $true) since this is now a switch.
 	.PARAMETER Secure
@@ -35,10 +35,10 @@ function Connect-deviceManager {
 	.OUTPUTS
 		OceanstorSession
 
-		Returns an OceanStor session object when Return is true. Otherwise, assigns the session to the global deviceManager variable.
+		Returns an OceanStor session object when Return is true. Otherwise, caches the session in the module-scoped $script:CurrentOceanstorSession variable.
 
 	.EXAMPLE
-		Example syntax for running that sets the $deviceManager global WebSession object.
+		Example syntax for running that sets the module-scoped $script:CurrentOceanstorSession WebSession object.
 		PS C:\> Connect-deviceManager -Hostname storage.domain.tld
 
 		Example syntax for returning a WebSession connection object.
@@ -50,7 +50,6 @@ function Connect-deviceManager {
 	.LINK
 	#>
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidGlobalVars', '')]
     [Cmdletbinding(DefaultParameterSetName = 'Prompt')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0, Mandatory = $true)]
@@ -128,15 +127,15 @@ function Connect-deviceManager {
         return $connection
     }
     else {
-        if ($global:deviceManager) {
+        if ($script:CurrentOceanstorSession) {
             try {
-                Disconnect-deviceManager -WebSession $global:deviceManager
+                Disconnect-deviceManager -WebSession $script:CurrentOceanstorSession
             }
             catch {
-                Write-Warning "Failed to close the previous OceanStor session on '$($global:deviceManager.Hostname)': $($_.Exception.Message)"
+                Write-Warning "Failed to close the previous OceanStor session on '$($script:CurrentOceanstorSession.Hostname)': $($_.Exception.Message)"
             }
         }
-        $global:deviceManager = $connection
+        $script:CurrentOceanstorSession = $connection
     }
 }
 #Export-ModuleMember -Variable 'logonsession'

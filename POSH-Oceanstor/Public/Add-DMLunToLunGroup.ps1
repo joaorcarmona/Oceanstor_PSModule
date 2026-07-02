@@ -7,7 +7,7 @@
     Optional host LUN ID settings can be supplied for the association. The cmdlet supports -WhatIf and -Confirm.
 
 .PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 .PARAMETER Lun
     LUN object to add to the LUN group. The object must expose a Name property and can be supplied from the pipeline.
@@ -68,7 +68,7 @@ function Add-DMLunToLunGroup {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $luns = @(Get-DMlun -WebSession $session)
                 $matchingItems = @($luns | Where-Object Name -EQ $candidate)
@@ -86,7 +86,7 @@ function Add-DMLunToLunGroup {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMlun -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -99,7 +99,7 @@ function Add-DMLunToLunGroup {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $groups = @(Get-DMlunGroup -WebSession $session)
                 $matchingItems = @($groups | Where-Object Name -EQ $candidate)
@@ -117,7 +117,7 @@ function Add-DMLunToLunGroup {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMlunGroup -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -142,7 +142,7 @@ function Add-DMLunToLunGroup {
         $WebSession
     }
     else {
-        $deviceManager
+        $script:CurrentOceanstorSession
     }
 
     $resolvedLunName = if ($Lun -and $Lun.PSObject.Properties.Name -contains 'Name') {

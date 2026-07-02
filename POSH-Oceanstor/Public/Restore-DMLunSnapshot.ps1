@@ -7,7 +7,7 @@
     This operation overwrites newer LUN data. Use -WhatIf first when testing automation.
 
 .PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 .PARAMETER SnapShotName
     Name of the snapshot to roll back. Valid values are checked against Get-DMLunSnapshot and support tab completion.
@@ -44,7 +44,7 @@ function Restore-DMLunSnapshot {
                     $session = $WebSession
                 }
                 else {
-                    $session = $deviceManager
+                    $session = $script:CurrentOceanstorSession
                 }
 
                 $snapshots = @(Get-DMLunSnapshot -WebSession $session)
@@ -67,7 +67,7 @@ function Restore-DMLunSnapshot {
                     $session = $fakeBoundParameters.WebSession
                 }
                 else {
-                    $session = $deviceManager
+                    $session = $script:CurrentOceanstorSession
                 }
 
                 (Get-DMLunSnapshot -WebSession $session).Name |
@@ -85,7 +85,7 @@ function Restore-DMLunSnapshot {
         $session = $WebSession
     }
     else {
-        $session = $deviceManager
+        $session = $script:CurrentOceanstorSession
     }
 
     $snapshot = @(Get-DMLunSnapshot -WebSession $session | Where-Object Name -EQ $SnapShotName)[0]

@@ -7,7 +7,7 @@
     By default the storage system delete behavior is used; specify ImmediateDelete to request non-delayed deletion. The cmdlet supports -WhatIf and -Confirm.
 
 .PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 .PARAMETER LunName
     Name of the LUN to remove. The name is validated against existing OceanStor LUNs.
@@ -52,7 +52,7 @@ function Remove-DMLun {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $luns = @(Get-DMlun -WebSession $session)
                 $matchingItems = @($luns | Where-Object Name -EQ $_)
@@ -70,7 +70,7 @@ function Remove-DMLun {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMlun -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -85,7 +85,7 @@ function Remove-DMLun {
         $WebSession
     }
     else {
-        $deviceManager
+        $script:CurrentOceanstorSession
     }
     $lun = @(Get-DMlun -WebSession $session | Where-Object Name -EQ $LunName)[0]
     if ($null -eq $lun) { throw "Could not resolve 'lun' — the object may have been removed since parameter validation." }

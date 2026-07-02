@@ -135,11 +135,11 @@ hidden [string]$iBaseToken
 |-------|-------|
 | **File** | `POSH-Oceanstor/Public/Connect-deviceManager.ps1` |
 | **Lines** | `110` |
-| **Status** | ✅ Closed — by design |
+| **Status** | ✅ Improved — cache narrowed from global to module scope |
 
-Any script or third-party module loaded in the same PowerShell runspace can read `$global:deviceManager` and extract the `iBaseToken` or Auth header.
+Any script or third-party module loaded in the same PowerShell runspace could read `$global:deviceManager` and extract the `iBaseToken` or Auth header.
 
-**Decision:** The global variable is the intended design. It allows users to `Connect-deviceManager` once and then use all `Get-DM*` / `Set-DM*` / `Remove-DM*` commands without passing `-WebSession` on every call. Removing it would force callers to carry the session object everywhere, defeating the "connect once and forget" UX. Multi-array use cases are covered by `-WebSession -PassThru`. Won't fix.
+**Fix:** The cached session moved from `$global:deviceManager` to a module-private `$script:CurrentOceanstorSession` variable (see `POSH-Oceanstor.psm1`), so it's no longer visible via `Get-Variable -Scope Global` or writable by unrelated scripts sharing the runspace. The "connect once and forget" UX is unchanged — `Connect-deviceManager` still caches a session that every other command falls back to automatically when `-WebSession` is omitted, and multi-array use cases are still covered by `-WebSession -PassThru`. This is encapsulation hygiene, not a hard security boundary: any code running in the same process can still reach a module-scoped variable via `& (Get-Module POSH-Oceanstor) { $script:CurrentOceanstorSession }`, so it does not stop a malicious actor with arbitrary code execution in that process. Full elimination of implicit session state (always requiring `-WebSession`) was considered and rejected for the same UX reason as before.
 
 ---
 
@@ -251,7 +251,7 @@ if ($lunReceived.WORKLOADTYPEID) {
 | **Files** | All ~100 public commands |
 | **Status** | ✅ Fixed — guard added inside `Invoke-DeviceManager.ps1` itself (single chokepoint every command funnels through), so all ~100 commands get the clear error without per-command changes. |
 
-When `$deviceManager` is `$null` and no `-WebSession` is provided, commands fall through to `Invoke-DeviceManager` which fails with a generic null-property PowerShell error rather than "Please call Connect-deviceManager first." A simple guard at the top of each command (or inside `Invoke-DeviceManager`) would give a clear diagnostic.
+When `$script:CurrentOceanstorSession` is `$null` and no `-WebSession` is provided, commands fall through to `Invoke-DeviceManager` which fails with a generic null-property PowerShell error rather than "Please call Connect-deviceManager first." A simple guard at the top of each command (or inside `Invoke-DeviceManager`) would give a clear diagnostic.
 
 ---
 
@@ -278,9 +278,9 @@ If the API returns a non-zero error code (e.g. session expired, permission denie
 |-------|-------|
 | **File** | `POSH-Oceanstor/Public/Connect-deviceManager.ps1` |
 | **Lines** | `110` |
-| **Status** | ✅ Fixed — `Disconnect-deviceManager` is now called on the prior global session (best-effort, wrapped in try/catch with `Write-Warning` on failure) immediately before it is overwritten. A failed disconnect (e.g. the old session already expired) never blocks the new connection from being established. |
+| **Status** | ✅ Fixed — `Disconnect-deviceManager` is now called on the prior cached session (best-effort, wrapped in try/catch with `Write-Warning` on failure) immediately before it is overwritten. A failed disconnect (e.g. the old session already expired) never blocks the new connection from being established. |
 
-`$global:deviceManager = $connection` overwrites the existing session object without calling `Disconnect-deviceManager` first. The previous authenticated session remains open on the array indefinitely, consuming a connection slot.
+`$script:CurrentOceanstorSession = $connection` overwrites the existing session object without calling `Disconnect-deviceManager` first. The previous authenticated session remains open on the array indefinitely, consuming a connection slot.
 
 ---
 
@@ -447,7 +447,7 @@ The V6 session restriction is enforced inside `Set-DMLun` (which `Rename-DMLun` 
 | 9 | S2 | Plaintext password variable never cleared | Security | ✅ Fixed |
 | 10 | S3 | Basic Auth header kept for entire session lifetime | Security | ✅ Fixed |
 | — | S5 | Redundant plaintext iBaseToken field on OceanstorSession | Security | ✅ Partially fixed — redundant copy removed; token still in Headers (required) |
-| — | S6 | `$global:deviceManager` accessible to all code in the session | Security | ✅ Closed — by design; global variable is the intended "connect once" UX |
+| — | S6 | `$global:deviceManager` accessible to all code in the session | Security | ✅ Improved — cache narrowed to module-scoped `$script:CurrentOceanstorSession` |
 | 11 | C4 | No helpful error when `$deviceManager` is null | UX | ✅ Fixed |
 | 12 | C5 | `Select-Object -ExpandProperty data` before checking error code | Reliability | ✅ Fixed |
 | 13 | C6 | Second `Connect-deviceManager` leaks old session on array | Resource | ✅ Fixed |

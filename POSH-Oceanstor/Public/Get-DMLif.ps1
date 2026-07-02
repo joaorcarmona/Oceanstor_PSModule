@@ -7,7 +7,7 @@ function Get-DMLif {
 		Function to request configured Huawei OceanStor logical interfaces.
 
 	.PARAMETER webSession
-		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
+		Optional parameter to define the session to be use on the REST call. If not defined, the module's cached $script:CurrentOceanstorSession session will be used
 
 	.INPUTS
 		System.Management.Automation.PSCustomObject
@@ -42,7 +42,7 @@ function Get-DMLif {
         $session = $WebSession
     }
     else {
-        $session = $deviceManager
+        $session = $script:CurrentOceanstorSession
     }
 
     $defaultDisplaySet = "Id", "LIF Name", "IPv4 Address", "Running Status", "Support Protocol"

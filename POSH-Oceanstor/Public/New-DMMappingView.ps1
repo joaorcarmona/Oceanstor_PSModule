@@ -7,7 +7,7 @@ function New-DMMappingView {
         Creates a new mapping view with an optional description and vStore scope.
 
     .PARAMETER WebSession
-        Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+        Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
     .PARAMETER Name
         Name of the mapping view to create.
@@ -50,7 +50,7 @@ function New-DMMappingView {
         $WebSession
     }
     else {
-        $deviceManager
+        $script:CurrentOceanstorSession
     }
     $body = @{
         TYPE = 245

@@ -7,7 +7,7 @@ function Get-DMdnsServer {
         Returns Huawei Oceanstor Storage Configured DNS Servers
 
     .PARAMETER WebSession
-        Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
+        Optional parameter to define the session to be use on the REST call. If not defined, the module's cached $script:CurrentOceanstorSession session will be used
 
     .INPUTS
         System.Management.Automation.PSCustomObject
@@ -41,7 +41,7 @@ function Get-DMdnsServer {
         $session = $WebSession
     }
     else {
-        $session = $deviceManager
+        $session = $script:CurrentOceanstorSession
     }
 
     $addressData = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "dns_server" |

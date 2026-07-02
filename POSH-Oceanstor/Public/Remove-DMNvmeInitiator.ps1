@@ -7,7 +7,7 @@
     Associated initiators must be removed from their host before deletion. The cmdlet supports -WhatIf and -Confirm.
 
 .PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 .PARAMETER Nqn
     NQN of the free NVMe over RoCE initiator to remove.
@@ -45,7 +45,7 @@ function Remove-DMNvmeInitiator {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $initiators = @(Get-DMNvmeInitiator -WebSession $session -FreeInitiators)
                 if ($initiators.Id -contains $candidate) {
@@ -59,7 +59,7 @@ function Remove-DMNvmeInitiator {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMNvmeInitiator -WebSession $session -FreeInitiators).Id | Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -72,7 +72,7 @@ function Remove-DMNvmeInitiator {
         $WebSession
     }
     else {
-        $deviceManager
+        $script:CurrentOceanstorSession
     }
     $body = @{ ID = $Nqn }
     if ($VstoreId) {

@@ -8,7 +8,7 @@ function Get-DMlunbyLunGroup {
 		identifiers to the module's LUN objects.
 
 	.PARAMETER WebSession
-		Optional session to use on REST calls. If omitted, deviceManager is used.
+		Optional session to use on REST calls. If omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 	.PARAMETER LunGroup
 		The OceanStorLunGroup object whose member LUNs are requested.
@@ -35,7 +35,7 @@ function Get-DMlunbyLunGroup {
 
 	.NOTES
 		The command reads the LUN group's ASSOCIATELUNIDLIST value and resolves the identifiers through Get-DMlun.
-		If WebSession is omitted, the command uses the module-level deviceManager session.
+		If WebSession is omitted, the command uses the module-scoped $script:CurrentOceanstorSession session.
 	#>
     [CmdletBinding()]
     param(
@@ -49,7 +49,7 @@ function Get-DMlunbyLunGroup {
         $session = $WebSession
     }
     else {
-        $session = $deviceManager
+        $session = $script:CurrentOceanstorSession
     }
 
     $defaultDisplaySet = "Id", "Name", "Health Status", "Lun Size", "WWN"

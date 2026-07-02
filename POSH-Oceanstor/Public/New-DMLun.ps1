@@ -7,7 +7,7 @@ function New-DMLun {
 		Function to create a Huawei Oceanstor Storage LUN (Logical Unit Number)
 
 	.PARAMETER webSession
-		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
+		Optional parameter to define the session to be use on the REST call. If not defined, the module's cached $script:CurrentOceanstorSession session will be used
 
     .PARAMETER LunName
         Mandatory parameter. Name of the LUN to be created
@@ -108,7 +108,7 @@ function New-DMLun {
                     $session = $WebSession
                 }
                 else {
-                    $session = $deviceManager
+                    $session = $script:CurrentOceanstorSession
                 }
                 $storagePools = Get-DMstoragePool -WebSession $session
                 if ($storagePools.Id -contains $_) {
@@ -129,7 +129,7 @@ function New-DMLun {
                     $session = $WebSession
                 }
                 else {
-                    $session = $deviceManager
+                    $session = $script:CurrentOceanstorSession
                 }
                 (Get-DMstoragePool -WebSession $session).Id | Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -173,7 +173,7 @@ function New-DMLun {
         $session = $WebSession
     }
     else {
-        $session = $deviceManager
+        $session = $script:CurrentOceanstorSession
     }
 
     # ensure dynamic StoragePoolID is assigned to variable for later use

@@ -7,7 +7,7 @@
     Returned objects use the OceanstorPortGroup class and include a default display set for common port group properties.
 
 .PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 .PARAMETER Name
     Optional port group name to return. When omitted, all visible port groups are returned.
@@ -50,7 +50,7 @@ function Get-DMPortGroup {
         $WebSession
     }
     else {
-        $deviceManager
+        $script:CurrentOceanstorSession
     }
     $resource = 'portgroup'
     if ($VstoreId) {

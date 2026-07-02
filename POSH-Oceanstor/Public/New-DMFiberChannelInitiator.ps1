@@ -7,7 +7,7 @@
     Third-party multipath settings can be supplied when the initiator requires explicit path and failover configuration.
 
 .PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 .PARAMETER WWN
     Fibre Channel WWN of the initiator to create. The value must contain 16 hexadecimal characters and cannot be all zeros or all Fs.
@@ -79,7 +79,7 @@ function New-DMFiberChannelInitiator {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $hosts = @(Get-DMhost -WebSession $session)
                 $matchingItems = @($hosts | Where-Object Name -EQ $candidate)
@@ -97,7 +97,7 @@ function New-DMFiberChannelInitiator {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMhost -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -122,7 +122,7 @@ function New-DMFiberChannelInitiator {
         $WebSession
     }
     else {
-        $deviceManager
+        $script:CurrentOceanstorSession
     }
     $body = @{
         ID            = $WWN

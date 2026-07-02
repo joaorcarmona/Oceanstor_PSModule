@@ -7,7 +7,7 @@ function Set-DMPortGroup {
         passes additional Huawei port-group API fields through unchanged.
 
     .PARAMETER WebSession
-        Optional session returned by Connect-deviceManager. The global deviceManager session is used by default.
+        Optional session returned by Connect-deviceManager. The module's cached $script:CurrentOceanstorSession session is used by default.
 
     .PARAMETER PortGroupName
         Existing port group name to modify.
@@ -49,7 +49,7 @@ function Set-DMPortGroup {
         [string]$VstoreId
     )
 
-    $session = if ($WebSession) { $WebSession } else { $deviceManager }
+    $session = if ($WebSession) { $WebSession } else { $script:CurrentOceanstorSession }
     $update = New-DMNamedObjectUpdate -Objects @(Get-DMPortGroup -WebSession $session -VstoreId $VstoreId) `
         -CurrentName $PortGroupName -EntityName 'port group' -ResourceBase 'portgroup' -NewName $NewName `
         -NewNameSpecified:$($PSBoundParameters.ContainsKey('NewName')) -Description $Description `

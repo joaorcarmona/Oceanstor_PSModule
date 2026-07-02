@@ -13,8 +13,8 @@ function Invoke-DMPagedRequest {
         in a collection is retrieved regardless of size.
 
     .PARAMETER WebSession
-        Optional session returned by Connect-deviceManager. The global deviceManager session
-        is used when omitted.
+        Optional session returned by Connect-deviceManager. The module's cached $script:CurrentOceanstorSession
+        session is used when omitted.
 
     .PARAMETER Resource
         REST resource path to page through. If the path already contains query parameters

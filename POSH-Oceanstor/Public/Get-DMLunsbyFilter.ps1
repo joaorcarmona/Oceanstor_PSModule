@@ -10,7 +10,7 @@ function Get-DMLunsbyFilter {
         Other property names fall back to a client-side exact match.
 
     .PARAMETER WebSession
-        Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
+        Optional parameter to define the session to be use on the REST call. If not defined, the module's cached $script:CurrentOceanstorSession session will be used
 
     .PARAMETER Filter
         Mandatory property name to filter against. The value must be a valid LUN object property.
@@ -58,7 +58,7 @@ function Get-DMLunsbyFilter {
         $session = $WebSession
     }
     else {
-        $session = $deviceManager
+        $session = $script:CurrentOceanstorSession
     }
 
     # Map friendly property names to API field names for server-side filtering

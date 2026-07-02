@@ -7,7 +7,7 @@
     The share name is validated against existing OceanStor CIFS shares before the delete request is sent. The cmdlet supports -WhatIf and -Confirm.
 
 .PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 .PARAMETER ShareName
     Name of the CIFS share to remove. The name is validated against existing OceanStor CIFS shares.
@@ -44,7 +44,7 @@ function Remove-DMCifsShare {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $shares = @(Get-DMShare -WebSession $session -ShareType CIFS)
                 $matchingItems = @($shares | Where-Object Name -EQ $_)
@@ -62,7 +62,7 @@ function Remove-DMCifsShare {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMShare -WebSession $session -ShareType CIFS).Name |
                     Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
@@ -76,7 +76,7 @@ function Remove-DMCifsShare {
         $WebSession
     }
     else {
-        $deviceManager
+        $script:CurrentOceanstorSession
     }
     $share = @(Get-DMShare -WebSession $session -ShareType CIFS | Where-Object Name -EQ $ShareName)[0]
     if ($null -eq $share) { throw "Could not resolve 'share' — the object may have been removed since parameter validation." }

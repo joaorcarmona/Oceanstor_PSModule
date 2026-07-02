@@ -7,7 +7,7 @@ function Get-DMPortSAS {
     Function to request Huawei Oceanstor Storage configured SAS Ports
 
 .PARAMETER webSession
-    Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
+    Optional parameter to define the session to be use on the REST call. If not defined, the module's cached $script:CurrentOceanstorSession session will be used
 
 .INPUTS
     System.Management.Automation.PSCustomObject
@@ -42,7 +42,7 @@ function Get-DMPortSAS {
         $session = $WebSession
     }
     else {
-        $session = $deviceManager
+        $session = $script:CurrentOceanstorSession
     }
 
     $defaultDisplaySet = "Id", "Name", "Health Status", "Running Status", "Port Location"

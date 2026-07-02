@@ -23,7 +23,7 @@ Describe 'Invoke-DeviceManager' {
     }
 
     AfterEach {
-        Remove-Variable -Name deviceManager -Scope Global -ErrorAction SilentlyContinue
+        Remove-Variable -Name CurrentOceanstorSession -Scope Script -ErrorAction SilentlyContinue
         Remove-Variable -Name DeviceManagerTraceAction -Scope Script -ErrorAction SilentlyContinue
         Remove-Variable -Name DeviceManagerTraceContext -Scope Script -ErrorAction SilentlyContinue
     }
@@ -53,8 +53,8 @@ Describe 'Invoke-DeviceManager' {
         }
     }
 
-    It 'uses the global deviceManager session when WebSession is omitted' {
-        $global:deviceManager = $script:session
+    It 'uses the module-scoped CurrentOceanstorSession session when WebSession is omitted' {
+        $script:CurrentOceanstorSession = $script:session
 
         $null = Invoke-DeviceManager -Method GET -Resource 'system/'
 
@@ -92,7 +92,7 @@ Describe 'Invoke-DeviceManager' {
     }
 
     It 'throws a clear error when no session is available' {
-        Remove-Variable -Name deviceManager -Scope Global -ErrorAction SilentlyContinue
+        $script:CurrentOceanstorSession = $null
 
         { Invoke-DeviceManager -Method GET -Resource 'lun' } | Should -Throw '*Connect-deviceManager*'
 

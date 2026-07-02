@@ -7,7 +7,7 @@
     The cmdlet validates the mapping view, port group, and current association before calling the OceanStor API. It supports -WhatIf and -Confirm.
 
 .PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 .PARAMETER MappingViewName
     Name of the mapping view from which the port group will be removed.
@@ -47,7 +47,7 @@ function Remove-DMPortGroupFromMappingView {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $views = @(Get-DMMappingView -WebSession $session)
                 $matchingItems = @($views | Where-Object Name -EQ $_)
@@ -65,7 +65,7 @@ function Remove-DMPortGroupFromMappingView {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMMappingView -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -77,7 +77,7 @@ function Remove-DMPortGroupFromMappingView {
                     $WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 $groups = @(Get-DMPortGroup -WebSession $session)
                 $matchingItems = @($groups | Where-Object Name -EQ $_)
@@ -95,7 +95,7 @@ function Remove-DMPortGroupFromMappingView {
                     $fakeBoundParameters.WebSession
                 }
                 else {
-                    $deviceManager
+                    $script:CurrentOceanstorSession
                 }
                 (Get-DMPortGroup -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
@@ -108,7 +108,7 @@ function Remove-DMPortGroupFromMappingView {
         $WebSession
     }
     else {
-        $deviceManager
+        $script:CurrentOceanstorSession
     }
     $view = @(Get-DMMappingView -WebSession $session | Where-Object Name -EQ $MappingViewName)[0]
     if ($null -eq $view) { throw "Could not resolve 'view' — the object may have been removed since parameter validation." }

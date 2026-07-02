@@ -12,7 +12,7 @@ function Set-DMLun {
         are passed through unchanged. ID, NAME, and CAPACITY are reserved; use LunName, NewName, and Capacity.
 
     .PARAMETER WebSession
-        Optional session returned by Connect-deviceManager. The global deviceManager session is used by default.
+        Optional session returned by Connect-deviceManager. The module's cached $script:CurrentOceanstorSession session is used by default.
 
     .PARAMETER LunName
         Existing LUN name to modify.
@@ -71,7 +71,7 @@ function Set-DMLun {
         [System.Collections.IDictionary]$ApiProperties
     )
 
-    $session = if ($WebSession) { $WebSession } else { $deviceManager }
+    $session = if ($WebSession) { $WebSession } else { $script:CurrentOceanstorSession }
     if (-not $session -or [string]$session.version -notmatch '^V6') {
         $version = if ($session) { [string]$session.version } else { '<none>' }
         throw "Set-DMLun supports only OceanStor Dorado V6 API sessions. Connected version: $version."

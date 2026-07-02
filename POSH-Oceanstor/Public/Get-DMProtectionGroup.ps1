@@ -7,7 +7,7 @@
     Results can be filtered by name after retrieval and are returned as OceanstorProtectionGroup objects.
 
 .PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the global deviceManager session is used.
+    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 .PARAMETER Name
     Optional protection group name to return. When omitted, all visible protection groups are returned.
@@ -45,7 +45,7 @@ function Get-DMProtectionGroup {
         $WebSession
     }
     else {
-        $deviceManager
+        $script:CurrentOceanstorSession
     }
     $response = Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource 'protectgroup' -ApiV2 |
         Select-DMResponseData

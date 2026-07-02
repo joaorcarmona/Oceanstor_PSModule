@@ -7,7 +7,7 @@ function Get-DMHostInitiator {
 		Function to request Huawei Oceanstor Storage Host Initiators
 
 	.PARAMETER webSession
-		Optional parameter to define the session to be use on the REST call. If not defined, the "deviceManager" Global Variable will be used
+		Optional parameter to define the session to be use on the REST call. If not defined, the module's cached $script:CurrentOceanstorSession session will be used
 	.PARAMETER HostId
 		Optional parameter to Query the Initiators for a specific Host Id
 	.PARAMETER FreeInitiators
@@ -78,7 +78,7 @@ function Get-DMHostInitiator {
         $session = $WebSession
     }
     else {
-        $session = $deviceManager
+        $session = $script:CurrentOceanstorSession
     }
 
     $defaultDisplaySet = "Id", "Type", "Host Name", "Running Status", "Is Free"
