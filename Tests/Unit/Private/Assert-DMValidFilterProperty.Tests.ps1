@@ -1,6 +1,7 @@
 BeforeAll {
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorHost.ps1"
+    . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\Get-DMFilterableProperty.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\Assert-DMValidFilterProperty.ps1"
 }
 

@@ -8,6 +8,7 @@ BeforeDiscovery {
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Get-DMparsedElabel.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Set-DMHostInitiator.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Select-DMResponseData.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Get-DMFilterableProperty.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Assert-DMValidFilterProperty.ps1"
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
@@ -233,6 +234,14 @@ Describe 'Public getter functions' {
                 Should -Throw '*Invalid LunName*'
         }
 
+        It 'lists valid LUN filter properties via the public discovery command' {
+            $result = Get-DMLunFilterableProperty
+
+            $result | Should -Contain 'Name'
+            $result | Should -Contain 'WWN'
+            $result | Should -Not -Contain 'Session'
+        }
+
         It 'rejects a Filter that is not a real LUN property, before making any REST call' {
             Mock Invoke-DeviceManager {
                 param($WebSession, $Method, $Resource)
@@ -276,6 +285,21 @@ Describe 'Public getter functions' {
             $result.Count | Should -Be 1
             $result[0].Id | Should -Be 'lun-01'
             $script:filterResource | Should -Be 'lun?filter=NAME:fin'
+        }
+
+        It 'exposes completion metadata for -Filter, sourced from both LUN classes properties' {
+            $command = Get-Command Get-DMLunbyFilter
+            @($command.Parameters['Filter'].Attributes |
+                Where-Object { $_ -is [System.Management.Automation.ArgumentCompleterAttribute] }).Count |
+                Should -BeGreaterThan 0 -Because 'Get-DMLunbyFilter -Filter should support tab completion'
+
+            $completer = ($command.Parameters['Filter'].Attributes |
+                Where-Object { $_ -is [System.Management.Automation.ArgumentCompleterAttribute] })[0].ScriptBlock
+            $candidates = @(& $completer 'Get-DMLunbyFilter' 'Filter' '' $null $null)
+
+            $candidates | Should -Contain 'Name'
+            $candidates | Should -Contain 'WWN'
+            $candidates | Should -Not -Contain 'Session'
         }
 
         It 'gets LUNs by filter using client-side exact match for unmapped properties' {

@@ -4,11 +4,12 @@ function Assert-DMValidFilterProperty {
         Throws when -Filter does not name a real property of the given class.
 
     .DESCRIPTION
-        Reflects on Type's public, non-hidden instance properties -- the same set a
-        constructed object would expose to Where-Object/Get-Member -- and throws if
-        Filter isn't one of them. Nothing about the valid property set is hardcoded
-        here: it's derived from whichever class the caller passes in, so any current
-        or future OceanStor object class works without touching this function.
+        Uses Get-DMFilterableProperty to get Type's real property names -- the same
+        set a constructed object would expose to Where-Object/Get-Member -- and
+        throws if Filter isn't one of them. Nothing about the valid property set is
+        hardcoded here: it's derived from whichever class the caller passes in, so
+        any current or future OceanStor object class works without touching this
+        function.
 
         This only validates that Filter names a real property; it says nothing about
         whether that property can be pushed server-side as a REST filter=field -- that
@@ -33,9 +34,7 @@ function Assert-DMValidFilterProperty {
         [string]$Filter
     )
 
-    $validNames = $Type.GetProperties([System.Reflection.BindingFlags]::Public -bor [System.Reflection.BindingFlags]::Instance) |
-        Where-Object { -not ($_.GetCustomAttributes($true) | Where-Object { $_.GetType().Name -eq 'HiddenAttribute' }) } |
-        Select-Object -ExpandProperty Name
+    $validNames = Get-DMFilterableProperty -Type $Type
 
     if ($Filter -notin $validNames) {
         throw "Invalid Filter '$Filter'. Valid properties for $($Type.Name) are: $($validNames -join ', ')"

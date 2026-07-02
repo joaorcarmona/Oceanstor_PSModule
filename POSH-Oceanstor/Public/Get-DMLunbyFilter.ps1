@@ -61,6 +61,8 @@ function Get-DMLunbyFilter {
 
     .LINK
     #>
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
     [Cmdletbinding()]
     [OutputType([System.Object[]])]
     param(
@@ -68,6 +70,10 @@ function Get-DMLunbyFilter {
         [pscustomobject]$WebSession,
         [Parameter(ValueFromPipelineByPropertyName = $true, Position = 1, Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
+        [ArgumentCompleter({
+                param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+                Get-DMLunFilterableProperty | Where-Object { $_ -like "$wordToComplete*" }
+            })]
         [string]$Filter,
         [Parameter(ValueFromPipelineByPropertyName = $true, Position = 2, Mandatory = $true)]
         [ValidateNotNullOrEmpty()]

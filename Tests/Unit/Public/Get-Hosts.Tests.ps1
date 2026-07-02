@@ -8,6 +8,7 @@ BeforeDiscovery {
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Set-DMHostInitiator.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Get-DMApiErrorMessage.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Select-DMResponseData.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Get-DMFilterableProperty.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Assert-DMValidFilterProperty.ps1"
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
@@ -97,6 +98,14 @@ Describe 'Public getter functions' {
             $result.'Parent Id' | Should -Be 'group-01'
         }
 
+        It 'lists valid host filter properties via the public discovery command' {
+            $result = Get-DMHostFilterableProperty
+
+            $result | Should -Contain 'Name'
+            $result | Should -Contain 'Health Status'
+            $result | Should -Not -Contain 'Session'
+        }
+
         It 'rejects a Filter that is not a real host property, before making any REST call' {
             { Get-DMhostbyFilter -WebSession $script:session -Filter 'Bogus' -Keyword 'x' } |
                 Should -Throw "*Invalid Filter 'Bogus'*"
@@ -137,6 +146,21 @@ Describe 'Public getter functions' {
             $result.Count | Should -Be 1
             $result[0].id | Should -Be 'host-01'
             $script:capturedResource | Should -Be 'host?filter=NAME:server-a'
+        }
+
+        It 'exposes completion metadata for -Filter, sourced from OceanStorHost properties' {
+            $command = Get-Command Get-DMhostbyFilter
+            @($command.Parameters['Filter'].Attributes |
+                Where-Object { $_ -is [System.Management.Automation.ArgumentCompleterAttribute] }).Count |
+                Should -BeGreaterThan 0 -Because 'Get-DMhostbyFilter -Filter should support tab completion'
+
+            $completer = ($command.Parameters['Filter'].Attributes |
+                Where-Object { $_ -is [System.Management.Automation.ArgumentCompleterAttribute] })[0].ScriptBlock
+            $candidates = @(& $completer 'Get-DMhostbyFilter' 'Filter' '' $null $null)
+
+            $candidates | Should -Contain 'Name'
+            $candidates | Should -Contain 'Health Status'
+            $candidates | Should -Not -Contain 'Session'
         }
 
         It 'falls back to a client-side filter for an unmapped field' {
