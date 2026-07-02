@@ -26,11 +26,11 @@ $script:MutationReadBackWorkflow = {
             } | Out-Null
         }
         if ($hostGroupContainsHost) {
-            Add-MutationReadVerification -Name 'Get-DMhostbyHostGroupId:Association' -ExpectedType 'OceanStorHost' -Action {
-                Get-DMhostbyHostGroupId -WebSession $session -HostGroupId $hostGroup[0].Id | Where-Object Name -EQ $testHostName
+            Add-MutationReadVerification -Name 'Get-DMhostbyHostGroup:ById' -ExpectedType 'OceanStorHost' -Action {
+                Get-DMhostbyHostGroup -WebSession $session -HostGroupId $hostGroup[0].Id | Where-Object Name -EQ $testHostName
             } | Out-Null
-            Add-MutationReadVerification -Name 'Get-DMhostbyHostGroupName:Association' -ExpectedType 'OceanStorHost' -Action {
-                Get-DMhostbyHostGroupName -WebSession $session -HostGroupName $hostGroupName | Where-Object Name -EQ $testHostName
+            Add-MutationReadVerification -Name 'Get-DMhostbyHostGroup:ByName' -ExpectedType 'OceanStorHost' -Action {
+                Get-DMhostbyHostGroup -WebSession $session -HostGroupName $hostGroupName | Where-Object Name -EQ $testHostName
             } | Out-Null
         }
         if ($owned.FileSystem.Contains($fileSystemName)) {

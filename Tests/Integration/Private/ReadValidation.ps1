@@ -124,13 +124,13 @@ function Invoke-ReadValidation {
         } | Out-Null
 
         if ($disk.poolId) {
-            Add-ValidationResult -Name 'Get-DMdiskbyPoolId' -ExpectedType 'OceanStorDisks' -Action {
-                Get-DMdiskbyPoolId -WebSession $session -PoolId $disk.poolId
+            Add-ValidationResult -Name 'Get-DMDiskByStoragePool:ById' -ExpectedType 'OceanStorDisks' -Action {
+                Get-DMDiskByStoragePool -WebSession $session -StoragePoolId $disk.poolId
             } | Out-Null
         }
         if ($disk.poolName) {
-            Add-ValidationResult -Name 'Get-DMdiskbyPoolName' -ExpectedType 'OceanStorDisks' -Action {
-                Get-DMdiskbyPoolName -WebSession $session -PoolName $disk.poolName
+            Add-ValidationResult -Name 'Get-DMDiskByStoragePool:ByName' -ExpectedType 'OceanStorDisks' -Action {
+                Get-DMDiskByStoragePool -WebSession $session -StoragePoolName $disk.poolName
             } | Out-Null
         }
     }
@@ -145,13 +145,13 @@ function Invoke-ReadValidation {
         } | Out-Null
 
         if ($hostRecord.'Parent Id') {
-            Add-ValidationResult -Name 'Get-DMhostbyHostGroupId' -ExpectedType 'OceanStorHost' -Action {
-                Get-DMhostbyHostGroupId -WebSession $session -HostGroupId $hostRecord.'Parent Id'
+            Add-ValidationResult -Name 'Get-DMhostbyHostGroup:ById' -ExpectedType 'OceanStorHost' -Action {
+                Get-DMhostbyHostGroup -WebSession $session -HostGroupId $hostRecord.'Parent Id'
             } | Out-Null
         }
         if ($hostRecord.'Parent Name') {
-            Add-ValidationResult -Name 'Get-DMhostbyHostGroupName' -ExpectedType 'OceanStorHost' -Action {
-                Get-DMhostbyHostGroupName -WebSession $session -HostGroupName $hostRecord.'Parent Name'
+            Add-ValidationResult -Name 'Get-DMhostbyHostGroup:ByName' -ExpectedType 'OceanStorHost' -Action {
+                Get-DMhostbyHostGroup -WebSession $session -HostGroupName $hostRecord.'Parent Name'
             } | Out-Null
         }
         Add-ValidationResult -Name 'Get-DMHostLink:FC' -ExpectedType 'OceanStorHostLink' -Action {

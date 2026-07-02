@@ -177,9 +177,15 @@ Describe 'Public getter functions' {
         }
 
         It 'gets hosts by host group id' {
-            Mock Invoke-DeviceManager { [pscustomobject]@{ data = $script:hostRecords } }
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                if ($Resource -eq 'host/associate?ASSOCIATEOBJTYPE=14&ASSOCIATEOBJID=group-01') {
+                    return [pscustomobject]@{ data = @($script:hostRecords[0]) }
+                }
+                [pscustomobject]@{ data = @() }
+            }
 
-            $result = (Get-DMhostbyHostGroupId -WebSession $script:session -HostGroupId 'group-01')[0]
+            $result = (Get-DMhostbyHostGroup -WebSession $script:session -HostGroupId 'group-01')[0]
 
             $result.id | Should -Be 'host-01'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
@@ -188,9 +194,16 @@ Describe 'Public getter functions' {
         }
 
         It 'gets hosts by host group name' {
-            Mock Invoke-DeviceManager { [pscustomobject]@{ data = $script:hostRecords } }
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                switch ($Resource) {
+                    'hostgroup' { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 2; NAME = 'cluster-b'; TYPE = 0; ISADD2MAPPINGVIEW = 'true' }) } }
+                    'host/associate?ASSOCIATEOBJTYPE=14&ASSOCIATEOBJID=2' { [pscustomobject]@{ data = @($script:hostRecords[1]) } }
+                    default { [pscustomobject]@{ data = @() } }
+                }
+            }
 
-            $result = (Get-DMhostbyHostGroupName -WebSession $script:session -HostGroupName 'cluster-b')[0]
+            $result = (Get-DMhostbyHostGroup -WebSession $script:session -HostGroupName 'cluster-b')[0]
 
             $result.id | Should -Be 'host-02'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |

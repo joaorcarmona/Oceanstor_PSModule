@@ -4,7 +4,7 @@ BeforeDiscovery {
 
         function Get-DMhostbyName { param([pscustomobject]$WebSession, [string]$Name) }
         function Get-DMhostGroup { param([pscustomobject]$WebSession) }
-        function Get-DMhostbyHostGroupId { param([pscustomobject]$WebSession, [string]$HostGroupId) }
+        function Get-DMhostbyHostGroup { param([pscustomobject]$WebSession, [string]$HostGroupId) }
         function Get-DMlun { param([pscustomobject]$WebSession) }
         function Get-DMlunGroup { param([pscustomobject]$WebSession) }
         function Get-DMlunbyLunGroup { param([pscustomobject]$WebSession, [psobject]$LunGroup) }
@@ -39,7 +39,7 @@ Describe 'Host group membership commands' {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
         Mock Get-DMhostbyName { @([pscustomobject]@{ Id = 'host-01'; Name = 'server01' } | Where-Object Name -EQ $Name) }
         Mock Get-DMhostGroup { @([pscustomobject]@{ Id = 'hg-01'; Name = 'cluster01' }) }
-        Mock Get-DMhostbyHostGroupId { @([pscustomobject]@{ Id = 'host-01'; Name = 'server01' }) }
+        Mock Get-DMhostbyHostGroup { @([pscustomobject]@{ Id = 'host-01'; Name = 'server01' }) }
         Mock Invoke-DeviceManager {
             $script:method = $Method
             $script:resource = $Resource
@@ -71,7 +71,7 @@ Describe 'Host group membership commands' {
     }
 
     It 'rejects removal when the host is not a group member' {
-        Mock Get-DMhostbyHostGroupId { @() }
+        Mock Get-DMhostbyHostGroup { @() }
 
         { Remove-DMHostFromHostGroup -WebSession $script:session -HostName 'server01' -HostGroupName 'cluster01' -Confirm:$false } |
             Should -Throw '*not a member*'

@@ -4,7 +4,7 @@ BeforeDiscovery {
 
         function Get-DMhostbyName       { param([pscustomobject]$WebSession, [string]$Name) }
         function Get-DMhostGroup        { param([pscustomobject]$WebSession) }
-        function Get-DMhostbyHostGroupId { param([pscustomobject]$WebSession, [string]$HostGroupId) }
+        function Get-DMhostbyHostGroup { param([pscustomobject]$WebSession, [string]$HostGroupId) }
         function Invoke-DeviceManager {
             param([pscustomobject]$WebSession, [string]$Method, [string]$Resource, [hashtable]$BodyData)
         }
@@ -32,7 +32,7 @@ Describe 'Remove-DMHostFromHostGroup' {
         Mock Get-DMhostGroup {
             @([pscustomobject]@{ Id = 'grp-01'; Name = 'prod-group' })
         }
-        Mock Get-DMhostbyHostGroupId {
+        Mock Get-DMhostbyHostGroup {
             @([pscustomobject]@{ Id = 'host-01'; Name = 'web-host' })
         }
         Mock Invoke-DeviceManager {
@@ -69,7 +69,7 @@ Describe 'Remove-DMHostFromHostGroup' {
     }
 
     It 'throws when the host is not a member of the host group' {
-        Mock Get-DMhostbyHostGroupId { @() }
+        Mock Get-DMhostbyHostGroup { @() }
 
         { Remove-DMHostFromHostGroup -WebSession $script:session -HostName 'web-host' -HostGroupName 'prod-group' -Confirm:$false } |
             Should -Throw "*not a member*"

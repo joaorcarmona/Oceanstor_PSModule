@@ -56,6 +56,19 @@ Describe 'Public getter functions' {
                 TYPE = 10; DISKTYPE = 14; DISKFORM = 3; manuCapacity = 1GB
             }
         }
+
+        function script:New-TestStoragePool {
+            param([string]$Id = 'pool-01', [string]$Name = 'performance')
+
+            [pscustomobject]@{ ID = $Id; NAME = $Name; TYPE = 216 }
+        }
+
+        function script:New-TestDiskFixture {
+            @(
+                (New-TestDisk -Id 'disk-free' -Location 'DAE000.1' -PoolId 'pool-01' -PoolName 'performance')
+                (New-TestDisk -Id 'disk-coffer' -Location 'DAE001.2' -PoolId 'pool-02' -PoolName 'capacity' -LogicType '2' -IsCofferDisk 'TRUE')
+            )
+        }
     }
     BeforeEach {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
@@ -65,10 +78,17 @@ Describe 'Public getter functions' {
     Describe 'Disk getter functions' {
         BeforeEach {
             Mock Invoke-DeviceManager {
-                [pscustomobject]@{ data = @(
-                    (New-TestDisk -Id 'disk-free' -Location 'DAE000.1' -PoolId 'pool-01' -PoolName 'performance')
-                    (New-TestDisk -Id 'disk-coffer' -Location 'DAE001.2' -PoolId 'pool-02' -PoolName 'capacity' -LogicType '2' -IsCofferDisk 'TRUE')
-                ) }
+                param($WebSession, $Method, $Resource)
+                switch -Wildcard ($Resource) {
+                    'disk' { [pscustomobject]@{ data = @(New-TestDiskFixture) } }
+                    'storagepool' {
+                        [pscustomobject]@{ data = @(
+                            (New-TestStoragePool -Id 'pool-01' -Name 'performance')
+                            (New-TestStoragePool -Id 'pool-02' -Name 'capacity')
+                        ) }
+                    }
+                    default { [pscustomobject]@{ data = @() } }
+                }
             }
         }
 
@@ -89,16 +109,16 @@ Describe 'Public getter functions' {
                 Should -Be @('Id', 'Location', 'Health Status', 'Disk Usage', 'PoolName')
         }
 
-        It 'gets disks by pool id' {
-            $result = (Get-DMdiskbyPoolId -WebSession $script:session -PoolId 'pool-01')[0]
+        It 'gets disks by storage pool id' {
+            $result = (Get-DMDiskByStoragePool -WebSession $script:session -StoragePoolId 'pool-01')[0]
 
             $result.id | Should -Be 'disk-free'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
                 Should -Be @('Id', 'Location', 'Health Status', 'Disk Usage', 'PoolName')
         }
 
-        It 'gets disks by pool name' {
-            $result = (Get-DMdiskbyPoolName -WebSession $script:session -PoolName 'capacity')[0]
+        It 'gets disks by storage pool name' {
+            $result = (Get-DMDiskByStoragePool -WebSession $script:session -StoragePoolName 'capacity')[0]
 
             $result.id | Should -Be 'disk-coffer'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
