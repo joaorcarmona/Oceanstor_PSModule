@@ -76,15 +76,14 @@ function Get-DMDiskByStoragePool {
                 else {
                     $script:CurrentOceanstorSession
                 }
-                $pools = @(Get-DMstoragePool -WebSession $session)
-                $matchingItems = @($pools | Where-Object Name -EQ $_)
+                $matchingItems = @(Get-DMstoragePool -WebSession $session -Name $_)
                 if ($matchingItems.Count -eq 1) {
                     return $true
                 }
                 if ($matchingItems.Count -gt 1) {
                     throw "StoragePoolName is ambiguous because more than one storage pool is named '$_'."
                 }
-                throw "Invalid StoragePoolName. Valid values are: $($pools.Name -join ', ')"
+                throw "Invalid StoragePoolName. Valid values are: $((Get-DMstoragePool -WebSession $session).Name -join ', ')"
             })]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
@@ -112,7 +111,7 @@ function Get-DMDiskByStoragePool {
     $poolId = switch ($PSCmdlet.ParameterSetName) {
         'ByObject' { $StoragePool.Id }
         'ByName' {
-            $resolvedPool = @(Get-DMstoragePool -WebSession $session | Where-Object Name -EQ $StoragePoolName)[0]
+            $resolvedPool = @(Get-DMstoragePool -WebSession $session -Name $StoragePoolName)[0]
             if ($null -eq $resolvedPool) { throw "Could not resolve 'StoragePoolName' - the object may have been removed since parameter validation." }
             $resolvedPool.Id
         }

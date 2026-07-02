@@ -81,7 +81,7 @@ Describe 'Public getter functions' {
                 param($WebSession, $Method, $Resource)
                 switch -Wildcard ($Resource) {
                     'disk' { [pscustomobject]@{ data = @(New-TestDiskFixture) } }
-                    'storagepool' {
+                    'storagepool*' {
                         [pscustomobject]@{ data = @(
                             (New-TestStoragePool -Id 'pool-01' -Name 'performance')
                             (New-TestStoragePool -Id 'pool-02' -Name 'capacity')

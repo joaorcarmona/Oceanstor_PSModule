@@ -2,7 +2,7 @@ BeforeDiscovery {
     $script:testModule = New-Module -Name GetDMDiskByStoragePoolTestModule -ArgumentList $PSScriptRoot -ScriptBlock {
         param($testRoot)
 
-        function Get-DMstoragePool { param([pscustomobject]$WebSession) }
+        function Get-DMstoragePool { param([pscustomobject]$WebSession, [string]$Name) }
         function Get-DMparsedElabel { param([string]$eLabelString) }
         function Invoke-DeviceManager {
             param([pscustomobject]$WebSession, [string]$Method, [string]$Resource)
@@ -31,7 +31,10 @@ Describe 'Get-DMDiskByStoragePool' {
         $script:storagePool = [pscustomobject]@{ Id = 'pool-01'; Name = 'performance' }
 
         Mock Get-DMstoragePool {
-            @([pscustomobject]@{ Id = 'pool-01'; Name = 'performance' })
+            param($WebSession, $Name)
+            $pools = @([pscustomobject]@{ Id = 'pool-01'; Name = 'performance' })
+            if ($Name) { return @($pools | Where-Object Name -Like $Name) }
+            $pools
         }
         Mock Get-DMparsedElabel { [pscustomobject]@{} }
     }
