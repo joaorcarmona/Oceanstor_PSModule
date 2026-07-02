@@ -10,7 +10,9 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-Import-Module Pester -MinimumVersion 5.0.0 -ErrorAction Stop
+# Capped below 6.0 so a future Pester major release can't be picked up silently and break
+# CI on breaking-change assumptions; bump the ceiling deliberately after validating against it.
+Import-Module Pester -MinimumVersion 5.0.0 -MaximumVersion 5.99.99 -ErrorAction Stop
 
 $configuration = New-PesterConfiguration
 $configuration.Run.Path = Join-Path -Path $PSScriptRoot -ChildPath 'Unit'
