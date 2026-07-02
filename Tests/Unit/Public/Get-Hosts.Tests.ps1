@@ -96,11 +96,11 @@ Describe 'Public getter functions' {
             $result.'Parent Id' | Should -Be 'group-01'
         }
 
-        It 'filters hosts by a known field through the server-side filter' {
+        It 'filters hosts by a known field through an exact server-side filter' {
             $script:capturedResource = $null
             Mock Invoke-DeviceManager {
                 param($WebSession, $Method, $Resource)
-                if ($Resource -eq 'host?filter=ID:host-01') {
+                if ($Resource -eq 'host?filter=ID::host-01') {
                     $script:capturedResource = $Resource
                     return [pscustomobject]@{ data = @($script:hostRecords[0]) }
                 }
@@ -110,7 +110,25 @@ Describe 'Public getter functions' {
             $result = (Get-DMhostbyFilter -WebSession $script:session -Filter 'Id' -Keyword 'host-01')[0]
 
             $result.id | Should -Be 'host-01'
-            $script:capturedResource | Should -Be 'host?filter=ID:host-01'
+            $script:capturedResource | Should -Be 'host?filter=ID::host-01'
+        }
+
+        It 'filters hosts by a known field through a fuzzy server-side hint when Keyword has a trailing wildcard' {
+            $script:capturedResource = $null
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                if ($Resource -eq 'host?filter=NAME:server-a') {
+                    $script:capturedResource = $Resource
+                    return [pscustomobject]@{ data = $script:hostRecords }
+                }
+                [pscustomobject]@{ data = @() }
+            }
+
+            $result = @(Get-DMhostbyFilter -WebSession $script:session -Filter 'Name' -Keyword 'server-a*')
+
+            $result.Count | Should -Be 1
+            $result[0].id | Should -Be 'host-01'
+            $script:capturedResource | Should -Be 'host?filter=NAME:server-a'
         }
 
         It 'falls back to a client-side filter for an unmapped field' {

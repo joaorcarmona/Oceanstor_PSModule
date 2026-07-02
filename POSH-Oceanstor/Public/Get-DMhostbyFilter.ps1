@@ -4,15 +4,25 @@ function Get-DMhostbyFilter {
         Searches for OceanStor hosts by a property filter.
 
     .DESCRIPTION
-        Searches for hosts whose specified property equals the supplied keyword.
+        Searches for hosts whose specified property matches the supplied keyword.
         When the filter matches a known API field (Id, Name), the query is pushed
         server-side to narrow the candidates transferred from the array. Other
         property names fall back to fetching the full host list, so prefer Id or
-        Name when possible. Either way, an exact match is always re-verified
-        client-side before enrichment, because the array's server-side filter is
-        not reliably exact for every field -- confirmed live that filtering hosts
-        by Id matches on substring (e.g. Id "5" also matches "15", "51", "150"),
-        while Name is an exact match.
+        Name when possible.
+
+        Keyword supports PowerShell wildcards (*, ?, [...]). Per the OceanStor
+        REST API reference, a single colon in "filter=field:value" requests a
+        fuzzy (substring) match, while a double colon requests an exact match --
+        confirmed live (host?filter=ID::5 returns exactly one host; ID:5 returns
+        every host whose ID contains "5", e.g. 15, 51, 150). Without a wildcard,
+        an exact double-colon query is sent. With a wildcard limited to a leading
+        and/or trailing *, the literal middle is sent as a single-colon fuzzy hint
+        to narrow the candidate set server-side. Any other wildcard shape (?, a
+        [...] class, or a * in the middle) can't be expressed as a single fuzzy
+        substring, so the full host list is fetched instead. Either way, the
+        exact requested pattern is always re-verified client-side (-Like) before
+        enrichment, so a broader-than-necessary server-side result only costs
+        extra candidates transferred, never a wrong final result.
 
     .PARAMETER WebSession
         Optional parameter to define the session to be use on the REST call. If not defined, the module's cached $script:CurrentOceanstorSession session will be used
@@ -21,7 +31,7 @@ function Get-DMhostbyFilter {
         Mandatory property name to filter against. The value must be a valid host object property.
 
     .PARAMETER Keyword
-        Mandatory value to match against the chosen property. The comparison is an exact match.
+        Mandatory value to match against the chosen property. Supports PowerShell wildcards (*, ?, [...]); without one, the comparison is an exact match.
 
     .INPUTS
         System.Management.Automation.PSCustomObject
@@ -40,6 +50,10 @@ function Get-DMhostbyFilter {
         OR
 
         PS C:\> $hosts = Get-DMhostbyFilter -Filter Name -Keyword 'esx01'
+
+        OR
+
+        PS C:\> $hosts = Get-DMhostbyFilter -Filter Name -Keyword 'esx*'
 
     .NOTES
         Filename: Get-DMhostbyFilter.ps1
@@ -67,22 +81,29 @@ function Get-DMhostbyFilter {
     }
 
     # Map friendly property names to API field names for server-side filtering,
-    # used only to narrow the candidate set transferred from the array -- not
-    # trusted for exact matching. Confirmed live that the array's ID filter does
-    # a substring match, not exact (filter=ID:5 returned every host whose ID
-    # contains "5", e.g. 5, 15, 25, 51, 59, 150-159); NAME was confirmed exact.
-    # An exact client-side match is always applied below regardless, so a
-    # substring-matching field here only costs extra candidates, not correctness.
+    # used only to narrow the candidate set transferred from the array. The
+    # exact requested pattern is always re-verified client-side below, so an
+    # imprecise server-side narrowing only costs extra candidates, not correctness.
     $PropertyToApiField = @{
         'Id'   = 'ID'
         'Name' = 'NAME'
     }
 
     $apiField = $PropertyToApiField[$Filter]
-    if ($apiField) {
-        $resource = "host?filter=$($apiField):$([uri]::EscapeDataString($Keyword))"
+    $hasWildcard = $Keyword -match '[*?\[\]]'
+
+    if ($apiField -and -not $hasWildcard) {
+        # No wildcard: request an exact match server-side (double colon).
+        $resource = "host?filter=$($apiField)::$([uri]::EscapeDataString($Keyword))"
+    }
+    elseif ($apiField -and $Keyword -match '^\*?([^*?\[\]]+)\*?$') {
+        # Wildcard limited to a leading/trailing *: the middle is a literal
+        # substring, safe to send as a fuzzy (single colon) narrowing hint.
+        $resource = "host?filter=$($apiField):$([uri]::EscapeDataString($Matches[1]))"
     }
     else {
+        # Unmapped field, or a wildcard shape the array's fuzzy filter can't
+        # express as one substring (?, a [...] class, or a * in the middle).
         $resource = "host"
     }
 
@@ -103,10 +124,10 @@ function Get-DMhostbyFilter {
         [void]$hosts.Add($hostobj)
     }
 
-    # Always re-verify with an exact match client-side, even after a server-side
-    # filter -- the array's filter semantics vary by field (see note above) and
-    # cannot be trusted alone.
-    $hosts = @($hosts | Where-Object $Filter -EQ $Keyword)
+    # Always re-verify against the exact requested pattern client-side, even
+    # after a server-side filter. -Like enforces the full wildcard pattern when
+    # Keyword has one, and behaves as an exact match when it doesn't.
+    $hosts = @($hosts | Where-Object $Filter -Like $Keyword)
 
     # Enrich only the filtered result, not the full unfiltered list, to avoid
     # paying the per-host initiator lookup cost for hosts that don't match.
