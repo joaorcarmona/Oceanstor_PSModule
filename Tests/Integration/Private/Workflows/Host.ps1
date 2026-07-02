@@ -44,7 +44,7 @@ $script:HostMutationWorkflow = {
                 }
             }
             $createdHost = @(Invoke-MutationStep -Name 'New-DMHost' -ExpectedType 'OceanStorHost' -Action {
-                if (@(Get-DMhost -WebSession $session | Where-Object Name -EQ $testHostName).Count -gt 0) {
+                if (@(Get-DMhostbyName -WebSession $session -Name $testHostName).Count -gt 0) {
                     throw "A host named '$testHostName' already exists; refusing to claim it as test-owned."
                 }
                 New-DMHost -WebSession $session -Name $testHostName -OperatingSystem $configuration.Host.OperatingSystem `
@@ -65,7 +65,7 @@ $script:HostMutationWorkflow = {
                         -Description "Integrity validation updated $runId" -Confirm:$false
                 } | Out-Null
                 Add-MutationReadVerification -Name 'Set-DMHost:ReadBack' -ExpectedType 'OceanStorHost' -Action {
-                    $updated = @(Get-DMhost -WebSession $session | Where-Object Name -EQ $testHostName)
+                    $updated = @(Get-DMhostbyName -WebSession $session -Name $testHostName)
                     if ($updated.Count -gt 0 -and $updated[0].Description -ne "Integrity validation updated $runId") {
                         throw "Set-DMHost description mismatch: expected 'Integrity validation updated $runId', got '$($updated[0].Description)'."
                     }
@@ -73,7 +73,7 @@ $script:HostMutationWorkflow = {
                 } | Out-Null
                 $renameResult = @(Invoke-MutationStep -Name 'Rename-DMHost' -Action {
                     Assert-TestOwnedResource -Kind Host -Identity $testHostName
-                    if (@(Get-DMhost -WebSession $session | Where-Object Name -EQ $renamedHostName).Count -gt 0) {
+                    if (@(Get-DMhostbyName -WebSession $session -Name $renamedHostName).Count -gt 0) {
                         throw "A host named '$renamedHostName' already exists; refusing to overwrite it."
                     }
                     Rename-DMHost -WebSession $session -HostName $testHostName -NewName $renamedHostName -Confirm:$false
@@ -82,7 +82,7 @@ $script:HostMutationWorkflow = {
                     Update-TestOwnedResourceIdentity -Kind Host -OldIdentity $testHostName -NewIdentity $renamedHostName
                     $testHostName = $renamedHostName
                     Add-MutationReadVerification -Name 'Rename-DMHost:ReadBack' -ExpectedType 'OceanStorHost' -Action {
-                        Get-DMhost -WebSession $session | Where-Object Name -EQ $testHostName
+                        Get-DMhostbyName -WebSession $session -Name $testHostName
                     } | Out-Null
                 }
             }
