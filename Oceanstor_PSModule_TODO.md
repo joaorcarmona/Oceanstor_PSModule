@@ -16,17 +16,6 @@ Detailed audit findings live in `ANALYSIS.md`. Release-facing summaries live in 
 - [ ] Decide whether initiator objects need action methods or should remain command-only objects.
 - [ ] Decide whether network objects (LIFs, VLANs, physical ports, bonds, and vStores) should remain read-only or gain supported mutation commands.
 
-### Code Quality & Linting Compliance
-
-- [x] **Enforce Strict PascalCase/lowercase Standards**
-  - [x] Standardize keywords (`if`, `else`, `foreach`, `try`, `catch`) to lowercase.
-  - [x] Standardize logical constants (`$true`, `$false`) to lowercase across all `.psm1` and helper script files.
-### Module Integrity & UX Optimization
-
-- [x] **Enforce Explicit Export Controls**
-  - [x] Update `POSH-Oceanstor.psd1` to explicitly populate `FunctionsToExport`.
-  - [x] Shift from wildcard exports (`*`) to explicit names to improve module load time and baseline command discovery.
-
 ### Native Pipeline & Context Architecture
 
 - [ ] **Implement Complete Pipeline Support**
@@ -69,6 +58,7 @@ Detailed audit findings live in `ANALYSIS.md`. Release-facing summaries live in 
 
 ### Consistency and Maintainability
 
+- [x] ~~Enforce strict PascalCase/lowercase standards.~~ Keywords (`if`, `else`, `foreach`, `try`, `catch`) and logical constants (`$true`, `$false`) are lowercase across all `.psm1` and helper script files.
 - [x] ~~Expand unit coverage for public commands that had no direct tests.~~ `Disconnect-deviceManager`, `New-DMnfsShare`, `New-DMnfsClient`, and `Set-DMdnsServer` have dedicated tests. All 127 public commands are referenced in at least one unit test file.
 - [x] ~~Define a consistent minimum object-method surface, such as `Rename()`, `Delete()`, and relationship helpers, for mutable returned objects.~~ `Delete()` was added to all mutable classes that lacked it, including LUN, file system, host, group, mapping view, NAS share, and dTree classes. Each method is covered by the corresponding class tests.
 - [x] ~~Generate command/object inventory during CI and fail when a new public command or class is absent from maintained coverage metadata.~~ `Tests/ModuleCoverage.psd1` records all class names. `Tests/Unit/Private/ModuleInventory.Tests.ps1` cross-checks every `Public/*.ps1` file against `FunctionsToExport` and every `Private/class-*.ps1` file against `ModuleCoverage.psd1`.
