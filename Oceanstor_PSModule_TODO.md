@@ -18,10 +18,12 @@ Detailed audit findings live in `ANALYSIS.md`. Release-facing summaries live in 
 
 ### Native Pipeline & Context Architecture
 
-- [ ] **Implement Complete Pipeline Support**
-  - Add `ValueFromPipeline` and `ValueFromPipelineByPropertyName` attributes to core parameters inside targeting commands.
-  - Structure cmdlets with proper `begin {}`, `process {}`, and `end {}` blocks to prevent multi-object arrays from flattening or dropping records.
-  - Rely on pipeline processing or array-bound parameters to handle multi-object output naturally, now that endpoint nouns are singular (see Completed).
+- [ ] **Fix Multi-Object Pipeline Input (`Get-DMlun | Remove-DMLun` silently drops all but one item)**
+  - **Confirmed real, not theoretical**: zero of 127 public commands have a `begin {}`/`process {}`/`end {}` structure. Verified empirically that an advanced function with a pipeline-bound parameter but no `process {}` block only *executes its body once*, using whichever pipeline object was bound *last* — piping 3 LUNs into a command like this runs it once, silently, on the 3rd. No error, no warning.
+  - Today `WebSession` has `ValueFromPipeline`/`ValueFromPipelineByPropertyName` on **all 127** commands, but the actual identifying parameter that would make bulk pipelines useful (`LunName`, `HostName`, etc.) has it on only **8**. Fix needs both: add pipeline binding to the per-item identifying parameter for `Get-`/`Set-`/`Remove-`/`Rename-`/`Add-` families, *and* wrap each command body in `begin {}` (resolve `$session` once) / `process {}` (act on the current item) / `end {}` (only if a family needs a post-loop summary).
+  - **Design decision to make before touching code**: `WebSession` being pipeline-bound on every command conflicts with also pipeline-binding the per-item identifier — two competing pipeline-bound parameters on one command doesn't make sense. Likely resolution: drop `ValueFromPipeline` from `WebSession` (keep it as a plain bindable parameter, resolved once in `begin {}`) and make the identifying field the pipeline-bound one.
+  - **Design decision to make before touching code**: bulk-pipeline error handling — if item 3 of 10 piped LUNs fails (e.g. a REST error via `Assert-DMApiSuccess`), should the whole pipeline stop (current single-item throw semantics, extended naturally), or should `process {}` catch per-item and continue, reporting failures at the end? Different modules do this differently (compare `Remove-Item -ErrorAction Continue` semantics); pick one and apply it consistently.
+  - **Scope**: large, comparable to the REST-error-mapping refactor (68 files) — likely touches most `Get-`/`Set-`/`Remove-`/`Rename-`/`Add-` commands. Plan and scope properly (like that refactor) rather than editing files ad hoc; don't start with `Get-*` itself, since piping *into* a filter-returning `Get-` command is rarely useful — the real value is piping `Get-*` output *into* `Set-`/`Remove-`/`Rename-`/`Add-`.
 
 ### Resilient REST API Integration
 
