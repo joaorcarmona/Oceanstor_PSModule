@@ -25,9 +25,9 @@ Detailed audit findings live in `ANALYSIS.md`. Release-facing summaries live in 
 
 ### Resilient REST API Integration
 
-- [ ] **Build Active Token Lifecycle Validation**
-  - Develop a private helper function `Test-DMSession` to check whether the active Huawei DeviceManager token is close to expiry or invalid.
-  - Implement a re-authentication routine using securely cached session parameters if a token times out during an active session block.
+- [ ] **Improve the Session-Expired Error Message**
+  - Detect Huawei's known session/token-expiry error code (`1077939726`, already used as the "session expired" fixture in `Tests/Unit/Public/Get-Hosts.Tests.ps1` and `Tests/Unit/Private/Invoke-DMPagedRequest.Tests.ps1`) in the shared error-throwing paths (`Private/Select-DMResponseData.ps1`, `Private/Assert-DMApiSuccess.ps1`) and append an actionable hint ("call Connect-deviceManager again") rather than surfacing only the raw API description.
+  - Keep the lookup deliberately small and extensible — only include codes verified against this codebase's existing fixtures or real hardware, not guessed values.
 
 ### Testing, CI/CD, & Supply Chain Security
 
@@ -72,3 +72,4 @@ Detailed audit findings live in `ANALYSIS.md`. Release-facing summaries live in 
 ## Rejected
 
 - [x] ~~Build Dynamic Parameter-to-Payload Transformer.~~ **Rejected** — audited the actual `$body` construction across `New-DM*`/`Set-DM*` commands (e.g. `New-DMLun.ps1`, `New-DMFileSystem.ps1`, `New-DMHost.ps1`) and found the parameter-to-payload mapping is not mechanical: key renames don't follow PascalCase→UPPERCASE (`-LunName` → `NAME`, `-StoragePoolID` → `PARENTID`, `-EnableCache` → `ENABLE_CACHE`), most fields need value transforms (capacity→blocks, friendly enum strings → Huawei numeric codes, bool→int casts) or are hardcoded constants unrelated to any parameter (`TYPE = 21`), and `Set-*` commands rely on `$PSBoundParameters.ContainsKey(...)` gating per field for PATCH semantics. A generic reflection-driven transformer would only cover the small mechanical slice and still need per-field override logic for everything else — net more indirection, not less. Established REST-wrapping PowerShell modules (Az, PowerCLI, NetApp/Pure SDKs) don't hand-roll this either; they use SDK-generated clients or hand-write the body per command, which is what this module already does.
+- [x] ~~Build Active Token Lifecycle Validation.~~ **Rejected** — re-authentication using "securely cached session parameters" directly conflicts with a design decision this module already made: `Private/class-OceanstorSession.ps1` has a commented-out `$Credentials` field with the author's own reasoning attached ("dont want to have the credentials in memory for long time"), matching `ANALYSIS.md` finding S2 (plaintext password wiped immediately after login). Silent re-auth needs a reusable secret retained for the session's lifetime — reopening the exact exposure that decision closed — and Huawei's login flow (Basic-Auth-once-for-an-opaque-token) has no refresh-token primitive to build on the way OAuth2-based CLIs (Azure/AWS/GCP) do. The `Test-DMSession` expiry-check half is also weak on its own: the module never captures a token TTL from the login response (none is returned), so "close to expiry" means either hardcoding an undocumented, unverifiable assumed timeout or proactively pinging before every real call — an inherently racy check (TOCTOU) that duplicates what "attempt the call, handle the failure" already does. See the narrower message-quality alternative queued separately below.
