@@ -47,12 +47,6 @@ Detailed audit findings live in `ANALYSIS.md`. Release-facing summaries live in 
   - Wrap `Invoke-RestMethod` logic in unified `try`/`catch` handling.
   - Parse Huawei OceanStor-specific JSON error payloads and transform them into native PowerShell `ErrorRecord` objects with `Write-Error`.
 
-### Data Guardrails & Safety
-
-- [ ] **Build Dynamic Parameter-to-Payload Transformer**
-  - Create an internal private helper `ConvertFrom-DMParameterToPayload`.
-  - Map PascalCase PowerShell parameters such as `-LunId` into the native REST payload keys required by DeviceManager via `$PSBoundParameters`.
-
 ### Testing, CI/CD, & Supply Chain Security
 
 - [ ] **Develop Robust API Mocking**
@@ -88,3 +82,9 @@ Detailed audit findings live in `ANALYSIS.md`. Release-facing summaries live in 
 - [x] ~~Expand `ShouldProcess` on state-changing actions.~~ Done in v0.9.4: all 74 mutating public commands (`New-DM*`, `Set-DM*`, `Remove-DM*`, `Rename-DM*`, `Add-DM*`, etc.) declare `SupportsShouldProcess = $true` and call `$PSCmdlet.ShouldProcess()` before their destructive/mutation REST call, giving native `-WhatIf`/`-Confirm` support. See `RELEASE_NOTES.md` v0.9.4.
 - [x] ~~Modernize Pester configuration.~~ Already on Pester 5 idioms throughout: `Tests/Invoke-UnitTests.ps1` uses `New-PesterConfiguration`/`Invoke-Pester -Configuration`; all 48 test files use `Should -Invoke` (zero `Assert-MockCalled`/`Assert-VerifiableMock` legacy calls) and explicit `Describe`/`It` blocks, with 32 of 48 using `BeforeDiscovery` for discovery/run-phase separation.
 - [x] ~~Pin an upper Pester version bound.~~ `Tests/Invoke-UnitTests.ps1` now imports Pester with `-MinimumVersion 5.0.0 -MaximumVersion 5.99.99`, so a future Pester 6 major release can't be picked up silently and break CI on breaking-change assumptions; the ceiling must be bumped deliberately after validating against it. The GitHub Actions workflow (`.github/workflows/powershell.yml`) already installs an exact pinned version (`5.7.1`), so it's unaffected.
+
+---
+
+## Rejected
+
+- [x] ~~Build Dynamic Parameter-to-Payload Transformer.~~ **Rejected** — audited the actual `$body` construction across `New-DM*`/`Set-DM*` commands (e.g. `New-DMLun.ps1`, `New-DMFileSystem.ps1`, `New-DMHost.ps1`) and found the parameter-to-payload mapping is not mechanical: key renames don't follow PascalCase→UPPERCASE (`-LunName` → `NAME`, `-StoragePoolID` → `PARENTID`, `-EnableCache` → `ENABLE_CACHE`), most fields need value transforms (capacity→blocks, friendly enum strings → Huawei numeric codes, bool→int casts) or are hardcoded constants unrelated to any parameter (`TYPE = 21`), and `Set-*` commands rely on `$PSBoundParameters.ContainsKey(...)` gating per field for PATCH semantics. A generic reflection-driven transformer would only cover the small mechanical slice and still need per-field override logic for everything else — net more indirection, not less. Established REST-wrapping PowerShell modules (Az, PowerCLI, NetApp/Pure SDKs) don't hand-roll this either; they use SDK-generated clients or hand-write the body per command, which is what this module already does.
