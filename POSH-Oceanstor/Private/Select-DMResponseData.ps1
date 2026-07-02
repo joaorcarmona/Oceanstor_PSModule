@@ -13,7 +13,7 @@ function Select-DMResponseData {
         if ($null -eq $Response) { return }
         $errorProp = $Response.PSObject.Properties['error']
         if ($null -ne $errorProp -and $errorProp.Value.Code -ne 0) {
-            throw "OceanStor API error $($errorProp.Value.Code): $($errorProp.Value.description)"
+            throw (Get-DMApiErrorMessage -Code $errorProp.Value.Code -Description $errorProp.Value.description)
         }
         return $Response.data
     }

@@ -54,7 +54,7 @@ function Invoke-DMPagedRequest {
                     return $fallbackPage
                 }
             }
-            throw "OceanStor API error $($errorProperty.Value.Code) for resource '$pagedResource': $($errorProperty.Value.description)"
+            throw (Get-DMApiErrorMessage -Code $errorProperty.Value.Code -Description $errorProperty.Value.description -ResourceContext $pagedResource)
         }
         $dataProperty = if ($null -ne $response) { $response.PSObject.Properties['data'] } else { $null }
         $page = if ($null -ne $dataProperty) { @($dataProperty.Value) } else { @() }

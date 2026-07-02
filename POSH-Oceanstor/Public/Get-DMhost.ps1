@@ -64,7 +64,7 @@ function Get-DMhost {
     $queryResult = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource $resource
     $errorProperty = if ($null -ne $queryResult) { $queryResult.PSObject.Properties['error'] } else { $null }
     if ($null -ne $errorProperty -and $errorProperty.Value.Code -ne 0) {
-        throw "OceanStor API error $($errorProperty.Value.Code) retrieving hosts: $($errorProperty.Value.description)"
+        throw (Get-DMApiErrorMessage -Code $errorProperty.Value.Code -Description $errorProperty.Value.description -ResourceContext $resource)
     }
     $response = $queryResult.data
     $hosts = New-Object System.Collections.ArrayList

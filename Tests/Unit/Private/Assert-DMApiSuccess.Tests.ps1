@@ -1,4 +1,5 @@
 BeforeAll {
+    . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\Get-DMApiErrorMessage.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\Assert-DMApiSuccess.ps1"
 }
 
@@ -68,5 +69,14 @@ Describe 'Assert-DMApiSuccess' {
         }
 
         { Assert-DMApiSuccess -Response $response } | Should -Throw '*OceanStor API error 5: not found*'
+    }
+
+    It 'includes the session-expiry hint for a mutation command hitting the known code' {
+        $response = [pscustomobject]@{
+            error = [pscustomobject]@{ Code = 1077939726; description = 'session expired' }
+        }
+
+        { Assert-DMApiSuccess -Response $response } |
+            Should -Throw '*1077939726*session expired*call Connect-deviceManager again*'
     }
 }

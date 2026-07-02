@@ -6,6 +6,7 @@ BeforeDiscovery {
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Get-DMparsedElabel.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Set-DMHostInitiator.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Get-DMApiErrorMessage.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Select-DMResponseData.ps1"
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
@@ -69,7 +70,8 @@ Describe 'Public getter functions' {
                 [pscustomobject]@{ error = [pscustomobject]@{ Code = 1077939726; description = 'session expired' } }
             }
 
-            { Get-DMhost -WebSession $script:session } | Should -Throw '*1077939726*session expired*'
+            { Get-DMhost -WebSession $script:session } |
+                Should -Throw '*1077939726*session expired*call Connect-deviceManager again*'
         }
 
         It 'gets hosts by id through the filtered endpoint' {

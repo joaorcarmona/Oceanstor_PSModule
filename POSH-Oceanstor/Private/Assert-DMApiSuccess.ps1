@@ -22,7 +22,7 @@ function Assert-DMApiSuccess {
         if ($null -eq $Response) { return $Response }
         $errorProp = $Response.PSObject.Properties['error']
         if ($null -ne $errorProp -and $errorProp.Value.Code -ne 0) {
-            $exception = [System.Exception]::new("OceanStor API error $($errorProp.Value.Code): $($errorProp.Value.description)")
+            $exception = [System.Exception]::new((Get-DMApiErrorMessage -Code $errorProp.Value.Code -Description $errorProp.Value.description))
             $errorRecord = [System.Management.Automation.ErrorRecord]::new(
                 $exception, 'OceanStorApiError', [System.Management.Automation.ErrorCategory]::InvalidOperation, $Response
             )

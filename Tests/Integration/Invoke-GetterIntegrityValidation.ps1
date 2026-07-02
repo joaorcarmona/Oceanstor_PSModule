@@ -36,6 +36,7 @@ $validationModule = New-Module -Name OceanstorLiveGetterValidation -ArgumentList
     foreach ($privateHelper in @(
         'Assert-DMApiSuccess.ps1',
         'ConvertTo-DMCapacityBlock.ps1',
+        'Get-DMApiErrorMessage.ps1',
         'Get-DMparsedElabel.ps1',
         'Get-DMPortGroupCandidate.ps1',
         'Invoke-DeviceManager.ps1',

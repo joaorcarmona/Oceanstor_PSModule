@@ -21,6 +21,7 @@ BeforeDiscovery {
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorNFSShare.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorNFSclient.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Disconnect-deviceManager.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Get-DMApiErrorMessage.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Assert-DMApiSuccess.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\New-DMnfsShare.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\New-DMnfsClient.ps1"

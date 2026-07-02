@@ -7,6 +7,7 @@ BeforeAll {
         )
     }
 
+    . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\Get-DMApiErrorMessage.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\Invoke-DMPagedRequest.ps1"
 }
 
