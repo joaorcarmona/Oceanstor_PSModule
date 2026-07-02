@@ -23,6 +23,13 @@ Detailed audit findings live in `ANALYSIS.md`. Release-facing summaries live in 
   - Structure cmdlets with proper `begin {}`, `process {}`, and `end {}` blocks to prevent multi-object arrays from flattening or dropping records.
   - Rely on pipeline processing or array-bound parameters to handle multi-object output naturally, now that endpoint nouns are singular (see Completed).
 
+### Resilient REST API Integration
+
+- [ ] **Audit `Get-DM*` Commands for Missing Pagination**
+  - Only `Get-DMlun`, `Get-DMFileSystem`, and `Get-DMLunSnapshot` use `Private/Invoke-DMPagedRequest.ps1`; confirmed via a live 1000+ LUN test that this pagination path had two real bugs (wrong range separator, off-by-one end boundary — both fixed and confirmed against `OceanStor Dorado 6.1.6 REST Interface Reference.md`, which documents `range=[start-end]` with an **exclusive** end index and recommends querying a maximum of 150 records per unpaged request).
+  - The other ~35 list-returning `Get-DM*` commands (`Get-DMhost`, `Get-DMnfsFileClient`, `Get-DMShare`, `Get-DMPortGroup`, `Get-DMdisk`, `Get-DMHostInitiator`, etc.) call `Invoke-DeviceManager` directly for a single unpaged request and have never been tested past ~150 records — each is a candidate for the same silent-truncation failure mode (no error, just an incomplete list) that pagination exists to prevent.
+  - Bulk-create test data for a few more resource types (hosts, NFS clients, port groups) to check whether their unpaged responses actually truncate on this array before deciding scope: this may be an isolated LUN/FileSystem/Snapshot-family quirk, or evidence of a module-wide gap needing `Invoke-DMPagedRequest` added more broadly.
+
 ### Testing, CI/CD, & Supply Chain Security
 
 - [ ] **Develop Robust API Mocking**
