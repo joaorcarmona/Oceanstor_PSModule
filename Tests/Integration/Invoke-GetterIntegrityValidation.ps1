@@ -34,6 +34,7 @@ $validationModule = New-Module -Name OceanstorLiveGetterValidation -ArgumentList
         ForEach-Object { . $_.FullName }
 
     foreach ($privateHelper in @(
+        'Assert-DMApiSuccess.ps1',
         'ConvertTo-DMCapacityBlock.ps1',
         'Get-DMparsedElabel.ps1',
         'Get-DMPortGroupCandidate.ps1',
