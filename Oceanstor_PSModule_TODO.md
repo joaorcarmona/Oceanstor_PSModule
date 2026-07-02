@@ -27,9 +27,9 @@ Detailed audit findings live in `ANALYSIS.md`. Release-facing summaries live in 
 
 ### Module Integrity & UX Optimization
 
-- [ ] **Enforce Explicit Export Controls**
-  - Update `POSH-Oceanstor.psd1` to explicitly populate `FunctionsToExport`.
-  - Shift from wildcard exports (`*`) to explicit names to improve module load time and baseline command discovery.
+- [x] **Enforce Explicit Export Controls**
+  - [x] Update `POSH-Oceanstor.psd1` to explicitly populate `FunctionsToExport`.
+  - [x] Shift from wildcard exports (`*`) to explicit names to improve module load time and baseline command discovery.
 - [ ] **Standardize Noun Cardinality**
   - Refactor public endpoint nouns from plural to singular where needed, for example `Get-DMLuns` to `Get-DMLun`.
   - Rely on pipeline processing or array-bound parameters to handle multi-object output naturally.
@@ -94,3 +94,4 @@ Detailed audit findings live in `ANALYSIS.md`. Release-facing summaries live in 
 - [x] ~~Expand unit coverage for public commands that had no direct tests.~~ `Disconnect-deviceManager`, `New-DMnfsShare`, `New-DMnfsClient`, and `Set-DMdnsServer` have dedicated tests. All 127 public commands are referenced in at least one unit test file.
 - [x] ~~Define a consistent minimum object-method surface, such as `Rename()`, `Delete()`, and relationship helpers, for mutable returned objects.~~ `Delete()` was added to all mutable classes that lacked it, including LUN, file system, host, group, mapping view, NAS share, and dTree classes. Each method is covered by the corresponding class tests.
 - [x] ~~Generate command/object inventory during CI and fail when a new public command or class is absent from maintained coverage metadata.~~ `Tests/ModuleCoverage.psd1` records all class names. `Tests/Unit/Private/ModuleInventory.Tests.ps1` cross-checks every `Public/*.ps1` file against `FunctionsToExport` and every `Private/class-*.ps1` file against `ModuleCoverage.psd1`.
+- [x] ~~Enforce explicit export controls.~~ `POSH-Oceanstor.psd1` explicitly lists all 127 public commands in `FunctionsToExport`; the list matches `POSH-Oceanstor/Public/*.ps1`, and `Test-ModuleManifest` validates the manifest.
