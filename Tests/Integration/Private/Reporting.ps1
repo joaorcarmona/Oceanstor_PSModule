@@ -1,3 +1,105 @@
+function Format-ValidationDuration {
+    param([double]$Milliseconds)
+
+    if ($Milliseconds -ge 1000) {
+        return "{0:N2} s" -f ($Milliseconds / 1000)
+    }
+    return "{0:N0} ms" -f $Milliseconds
+}
+
+function ConvertTo-MarkdownTableCell {
+    param([string]$Value)
+
+    if ([string]::IsNullOrEmpty($Value)) {
+        return ''
+    }
+    ($Value -replace '\|', '\|') -replace '\r?\n', ' '
+}
+
+function Write-ValidationMarkdownReport {
+    param(
+        [Parameter(Mandatory)]
+        [pscustomobject]$Report,
+
+        [Parameter(Mandatory)]
+        [string]$Path
+    )
+
+    $lines = [System.Collections.Generic.List[string]]::new()
+    $runAtLocal = ([datetime]$Report.RunAt).ToLocalTime()
+
+    $lines.Add('# OceanStor Integration Validation Report')
+    $lines.Add('')
+    $lines.Add("- **Hostname:** $($Report.Hostname)")
+    $lines.Add("- **Run at:** $($runAtLocal.ToString('yyyy-MM-dd HH:mm:ss')) (local)")
+    $lines.Add("- **Duration:** $(Format-ValidationDuration $Report.DurationMs)")
+    $lines.Add("- **Mode:** $($Report.Mode)")
+    $lines.Add("- **Run ID:** $($Report.RunId)")
+    $lines.Add('')
+    $lines.Add('## Summary')
+    $lines.Add('')
+    $lines.Add('| Passed | NoData | Skipped | Blocked | Failed |')
+    $lines.Add('|---|---|---|---|---|')
+    $lines.Add("| $($Report.Passed) | $($Report.NoData) | $($Report.Skipped) | $($Report.Blocked) | $($Report.Failed) |")
+    $lines.Add('')
+
+    $failedChecks = @($Report.Checks | Where-Object Status -in @('Failed', 'UnexpectedType'))
+    if ($failedChecks.Count -gt 0) {
+        $lines.Add('## Failures')
+        $lines.Add('')
+        $lines.Add('| Category | Check | Status | Error |')
+        $lines.Add('|---|---|---|---|')
+        foreach ($check in $failedChecks) {
+            $lines.Add("| $($check.Category) | $($check.Name) | $($check.Status) | $(ConvertTo-MarkdownTableCell $check.Error) |")
+        }
+        $lines.Add('')
+    }
+
+    if ($Report.RemainingTestOwnedResources.Count -gt 0) {
+        $lines.Add('## Remaining Test-Owned Resources')
+        $lines.Add('')
+        $lines.Add('These resources were created by this run and were not cleaned up:')
+        $lines.Add('')
+        foreach ($resource in $Report.RemainingTestOwnedResources) {
+            $lines.Add("- $resource")
+        }
+        $lines.Add('')
+    }
+
+    if ($Report.ExcludedCommands.Count -gt 0) {
+        $lines.Add('## Excluded Commands')
+        $lines.Add('')
+        $lines.Add(($Report.ExcludedCommands -join ', '))
+        $lines.Add('')
+    }
+
+    $lines.Add('## Checks')
+    $lines.Add('')
+
+    $categoryOrder = @('Session', 'Read', 'Mutation', 'MutationRead')
+    $groupedChecks = @($Report.Checks | Group-Object Category)
+    $orderedGroups = @(
+        foreach ($category in $categoryOrder) {
+            $groupedChecks | Where-Object Name -eq $category
+        }
+        $groupedChecks | Where-Object { $categoryOrder -notcontains $_.Name }
+    )
+
+    foreach ($group in $orderedGroups) {
+        $lines.Add("### $($group.Name)")
+        $lines.Add('')
+        $lines.Add('| Check | Status | Duration | Count | Type | Error |')
+        $lines.Add('|---|---|---|---|---|---|')
+        foreach ($check in $group.Group) {
+            $type = if ($check.ActualTypes) { $check.ActualTypes -join ', ' } else { '' }
+            $lines.Add("| $($check.Name) | $($check.Status) | $(Format-ValidationDuration $check.DurationMs) | $($check.Count) | $(ConvertTo-MarkdownTableCell $type) | $(ConvertTo-MarkdownTableCell $check.Error) |")
+        }
+        $lines.Add('')
+    }
+
+    $lines | Set-Content -LiteralPath $Path
+}
+
 function Write-ValidationReport {
     $representedCommands = @(
         $checks.Name |
@@ -61,6 +163,7 @@ function Write-ValidationReport {
     }
 
     $report | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $ReportPath
+    Write-ValidationMarkdownReport -Report $report -Path $MarkdownReportPath
     $report | Format-List Hostname, RunAt, DurationMs, Mode, RunId, Passed, NoData, Skipped, Blocked, Failed, MutationLogPath, TracedMutationRequests, ExcludedCommands, RemainingTestOwnedResources
     $checks | Format-Table Category, Name, Status, DurationMs, Count, ExpectedType, ActualTypes, Error -AutoSize
 }

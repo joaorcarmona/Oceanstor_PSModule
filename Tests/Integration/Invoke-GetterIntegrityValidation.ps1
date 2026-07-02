@@ -9,6 +9,8 @@ param(
 
     [string]$ReportPath = (Join-Path $PSScriptRoot 'getter-integrity-last-result.json'),
 
+    [string]$MarkdownReportPath = (Join-Path $PSScriptRoot 'getter-integrity-last-result.md'),
+
     [string]$MutationLogPath = (Join-Path $PSScriptRoot 'mutation-trace-last-result.json'),
 
     [string]$ConfigurationPath = (Join-Path $PSScriptRoot 'IntegrityValidationConfig.psd1'),

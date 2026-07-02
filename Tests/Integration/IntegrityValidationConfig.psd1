@@ -9,6 +9,10 @@
 #
 # Hide the interactive progress display with -NoProgress when redirecting output.
 #
+# Every run writes a machine-readable report to ./getter-integrity-last-result.json
+# and a human-readable Markdown summary to ./getter-integrity-last-result.md
+# (override with -ReportPath / -MarkdownReportPath).
+#
 # Mutation runs write REST request/response diagnostics to
 #   ./mutation-trace-last-result.json
 # Override the output location with -MutationLogPath when retaining multiple runs.
