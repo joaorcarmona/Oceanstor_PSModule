@@ -91,8 +91,8 @@ Describe 'Invoke-DMPagedRequest' {
 
         Invoke-DMPagedRequest -WebSession $script:session -Resource 'lun' -PageSize 100
 
-        $global:PagedCalls[0] | Should -Be 'lun?range=[0-99]'
-        $global:PagedCalls[1] | Should -Be 'lun?range=[100-199]'
+        $global:PagedCalls[0] | Should -Be 'lun?range=[0-100]'
+        $global:PagedCalls[1] | Should -Be 'lun?range=[100-200]'
     }
 
     It 'returns an empty array when the collection is empty' {
@@ -130,7 +130,7 @@ Describe 'Invoke-DMPagedRequest' {
         $result = Invoke-DMPagedRequest -WebSession $script:session -Resource 'lun' -WarningVariable fallbackWarning -WarningAction SilentlyContinue
 
         $result.Count | Should -Be 1
-        $global:PagedCalls[0] | Should -Be 'lun?range=[0-99]'
+        $global:PagedCalls[0] | Should -Be 'lun?range=[0-100]'
         $global:PagedCalls[1] | Should -Be 'lun'
         $fallbackWarning | Should -Not -BeNullOrEmpty
         [string]$fallbackWarning | Should -Match "rejected the range parameter"

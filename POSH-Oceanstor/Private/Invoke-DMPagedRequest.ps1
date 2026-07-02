@@ -8,6 +8,10 @@ function Invoke-DMPagedRequest {
         until the API returns fewer results than the requested page size, indicating the last
         page has been reached. Returns the combined raw data array from all pages.
 
+        The end boundary is exclusive (confirmed against a live array: range=[0-99] with
+        PageSize 100 returned exactly 99 records, not 100), so each page requests
+        [start, start+PageSize) rather than a closed [start, start+PageSize-1] interval.
+
         The OceanStor API returns at most PageSize objects per request when no range is
         specified, silently truncating larger collections. This helper ensures every object
         in a collection is retrieved regardless of size.
@@ -45,7 +49,7 @@ function Invoke-DMPagedRequest {
     $separator = if ($Resource -match '\?') { '&' } else { '?' }
 
     do {
-        $end = $start + $PageSize - 1
+        $end = $start + $PageSize
         $pagedResource = "${Resource}${separator}range=[$start-$end]"
 
         $response = Invoke-DeviceManager -WebSession $WebSession -Method 'GET' -Resource $pagedResource
