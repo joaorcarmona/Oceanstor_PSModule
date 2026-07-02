@@ -3,6 +3,8 @@ param(
     [Parameter(Mandatory)]
     [string]$Hostname,
 
+    [pscredential]$Credential,
+
     [switch]$SkipCertificateCheck,
 
     [string]$ReportPath = (Join-Path $PSScriptRoot 'getter-integrity-last-result.json'),
@@ -99,10 +101,16 @@ foreach ($kind in @('Lun', 'LunSnapshot', 'LunGroup', 'ProtectionGroup', 'Snapsh
 . (Join-Path $PSScriptRoot 'Private\Reporting.ps1')
 
 try {
-    Write-Host "A credential prompt will open for validation of $Hostname. No credentials are read from or written to the configuration file."
     Write-ValidationProgress -Name 'Connect-deviceManager' -Category 'Session'
     $connectionStartedAt = Get-Date
-    $session = Connect-deviceManager -Hostname $Hostname -PassThru -Secure -SkipCertificateCheck:$SkipCertificateCheck
+    if ($Credential) {
+        Write-Host "Connecting to $Hostname using the supplied -Credential. No credentials are read from or written to the configuration file."
+        $session = Connect-deviceManager -Hostname $Hostname -PassThru -Credential $Credential -SkipCertificateCheck:$SkipCertificateCheck
+    }
+    else {
+        Write-Host "A credential prompt will open for validation of $Hostname. No credentials are read from or written to the configuration file."
+        $session = Connect-deviceManager -Hostname $Hostname -PassThru -Secure -SkipCertificateCheck:$SkipCertificateCheck
+    }
     $connectionDurationMs = [math]::Round(((Get-Date) - $connectionStartedAt).TotalMilliseconds, 2)
     $checks.Add([pscustomobject]@{
         Name         = 'Connect-deviceManager'

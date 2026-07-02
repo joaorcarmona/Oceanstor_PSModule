@@ -2,7 +2,7 @@ BeforeDiscovery {
     $script:groupMembershipModule = New-Module -Name GroupMembershipTestModule -ArgumentList $PSScriptRoot -ScriptBlock {
         param($testRoot)
 
-        function Get-DMhost { param([pscustomobject]$WebSession) }
+        function Get-DMhostbyName { param([pscustomobject]$WebSession, [string]$Name) }
         function Get-DMhostGroup { param([pscustomobject]$WebSession) }
         function Get-DMhostbyHostGroupId { param([pscustomobject]$WebSession, [string]$HostGroupId) }
         function Get-DMlun { param([pscustomobject]$WebSession) }
@@ -37,7 +37,7 @@ InModuleScope GroupMembershipTestModule {
 Describe 'Host group membership commands' {
     BeforeEach {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
-        Mock Get-DMhost { @([pscustomobject]@{ Id = 'host-01'; Name = 'server01' }) }
+        Mock Get-DMhostbyName { @([pscustomobject]@{ Id = 'host-01'; Name = 'server01' } | Where-Object Name -EQ $Name) }
         Mock Get-DMhostGroup { @([pscustomobject]@{ Id = 'hg-01'; Name = 'cluster01' }) }
         Mock Get-DMhostbyHostGroupId { @([pscustomobject]@{ Id = 'host-01'; Name = 'server01' }) }
         Mock Invoke-DeviceManager {

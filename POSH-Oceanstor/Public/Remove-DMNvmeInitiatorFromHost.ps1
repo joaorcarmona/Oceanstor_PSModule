@@ -50,15 +50,14 @@ function Remove-DMNvmeInitiatorFromHost {
                 else {
                     $script:CurrentOceanstorSession
                 }
-                $hosts = @(Get-DMhost -WebSession $session)
-                $matchingItems = @($hosts | Where-Object Name -EQ $candidate)
+                $matchingItems = @(Get-DMhostbyName -WebSession $session -Name $candidate)
                 if ($matchingItems.Count -eq 1) {
                     return $true
                 }
                 if ($matchingItems.Count -gt 1) {
                     throw "HostName is ambiguous because more than one host is named '$candidate'."
                 }
-                throw "Invalid HostName. Valid values are: $($hosts.Name -join ', ')"
+                throw "Invalid HostName '$candidate'. No host with that name exists."
             })]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
@@ -82,7 +81,7 @@ function Remove-DMNvmeInitiatorFromHost {
                     $script:CurrentOceanstorSession
                 }
                 $selectedHostName = [string]$HostName
-                $hostObject = @(Get-DMhost -WebSession $session | Where-Object Name -EQ $selectedHostName)[0]
+                $hostObject = @(Get-DMhostbyName -WebSession $session -Name $selectedHostName)[0]
                 $resource = "NVMe_over_RoCE_initiator/associate?ASSOCIATEOBJTYPE=21&ASSOCIATEOBJID=$($hostObject.Id)"
                 $initiators = @((Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource $resource).data)
                 if ($initiators.ID -contains $candidate) {
@@ -114,7 +113,7 @@ function Remove-DMNvmeInitiatorFromHost {
     else {
         $script:CurrentOceanstorSession
     }
-    $hostObject = @(Get-DMhost -WebSession $session | Where-Object Name -EQ $HostName)[0]
+    $hostObject = @(Get-DMhostbyName -WebSession $session -Name $HostName)[0]
     if ($null -eq $hostObject) { throw "Could not resolve 'hostObject' — the object may have been removed since parameter validation." }
     $body = @{
         ID               = $hostObject.Id

@@ -2,7 +2,7 @@ BeforeDiscovery {
     $script:testModule = New-Module -Name AddDMHostToHostGroupTestModule -ArgumentList $PSScriptRoot -ScriptBlock {
         param($testRoot)
 
-        function Get-DMhost      { param([pscustomobject]$WebSession) }
+        function Get-DMhostbyName { param([pscustomobject]$WebSession, [string]$Name) }
         function Get-DMhostGroup { param([pscustomobject]$WebSession) }
         function Invoke-DeviceManager {
             param([pscustomobject]$WebSession, [string]$Method, [string]$Resource, [hashtable]$BodyData)
@@ -25,8 +25,8 @@ InModuleScope AddDMHostToHostGroupTestModule {
 Describe 'Add-DMHostToHostGroup' {
     BeforeEach {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
-        Mock Get-DMhost {
-            @([pscustomobject]@{ Id = 'host-01'; Name = 'web-host' })
+        Mock Get-DMhostbyName {
+            @([pscustomobject]@{ Id = 'host-01'; Name = 'web-host' } | Where-Object Name -EQ $Name)
         }
         Mock Get-DMhostGroup {
             @([pscustomobject]@{ Id = 'grp-01'; Name = 'prod-group' })
@@ -46,10 +46,10 @@ Describe 'Add-DMHostToHostGroup' {
         }
     }
 
-    It 'calls Get-DMhost only once per invocation (no redundant API round-trip)' {
+    It 'calls Get-DMhostbyName only once per invocation (no redundant API round-trip)' {
         $null = Add-DMHostToHostGroup -WebSession $script:session -HostName 'web-host' -HostGroupName 'prod-group' -Confirm:$false
 
-        Should -Invoke Get-DMhost -Times 1 -Exactly
+        Should -Invoke Get-DMhostbyName -Times 1 -Exactly
     }
 
     It 'calls Get-DMhostGroup only once per invocation (no redundant API round-trip)' {

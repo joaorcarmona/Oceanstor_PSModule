@@ -50,15 +50,14 @@ function Add-DMHostToHostGroup {
                 else {
                     $script:CurrentOceanstorSession
                 }
-                $script:_dmAddHostHosts = @(Get-DMhost -WebSession $session)
-                $matchingItems = @($script:_dmAddHostHosts | Where-Object Name -EQ $candidate)
-                if ($matchingItems.Count -eq 1) {
+                $script:_dmAddHostHosts = @(Get-DMhostbyName -WebSession $session -Name $candidate)
+                if ($script:_dmAddHostHosts.Count -eq 1) {
                     return $true
                 }
-                if ($matchingItems.Count -gt 1) {
+                if ($script:_dmAddHostHosts.Count -gt 1) {
                     throw "HostName is ambiguous because more than one host is named '$candidate'."
                 }
-                throw "Invalid HostName. Valid values are: $($script:_dmAddHostHosts.Name -join ', ')"
+                throw "Invalid HostName '$candidate'. No host with that name exists."
             })]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)

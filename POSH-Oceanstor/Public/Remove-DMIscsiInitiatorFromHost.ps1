@@ -50,15 +50,14 @@ function Remove-DMIscsiInitiatorFromHost {
                 else {
                     $script:CurrentOceanstorSession
                 }
-                $hosts = @(Get-DMhost -WebSession $session)
-                $matchingItems = @($hosts | Where-Object Name -EQ $candidate)
+                $matchingItems = @(Get-DMhostbyName -WebSession $session -Name $candidate)
                 if ($matchingItems.Count -eq 1) {
                     return $true
                 }
                 if ($matchingItems.Count -gt 1) {
                     throw "HostName is ambiguous because more than one host is named '$candidate'."
                 }
-                throw "Invalid HostName. Valid values are: $($hosts.Name -join ', ')"
+                throw "Invalid HostName '$candidate'. No host with that name exists."
             })]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
@@ -82,7 +81,7 @@ function Remove-DMIscsiInitiatorFromHost {
                     $script:CurrentOceanstorSession
                 }
                 $selectedHostName = [string]$HostName
-                $hostObject = @(Get-DMhost -WebSession $session | Where-Object Name -EQ $selectedHostName)[0]
+                $hostObject = @(Get-DMhostbyName -WebSession $session -Name $selectedHostName)[0]
                 $initiators = @(Get-DMHostInitiator -WebSession $session -InitiatorType ISCSI -HostId $hostObject.Id)
                 if ($initiators.Id -contains $candidate) {
                     return $true

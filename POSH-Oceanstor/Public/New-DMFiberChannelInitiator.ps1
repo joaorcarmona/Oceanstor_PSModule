@@ -81,15 +81,14 @@ function New-DMFiberChannelInitiator {
                 else {
                     $script:CurrentOceanstorSession
                 }
-                $hosts = @(Get-DMhost -WebSession $session)
-                $matchingItems = @($hosts | Where-Object Name -EQ $candidate)
+                $matchingItems = @(Get-DMhostbyName -WebSession $session -Name $candidate)
                 if ($matchingItems.Count -eq 1) {
                     return $true
                 }
                 if ($matchingItems.Count -gt 1) {
                     throw "HostName is ambiguous because more than one host is named '$candidate'."
                 }
-                throw "Invalid HostName. Valid values are: $($hosts.Name -join ', ')"
+                throw "Invalid HostName '$candidate'. No host with that name exists."
             })]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
@@ -132,7 +131,7 @@ function New-DMFiberChannelInitiator {
         $body.NAME = $Name
     }
     if ($HostName) {
-        $hostObject = @(Get-DMhost -WebSession $session | Where-Object Name -EQ $HostName)[0]
+        $hostObject = @(Get-DMhostbyName -WebSession $session -Name $HostName)[0]
         if ($null -eq $hostObject) { throw "Could not resolve 'hostObject' — the object may have been removed since parameter validation." }
         $body.PARENTTYPE = 21
         $body.PARENTID = $hostObject.Id
