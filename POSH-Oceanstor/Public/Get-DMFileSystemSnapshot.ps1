@@ -103,7 +103,11 @@ function Get-DMFileSystemSnapshot {
     }
 
     if (@($response).Count -eq 0) {
-        $listResult = Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource "fssnapshot?filter=PARENTID:$($fileSystem.Id)"
+        # Double colon requests an exact match; a single colon is a fuzzy substring
+        # match on this API (confirmed live for hosts: filter=ID:5 matched every ID
+        # containing "5"), which would leak snapshots from other file systems whose
+        # Id happens to contain this one's Id as a substring.
+        $listResult = Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource "fssnapshot?filter=PARENTID::$($fileSystem.Id)"
         $response = if ($null -ne $listResult -and $null -ne $listResult.data) { @($listResult.data) } else { @() }
         if (@($response).Count -eq 0) {
             $listResult = Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource "fssnapshot?PARENTID=$($fileSystem.Id)"
@@ -117,7 +121,8 @@ function Get-DMFileSystemSnapshot {
 
     foreach ($snapshotData in @($response)) {
         $snapshot = [OceanstorFileSystemSnapshot]::new($snapshotData, $session)
-        if (-not $SnapshotName -or $snapshot.Name -eq $SnapshotName) {
+        $belongsToFileSystem = $snapshot.'Source File System Id' -eq $fileSystem.Id
+        if ($belongsToFileSystem -and (-not $SnapshotName -or $snapshot.Name -eq $SnapshotName)) {
             $snapshot | Add-Member MemberSet PSStandardMembers $standardMembers -Force
             [void]$snapshots.Add($snapshot)
         }

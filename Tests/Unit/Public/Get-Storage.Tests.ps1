@@ -153,7 +153,7 @@ Describe 'Public getter functions' {
 
                 switch -Wildcard ($Resource) {
                     'lun*' { [pscustomobject]@{ data = @(New-TestLun) } }
-                    'snapshot?filter=SOURCELUNID:lun-01*' {
+                    'snapshot?filter=SOURCELUNID::lun-01*' {
                         $script:snapshotFilterResource = $Resource
                         [pscustomobject]@{ data = @(New-TestLunSnapshot) }
                     }
@@ -164,7 +164,7 @@ Describe 'Public getter functions' {
             $result = Get-DMLunSnapshot -WebSession $script:session -LunName 'data-lun'
 
             $result[0].Id | Should -Be 'snap-01'
-            $script:snapshotFilterResource | Should -BeLike 'snapshot?filter=SOURCELUNID:lun-01*'
+            $script:snapshotFilterResource | Should -BeLike 'snapshot?filter=SOURCELUNID::lun-01*'
         }
 
         It 'rejects an invalid source LUN name for snapshot filtering' {
@@ -177,7 +177,7 @@ Describe 'Public getter functions' {
                 Should -Throw '*Invalid LunName*'
         }
 
-        It 'gets LUNs by filter using server-side query for known fields' {
+        It 'gets LUNs by filter using an exact server-side query for known fields' {
             Mock Invoke-DeviceManager {
                 param($WebSession, $Method, $Resource)
                 $script:filterResource = $Resource
@@ -187,10 +187,27 @@ Describe 'Public getter functions' {
             $result = (Get-DMLunsbyFilter -WebSession $script:session -Filter Name -Keyword finance)[0]
 
             $result.Id | Should -Be 'lun-01'
-            $script:filterResource | Should -Be 'lun?filter=NAME:finance'
+            $script:filterResource | Should -Be 'lun?filter=NAME::finance'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
                 Should -Be @('Id', 'Name', 'Health Status', 'Lun Size', 'WWN')
             $result.'Allocation Type' | Should -Be 'Thin'
+        }
+
+        It 'gets LUNs by filter using a fuzzy server-side hint for a wildcard keyword' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                $script:filterResource = $Resource
+                if ($Resource -eq 'lun?filter=NAME:fin') {
+                    return [pscustomobject]@{ data = @(New-TestLun -Id 'lun-01' -Name 'finance') }
+                }
+                [pscustomobject]@{ data = @() }
+            }
+
+            $result = @(Get-DMLunsbyFilter -WebSession $script:session -Filter Name -Keyword 'fin*')
+
+            $result.Count | Should -Be 1
+            $result[0].Id | Should -Be 'lun-01'
+            $script:filterResource | Should -Be 'lun?filter=NAME:fin'
         }
 
         It 'gets LUNs by filter using client-side exact match for unmapped properties' {

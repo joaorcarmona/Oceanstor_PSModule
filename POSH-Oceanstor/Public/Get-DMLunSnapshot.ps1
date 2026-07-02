@@ -103,7 +103,11 @@ function Get-DMLunSnapshot {
     if ($LunName) {
         $sourceLun = @(Get-DMlun -WebSession $session | Where-Object Name -EQ $LunName)[0]
         if ($null -eq $sourceLun) { throw "Could not resolve 'sourceLun' — the object may have been removed since parameter validation." }
-        $resource = "snapshot?filter=SOURCELUNID:$($sourceLun.Id)"
+        # Double colon requests an exact match; a single colon is a fuzzy substring
+        # match on this API (confirmed live for hosts: filter=ID:5 matched every ID
+        # containing "5"), which would leak snapshots from other LUNs whose Id
+        # happens to contain this one's Id as a substring.
+        $resource = "snapshot?filter=SOURCELUNID::$($sourceLun.Id)"
     }
 
     $response = Invoke-DMPagedRequest -WebSession $session -Resource $resource
@@ -111,6 +115,9 @@ function Get-DMLunSnapshot {
 
     foreach ($snapshotData in @($response)) {
         $snapshot = [OceanstorLunSnapshot]::new($snapshotData, $session)
+        if ($LunName -and $snapshot.'Source Lun Id' -ne $sourceLun.Id) {
+            continue
+        }
         $snapshot | Add-Member MemberSet PSStandardMembers $standardMembers -Force
         [void]$snapshots.Add($snapshot)
     }

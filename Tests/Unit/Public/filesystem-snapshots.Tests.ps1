@@ -90,7 +90,7 @@ Describe 'File-system snapshot commands' {
         $result[0].PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
             Should -Be @('Id', 'Name', 'Source File System Name', 'Health Status', 'Snapshot Type', 'Timestamp')
         $script:method | Should -Be 'GET'
-        $script:resource | Should -Be 'fssnapshot?filter=PARENTID:5'
+        $script:resource | Should -Be 'fssnapshot?filter=PARENTID::5'
     }
 
     It 'gets a named file-system snapshot directly by its composite ID' {
@@ -122,7 +122,7 @@ Describe 'File-system snapshot commands' {
         Mock Invoke-DeviceManager {
             $script:requestedResources.Add($Resource)
             switch ($Resource) {
-                'fssnapshot?filter=PARENTID:5' {
+                'fssnapshot?filter=PARENTID::5' {
                     [pscustomobject]@{ data = @() }
                     break
                 }
@@ -139,7 +139,7 @@ Describe 'File-system snapshot commands' {
 
         $result.Count | Should -Be 1
         $result[0].Name | Should -Be 'checkpoint'
-        $script:requestedResources[0] | Should -Be 'fssnapshot?filter=PARENTID:5'
+        $script:requestedResources[0] | Should -Be 'fssnapshot?filter=PARENTID::5'
         $script:requestedResources[1] | Should -Be 'fssnapshot?PARENTID=5'
     }
 
