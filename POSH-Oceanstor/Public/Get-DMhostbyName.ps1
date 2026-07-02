@@ -44,39 +44,7 @@ function Get-DMhostbyName {
         [string]$Name
     )
 
-    if ($WebSession) {
-        $session = $WebSession
-    }
-    else {
-        $session = $script:CurrentOceanstorSession
-    }
-
-    $defaultDisplaySet = "Id", "Name", "Health Status", "Operation System", "Parent Name"
-
-    $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
-        'DefaultDisplayPropertySet',
-        [string[]]$defaultDisplaySet
-    )
-
-    $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
-
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "host?filter=NAME:$([uri]::EscapeDataString($Name))" | Select-DMResponseData
-    $hosts = New-Object System.Collections.ArrayList
-
-    foreach ($thost in $response) {
-        $hostobj = [OceanStorHost]::new($thost, $session)
-        [void]$hosts.Add($hostobj)
-    }
-
-    $hosts = @(Set-DMHostInitiator -InputObject $hosts -WebSession $session)
-
-    $hosts | ForEach-Object {
-        $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
-    }
-
-    $result = $hosts
-
-    return $result
+    Get-DMhostbyFilter -WebSession $WebSession -Filter 'Name' -Keyword $Name
 }
 
 Set-Alias -Name Get-DMhostsbyName -Value Get-DMhostbyName

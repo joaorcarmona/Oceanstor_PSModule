@@ -96,6 +96,41 @@ Describe 'Public getter functions' {
             $result.'Parent Id' | Should -Be 'group-01'
         }
 
+        It 'filters hosts by a known field through the server-side filter' {
+            $script:capturedResource = $null
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                if ($Resource -eq 'host?filter=ID:host-01') {
+                    $script:capturedResource = $Resource
+                    return [pscustomobject]@{ data = @($script:hostRecords[0]) }
+                }
+                [pscustomobject]@{ data = @() }
+            }
+
+            $result = (Get-DMhostbyFilter -WebSession $script:session -Filter 'Id' -Keyword 'host-01')[0]
+
+            $result.id | Should -Be 'host-01'
+            $script:capturedResource | Should -Be 'host?filter=ID:host-01'
+        }
+
+        It 'falls back to a client-side filter for an unmapped field' {
+            $script:capturedResource = $null
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                if ($Resource -eq 'host') {
+                    $script:capturedResource = $Resource
+                    return [pscustomobject]@{ data = $script:hostRecords }
+                }
+                [pscustomobject]@{ data = @() }
+            }
+
+            $result = @(Get-DMhostbyFilter -WebSession $script:session -Filter 'Parent Name' -Keyword 'cluster-b')
+
+            $result.Count | Should -Be 1
+            $result[0].id | Should -Be 'host-02'
+            $script:capturedResource | Should -Be 'host'
+        }
+
         It 'gets hosts by host group id' {
             Mock Invoke-DeviceManager { [pscustomobject]@{ data = $script:hostRecords } }
 
