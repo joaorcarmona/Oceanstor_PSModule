@@ -4,15 +4,23 @@ function Get-DMlun {
 		To Get Huawei Oceanstor Storage Luns
 
 	.DESCRIPTION
-		Function to request Huawei Oceanstor Storage Luns
+		Function to request Huawei Oceanstor Storage Luns. With no arguments, returns every
+		LUN. With Keyword supplied (positionally or named), looks the LUN up by Name first;
+		if that finds nothing, falls back to WWN. Keyword supports PowerShell wildcards
+		(*, ?, [...]); without one, both lookups are exact matches. This lets a single value
+		be passed with no parameter name at all, e.g. Get-DMlun 'finance*' or
+		Get-DMlun '658be72100f6793b6bb9512e000000e1'.
 
 	.PARAMETER webSession
 		Optional parameter to define the session to be use on the REST call. If not defined, the module's cached $script:CurrentOceanstorSession session will be used
 
+	.PARAMETER Keyword
+		Optional LUN Name or WWN to search for, positional. When omitted, every LUN is returned. Name is tried first, WWN is a fallback when Name finds nothing. Supports PowerShell wildcards (*, ?, [...]); without one, the comparison is an exact match.
+
 	.INPUTS
 		System.Management.Automation.PSCustomObject
 
-		You can pipe an OceanStor session object to WebSession.
+		You can pipe an OceanStor session object to WebSession by property name.
 
 	.OUTPUTS
 		OceanstorLunv3
@@ -28,6 +36,14 @@ function Get-DMlun {
 
 		PS C:\> $luns = Get-DMlun
 
+		OR
+
+		PS C:\> Get-DMlun 'finance*'
+
+		OR
+
+		PS C:\> Get-DMlun '658be72100f6793b6bb9512e000000e1'
+
 	.NOTES
 		Filename: Get-DMlun.ps1
 
@@ -35,9 +51,13 @@ function Get-DMlun {
 	#>
     [Cmdletbinding()]
     [OutputType([System.Collections.ArrayList])]
+    [OutputType([System.Object[]])]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0, Mandatory = $false)]
-        [pscustomobject]$WebSession
+        [Parameter(ValueFromPipelineByPropertyName = $true, Mandatory = $false)]
+        [pscustomobject]$WebSession,
+
+        [Parameter(Position = 0, Mandatory = $false)]
+        [string]$Keyword
     )
 
     if ($WebSession) {
@@ -45,6 +65,14 @@ function Get-DMlun {
     }
     else {
         $session = $script:CurrentOceanstorSession
+    }
+
+    if ($Keyword) {
+        $result = @(Get-DMLunbyFilter -WebSession $session -Filter 'Name' -Keyword $Keyword)
+        if ($result.Count -eq 0) {
+            $result = @(Get-DMLunbyFilter -WebSession $session -Filter 'WWN' -Keyword $Keyword)
+        }
+        return $result
     }
 
     $defaultDisplaySet = "Id", "Name", "Health Status", "Lun Size", "WWN"

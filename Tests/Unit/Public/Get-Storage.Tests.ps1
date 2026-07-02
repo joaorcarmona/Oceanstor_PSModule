@@ -126,6 +126,61 @@ Describe 'Public getter functions' {
             $result[0].GetType().Name | Should -Be 'OceanstorLunv6'
         }
 
+        It 'gets a LUN by positional Keyword, matching Name first' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                $script:keywordResource = $Resource
+                if ($Resource -eq 'lun?filter=NAME::finance') {
+                    return [pscustomobject]@{ data = @(New-TestLun -Id 'lun-01' -Name 'finance') }
+                }
+                [pscustomobject]@{ data = @() }
+            }
+
+            $result = @(Get-DMlun -WebSession $script:session 'finance')
+
+            $result.Count | Should -Be 1
+            $result[0].Id | Should -Be 'lun-01'
+            $script:keywordResource | Should -Be 'lun?filter=NAME::finance'
+        }
+
+        It 'falls back to WWN when Keyword matches no LUN by Name' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                $script:keywordResources += $Resource
+                if ($Resource -eq 'lun?filter=WWN::658be72100f6793b6bb9512e000000e1') {
+                    return [pscustomobject]@{ data = @(New-TestLun -Id 'lun-02' -WWN '658be72100f6793b6bb9512e000000e1') }
+                }
+                [pscustomobject]@{ data = @() }
+            }
+            $script:keywordResources = @()
+
+            $result = @(Get-DMlun -WebSession $script:session '658be72100f6793b6bb9512e000000e1')
+
+            $result.Count | Should -Be 1
+            $result[0].Id | Should -Be 'lun-02'
+            $script:keywordResources | Should -Be @(
+                'lun?filter=NAME::658be72100f6793b6bb9512e000000e1',
+                'lun?filter=WWN::658be72100f6793b6bb9512e000000e1'
+            )
+        }
+
+        It 'supports a wildcard Keyword' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                $script:keywordResource = $Resource
+                if ($Resource -eq 'lun?filter=NAME:fin') {
+                    return [pscustomobject]@{ data = @(New-TestLun -Id 'lun-01' -Name 'finance') }
+                }
+                [pscustomobject]@{ data = @() }
+            }
+
+            $result = @(Get-DMlun -WebSession $script:session -Keyword 'fin*')
+
+            $result.Count | Should -Be 1
+            $result[0].Id | Should -Be 'lun-01'
+            $script:keywordResource | Should -Be 'lun?filter=NAME:fin'
+        }
+
         It 'gets LUN snapshots' {
             Mock Invoke-DeviceManager {
                 param($WebSession, $Method, $Resource)
