@@ -3,6 +3,7 @@ BeforeDiscovery {
         param($testRoot)
 
         function Get-DMlun { param([pscustomobject]$WebSession) }
+        function Get-DMlunGroup { param([pscustomobject]$WebSession) }
         function Invoke-DeviceManager {
             param([pscustomobject]$WebSession, [string]$Method, [string]$Resource)
         }
@@ -31,6 +32,9 @@ Describe 'Get-DMlunbyLunGroup' {
                 [pscustomobject]@{ Id = '2'; Name = 'lun-b' }
                 [pscustomobject]@{ Id = '3'; Name = 'lun-c' }
             )
+        }
+        Mock Get-DMlunGroup {
+            @([pscustomobject]@{ Id = 'lg-01'; Name = 'web-luns' })
         }
     }
 
@@ -100,6 +104,51 @@ Describe 'Get-DMlunbyLunGroup' {
         $result = Get-DMlunbyLunGroup -WebSession $script:session -LunGroup $script:lunGroup
 
         @($result).Count | Should -Be 0
+    }
+
+    It 'resolves the group by name when LunGroupName is supplied' {
+        $script:requestedResource = $null
+        Mock Invoke-DeviceManager {
+            param($WebSession, $Method, $Resource)
+            $script:requestedResource = $Resource
+            [pscustomobject]@{ data = [pscustomobject]@{ ASSOCIATELUNIDLIST = @('1', '2') } }
+        }
+
+        $result = Get-DMlunbyLunGroup -WebSession $script:session -LunGroupName 'web-luns'
+
+        $result.Count | Should -Be 2
+        $script:requestedResource | Should -Be 'lungroup/lg-01'
+    }
+
+    It 'rejects a LunGroupName that does not exist' {
+        Mock Invoke-DeviceManager { [pscustomobject]@{ data = [pscustomobject]@{ ASSOCIATELUNIDLIST = @() } } }
+
+        { Get-DMlunbyLunGroup -WebSession $script:session -LunGroupName 'missing' } |
+            Should -Throw '*Invalid LunGroupName*'
+
+        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
+    }
+
+    It 'resolves the group by ID when LunGroupId is supplied, without validating it first' {
+        $script:requestedResource = $null
+        Mock Invoke-DeviceManager {
+            param($WebSession, $Method, $Resource)
+            $script:requestedResource = $Resource
+            [pscustomobject]@{ data = [pscustomobject]@{ ASSOCIATELUNIDLIST = @('1', '2') } }
+        }
+
+        $result = Get-DMlunbyLunGroup -WebSession $script:session -LunGroupId 'lg-99'
+
+        $result.Count | Should -Be 2
+        $script:requestedResource | Should -Be 'lungroup/lg-99'
+        Should -Invoke Get-DMlunGroup -Times 0 -Exactly
+    }
+
+    It 'exposes completion metadata for LunGroupName' {
+        $command = Get-Command Get-DMlunbyLunGroup
+        @($command.Parameters['LunGroupName'].Attributes |
+            Where-Object { $_ -is [System.Management.Automation.ArgumentCompleterAttribute] }).Count |
+            Should -BeGreaterThan 0 -Because 'Get-DMlunbyLunGroup -LunGroupName should support tab completion'
     }
 }
 }

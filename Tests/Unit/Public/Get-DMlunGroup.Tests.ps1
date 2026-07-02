@@ -7,6 +7,8 @@ BeforeDiscovery {
         }
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Select-DMResponseData.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorLunGroup.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMlunGroup.ps1"
 
         Export-ModuleMember -Function Get-DMlunGroup
@@ -52,6 +54,46 @@ Describe 'Get-DMlunGroup' {
         $null = Get-DMlunGroup -WebSession $script:session -VstoreId 'vs-01'
 
         Should -Invoke Invoke-DeviceManager -Times 1 -Exactly
+    }
+
+    It 'filters by positional Name using an exact server-side filter' {
+        Mock Invoke-DeviceManager {
+            $script:resource = $Resource
+            [pscustomobject]@{ data = @([pscustomobject]@{ ID = '1'; NAME = 'production-luns'; TYPE = 256; ISADD2MAPPINGVIEW = 'false' }) }
+        }
+
+        $result = @(Get-DMlunGroup -WebSession $script:session 'production-luns')
+
+        $result.Count | Should -Be 1
+        $result[0].Name | Should -Be 'production-luns'
+        $script:resource | Should -Be 'lungroup?filter=NAME::production-luns'
+    }
+
+    It 'filters by Name using a fuzzy server-side hint for a wildcard keyword' {
+        Mock Invoke-DeviceManager {
+            $script:resource = $Resource
+            if ($Resource -eq 'lungroup?filter=NAME:prod') {
+                return [pscustomobject]@{ data = @([pscustomobject]@{ ID = '1'; NAME = 'production-luns'; TYPE = 256; ISADD2MAPPINGVIEW = 'false' }) }
+            }
+            [pscustomobject]@{ data = @() }
+        }
+
+        $result = @(Get-DMlunGroup -WebSession $script:session -Name 'prod*')
+
+        $result.Count | Should -Be 1
+        $result[0].Name | Should -Be 'production-luns'
+        $script:resource | Should -Be 'lungroup?filter=NAME:prod'
+    }
+
+    It 'combines Name and VstoreId in the same query string' {
+        Mock Invoke-DeviceManager {
+            $script:resource = $Resource
+            [pscustomobject]@{ data = @() }
+        }
+
+        $null = Get-DMlunGroup -WebSession $script:session -Name 'production-luns' -VstoreId 'vs-01'
+
+        $script:resource | Should -Be 'lungroup?filter=NAME::production-luns&vstoreId=vs-01'
     }
 }
 }
