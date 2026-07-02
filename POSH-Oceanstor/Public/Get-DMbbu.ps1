@@ -25,6 +25,7 @@ function Get-DMbbu {
         Filename: Get-DMbbu.ps1
     #>
     [Cmdletbinding()]
+    [OutputType([System.Collections.ArrayList])]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession

@@ -1,4 +1,4 @@
-function Remove-DMMappingView {
+﻿function Remove-DMMappingView {
     <#
     .SYNOPSIS
         Removes a Huawei OceanStor mapping view.

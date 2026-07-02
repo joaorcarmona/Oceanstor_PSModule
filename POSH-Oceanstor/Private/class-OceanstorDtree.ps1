@@ -16,7 +16,7 @@ class OceanStorDtree {
     [string]${Replication Count}
     [string]${Snapshot Count}
     [string]${Locking Policy}
-    
+
     OceanStorDtree ([array]$dtree, [pscustomobject]$WebSession)
     {
         $this.Session = $WebSession

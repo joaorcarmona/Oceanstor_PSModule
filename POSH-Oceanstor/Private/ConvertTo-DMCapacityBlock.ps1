@@ -1,4 +1,4 @@
-function ConvertTo-DMCapacityBlock {
+﻿function ConvertTo-DMCapacityBlock {
     # Converts a capacity value (e.g. "10GB", "500MB", "2TB", or a raw number)
     # into 512-byte block counts expected by the OceanStor DeviceManager API.
     [CmdletBinding()]

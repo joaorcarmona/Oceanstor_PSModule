@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Expands an OceanStor LUN snapshot.
 

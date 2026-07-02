@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Removes an OceanStor NFS share client.
 

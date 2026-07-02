@@ -1,4 +1,4 @@
-function Connect-deviceManager {
+﻿function Connect-deviceManager {
     <#
 	.SYNOPSIS
 		Connects to a Huawei OceanStor array by REST.

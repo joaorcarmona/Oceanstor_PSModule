@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Removes an OceanStor host from a host group.
 

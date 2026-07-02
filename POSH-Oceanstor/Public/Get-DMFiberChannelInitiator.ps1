@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Retrieves Fibre Channel initiators from the OceanStor device manager.
 
@@ -37,6 +37,7 @@ function Get-DMFiberChannelInitiator {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
 
     [CmdletBinding(DefaultParameterSetName = 'All')]
+    [OutputType([System.Object[]])]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,

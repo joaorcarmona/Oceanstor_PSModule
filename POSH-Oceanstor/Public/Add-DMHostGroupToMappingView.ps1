@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Associates an OceanStor host group with a mapping view.
 

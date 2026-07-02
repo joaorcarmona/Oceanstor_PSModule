@@ -5,10 +5,43 @@ param(
 
     [string]$ResultPath,
 
-    [string]$CoveragePath
+    [string]$CoveragePath,
+
+    [switch]$SkipAnalyzer,
+
+    [switch]$FailOnAnalyzerIssue
 )
 
 $ErrorActionPreference = 'Stop'
+
+if (-not $SkipAnalyzer) {
+    $analyzerModule = Get-Module -Name PSScriptAnalyzer -ListAvailable | Select-Object -First 1
+    if ($null -eq $analyzerModule) {
+        Write-Warning 'PSScriptAnalyzer is not installed locally; skipping lint pass (CI still runs the full rule set). Install with: Install-Module PSScriptAnalyzer -Scope CurrentUser'
+    }
+    else {
+        Import-Module PSScriptAnalyzer -ErrorAction Stop
+        $moduleRoot = Join-Path -Path $PSScriptRoot -ChildPath '..\POSH-Oceanstor'
+        $settingsPath = Join-Path -Path $PSScriptRoot -ChildPath '..\PSScriptAnalyzerSettings.psd1'
+        $analyzerResults = Invoke-ScriptAnalyzer -Path $moduleRoot -Settings $settingsPath -Recurse
+
+        if ($analyzerResults) {
+            $bySeverity = $analyzerResults | Group-Object Severity | Sort-Object Count -Descending
+            Write-Host "PSScriptAnalyzer found $($analyzerResults.Count) issue(s):"
+            $bySeverity | ForEach-Object { Write-Host "  $($_.Name): $($_.Count)" }
+            $analyzerResults | ForEach-Object {
+                Write-Host "  [$($_.Severity)] $($_.RuleName) - $($_.ScriptName):$($_.Line) - $($_.Message)"
+            }
+
+            if ($FailOnAnalyzerIssue) {
+                throw "PSScriptAnalyzer reported $($analyzerResults.Count) issue(s)."
+            }
+        }
+        else {
+            Write-Host 'PSScriptAnalyzer: no issues found.'
+        }
+    }
+}
 
 # Capped below 6.0 so a future Pester major release can't be picked up silently and break
 # CI on breaking-change assumptions; bump the ceiling deliberately after validating against it.

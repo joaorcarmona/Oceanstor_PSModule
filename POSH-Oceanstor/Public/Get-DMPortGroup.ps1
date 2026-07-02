@@ -36,6 +36,7 @@
 #>
 function Get-DMPortGroup {
     [CmdletBinding()]
+    [OutputType([System.Collections.ArrayList])]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,

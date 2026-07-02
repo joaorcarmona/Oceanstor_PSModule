@@ -32,6 +32,7 @@ function Get-DMdnsServer {
 	.LINK
 	#>
     [Cmdletbinding()]
+    [OutputType([hashtable])]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession

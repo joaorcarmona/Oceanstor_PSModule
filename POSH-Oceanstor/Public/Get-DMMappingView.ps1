@@ -1,4 +1,4 @@
-function Get-DMMappingView {
+﻿function Get-DMMappingView {
     <#
     .SYNOPSIS
         Retrieves Huawei OceanStor mapping views.
@@ -39,6 +39,7 @@ function Get-DMMappingView {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
 
     [CmdletBinding(DefaultParameterSetName = 'All')]
+    [OutputType([System.Collections.ArrayList])]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,

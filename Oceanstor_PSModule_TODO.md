@@ -21,10 +21,6 @@ Detailed audit findings live in `ANALYSIS.md`. Release-facing summaries live in 
 - [x] **Enforce Strict PascalCase/lowercase Standards**
   - [x] Standardize keywords (`if`, `else`, `foreach`, `try`, `catch`) to lowercase.
   - [x] Standardize logical constants (`$true`, `$false`) to lowercase across all `.psm1` and helper script files.
-- [ ] **Automate PSScriptAnalyzer Integration**
-  - Embed `Invoke-ScriptAnalyzer` checks into the local testing loop.
-  - Resolve all remaining Severity: Warning / Information items.
-
 ### Module Integrity & UX Optimization
 
 - [x] **Enforce Explicit Export Controls**
@@ -82,6 +78,7 @@ Detailed audit findings live in `ANALYSIS.md`. Release-facing summaries live in 
 - [x] ~~Expand `ShouldProcess` on state-changing actions.~~ Done in v0.9.4: all 74 mutating public commands (`New-DM*`, `Set-DM*`, `Remove-DM*`, `Rename-DM*`, `Add-DM*`, etc.) declare `SupportsShouldProcess = $true` and call `$PSCmdlet.ShouldProcess()` before their destructive/mutation REST call, giving native `-WhatIf`/`-Confirm` support. See `RELEASE_NOTES.md` v0.9.4.
 - [x] ~~Modernize Pester configuration.~~ Already on Pester 5 idioms throughout: `Tests/Invoke-UnitTests.ps1` uses `New-PesterConfiguration`/`Invoke-Pester -Configuration`; all 48 test files use `Should -Invoke` (zero `Assert-MockCalled`/`Assert-VerifiableMock` legacy calls) and explicit `Describe`/`It` blocks, with 32 of 48 using `BeforeDiscovery` for discovery/run-phase separation.
 - [x] ~~Pin an upper Pester version bound.~~ `Tests/Invoke-UnitTests.ps1` now imports Pester with `-MinimumVersion 5.0.0 -MaximumVersion 5.99.99`, so a future Pester 6 major release can't be picked up silently and break CI on breaking-change assumptions; the ceiling must be bumped deliberately after validating against it. The GitHub Actions workflow (`.github/workflows/powershell.yml`) already installs an exact pinned version (`5.7.1`), so it's unaffected.
+- [x] ~~Automate PSScriptAnalyzer integration.~~ `Tests/Invoke-UnitTests.ps1` now runs `Invoke-ScriptAnalyzer` before the Pester pass (non-blocking by default — prints a per-severity summary; `-FailOnAnalyzerIssue` makes it throw, `-SkipAnalyzer` skips it; gracefully warns and continues if PSScriptAnalyzer isn't installed locally). All 115 previously-open Warning/Information findings were resolved: 48 `PSUseOutputTypeCorrectly` fixed by adding `[OutputType(...)]` matching each command's actual inferred return type; 14 `PSAvoidTrailingWhitespace` stripped; 53 `PSUseBOMForUnicodeEncodedFile` fixed by writing a UTF-8 BOM (deliberate choice, not just rule-compliance: this codebase's comment-based help contains non-ASCII characters like em-dashes, and Windows PowerShell 5.1 — still common in enterprise storage-admin environments — reads non-BOM UTF-8 files using the system codepage, which can mis-render or mis-parse them). `Invoke-ScriptAnalyzer -Path ./POSH-Oceanstor -Settings ./PSScriptAnalyzerSettings.psd1 -Recurse` now reports zero issues.
 
 ---
 

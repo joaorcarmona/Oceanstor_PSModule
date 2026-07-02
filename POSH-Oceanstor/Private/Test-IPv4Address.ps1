@@ -1,5 +1,6 @@
 function Test-IPv4Address {
     [Cmdletbinding()]
+    [OutputType([bool])]
     Param(
     [Parameter(ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,Position=0,Mandatory=$true)]
         [string]$IPv4

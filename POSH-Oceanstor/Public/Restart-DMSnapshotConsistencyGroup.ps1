@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Reactivates an OceanStor snapshot consistency group.
 

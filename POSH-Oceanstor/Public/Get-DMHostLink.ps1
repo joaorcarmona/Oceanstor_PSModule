@@ -39,6 +39,7 @@ function Get-DMHostLink {
 	.LINK
 	#>
     [Cmdletbinding()]
+    [OutputType([System.Collections.ArrayList])]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession,

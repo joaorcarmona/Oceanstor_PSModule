@@ -60,6 +60,7 @@ function Get-DMHostInitiator {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
 
     [Cmdletbinding(DefaultParameterSetName = "AllInitiators")]
+    [OutputType([System.Collections.ArrayList])]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession,

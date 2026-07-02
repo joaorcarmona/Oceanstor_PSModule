@@ -38,6 +38,7 @@ function Get-DMlunbyLunGroup {
 		If WebSession is omitted, the command uses the module-scoped $script:CurrentOceanstorSession session.
 	#>
     [CmdletBinding()]
+    [OutputType([System.Object[]])]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession,

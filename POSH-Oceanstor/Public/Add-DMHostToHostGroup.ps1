@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Associates an OceanStor host with a host group.
 

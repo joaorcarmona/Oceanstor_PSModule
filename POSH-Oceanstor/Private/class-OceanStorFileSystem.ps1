@@ -116,7 +116,7 @@ class OceanstorFileSystem{
 		$this.WebSession = $WebSession
         [int64]$fSector = 512
         $this.{Sector Size} = $FileSystem.SECTORSIZE
-        
+
         switch($FileSystem.ACTUALFILESYSTEMTYPE)
 		{
 			0 {$this.{Actual File System Type} = "Wushan FS"}
@@ -124,14 +124,14 @@ class OceanstorFileSystem{
 		}
 
         $this.{Allocated Pool Quota} = $FileSystem.allocatedPoolQuota
-        
+
         if ($FileSystem.ALLOCCAPACITY -eq "0")
         {
             $this.{Allocation Capacity} = "0"
         } else {
             $this.{Allocation Capacity} = $FileSystem.ALLOCCAPACITY / $this.{Sector Size} / 1GB
-        }   
-        
+        }
+
         $this.{Allocation Type} = $FileSystem.ALLOCTYPE
 
         switch($FileSystem.ALLOCTYPE)
@@ -210,7 +210,7 @@ class OceanstorFileSystem{
         [int64]$fscapacity = $fCapacity * $fSector / 1GB
         $this.{Capacity (GB)} = $fscapacity
         $this.{RealCapacity} = $fCapacity
-        
+
         $this.{Capacity Threshold} = $FileSystem.CAPACITYTHRESHOLD
 
         if ($FileSystem.CASEPRESERVED -eq "TRUE")

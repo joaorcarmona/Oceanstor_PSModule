@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Removes an OceanStor LUN from a LUN group.
 

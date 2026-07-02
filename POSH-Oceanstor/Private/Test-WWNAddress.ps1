@@ -1,5 +1,6 @@
 function Test-WWNAddress {
     [CmdletBinding()]
+    [OutputType([bool])]
     param(
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [string]$WWN

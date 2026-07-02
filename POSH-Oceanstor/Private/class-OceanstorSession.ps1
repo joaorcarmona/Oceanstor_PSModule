@@ -4,7 +4,7 @@ class OceanstorSession{
 
 	#Define Host Credentials Property
 	# dont need credential in the session, just use it to get the token and then discard it. Dont want to have the credentials in memory for long time
-	#hidden [System.Management.Automation.PSCredential]$Credentials 
+	#hidden [System.Management.Automation.PSCredential]$Credentials
 
 	#Define DeviceID Property
 	[string]$DeviceId

@@ -28,7 +28,7 @@ class OceanstorNFSclient
 		$this.WebSession = $WebSession
         $this.{Name} = $NFSExport.NAME
         $this.{Id} = $NFSExport.ID
-        $this.{Parent Id} = $NFSExport.PARENTID 
+        $this.{Parent Id} = $NFSExport.PARENTID
 
         switch ($NFSExport.ACCESSVAL){
             0 {$this.{Access Permission} = "read-only"}
@@ -39,7 +39,7 @@ class OceanstorNFSclient
         switch ($NFSExport.SYNC){
             0 {$this.{WriteMode} = "synchronous"}
             1 {$this.{WriteMode} = "asynchronous"}
-        }        
+        }
 
         switch ($NFSExport.ALLSQUASH){
             0 {$this.{Permission Constrain} = "all_squash"}
@@ -90,17 +90,17 @@ class OceanstorNFSclient
             60 {$this.{Charset Encoding} = "EN-US"}
             61 {$this.{Charset Encoding} = "EUC-KR"}
             65535 {$this.{Charset Encoding} = "default"}
-   
+
         }
 
         $this.{vStore Id} = $NFSExport.vstoreId
         $this.{NFS Share Name} = $NFSExport.SHARENAME
- 
+
         switch ($NFSExport.securityType){
             0 {$this.{Mounting Security Type} = "unix"}
             1 {$this.{Mounting Security Type} = "none"}
             2 {$this.{Mounting Security Type} = "none_unix"}
-        }        
+        }
 
         switch ($NFSExport.ntfsUnixSecurityOps){
             0 {$this.{NTFS Unix Security Option} = "fail"}
@@ -134,7 +134,7 @@ class OceanstorNFSclient
             1 {$this.{Nfs Share krb5p Mode} = "read and write"}
             5 {$this.{Nfs Share krb5p Mode} = "no permission"}
         }
-        
+
         #$this.{vStore Name} = $NFSExport.vstoreName - unsupported
     }
 }

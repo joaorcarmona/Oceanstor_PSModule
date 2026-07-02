@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Creates an OceanStor snapshot consistency group.
 

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Rolls back an OceanStor snapshot consistency group.
 
