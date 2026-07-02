@@ -37,8 +37,6 @@ Detailed audit findings live in `ANALYSIS.md`. Release-facing summaries live in 
 - [ ] **Develop Robust API Mocking**
   - Build comprehensive `Mock Invoke-RestMethod` templates that mimic real Huawei OceanStor v6 responses.
   - Keep code-path validation isolated and safe without requiring a physical SAN connection.
-- [ ] **Establish GitHub Actions CI Workflow**
-  - Create `.github/workflows/ci.yml` to execute PSScriptAnalyzer and the Pester test suite on every pull request or main branch push.
 - [ ] **Automate Release Pipeline to PowerShell Gallery**
   - Design a continuous deployment workflow that signs, packages, and publishes a validated versioned module to the PowerShell Gallery on GitHub Release tags.
 
@@ -69,6 +67,7 @@ Detailed audit findings live in `ANALYSIS.md`. Release-facing summaries live in 
 - [x] ~~Modernize Pester configuration.~~ Already on Pester 5 idioms throughout: `Tests/Invoke-UnitTests.ps1` uses `New-PesterConfiguration`/`Invoke-Pester -Configuration`; all 48 test files use `Should -Invoke` (zero `Assert-MockCalled`/`Assert-VerifiableMock` legacy calls) and explicit `Describe`/`It` blocks, with 32 of 48 using `BeforeDiscovery` for discovery/run-phase separation.
 - [x] ~~Pin an upper Pester version bound.~~ `Tests/Invoke-UnitTests.ps1` now imports Pester with `-MinimumVersion 5.0.0 -MaximumVersion 5.99.99`, so a future Pester 6 major release can't be picked up silently and break CI on breaking-change assumptions; the ceiling must be bumped deliberately after validating against it. The GitHub Actions workflow (`.github/workflows/powershell.yml`) already installs an exact pinned version (`5.7.1`), so it's unaffected.
 - [x] ~~Automate PSScriptAnalyzer integration.~~ `Tests/Invoke-UnitTests.ps1` now runs `Invoke-ScriptAnalyzer` before the Pester pass (non-blocking by default — prints a per-severity summary; `-FailOnAnalyzerIssue` makes it throw, `-SkipAnalyzer` skips it; gracefully warns and continues if PSScriptAnalyzer isn't installed locally). All 115 previously-open Warning/Information findings were resolved: 48 `PSUseOutputTypeCorrectly` fixed by adding `[OutputType(...)]` matching each command's actual inferred return type; 14 `PSAvoidTrailingWhitespace` stripped; 53 `PSUseBOMForUnicodeEncodedFile` fixed by writing a UTF-8 BOM (deliberate choice, not just rule-compliance: this codebase's comment-based help contains non-ASCII characters like em-dashes, and Windows PowerShell 5.1 — still common in enterprise storage-admin environments — reads non-BOM UTF-8 files using the system codepage, which can mis-render or mis-parse them). `Invoke-ScriptAnalyzer -Path ./POSH-Oceanstor -Settings ./PSScriptAnalyzerSettings.psd1 -Recurse` now reports zero issues.
+- [x] ~~Establish GitHub Actions CI Workflow.~~ `.github/workflows/powershell.yml` (name differs from the originally proposed `ci.yml`, functionally identical) already runs a `PSScriptAnalyzer` job (full ruleset minus the settings-file exclusions, uploads SARIF) and a `Pester Unit Tests` job (`Tests/Invoke-UnitTests.ps1` with coverage) across a `windows-latest`/`ubuntu-latest`/`macos-latest` matrix, triggered on every push to `master`, every PR into `master`, and a weekly schedule.
 
 ---
 
