@@ -70,6 +70,37 @@ Describe 'Public getter functions' {
             $result.RealCapacity | Should -Be 2097152
         }
 
+        It 'gets a file system by positional Name using an exact server-side filter' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                $script:fsResource = $Resource
+                [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'fs-01'; NAME = 'documents'; SECTORSIZE = 512; CAPACITY = 2097152; ALLOCCAPACITY = '0'; HEALTHSTATUS = 1; RUNNINGSTATUS = 27 }) }
+            }
+
+            $result = @(Get-DMFileSystem -WebSession $script:session 'documents')
+
+            $result.Count | Should -Be 1
+            $result[0].Name | Should -Be 'documents'
+            $script:fsResource | Should -BeLike 'filesystem?filter=NAME::documents*'
+        }
+
+        It 'gets file systems by Name using a fuzzy server-side hint for a wildcard keyword' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                $script:fsResource = $Resource
+                if ($Resource -like 'filesystem?filter=NAME:doc*') {
+                    return [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'fs-01'; NAME = 'documents'; SECTORSIZE = 512; CAPACITY = 2097152; ALLOCCAPACITY = '0'; HEALTHSTATUS = 1; RUNNINGSTATUS = 27 }) }
+                }
+                [pscustomobject]@{ data = @() }
+            }
+
+            $result = @(Get-DMFileSystem -WebSession $script:session -Name 'doc*')
+
+            $result.Count | Should -Be 1
+            $result[0].Name | Should -Be 'documents'
+            $script:fsResource | Should -BeLike 'filesystem?filter=NAME:doc*'
+        }
+
         It 'gets LUN groups' {
             Mock Invoke-DeviceManager { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 12; NAME = 'luns'; GROUPTYPE = 0; CAPCITY = 1GB }) } }
 
@@ -387,6 +418,37 @@ Describe 'Public getter functions' {
             $result.'Charset Encoding' | Should -Be 'UTF-8'
         }
 
+        It 'gets an NFS file client by positional Name using an exact server-side filter' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                $script:clientResource = $Resource
+                [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'client-01'; NAME = '10.0.0.0/24'; ACCESSVAL = 1; CHARSET = 0 }) }
+            }
+
+            $result = @(Get-DMnfsFileClient -WebSession $script:session '10.0.0.0/24')
+
+            $result.Count | Should -Be 1
+            $result[0].Name | Should -Be '10.0.0.0/24'
+            $script:clientResource | Should -Be 'NFS_SHARE_AUTH_CLIENT?filter=NAME::10.0.0.0%2F24'
+        }
+
+        It 'gets NFS file clients by Name using a fuzzy server-side hint for a wildcard keyword' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                $script:clientResource = $Resource
+                if ($Resource -eq 'NFS_SHARE_AUTH_CLIENT?filter=NAME:10.0.0') {
+                    return [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'client-01'; NAME = '10.0.0.0/24'; ACCESSVAL = 1; CHARSET = 0 }) }
+                }
+                [pscustomobject]@{ data = @() }
+            }
+
+            $result = @(Get-DMnfsFileClient -WebSession $script:session -Name '10.0.0*')
+
+            $result.Count | Should -Be 1
+            $result[0].Name | Should -Be '10.0.0.0/24'
+            $script:clientResource | Should -Be 'NFS_SHARE_AUTH_CLIENT?filter=NAME:10.0.0'
+        }
+
         It 'gets CIFS shares' {
             Mock Invoke-DeviceManager { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'cifs-01'; NAME = 'share'; subType = 0 }) } }
 
@@ -398,6 +460,37 @@ Describe 'Public getter functions' {
             $result.'Sub Type' | Should -Be 'normal'
         }
 
+        It 'gets a CIFS share by positional Name using an exact server-side filter on NAME' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                $script:cifsResource = $Resource
+                [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'cifs-01'; NAME = 'finance'; subType = 0 }) }
+            }
+
+            $result = @(Get-DMShare -WebSession $script:session 'finance' -ShareType CIFS)
+
+            $result.Count | Should -Be 1
+            $result[0].Name | Should -Be 'finance'
+            $script:cifsResource | Should -Be 'CIFSHARE?filter=NAME::finance'
+        }
+
+        It 'gets CIFS shares by Name using a fuzzy server-side hint for a wildcard keyword' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                $script:cifsResource = $Resource
+                if ($Resource -eq 'CIFSHARE?filter=NAME:fin') {
+                    return [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'cifs-01'; NAME = 'finance'; subType = 0 }) }
+                }
+                [pscustomobject]@{ data = @() }
+            }
+
+            $result = @(Get-DMShare -WebSession $script:session -Name 'fin*' -ShareType CIFS)
+
+            $result.Count | Should -Be 1
+            $result[0].Name | Should -Be 'finance'
+            $script:cifsResource | Should -Be 'CIFSHARE?filter=NAME:fin'
+        }
+
         It 'gets NFS shares' {
             Mock Invoke-DeviceManager { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'nfs-01'; NAME = 'export'; CHARACTERENCODING = 0 }) } }
 
@@ -407,6 +500,39 @@ Describe 'Public getter functions' {
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
                 Should -Be @('Id', 'Name', 'Share Path', 'FileSystem ID', 'vStore Name')
             $result.'Character Enconding' | Should -Be 'UTF-8'
+        }
+
+        It 'gets an NFS share by Name matching Share Path server-side, since NFSHARE NAME filtering is unsupported' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                $script:nfsResource = $Resource
+                if ($Resource -eq 'NFSHARE?filter=SHAREPATH:documents') {
+                    return [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'nfs-01'; NAME = ''; SHAREPATH = '/documents/'; CHARACTERENCODING = 0 }) }
+                }
+                [pscustomobject]@{ data = @() }
+            }
+
+            $result = @(Get-DMShare -WebSession $script:session -Name '*documents*' -ShareType NFS)
+
+            $result.Count | Should -Be 1
+            $result[0].'Share Path' | Should -Be '/documents/'
+            $script:nfsResource | Should -Be 'NFSHARE?filter=SHAREPATH:documents'
+        }
+
+        It 'never requests an exact double-colon filter for NFS shares, since SHAREPATH is fuzzy-match only' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                $script:nfsResource = $Resource
+                if ($Resource -eq 'NFSHARE?filter=SHAREPATH:%2Fdocuments%2F') {
+                    return [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'nfs-01'; NAME = ''; SHAREPATH = '/documents/'; CHARACTERENCODING = 0 }) }
+                }
+                [pscustomobject]@{ data = @() }
+            }
+
+            $result = @(Get-DMShare -WebSession $script:session -Name '/documents/' -ShareType NFS)
+
+            $result.Count | Should -Be 1
+            $script:nfsResource | Should -Be 'NFSHARE?filter=SHAREPATH:%2Fdocuments%2F'
         }
 
         It 'gets storage pools' {
