@@ -420,6 +420,37 @@ Describe 'Public getter functions' {
             $result.dataspace | Should -Be 1
         }
 
+        It 'gets a storage pool by positional Name using an exact server-side filter' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                $script:poolResource = $Resource
+                [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'pool-01'; NAME = 'performance'; HEALTHSTATUS = 1; RUNNINGSTATUS = 27; DATASPACE = (512 * 1GB) }) }
+            }
+
+            $result = @(Get-DMstoragePool -WebSession $script:session 'performance')
+
+            $result.Count | Should -Be 1
+            $result[0].Name | Should -Be 'performance'
+            $script:poolResource | Should -Be 'storagepool?filter=NAME::performance'
+        }
+
+        It 'gets storage pools by Name using a fuzzy server-side hint for a wildcard keyword' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                $script:poolResource = $Resource
+                if ($Resource -eq 'storagepool?filter=NAME:perf') {
+                    return [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'pool-01'; NAME = 'performance'; HEALTHSTATUS = 1; RUNNINGSTATUS = 27; DATASPACE = (512 * 1GB) }) }
+                }
+                [pscustomobject]@{ data = @() }
+            }
+
+            $result = @(Get-DMstoragePool -WebSession $script:session -Name 'perf*')
+
+            $result.Count | Should -Be 1
+            $result[0].Name | Should -Be 'performance'
+            $script:poolResource | Should -Be 'storagepool?filter=NAME:perf'
+        }
+
         It 'gets system information' {
             Mock Invoke-DeviceManager { [pscustomobject]@{ data = '@{ID=system-01;PRODUCTVERSION=V600R001;HEALTHSTATUS=1;RUNNINGSTATUS=1;HOTSPAREDISKSCAPACITY=2}' } }
 
