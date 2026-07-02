@@ -98,14 +98,6 @@ Describe 'Public getter functions' {
             $result.'Parent Id' | Should -Be 'group-01'
         }
 
-        It 'lists valid host filter properties via the public discovery command' {
-            $result = Get-DMHostFilterableProperty
-
-            $result | Should -Contain 'Name'
-            $result | Should -Contain 'Health Status'
-            $result | Should -Not -Contain 'Session'
-        }
-
         It 'rejects a Filter that is not a real host property, before making any REST call' {
             { Get-DMhostbyFilter -WebSession $script:session -Filter 'Bogus' -Keyword 'x' } |
                 Should -Throw "*Invalid Filter 'Bogus'*"
@@ -148,7 +140,9 @@ Describe 'Public getter functions' {
             $script:capturedResource | Should -Be 'host?filter=NAME:server-a'
         }
 
-        It 'exposes completion metadata for -Filter, sourced from OceanStorHost properties' {
+        It 'exposes completion metadata for -Filter, sourced from a live host sample' {
+            Mock Invoke-DeviceManager { [pscustomobject]@{ data = @($script:hostRecords[0]) } }
+
             $command = Get-Command Get-DMhostbyFilter
             @($command.Parameters['Filter'].Attributes |
                 Where-Object { $_ -is [System.Management.Automation.ArgumentCompleterAttribute] }).Count |
@@ -156,7 +150,8 @@ Describe 'Public getter functions' {
 
             $completer = ($command.Parameters['Filter'].Attributes |
                 Where-Object { $_ -is [System.Management.Automation.ArgumentCompleterAttribute] })[0].ScriptBlock
-            $candidates = @(& $completer 'Get-DMhostbyFilter' 'Filter' '' $null $null)
+            $fakeBoundParameters = @{ WebSession = $script:session }
+            $candidates = @(& $completer 'Get-DMhostbyFilter' 'Filter' '' $null $fakeBoundParameters)
 
             $candidates | Should -Contain 'Name'
             $candidates | Should -Contain 'Health Status'

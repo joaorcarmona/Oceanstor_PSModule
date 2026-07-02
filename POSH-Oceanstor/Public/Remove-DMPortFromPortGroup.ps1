@@ -110,8 +110,16 @@ function Remove-DMPortFromPortGroup {
                 else {
                     $script:CurrentOceanstorSession
                 }
-                (Get-DMPortGroupCandidate -WebSession $session -PortType $fakeBoundParameters.PortType).Name |
-                    Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+                # Get-DMPortGroupCandidate is private and would not resolve here -- confirmed
+                # empirically that an ArgumentCompleter scriptblock invoked by the real completion
+                # engine can only reliably call already-public commands -- so its per-PortType
+                # lookup is inlined directly instead of exposing it as a public command.
+                $names = switch ($fakeBoundParameters.PortType) {
+                    'FibreChannel' { (Get-DMPortFc -WebSession $session).Name }
+                    'Ethernet' { (Get-DMPortETH -WebSession $session).Name }
+                    'LogicalPort' { (Get-DMLif -WebSession $session).'LIF Name' }
+                }
+                $names | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$PortName,
 

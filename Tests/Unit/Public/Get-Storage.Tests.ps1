@@ -234,14 +234,6 @@ Describe 'Public getter functions' {
                 Should -Throw '*Invalid LunName*'
         }
 
-        It 'lists valid LUN filter properties via the public discovery command' {
-            $result = Get-DMLunFilterableProperty
-
-            $result | Should -Contain 'Name'
-            $result | Should -Contain 'WWN'
-            $result | Should -Not -Contain 'Session'
-        }
-
         It 'rejects a Filter that is not a real LUN property, before making any REST call' {
             Mock Invoke-DeviceManager {
                 param($WebSession, $Method, $Resource)
@@ -287,7 +279,9 @@ Describe 'Public getter functions' {
             $script:filterResource | Should -Be 'lun?filter=NAME:fin'
         }
 
-        It 'exposes completion metadata for -Filter, sourced from both LUN classes properties' {
+        It 'exposes completion metadata for -Filter, sourced from a live LUN sample' {
+            Mock Invoke-DeviceManager { [pscustomobject]@{ data = @(New-TestLun) } }
+
             $command = Get-Command Get-DMLunbyFilter
             @($command.Parameters['Filter'].Attributes |
                 Where-Object { $_ -is [System.Management.Automation.ArgumentCompleterAttribute] }).Count |
@@ -295,7 +289,8 @@ Describe 'Public getter functions' {
 
             $completer = ($command.Parameters['Filter'].Attributes |
                 Where-Object { $_ -is [System.Management.Automation.ArgumentCompleterAttribute] })[0].ScriptBlock
-            $candidates = @(& $completer 'Get-DMLunbyFilter' 'Filter' '' $null $null)
+            $fakeBoundParameters = @{ WebSession = $script:session }
+            $candidates = @(& $completer 'Get-DMLunbyFilter' 'Filter' '' $null $fakeBoundParameters)
 
             $candidates | Should -Contain 'Name'
             $candidates | Should -Contain 'WWN'

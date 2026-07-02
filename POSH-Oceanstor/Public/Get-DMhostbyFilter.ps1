@@ -71,7 +71,18 @@ function Get-DMhostbyFilter {
         [ValidateNotNullOrEmpty()]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
-                Get-DMHostFilterableProperty | Where-Object { $_ -like "$wordToComplete*" }
+                # A private-function or class-type-literal reference here would not resolve when the
+                # real completion engine invokes this scriptblock (confirmed empirically); only calling
+                # an already-public command like Get-DMhost works, so property names are read off one
+                # live sample object instead of reflecting on the class directly.
+                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
+                    $fakeBoundParameters.WebSession
+                }
+                else {
+                    $script:CurrentOceanstorSession
+                }
+                (Get-DMhost -WebSession $session | Select-Object -First 1).PSObject.Properties.Name |
+                    Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$Filter,
         [Parameter(ValueFromPipelineByPropertyName = $true, Position = 2, Mandatory = $true)]

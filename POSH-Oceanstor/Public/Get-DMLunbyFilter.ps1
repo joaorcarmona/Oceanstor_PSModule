@@ -72,7 +72,19 @@ function Get-DMLunbyFilter {
         [ValidateNotNullOrEmpty()]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
-                Get-DMLunFilterableProperty | Where-Object { $_ -like "$wordToComplete*" }
+                # A private-function or class-type-literal reference here would not resolve when the
+                # real completion engine invokes this scriptblock (confirmed empirically); only calling
+                # an already-public command like Get-DMlun works, so property names are read off one
+                # live sample object instead of reflecting on the class directly -- this also means the
+                # offered names are for whichever LUN class this specific array actually returns.
+                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
+                    $fakeBoundParameters.WebSession
+                }
+                else {
+                    $script:CurrentOceanstorSession
+                }
+                (Get-DMlun -WebSession $session | Select-Object -First 1).PSObject.Properties.Name |
+                    Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$Filter,
         [Parameter(ValueFromPipelineByPropertyName = $true, Position = 2, Mandatory = $true)]
