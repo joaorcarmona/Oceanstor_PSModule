@@ -30,15 +30,13 @@ Detailed audit findings live in `ANALYSIS.md`. Release-facing summaries live in 
 - [x] **Enforce Explicit Export Controls**
   - [x] Update `POSH-Oceanstor.psd1` to explicitly populate `FunctionsToExport`.
   - [x] Shift from wildcard exports (`*`) to explicit names to improve module load time and baseline command discovery.
-- [ ] **Standardize Noun Cardinality**
-  - Refactor public endpoint nouns from plural to singular where needed, for example `Get-DMLuns` to `Get-DMLun`.
-  - Rely on pipeline processing or array-bound parameters to handle multi-object output naturally.
 
 ### Native Pipeline & Context Architecture
 
 - [ ] **Implement Complete Pipeline Support**
   - Add `ValueFromPipeline` and `ValueFromPipelineByPropertyName` attributes to core parameters inside targeting commands.
   - Structure cmdlets with proper `begin {}`, `process {}`, and `end {}` blocks to prevent multi-object arrays from flattening or dropping records.
+  - Rely on pipeline processing or array-bound parameters to handle multi-object output naturally, now that endpoint nouns are singular (see Completed).
 
 ### Resilient REST API Integration
 
@@ -51,18 +49,14 @@ Detailed audit findings live in `ANALYSIS.md`. Release-facing summaries live in 
 
 ### Data Guardrails & Safety
 
-- [ ] **Expand `ShouldProcess` on State-Changing Actions**
-  - Confirm all destructive/mutation endpoints use `SupportsShouldProcess = $true`.
-  - Enforce native support for `-WhatIf` and `-Confirm` parameters across mutating API interactions.
 - [ ] **Build Dynamic Parameter-to-Payload Transformer**
   - Create an internal private helper `ConvertFrom-DMParameterToPayload`.
   - Map PascalCase PowerShell parameters such as `-LunId` into the native REST payload keys required by DeviceManager via `$PSBoundParameters`.
 
 ### Testing, CI/CD, & Supply Chain Security
 
-- [ ] **Modernize Pester Configuration**
-  - Audit and transition the `Tests/` directory structure to modern Pester 5+ syntax standards.
-  - Prefer explicit `BeforeAll`, `Describe`, `Context`, and `It` block segmentation where it improves readability.
+- [ ] **Pin an Upper Pester Version Bound**
+  - `Tests/Invoke-UnitTests.ps1` pins `Import-Module Pester -MinimumVersion 5.0.0` with no ceiling; add a `-MaximumVersion` (or an explicit compatibility check) so a future Pester 6 major bump can't silently break CI.
 - [ ] **Develop Robust API Mocking**
   - Build comprehensive `Mock Invoke-RestMethod` templates that mimic real Huawei OceanStor v6 responses.
   - Keep code-path validation isolated and safe without requiring a physical SAN connection.
@@ -91,4 +85,7 @@ Detailed audit findings live in `ANALYSIS.md`. Release-facing summaries live in 
 - [x] ~~Define a consistent minimum object-method surface, such as `Rename()`, `Delete()`, and relationship helpers, for mutable returned objects.~~ `Delete()` was added to all mutable classes that lacked it, including LUN, file system, host, group, mapping view, NAS share, and dTree classes. Each method is covered by the corresponding class tests.
 - [x] ~~Generate command/object inventory during CI and fail when a new public command or class is absent from maintained coverage metadata.~~ `Tests/ModuleCoverage.psd1` records all class names. `Tests/Unit/Private/ModuleInventory.Tests.ps1` cross-checks every `Public/*.ps1` file against `FunctionsToExport` and every `Private/class-*.ps1` file against `ModuleCoverage.psd1`.
 - [x] ~~Enforce explicit export controls.~~ `POSH-Oceanstor.psd1` explicitly lists all 127 public commands in `FunctionsToExport`; the list matches `POSH-Oceanstor/Public/*.ps1`, and `Test-ModuleManifest` validates the manifest.
+- [x] ~~Standardize noun cardinality.~~ Done in v0.9.4: 30 plural-noun getter commands were renamed to their singular canonical forms (`Get-DMLuns` → `Get-DMlun`, `Get-DMHosts` → `Get-DMhost`, etc.), with 30 backward-compatibility aliases exported in `POSH-Oceanstor.psd1` (`AliasesToExport`) so existing scripts keep working. See `RELEASE_NOTES.md` v0.9.4.
 - [x] ~~Implement Module/Script-Scoped Session Fallback.~~ `POSH-Oceanstor.psm1` now initializes a module-private `$script:CurrentOceanstorSession` variable. `Connect-deviceManager` caches successful sessions into it (and clears/replaces it on reconnect/disconnect) instead of `$global:deviceManager`, and every other public/private cmdlet falls back to it when `-WebSession` is omitted. See `ANALYSIS.md` finding S6 for the narrowed security posture.
+- [x] ~~Expand `ShouldProcess` on state-changing actions.~~ Done in v0.9.4: all 74 mutating public commands (`New-DM*`, `Set-DM*`, `Remove-DM*`, `Rename-DM*`, `Add-DM*`, etc.) declare `SupportsShouldProcess = $true` and call `$PSCmdlet.ShouldProcess()` before their destructive/mutation REST call, giving native `-WhatIf`/`-Confirm` support. See `RELEASE_NOTES.md` v0.9.4.
+- [x] ~~Modernize Pester configuration.~~ Already on Pester 5 idioms throughout: `Tests/Invoke-UnitTests.ps1` uses `New-PesterConfiguration`/`Invoke-Pester -Configuration`; all 48 test files use `Should -Invoke` (zero `Assert-MockCalled`/`Assert-VerifiableMock` legacy calls) and explicit `Describe`/`It` blocks, with 32 of 48 using `BeforeDiscovery` for discovery/run-phase separation. The narrower follow-up (pinning a `-MaximumVersion` against a future Pester 6) is tracked separately above.
