@@ -1,28 +1,10 @@
 function Get-DMhostbyFilter {
     <#
     .SYNOPSIS
-        Searches for OceanStor hosts by a property filter.
+        Deprecated. Searches for OceanStor hosts by a property filter.
 
     .DESCRIPTION
-        Searches for hosts whose specified property matches the supplied keyword.
-        When the filter matches a known API field (Id, Name), the query is pushed
-        server-side to narrow the candidates transferred from the array. Other
-        property names fall back to fetching the full host list, so prefer Id or
-        Name when possible.
-
-        Keyword supports PowerShell wildcards (*, ?, [...]). Per the OceanStor
-        REST API reference, a single colon in "filter=field:value" requests a
-        fuzzy (substring) match, while a double colon requests an exact match --
-        confirmed live (host?filter=ID::5 returns exactly one host; ID:5 returns
-        every host whose ID contains "5", e.g. 15, 51, 150). Without a wildcard,
-        an exact double-colon query is sent. With a wildcard limited to a leading
-        and/or trailing *, the literal middle is sent as a single-colon fuzzy hint
-        to narrow the candidate set server-side. Any other wildcard shape (?, a
-        [...] class, or a * in the middle) can't be expressed as a single fuzzy
-        substring, so the full host list is fetched instead. Either way, the
-        exact requested pattern is always re-verified client-side (-Like) before
-        enrichment, so a broader-than-necessary server-side result only costs
-        extra candidates transferred, never a wrong final result.
+        Deprecated - use Get-DMhost -Filter -Value instead. This command is a thin wrapper kept for backward compatibility and will be removed in a future release.
 
     .PARAMETER WebSession
         Optional parameter to define the session to be use on the REST call. If not defined, the module's cached $script:CurrentOceanstorSession session will be used
@@ -57,6 +39,7 @@ function Get-DMhostbyFilter {
 
     .NOTES
         Filename: Get-DMhostbyFilter.ps1
+        Deprecated: use Get-DMhost -Filter -Value instead.
 
     .LINK
     #>
@@ -71,10 +54,6 @@ function Get-DMhostbyFilter {
         [ValidateNotNullOrEmpty()]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
-                # A private-function or class-type-literal reference here would not resolve when the
-                # real completion engine invokes this scriptblock (confirmed empirically); only calling
-                # an already-public command like Get-DMhost works, so property names are read off one
-                # live sample object instead of reflecting on the class directly.
                 $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
                     $fakeBoundParameters.WebSession
                 }
@@ -90,73 +69,9 @@ function Get-DMhostbyFilter {
         [string]$Keyword
     )
 
-    if ($WebSession) {
-        $session = $WebSession
-    }
-    else {
-        $session = $script:CurrentOceanstorSession
-    }
+    Write-Warning "Get-DMhostbyFilter is deprecated and will be removed in a future release. Use Get-DMhost -Filter -Value instead."
 
-    Assert-DMValidFilterProperty -Type ([OceanStorHost]) -Filter $Filter
-
-    # Map friendly property names to API field names for server-side filtering,
-    # used only to narrow the candidate set transferred from the array. The
-    # exact requested pattern is always re-verified client-side below, so an
-    # imprecise server-side narrowing only costs extra candidates, not correctness.
-    $PropertyToApiField = @{
-        'Id'   = 'ID'
-        'Name' = 'NAME'
-    }
-
-    $apiField = $PropertyToApiField[$Filter]
-    $hasWildcard = $Keyword -match '[*?\[\]]'
-
-    if ($apiField -and -not $hasWildcard) {
-        # No wildcard: request an exact match server-side (double colon).
-        $resource = "host?filter=$($apiField)::$([uri]::EscapeDataString($Keyword))"
-    }
-    elseif ($apiField -and $Keyword -match '^\*?([^*?\[\]]+)\*?$') {
-        # Wildcard limited to a leading/trailing *: the middle is a literal
-        # substring, safe to send as a fuzzy (single colon) narrowing hint.
-        $resource = "host?filter=$($apiField):$([uri]::EscapeDataString($Matches[1]))"
-    }
-    else {
-        # Unmapped field, or a wildcard shape the array's fuzzy filter can't
-        # express as one substring (?, a [...] class, or a * in the middle).
-        $resource = "host"
-    }
-
-    $defaultDisplaySet = "Id", "Name", "Health Status", "Operation System", "Parent Name"
-
-    $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
-        'DefaultDisplayPropertySet',
-        [string[]]$defaultDisplaySet
-    )
-
-    $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
-
-    $response = Invoke-DMPagedRequest -WebSession $session -Resource $resource
-    $hosts = New-Object System.Collections.ArrayList
-
-    foreach ($thost in $response) {
-        $hostobj = [OceanStorHost]::new($thost, $session)
-        [void]$hosts.Add($hostobj)
-    }
-
-    # Always re-verify against the exact requested pattern client-side, even
-    # after a server-side filter. -Like enforces the full wildcard pattern when
-    # Keyword has one, and behaves as an exact match when it doesn't.
-    $hosts = @($hosts | Where-Object $Filter -Like $Keyword)
-
-    # Enrich only the filtered result, not the full unfiltered list, to avoid
-    # paying the per-host initiator lookup cost for hosts that don't match.
-    $hosts = @(Set-DMHostInitiator -InputObject $hosts -WebSession $session)
-
-    $hosts | ForEach-Object {
-        $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
-    }
-
-    return $hosts
+    Get-DMhost -WebSession $WebSession -Filter $Filter -Value $Keyword
 }
 
 Set-Alias -Name Get-DMhostsbyFilter -Value Get-DMhostbyFilter

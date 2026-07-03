@@ -1,10 +1,10 @@
 function Get-DMhostbyName {
     <#
 .SYNOPSIS
-    To Get Huawei Oceanstor Storage configured Hosts querying by Host Name
+    Deprecated. To Get Huawei Oceanstor Storage configured Hosts querying by Host Name
 
 .DESCRIPTION
-    Function to request Huawei Oceanstor Storage configured Hosts
+    Deprecated - use Get-DMhost -Name instead. This command is a thin wrapper kept for backward compatibility and will be removed in a future release.
 
 .PARAMETER webSession
     Optional parameter to define the session to be use on the REST call. If not defined, the module's cached $script:CurrentOceanstorSession session will be used
@@ -32,6 +32,7 @@ function Get-DMhostbyName {
 
 .NOTES
     Filename: Get-DMhostbyName.ps1
+    Deprecated: use Get-DMhost -Name instead.
 
 .LINK
 #>
@@ -44,7 +45,9 @@ function Get-DMhostbyName {
         [string]$Name
     )
 
-    Get-DMhostbyFilter -WebSession $WebSession -Filter 'Name' -Keyword $Name
+    Write-Warning "Get-DMhostbyName is deprecated and will be removed in a future release. Use Get-DMhost -Name instead."
+
+    Get-DMhost -WebSession $WebSession -Name $Name
 }
 
 Set-Alias -Name Get-DMhostsbyName -Value Get-DMhostbyName

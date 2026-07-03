@@ -479,6 +479,126 @@ Describe 'Public getter functions' {
             $script:nameResource | Should -BeLike 'lun?filter=NAME:fin*'
         }
 
+        It 'gets a LUN directly by -Name using an exact server-side filter' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                $script:directNameResource = $Resource
+                [pscustomobject]@{ data = @(New-TestLun -Id 'lun-01' -Name 'finance') }
+            }
+
+            $result = (Get-DMlun -WebSession $script:session -Name 'finance')[0]
+
+            $result.Id | Should -Be 'lun-01'
+            $script:directNameResource | Should -BeLike 'lun?filter=NAME::finance*'
+        }
+
+        It 'gets a LUN directly by -WWN using an exact server-side filter' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                $script:directWwnResource = $Resource
+                [pscustomobject]@{ data = @(New-TestLun -Id 'lun-02' -WWN 'wwn-b') }
+            }
+
+            $result = (Get-DMlun -WebSession $script:session -WWN 'wwn-b')[0]
+
+            $result.Id | Should -Be 'lun-02'
+            $script:directWwnResource | Should -BeLike 'lun?filter=WWN::wwn-b*'
+        }
+
+        It 'gets LUNs directly by -Filter/-Value using an exact server-side query' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                $script:directFilterResource = $Resource
+                [pscustomobject]@{ data = @(New-TestLun -Id 'lun-01' -Name 'finance') }
+            }
+
+            $result = (Get-DMlun -WebSession $script:session -Filter Name -Value finance)[0]
+
+            $result.Id | Should -Be 'lun-01'
+            $script:directFilterResource | Should -BeLike 'lun?filter=NAME::finance*'
+        }
+
+        It 'gets LUNs directly by -LunGroupId without resolving through Get-DMlunGroup' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                switch -Wildcard ($Resource) {
+                    'lungroup/lg-01' { [pscustomobject]@{ data = [pscustomobject]@{ ASSOCIATELUNIDLIST = '["lun-02"]' } }; break }
+                    'lun*' { [pscustomobject]@{ data = @((New-TestLun -Id 'lun-01' -Name 'database'), (New-TestLun -Id 'lun-02' -Name 'archive')) }; break }
+                    default { [pscustomobject]@{ data = @() } }
+                }
+            }
+
+            $result = @(Get-DMlun -WebSession $script:session -LunGroupId 'lg-01')
+
+            $result.Count | Should -Be 1
+            $result[0].Id | Should -Be 'lun-02'
+        }
+
+        It 'gets LUNs directly by -LunGroupName, resolving the group first' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                switch -Wildcard ($Resource) {
+                    'lungroup/1' { [pscustomobject]@{ data = [pscustomobject]@{ ASSOCIATELUNIDLIST = '["lun-02"]' } }; break }
+                    'lungroup*' { [pscustomobject]@{ data = @([pscustomobject]@{ ID = '1'; NAME = 'production-luns'; GROUPTYPE = 0; CAPCITY = 1GB }) }; break }
+                    'lun*' { [pscustomobject]@{ data = @((New-TestLun -Id 'lun-01' -Name 'database'), (New-TestLun -Id 'lun-02' -Name 'archive')) }; break }
+                    default { [pscustomobject]@{ data = @() } }
+                }
+            }
+
+            $result = @(Get-DMlun -WebSession $script:session -LunGroupName 'production-luns')
+
+            $result.Count | Should -Be 1
+            $result[0].Id | Should -Be 'lun-02'
+        }
+
+        It 'gets LUNs directly by piped -LunGroup object' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                switch -Wildcard ($Resource) {
+                    'lungroup/lg-01' { [pscustomobject]@{ data = [pscustomobject]@{ ASSOCIATELUNIDLIST = '["lun-02"]' } }; break }
+                    'lun*' { [pscustomobject]@{ data = @((New-TestLun -Id 'lun-01' -Name 'database'), (New-TestLun -Id 'lun-02' -Name 'archive')) }; break }
+                    default { [pscustomobject]@{ data = @() } }
+                }
+            }
+            $lunGroup = [pscustomobject]@{ Id = 'lg-01'; Name = 'production-luns' }
+
+            $result = @($lunGroup | Get-DMlun -WebSession $script:session)
+
+            $result.Count | Should -Be 1
+            $result[0].Id | Should -Be 'lun-02'
+        }
+
+        It 'rejects supplying both -Name and -Id for Get-DMlun' {
+            { Get-DMlun -WebSession $script:session -Name 'finance' -Id 'lun-01' } | Should -Throw '*parameter set*'
+        }
+
+        It 'Get-DMLunbyFilter warns about deprecation' {
+            Mock Invoke-DeviceManager { [pscustomobject]@{ data = @(New-TestLun -Id 'lun-01' -Name 'finance') } }
+
+            Get-DMLunbyFilter -WebSession $script:session -Filter Name -Keyword finance -WarningVariable warnings -WarningAction SilentlyContinue | Out-Null
+
+            $warnings.Count | Should -Be 1
+            $warnings[0] | Should -Match 'deprecated'
+        }
+
+        It 'Get-DMlunByWWN warns about deprecation' {
+            Mock Invoke-DeviceManager { [pscustomobject]@{ data = @(New-TestLun -Id 'lun-02' -WWN 'wwn-b') } }
+
+            Get-DMlunByWWN -WebSession $script:session -WWN 'wwn-b' -WarningVariable warnings -WarningAction SilentlyContinue | Out-Null
+
+            $warnings.Count | Should -Be 1
+            $warnings[0] | Should -Match 'deprecated'
+        }
+
+        It 'Get-DMlunByName warns about deprecation' {
+            Mock Invoke-DeviceManager { [pscustomobject]@{ data = @(New-TestLun -Id 'lun-01' -Name 'finance') } }
+
+            Get-DMlunByName -WebSession $script:session -Name 'finance' -WarningVariable warnings -WarningAction SilentlyContinue | Out-Null
+
+            $warnings.Count | Should -Be 1
+            $warnings[0] | Should -Match 'deprecated'
+        }
+
         It 'gets NFS file clients' {
             Mock Invoke-DeviceManager { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'client-01'; NAME = '10.0.0.0/24'; ACCESSVAL = 1; CHARSET = 0 }) } }
 

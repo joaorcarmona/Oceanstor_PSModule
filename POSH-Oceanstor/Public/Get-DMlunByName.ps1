@@ -1,12 +1,10 @@
 function Get-DMlunByName {
     <#
     .SYNOPSIS
-        Searches for a LUN by its name.
+        Deprecated. Searches for a LUN by its name.
 
     .DESCRIPTION
-        Searches for LUNs whose name matches the supplied value, via
-        Get-DMLunbyFilter. Name supports PowerShell wildcards (*, ?, [...]);
-        without one, the comparison is an exact match.
+        Deprecated - use Get-DMlun -Name instead. This command is a thin wrapper kept for backward compatibility and will be removed in a future release.
 
     .PARAMETER WebSession
         Optional parameter to define the session to be use on the REST call. If not defined, the module's cached $script:CurrentOceanstorSession session will be used
@@ -39,6 +37,7 @@ function Get-DMlunByName {
 
     .NOTES
         Filename: Get-DMlunByName.ps1
+        Deprecated: use Get-DMlun -Name instead.
 
     .LINK
     #>
@@ -52,7 +51,9 @@ function Get-DMlunByName {
         [string]$Name
     )
 
-    Get-DMLunbyFilter -WebSession $WebSession -Filter 'Name' -Keyword $Name
+    Write-Warning "Get-DMlunByName is deprecated and will be removed in a future release. Use Get-DMlun -Name instead."
+
+    Get-DMlun -WebSession $WebSession -Name $Name
 }
 
 Set-Alias -Name Get-DMlunsByName -Value Get-DMlunByName

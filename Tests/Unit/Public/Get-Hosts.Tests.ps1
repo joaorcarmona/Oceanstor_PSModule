@@ -107,6 +107,94 @@ Describe 'Public getter functions' {
             { Get-DMhost -WebSession $script:session -Name 'server-a' -Id 'host-01' } | Should -Throw '*parameter set*'
         }
 
+        It 'gets hosts directly by -Filter/-Value using an exact server-side query' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                if ($Resource -like 'host?filter=NAME::server-a*') {
+                    $script:directFilterResource = $Resource
+                    return [pscustomobject]@{ data = @($script:hostRecords[0]) }
+                }
+                [pscustomobject]@{ data = @() }
+            }
+
+            $result = @(Get-DMhost -WebSession $script:session -Filter Name -Value 'server-a')
+
+            $result.Count | Should -Be 1
+            $result[0].id | Should -Be 'host-01'
+            $script:directFilterResource | Should -BeLike 'host?filter=NAME::server-a*'
+        }
+
+        It 'gets hosts directly by -HostGroupId without resolving through Get-DMhostGroup' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                if ($Resource -eq 'host/associate?ASSOCIATEOBJTYPE=14&ASSOCIATEOBJID=group-01') {
+                    return [pscustomobject]@{ data = @($script:hostRecords[0]) }
+                }
+                [pscustomobject]@{ data = @() }
+            }
+
+            $result = @(Get-DMhost -WebSession $script:session -HostGroupId 'group-01')
+
+            $result.Count | Should -Be 1
+            $result[0].id | Should -Be 'host-01'
+        }
+
+        It 'gets hosts directly by -HostGroupName, resolving the group first' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                switch -Wildcard ($Resource) {
+                    'host/associate?ASSOCIATEOBJTYPE=14&ASSOCIATEOBJID=2*' { [pscustomobject]@{ data = @($script:hostRecords[1]) }; break }
+                    'hostgroup*' { [pscustomobject]@{ data = @([pscustomobject]@{ ID = '2'; NAME = 'cluster-b'; TYPE = 0; ISADD2MAPPINGVIEW = 'true' }) }; break }
+                    default { [pscustomobject]@{ data = @() } }
+                }
+            }
+
+            $result = @(Get-DMhost -WebSession $script:session -HostGroupName 'cluster-b')
+
+            $result.Count | Should -Be 1
+            $result[0].id | Should -Be 'host-02'
+        }
+
+        It 'gets hosts directly by piped -HostGroup object' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                if ($Resource -eq 'host/associate?ASSOCIATEOBJTYPE=14&ASSOCIATEOBJID=group-01') {
+                    return [pscustomobject]@{ data = @($script:hostRecords[0]) }
+                }
+                [pscustomobject]@{ data = @() }
+            }
+
+            $hostGroup = [pscustomobject]@{ Id = 'group-01'; Name = 'cluster-a' }
+            $result = @($hostGroup | Get-DMhost -WebSession $script:session)
+
+            $result.Count | Should -Be 1
+            $result[0].id | Should -Be 'host-01'
+        }
+
+        It 'exposes completion metadata for -Name, sourced from a live host sample' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                switch -Wildcard ($Resource) {
+                    'host' { [pscustomobject]@{ data = $script:hostRecords } }
+                    'host?range=*' { [pscustomobject]@{ data = $script:hostRecords } }
+                    default { [pscustomobject]@{ data = @() } }
+                }
+            }
+
+            $command = Get-Command Get-DMhost
+            @($command.Parameters['Name'].Attributes |
+                Where-Object { $_ -is [System.Management.Automation.ArgumentCompleterAttribute] }).Count |
+                Should -BeGreaterThan 0 -Because 'Get-DMhost -Name should support tab completion'
+
+            $completer = ($command.Parameters['Name'].Attributes |
+                Where-Object { $_ -is [System.Management.Automation.ArgumentCompleterAttribute] })[0].ScriptBlock
+            $fakeBoundParameters = @{ WebSession = $script:session }
+            $candidates = @(& $completer 'Get-DMhost' 'Name' '' $null $fakeBoundParameters)
+
+            $candidates | Should -Contain 'server-a'
+            $candidates | Should -Contain 'server-b'
+        }
+
         It 'throws a descriptive error when the API reports a failure retrieving hosts' {
             Mock Invoke-DeviceManager {
                 [pscustomobject]@{ error = [pscustomobject]@{ Code = 1077939726; description = 'session expired' } }
@@ -331,6 +419,44 @@ Describe 'Public getter functions' {
             $result = @(Get-DMHostInitiator -WebSession $script:session -HostId 'host-fc-only' -InitiatorType ISCSI)
 
             $result | Should -BeNullOrEmpty
+        }
+    }
+
+    Describe 'Host getter deprecation warnings' {
+        BeforeEach {
+            $script:hostRecords = @(
+                [pscustomobject]@{ ID = 'host-01'; NAME = 'server-a'; PARENTTYPE = 14; PARENTID = 'group-01'; PARENTNAME = 'cluster-a'; HEALTHSTATUS = 1; RUNNINGSTATUS = 1; TYPE = 21 }
+                [pscustomobject]@{ ID = 'host-02'; NAME = 'server-b'; PARENTTYPE = 14; PARENTID = 'group-02'; PARENTNAME = 'cluster-b'; HEALTHSTATUS = 1; RUNNINGSTATUS = 1; TYPE = 21 }
+            )
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                switch -Wildcard ($Resource) {
+                    'host?filter=NAME::server-a*' { [pscustomobject]@{ data = @($script:hostRecords[0]) }; break }
+                    'host?filter=ID::host-01*' { [pscustomobject]@{ data = @($script:hostRecords[0]) }; break }
+                    default { [pscustomobject]@{ data = @() } }
+                }
+            }
+        }
+
+        It 'Get-DMhostbyFilter warns about deprecation' {
+            Get-DMhostbyFilter -WebSession $script:session -Filter 'Name' -Keyword 'server-a' -WarningVariable warnings -WarningAction SilentlyContinue | Out-Null
+
+            $warnings.Count | Should -Be 1
+            $warnings[0] | Should -Match 'deprecated'
+        }
+
+        It 'Get-DMhostbyName warns about deprecation' {
+            Get-DMhostbyName -WebSession $script:session -Name 'server-a' -WarningVariable warnings -WarningAction SilentlyContinue | Out-Null
+
+            $warnings.Count | Should -Be 1
+            $warnings[0] | Should -Match 'deprecated'
+        }
+
+        It 'Get-DMhostbyId warns about deprecation' {
+            Get-DMhostbyId -WebSession $script:session -hostId 'host-01' -WarningVariable warnings -WarningAction SilentlyContinue | Out-Null
+
+            $warnings.Count | Should -Be 1
+            $warnings[0] | Should -Match 'deprecated'
         }
     }
 }

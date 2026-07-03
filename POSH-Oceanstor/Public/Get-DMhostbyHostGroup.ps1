@@ -1,14 +1,10 @@
 function Get-DMhostbyHostGroup {
     <#
 	.SYNOPSIS
-		Retrieves the hosts associated with a host group.
+		Deprecated. Retrieves the hosts associated with a host group.
 
 	.DESCRIPTION
-		Queries host/associate for the hosts associated with a host group
-		(ASSOCIATEOBJTYPE=14 identifies a host group), a server-side filtered
-		call that returns only that group's member hosts. The target host
-		group can be identified by an already-resolved object, by name, or
-		by ID.
+		Deprecated - use Get-DMhost -HostGroup / -HostGroupName / -HostGroupId instead. This command is a thin wrapper kept for backward compatibility and will be removed in a future release.
 
 	.PARAMETER WebSession
 		Optional session to use on REST calls. If omitted, the module's cached $script:CurrentOceanstorSession session is used.
@@ -52,6 +48,7 @@ function Get-DMhostbyHostGroup {
 
 	.NOTES
 		Filename: Get-DMhostbyHostGroup.ps1
+		Deprecated: use Get-DMhost -HostGroup / -HostGroupName / -HostGroupId instead.
 		If WebSession is omitted, the command uses the module-scoped $script:CurrentOceanstorSession session.
 
 	.LINK
@@ -101,47 +98,13 @@ function Get-DMhostbyHostGroup {
         [string]$HostGroupId
     )
 
-    if ($WebSession) {
-        $session = $WebSession
+    Write-Warning "Get-DMhostbyHostGroup is deprecated and will be removed in a future release. Use Get-DMhost -HostGroup / -HostGroupName / -HostGroupId instead."
+
+    switch ($PSCmdlet.ParameterSetName) {
+        'ByObject' { return Get-DMhost -WebSession $WebSession -HostGroup $HostGroup }
+        'ByName' { return Get-DMhost -WebSession $WebSession -HostGroupName $HostGroupName }
+        'ById' { return Get-DMhost -WebSession $WebSession -HostGroupId $HostGroupId }
     }
-    else {
-        $session = $script:CurrentOceanstorSession
-    }
-
-    $groupId = switch ($PSCmdlet.ParameterSetName) {
-        'ByObject' { $HostGroup.Id }
-        'ByName' {
-            $resolvedGroup = @(Get-DMhostGroup -WebSession $session | Where-Object Name -EQ $HostGroupName)[0]
-            if ($null -eq $resolvedGroup) { throw "Could not resolve 'HostGroupName' - the object may have been removed since parameter validation." }
-            $resolvedGroup.Id
-        }
-        'ById' { $HostGroupId }
-    }
-
-    $defaultDisplaySet = "Id", "Name", "Health Status", "Operation System", "Parent Name"
-
-    $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
-        'DefaultDisplayPropertySet',
-        [string[]]$defaultDisplaySet
-    )
-
-    $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
-
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "host/associate?ASSOCIATEOBJTYPE=14&ASSOCIATEOBJID=$groupId" | Select-DMResponseData
-    $hosts = New-Object System.Collections.ArrayList
-
-    foreach ($thost in $response) {
-        $hostobj = [OceanStorHost]::new($thost, $session)
-        [void]$hosts.Add($hostobj)
-    }
-
-    $hosts = @(Set-DMHostInitiator -InputObject $hosts -WebSession $session)
-
-    $hosts | ForEach-Object {
-        $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
-    }
-
-    return $hosts
 }
 
 Set-Alias -Name Get-DMhostsbyHostGroup -Value Get-DMhostbyHostGroup

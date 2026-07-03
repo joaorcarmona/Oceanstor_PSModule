@@ -142,6 +142,99 @@ Describe 'Public getter functions' {
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
                 Should -Be @('Id', 'Location', 'Health Status', 'Disk Usage', 'PoolName')
         }
+
+        It 'gets disks directly by -Free' {
+            $result = (Get-DMdisk -WebSession $script:session -Free)[0]
+
+            $result.id | Should -Be 'disk-free'
+        }
+
+        It 'gets disks directly by -Coffer' {
+            $result = (Get-DMdisk -WebSession $script:session -Coffer)[0]
+
+            $result.id | Should -Be 'disk-coffer'
+        }
+
+        It 'gets disks directly by -StoragePoolId' {
+            $result = (Get-DMdisk -WebSession $script:session -StoragePoolId 'pool-01')[0]
+
+            $result.id | Should -Be 'disk-free'
+        }
+
+        It 'gets disks directly by -StoragePoolName' {
+            $result = (Get-DMdisk -WebSession $script:session -StoragePoolName 'capacity')[0]
+
+            $result.id | Should -Be 'disk-coffer'
+        }
+
+        It 'gets disks directly by piped -StoragePool object' {
+            $pool = New-TestStoragePool -Id 'pool-02' -Name 'capacity'
+            $result = ($pool | Get-DMdisk -WebSession $script:session)[0]
+
+            $result.id | Should -Be 'disk-coffer'
+        }
+
+        It 'gets disks directly by -Location' {
+            $result = (Get-DMdisk -WebSession $script:session -Location 'DAE001')[0]
+
+            $result.id | Should -Be 'disk-coffer'
+        }
+
+        It 'combines -Location with -Free' {
+            $result = @(Get-DMdisk -WebSession $script:session -Free -Location 'DAE001')
+
+            $result.Count | Should -Be 0
+        }
+
+        It 'rejects combining -Free and -Coffer' {
+            { Get-DMdisk -WebSession $script:session -Free -Coffer } | Should -Throw '*parameter set*'
+        }
+    }
+
+    Describe 'Disk getter deprecation warnings' {
+        BeforeEach {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                switch -Wildcard ($Resource) {
+                    'disk*' { [pscustomobject]@{ data = @(New-TestDiskFixture) } }
+                    'storagepool*' {
+                        [pscustomobject]@{ data = @(
+                            (New-TestStoragePool -Id 'pool-01' -Name 'performance')
+                            (New-TestStoragePool -Id 'pool-02' -Name 'capacity')
+                        ) }
+                    }
+                    default { [pscustomobject]@{ data = @() } }
+                }
+            }
+        }
+
+        It 'Get-DMfreeDisk warns about deprecation' {
+            Get-DMfreeDisk -WebSession $script:session -WarningVariable warnings -WarningAction SilentlyContinue | Out-Null
+
+            $warnings.Count | Should -Be 1
+            $warnings[0] | Should -Match 'deprecated'
+        }
+
+        It 'Get-DMDiskbyLocation warns about deprecation' {
+            Get-DMDiskbyLocation -WebSession $script:session -Location 'DAE000' -WarningVariable warnings -WarningAction SilentlyContinue | Out-Null
+
+            $warnings.Count | Should -Be 1
+            $warnings[0] | Should -Match 'deprecated'
+        }
+
+        It 'Get-DMcofferDisk warns about deprecation' {
+            Get-DMcofferDisk -WebSession $script:session -WarningVariable warnings -WarningAction SilentlyContinue | Out-Null
+
+            $warnings.Count | Should -Be 1
+            $warnings[0] | Should -Match 'deprecated'
+        }
+
+        It 'Get-DMDiskByStoragePool warns about deprecation' {
+            Get-DMDiskByStoragePool -WebSession $script:session -StoragePoolId 'pool-01' -WarningVariable warnings -WarningAction SilentlyContinue | Out-Null
+
+            $warnings.Count | Should -Be 1
+            $warnings[0] | Should -Match 'deprecated'
+        }
     }
 }
 }

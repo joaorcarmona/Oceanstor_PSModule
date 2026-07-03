@@ -1,12 +1,10 @@
 function Get-DMlunByWWN {
     <#
     .SYNOPSIS
-        Searches for a LUN by its WWN.
+        Deprecated. Searches for a LUN by its WWN.
 
     .DESCRIPTION
-        Searches for LUNs whose WWN matches the supplied value, via
-        Get-DMLunbyFilter. WWN supports PowerShell wildcards (*, ?, [...]);
-        without one, the comparison is an exact match.
+        Deprecated - use Get-DMlun -WWN instead. This command is a thin wrapper kept for backward compatibility and will be removed in a future release.
 
     .PARAMETER WebSession
         Optional parameter to define the session to be use on the REST call. If not defined, the module's cached $script:CurrentOceanstorSession session will be used
@@ -35,6 +33,7 @@ function Get-DMlunByWWN {
 
     .NOTES
         Filename: Get-DMlunByWWN.ps1
+        Deprecated: use Get-DMlun -WWN instead.
 
     .LINK
     #>
@@ -48,7 +47,9 @@ function Get-DMlunByWWN {
         [string]$WWN
     )
 
-    Get-DMLunbyFilter -WebSession $WebSession -Filter 'WWN' -Keyword $WWN
+    Write-Warning "Get-DMlunByWWN is deprecated and will be removed in a future release. Use Get-DMlun -WWN instead."
+
+    Get-DMlun -WebSession $WebSession -WWN $WWN
 }
 
 Set-Alias -Name Get-DMlunsByWWN -Value Get-DMlunByWWN

@@ -2,11 +2,8 @@ BeforeDiscovery {
     $script:testModule = New-Module -Name GetDMlunbyLunGroupTestModule -ArgumentList $PSScriptRoot -ScriptBlock {
         param($testRoot)
 
-        function Get-DMlun { param([pscustomobject]$WebSession) }
-        function Get-DMlunGroup { param([pscustomobject]$WebSession) }
-        function Invoke-DeviceManager {
-            param([pscustomobject]$WebSession, [string]$Method, [string]$Resource)
-        }
+        function Get-DMlun { param([pscustomobject]$WebSession, $LunGroup, $LunGroupName, $LunGroupId) }
+        function Get-DMlunGroup { param([pscustomobject]$WebSession, [string]$Name) }
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMlunbyLunGroup.ps1"
 
@@ -21,127 +18,60 @@ AfterAll {
 }
 
 InModuleScope GetDMlunbyLunGroupTestModule {
-Describe 'Get-DMlunbyLunGroup' {
+Describe 'Get-DMlunbyLunGroup (legacy wrapper)' {
     BeforeEach {
         $script:session  = [pscustomobject]@{ version = 'V600R001' }
         $script:lunGroup = [pscustomobject]@{ Id = 'lg-01'; Name = 'web-luns' }
 
-        Mock Get-DMlun {
-            @(
-                [pscustomobject]@{ Id = '1'; Name = 'lun-a' }
-                [pscustomobject]@{ Id = '2'; Name = 'lun-b' }
-                [pscustomobject]@{ Id = '3'; Name = 'lun-c' }
-            )
-        }
         Mock Get-DMlunGroup {
-            @([pscustomobject]@{ Id = 'lg-01'; Name = 'web-luns' })
+            param($WebSession, $Name)
+            $groups = @([pscustomobject]@{ Id = 'lg-01'; Name = 'web-luns' })
+            if ($Name) { return @($groups | Where-Object Name -EQ $Name) }
+            $groups
         }
     }
 
-    It 'returns LUNs when ASSOCIATELUNIDLIST is a native array' {
-        Mock Invoke-DeviceManager {
-            [pscustomobject]@{ data = [pscustomobject]@{ ASSOCIATELUNIDLIST = @('1', '2') } }
+    It 'forwards a piped LunGroup object to Get-DMlun' {
+        Mock Get-DMlun { [pscustomobject]@{ Id = '1'; Name = 'lun-a' } }
+
+        $result = @(Get-DMlunbyLunGroup -WebSession $script:session -LunGroup $script:lunGroup)
+
+        $result[0].Name | Should -Be 'lun-a'
+        Should -Invoke Get-DMlun -Times 1 -Exactly -ParameterFilter {
+            $LunGroup -eq $script:lunGroup -and $WebSession -eq $script:session
         }
-
-        $result = Get-DMlunbyLunGroup -WebSession $script:session -LunGroup $script:lunGroup
-
-        $result.Count | Should -Be 2
-        $result.Name  | Should -Contain 'lun-a'
-        $result.Name  | Should -Contain 'lun-b'
     }
 
-    It 'parses ASSOCIATELUNIDLIST when returned as a JSON array string' {
-        Mock Invoke-DeviceManager {
-            [pscustomobject]@{ data = [pscustomobject]@{ ASSOCIATELUNIDLIST = '["1","2"]' } }
+    It 'forwards LunGroupName to Get-DMlun after resolving it' {
+        Mock Get-DMlun { [pscustomobject]@{ Id = '1'; Name = 'lun-a' } }
+
+        $result = @(Get-DMlunbyLunGroup -WebSession $script:session -LunGroupName 'web-luns')
+
+        $result[0].Name | Should -Be 'lun-a'
+        Should -Invoke Get-DMlun -Times 1 -Exactly -ParameterFilter {
+            $LunGroupName -eq 'web-luns' -and $WebSession -eq $script:session
         }
-
-        $result = Get-DMlunbyLunGroup -WebSession $script:session -LunGroup $script:lunGroup
-
-        $result.Count | Should -Be 2
-        $result.Name  | Should -Contain 'lun-a'
-        $result.Name  | Should -Contain 'lun-b'
     }
 
-    It 'parses ASSOCIATELUNIDLIST correctly when JSON parse fails and brackets are present' {
-        # Simulate a PS build where ConvertFrom-Json fails on the input. The fallback must
-        # strip [ ] before splitting so "[1,2,3]" → "1","2","3", not "[1","2","3]".
-        Mock Invoke-DeviceManager {
-            [pscustomobject]@{ data = [pscustomobject]@{ ASSOCIATELUNIDLIST = '[1,2]' } }
-        }
-        Mock ConvertFrom-Json { throw 'simulated parse failure' }
-
-        $result = Get-DMlunbyLunGroup -WebSession $script:session -LunGroup $script:lunGroup
-
-        $result.Count | Should -Be 2
-        $result.Name  | Should -Contain 'lun-a'
-        $result.Name  | Should -Contain 'lun-b'
-    }
-
-    It 'parses ASSOCIATELUNIDLIST when returned as a plain CSV string without brackets' {
-        Mock Invoke-DeviceManager {
-            [pscustomobject]@{ data = [pscustomobject]@{ ASSOCIATELUNIDLIST = '1,2' } }
-        }
-        Mock ConvertFrom-Json { throw 'simulated parse failure' }
-
-        $result = Get-DMlunbyLunGroup -WebSession $script:session -LunGroup $script:lunGroup
-
-        $result.Count | Should -Be 2
-    }
-
-    It 'returns an empty array when the group has no associated LUNs' {
-        Mock Invoke-DeviceManager {
-            [pscustomobject]@{ data = [pscustomobject]@{ ASSOCIATELUNIDLIST = $null } }
-        }
-
-        $result = Get-DMlunbyLunGroup -WebSession $script:session -LunGroup $script:lunGroup
-
-        @($result).Count | Should -Be 0
-    }
-
-    It 'returns an empty array when the API response has no data property' {
-        Mock Invoke-DeviceManager { [pscustomobject]@{} }
-
-        $result = Get-DMlunbyLunGroup -WebSession $script:session -LunGroup $script:lunGroup
-
-        @($result).Count | Should -Be 0
-    }
-
-    It 'resolves the group by name when LunGroupName is supplied' {
-        $script:requestedResource = $null
-        Mock Invoke-DeviceManager {
-            param($WebSession, $Method, $Resource)
-            $script:requestedResource = $Resource
-            [pscustomobject]@{ data = [pscustomobject]@{ ASSOCIATELUNIDLIST = @('1', '2') } }
-        }
-
-        $result = Get-DMlunbyLunGroup -WebSession $script:session -LunGroupName 'web-luns'
-
-        $result.Count | Should -Be 2
-        $script:requestedResource | Should -Be 'lungroup/lg-01'
-    }
-
-    It 'rejects a LunGroupName that does not exist' {
-        Mock Invoke-DeviceManager { [pscustomobject]@{ data = [pscustomobject]@{ ASSOCIATELUNIDLIST = @() } } }
+    It 'rejects a LunGroupName that does not exist, before calling Get-DMlun' {
+        Mock Get-DMlun { [pscustomobject]@{ Id = '1'; Name = 'lun-a' } }
 
         { Get-DMlunbyLunGroup -WebSession $script:session -LunGroupName 'missing' } |
             Should -Throw '*Invalid LunGroupName*'
 
-        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
+        Should -Invoke Get-DMlun -Times 0 -Exactly
     }
 
-    It 'resolves the group by ID when LunGroupId is supplied, without validating it first' {
-        $script:requestedResource = $null
-        Mock Invoke-DeviceManager {
-            param($WebSession, $Method, $Resource)
-            $script:requestedResource = $Resource
-            [pscustomobject]@{ data = [pscustomobject]@{ ASSOCIATELUNIDLIST = @('1', '2') } }
-        }
+    It 'forwards LunGroupId to Get-DMlun without validating it first' {
+        Mock Get-DMlun { [pscustomobject]@{ Id = '1'; Name = 'lun-a' } }
 
-        $result = Get-DMlunbyLunGroup -WebSession $script:session -LunGroupId 'lg-99'
+        $result = @(Get-DMlunbyLunGroup -WebSession $script:session -LunGroupId 'lg-99')
 
-        $result.Count | Should -Be 2
-        $script:requestedResource | Should -Be 'lungroup/lg-99'
+        $result[0].Name | Should -Be 'lun-a'
         Should -Invoke Get-DMlunGroup -Times 0 -Exactly
+        Should -Invoke Get-DMlun -Times 1 -Exactly -ParameterFilter {
+            $LunGroupId -eq 'lg-99' -and $WebSession -eq $script:session
+        }
     }
 
     It 'exposes completion metadata for LunGroupName' {
@@ -149,6 +79,15 @@ Describe 'Get-DMlunbyLunGroup' {
         @($command.Parameters['LunGroupName'].Attributes |
             Where-Object { $_ -is [System.Management.Automation.ArgumentCompleterAttribute] }).Count |
             Should -BeGreaterThan 0 -Because 'Get-DMlunbyLunGroup -LunGroupName should support tab completion'
+    }
+
+    It 'warns about deprecation' {
+        Mock Get-DMlun { [pscustomobject]@{ Id = '1'; Name = 'lun-a' } }
+
+        Get-DMlunbyLunGroup -WebSession $script:session -LunGroup $script:lunGroup -WarningVariable warnings -WarningAction SilentlyContinue | Out-Null
+
+        $warnings.Count | Should -Be 1
+        $warnings[0] | Should -Match 'deprecated'
     }
 }
 }

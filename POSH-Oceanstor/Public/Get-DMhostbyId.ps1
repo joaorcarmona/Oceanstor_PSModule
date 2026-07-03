@@ -1,10 +1,10 @@
 function Get-DMhostbyId {
     <#
 .SYNOPSIS
-    To Get Huawei Oceanstor Storage configured Hosts querying by Hostid
+    Deprecated. To Get Huawei Oceanstor Storage configured Hosts querying by Hostid
 
 .DESCRIPTION
-    Function to request Huawei Oceanstor Storage configured Hosts
+    Deprecated - use Get-DMhost -Id instead. This command is a thin wrapper kept for backward compatibility and will be removed in a future release.
 
 .PARAMETER webSession
     Optional parameter to define the session to be use on the REST call. If not defined, the module's cached $script:CurrentOceanstorSession session will be used
@@ -32,6 +32,7 @@ function Get-DMhostbyId {
 
 .NOTES
     Filename: Get-DMhostbyId.ps1
+    Deprecated: use Get-DMhost -Id instead.
 
 .LINK
 #>
@@ -44,7 +45,9 @@ function Get-DMhostbyId {
         [string]$hostId
     )
 
-    Get-DMhostbyFilter -WebSession $WebSession -Filter 'Id' -Keyword $hostId
+    Write-Warning "Get-DMhostbyId is deprecated and will be removed in a future release. Use Get-DMhost -Id instead."
+
+    Get-DMhost -WebSession $WebSession -Id $hostId
 }
 
 Set-Alias -Name Get-DMhostsbyId -Value Get-DMhostbyId

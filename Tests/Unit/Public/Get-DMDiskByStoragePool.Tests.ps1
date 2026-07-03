@@ -3,16 +3,8 @@ BeforeDiscovery {
         param($testRoot)
 
         function Get-DMstoragePool { param([pscustomobject]$WebSession, [string]$Name) }
-        function Get-DMparsedElabel { param([string]$eLabelString) }
-        function Invoke-DeviceManager {
-            param([pscustomobject]$WebSession, [string]$Method, [string]$Resource)
-        }
+        function Get-DMdisk { param($WebSession, $StoragePool, $StoragePoolName, $StoragePoolId) }
 
-        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Select-DMResponseData.ps1"
-        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Get-DMApiErrorMessage.ps1"
-        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Invoke-DMPagedRequest.ps1"
-        . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
-        . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorDisks.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMDiskByStoragePool.ps1"
 
         Export-ModuleMember -Function Get-DMDiskByStoragePool
@@ -26,7 +18,7 @@ AfterAll {
 }
 
 InModuleScope GetDMDiskByStoragePoolTestModule {
-Describe 'Get-DMDiskByStoragePool' {
+Describe 'Get-DMDiskByStoragePool (legacy wrapper)' {
     BeforeEach {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
         $script:storagePool = [pscustomobject]@{ Id = 'pool-01'; Name = 'performance' }
@@ -37,65 +29,49 @@ Describe 'Get-DMDiskByStoragePool' {
             if ($Name) { return @($pools | Where-Object Name -Like $Name) }
             $pools
         }
-        Mock Get-DMparsedElabel { [pscustomobject]@{} }
     }
 
-    It 'returns disks that are members of the pool when a StoragePool object is supplied' {
-        Mock Invoke-DeviceManager {
-            [pscustomobject]@{ data = @(
-                    [pscustomobject]@{ ID = 'disk-01'; POOLID = 'pool-01'; POOLNAME = 'performance'; LOGICTYPE = 2; HEALTHSTATUS = 1; RUNNINGSTATUS = 27; TYPE = 10; DISKTYPE = 14; DISKFORM = 3; barcode = '00PARTNUM01'; ELABEL = 'BoardType=board-01' }
-                    [pscustomobject]@{ ID = 'disk-02'; POOLID = 'pool-02'; POOLNAME = 'capacity'; LOGICTYPE = 2; HEALTHSTATUS = 1; RUNNINGSTATUS = 27; TYPE = 10; DISKTYPE = 14; DISKFORM = 3; barcode = '00PARTNUM01'; ELABEL = 'BoardType=board-01' }
-                ) }
-        }
+    It 'forwards a piped StoragePool object to Get-DMdisk' {
+        Mock Get-DMdisk { [pscustomobject]@{ id = 'disk-01' } }
 
         $result = @(Get-DMDiskByStoragePool -WebSession $script:session -StoragePool $script:storagePool)
 
-        $result.Count | Should -Be 1
         $result[0].id | Should -Be 'disk-01'
+        Should -Invoke Get-DMdisk -Times 1 -Exactly -ParameterFilter {
+            $StoragePool -eq $script:storagePool -and $WebSession -eq $script:session
+        }
     }
 
-    It 'resolves the pool by name when StoragePoolName is supplied' {
-        Mock Invoke-DeviceManager {
-            [pscustomobject]@{ data = @(
-                    [pscustomobject]@{ ID = 'disk-01'; POOLID = 'pool-01'; POOLNAME = 'performance'; LOGICTYPE = 2; HEALTHSTATUS = 1; RUNNINGSTATUS = 27; TYPE = 10; DISKTYPE = 14; DISKFORM = 3; barcode = '00PARTNUM01'; ELABEL = 'BoardType=board-01' }
-                ) }
-        }
+    It 'forwards StoragePoolName to Get-DMdisk after resolving it' {
+        Mock Get-DMdisk { [pscustomobject]@{ id = 'disk-01' } }
 
         $result = @(Get-DMDiskByStoragePool -WebSession $script:session -StoragePoolName 'performance')
 
-        $result.Count | Should -Be 1
         $result[0].id | Should -Be 'disk-01'
+        Should -Invoke Get-DMdisk -Times 1 -Exactly -ParameterFilter {
+            $StoragePoolName -eq 'performance' -and $WebSession -eq $script:session
+        }
     }
 
-    It 'rejects a StoragePoolName that does not exist' {
-        Mock Invoke-DeviceManager { [pscustomobject]@{ data = @() } }
+    It 'rejects a StoragePoolName that does not exist, before calling Get-DMdisk' {
+        Mock Get-DMdisk { [pscustomobject]@{ id = 'disk-01' } }
 
         { Get-DMDiskByStoragePool -WebSession $script:session -StoragePoolName 'missing' } |
             Should -Throw '*Invalid StoragePoolName*'
 
-        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
+        Should -Invoke Get-DMdisk -Times 0 -Exactly
     }
 
-    It 'resolves the pool by ID when StoragePoolId is supplied, without validating it first' {
-        Mock Invoke-DeviceManager {
-            [pscustomobject]@{ data = @(
-                    [pscustomobject]@{ ID = 'disk-03'; POOLID = 'pool-99'; POOLNAME = 'archive'; LOGICTYPE = 2; HEALTHSTATUS = 1; RUNNINGSTATUS = 27; TYPE = 10; DISKTYPE = 14; DISKFORM = 3; barcode = '00PARTNUM01'; ELABEL = 'BoardType=board-01' }
-                ) }
-        }
+    It 'forwards StoragePoolId to Get-DMdisk without validating it first' {
+        Mock Get-DMdisk { [pscustomobject]@{ id = 'disk-03' } }
 
         $result = @(Get-DMDiskByStoragePool -WebSession $script:session -StoragePoolId 'pool-99')
 
-        $result.Count | Should -Be 1
         $result[0].id | Should -Be 'disk-03'
         Should -Invoke Get-DMstoragePool -Times 0 -Exactly
-    }
-
-    It 'returns an empty array when the pool has no member disks' {
-        Mock Invoke-DeviceManager { [pscustomobject]@{ data = @() } }
-
-        $result = Get-DMDiskByStoragePool -WebSession $script:session -StoragePool $script:storagePool
-
-        @($result).Count | Should -Be 0
+        Should -Invoke Get-DMdisk -Times 1 -Exactly -ParameterFilter {
+            $StoragePoolId -eq 'pool-99' -and $WebSession -eq $script:session
+        }
     }
 
     It 'exposes completion metadata for StoragePoolName' {
@@ -103,6 +79,15 @@ Describe 'Get-DMDiskByStoragePool' {
         @($command.Parameters['StoragePoolName'].Attributes |
             Where-Object { $_ -is [System.Management.Automation.ArgumentCompleterAttribute] }).Count |
             Should -BeGreaterThan 0 -Because 'Get-DMDiskByStoragePool -StoragePoolName should support tab completion'
+    }
+
+    It 'warns about deprecation' {
+        Mock Get-DMdisk { [pscustomobject]@{ id = 'disk-01' } }
+
+        Get-DMDiskByStoragePool -WebSession $script:session -StoragePool $script:storagePool -WarningVariable warnings -WarningAction SilentlyContinue | Out-Null
+
+        $warnings.Count | Should -Be 1
+        $warnings[0] | Should -Match 'deprecated'
     }
 }
 }

@@ -2,16 +2,9 @@ BeforeDiscovery {
     $script:testModule = New-Module -Name GetDMhostbyHostGroupTestModule -ArgumentList $PSScriptRoot -ScriptBlock {
         param($testRoot)
 
-        function Get-DMhostGroup { param([pscustomobject]$WebSession) }
-        function Set-DMHostInitiator { param([object[]]$InputObject, [pscustomobject]$WebSession) }
-        function Invoke-DeviceManager {
-            param([pscustomobject]$WebSession, [string]$Method, [string]$Resource)
-        }
+        function Get-DMhost { param([pscustomobject]$WebSession, $HostGroup, $HostGroupName, $HostGroupId) }
+        function Get-DMhostGroup { param([pscustomobject]$WebSession, [string]$Name) }
 
-        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Select-DMResponseData.ps1"
-        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Get-DMApiErrorMessage.ps1"
-        . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
-        . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorHost.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMhostbyHostGroup.ps1"
 
         Export-ModuleMember -Function Get-DMhostbyHostGroup
@@ -25,81 +18,60 @@ AfterAll {
 }
 
 InModuleScope GetDMhostbyHostGroupTestModule {
-Describe 'Get-DMhostbyHostGroup' {
+Describe 'Get-DMhostbyHostGroup (legacy wrapper)' {
     BeforeEach {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
         $script:hostGroup = [pscustomobject]@{ Id = 'hg-01'; Name = 'cluster01' }
-        $script:requestedResource = $null
 
         Mock Get-DMhostGroup {
-            @([pscustomobject]@{ Id = 'hg-01'; Name = 'cluster01' })
-        }
-        Mock Set-DMHostInitiator {
-            param($InputObject, $WebSession)
-            $InputObject
+            param($WebSession, $Name)
+            $groups = @([pscustomobject]@{ Id = 'hg-01'; Name = 'cluster01' })
+            if ($Name) { return @($groups | Where-Object Name -EQ $Name) }
+            $groups
         }
     }
 
-    It 'returns hosts associated with the group when a HostGroup object is supplied' {
-        Mock Invoke-DeviceManager {
-            param($WebSession, $Method, $Resource)
-            $script:requestedResource = $Resource
-            [pscustomobject]@{ data = @(
-                    [pscustomobject]@{ ID = 'host-01'; NAME = 'server-a'; HEALTHSTATUS = 1; RUNNINGSTATUS = 1; TYPE = 21 }
-                ) }
-        }
+    It 'forwards a piped HostGroup object to Get-DMhost' {
+        Mock Get-DMhost { [pscustomobject]@{ Id = 'host-01'; Name = 'server-a' } }
 
-        $result = Get-DMhostbyHostGroup -WebSession $script:session -HostGroup $script:hostGroup
+        $result = @(Get-DMhostbyHostGroup -WebSession $script:session -HostGroup $script:hostGroup)
 
-        $result.Count | Should -Be 1
         $result[0].Name | Should -Be 'server-a'
-        $script:requestedResource | Should -Be 'host/associate?ASSOCIATEOBJTYPE=14&ASSOCIATEOBJID=hg-01'
-    }
-
-    It 'resolves the group by name when HostGroupName is supplied' {
-        Mock Invoke-DeviceManager {
-            param($WebSession, $Method, $Resource)
-            $script:requestedResource = $Resource
-            [pscustomobject]@{ data = @(
-                    [pscustomobject]@{ ID = 'host-01'; NAME = 'server-a'; HEALTHSTATUS = 1; RUNNINGSTATUS = 1; TYPE = 21 }
-                ) }
+        Should -Invoke Get-DMhost -Times 1 -Exactly -ParameterFilter {
+            $HostGroup -eq $script:hostGroup -and $WebSession -eq $script:session
         }
-
-        $result = Get-DMhostbyHostGroup -WebSession $script:session -HostGroupName 'cluster01'
-
-        $result.Count | Should -Be 1
-        $script:requestedResource | Should -Be 'host/associate?ASSOCIATEOBJTYPE=14&ASSOCIATEOBJID=hg-01'
     }
 
-    It 'rejects a HostGroupName that does not exist' {
-        Mock Invoke-DeviceManager { [pscustomobject]@{ data = @() } }
+    It 'forwards HostGroupName to Get-DMhost after resolving it' {
+        Mock Get-DMhost { [pscustomobject]@{ Id = 'host-01'; Name = 'server-a' } }
+
+        $result = @(Get-DMhostbyHostGroup -WebSession $script:session -HostGroupName 'cluster01')
+
+        $result[0].Name | Should -Be 'server-a'
+        Should -Invoke Get-DMhost -Times 1 -Exactly -ParameterFilter {
+            $HostGroupName -eq 'cluster01' -and $WebSession -eq $script:session
+        }
+    }
+
+    It 'rejects a HostGroupName that does not exist, before calling Get-DMhost' {
+        Mock Get-DMhost { [pscustomobject]@{ Id = 'host-01'; Name = 'server-a' } }
 
         { Get-DMhostbyHostGroup -WebSession $script:session -HostGroupName 'missing' } |
             Should -Throw '*Invalid HostGroupName*'
 
-        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
+        Should -Invoke Get-DMhost -Times 0 -Exactly
     }
 
-    It 'resolves the group by ID when HostGroupId is supplied, without validating it first' {
-        Mock Invoke-DeviceManager {
-            param($WebSession, $Method, $Resource)
-            $script:requestedResource = $Resource
-            [pscustomobject]@{ data = @() }
-        }
+    It 'forwards HostGroupId to Get-DMhost without validating it first' {
+        Mock Get-DMhost { [pscustomobject]@{ Id = 'host-01'; Name = 'server-a' } }
 
         $result = @(Get-DMhostbyHostGroup -WebSession $script:session -HostGroupId 'hg-99')
 
-        $result.Count | Should -Be 0
-        $script:requestedResource | Should -Be 'host/associate?ASSOCIATEOBJTYPE=14&ASSOCIATEOBJID=hg-99'
+        $result[0].Name | Should -Be 'server-a'
         Should -Invoke Get-DMhostGroup -Times 0 -Exactly
-    }
-
-    It 'returns an empty array when the group has no associated hosts' {
-        Mock Invoke-DeviceManager { [pscustomobject]@{ data = @() } }
-
-        $result = Get-DMhostbyHostGroup -WebSession $script:session -HostGroup $script:hostGroup
-
-        @($result).Count | Should -Be 0
+        Should -Invoke Get-DMhost -Times 1 -Exactly -ParameterFilter {
+            $HostGroupId -eq 'hg-99' -and $WebSession -eq $script:session
+        }
     }
 
     It 'exposes completion metadata for HostGroupName' {
@@ -107,6 +79,15 @@ Describe 'Get-DMhostbyHostGroup' {
         @($command.Parameters['HostGroupName'].Attributes |
             Where-Object { $_ -is [System.Management.Automation.ArgumentCompleterAttribute] }).Count |
             Should -BeGreaterThan 0 -Because 'Get-DMhostbyHostGroup -HostGroupName should support tab completion'
+    }
+
+    It 'warns about deprecation' {
+        Mock Get-DMhost { [pscustomobject]@{ Id = 'host-01'; Name = 'server-a' } }
+
+        Get-DMhostbyHostGroup -WebSession $script:session -HostGroup $script:hostGroup -WarningVariable warnings -WarningAction SilentlyContinue | Out-Null
+
+        $warnings.Count | Should -Be 1
+        $warnings[0] | Should -Match 'deprecated'
     }
 }
 }

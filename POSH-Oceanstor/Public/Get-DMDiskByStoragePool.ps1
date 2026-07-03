@@ -1,15 +1,10 @@
 function Get-DMDiskByStoragePool {
     <#
 	.SYNOPSIS
-		Retrieves the disks that are members of a storage pool.
+		Deprecated. Retrieves the disks that are members of a storage pool.
 
 	.DESCRIPTION
-		Fetches every disk and returns those whose poolId matches the target
-		storage pool. The OceanStor REST API has no server-side association
-		endpoint or filter for disks scoped to a storage pool (unlike
-		host/associate for host groups), so filtering happens client-side
-		against an exact PoolId match. The target storage pool can be
-		identified by an already-resolved object, by name, or by ID.
+		Deprecated - use Get-DMdisk -StoragePool / -StoragePoolName / -StoragePoolId instead. This command is a thin wrapper kept for backward compatibility and will be removed in a future release.
 
 	.PARAMETER WebSession
 		Optional session to use on REST calls. If omitted, the module's cached $script:CurrentOceanstorSession session is used.
@@ -53,6 +48,7 @@ function Get-DMDiskByStoragePool {
 
 	.NOTES
 		Filename: Get-DMDiskByStoragePool.ps1
+		Deprecated: use Get-DMdisk -StoragePool / -StoragePoolName / -StoragePoolId instead.
 		If WebSession is omitted, the command uses the module-scoped $script:CurrentOceanstorSession session.
 
 	.LINK
@@ -101,47 +97,13 @@ function Get-DMDiskByStoragePool {
         [string]$StoragePoolId
     )
 
-    if ($WebSession) {
-        $session = $WebSession
+    Write-Warning "Get-DMDiskByStoragePool is deprecated and will be removed in a future release. Use Get-DMdisk -StoragePool / -StoragePoolName / -StoragePoolId instead."
+
+    switch ($PSCmdlet.ParameterSetName) {
+        'ByObject' { return Get-DMdisk -WebSession $WebSession -StoragePool $StoragePool }
+        'ByName' { return Get-DMdisk -WebSession $WebSession -StoragePoolName $StoragePoolName }
+        'ById' { return Get-DMdisk -WebSession $WebSession -StoragePoolId $StoragePoolId }
     }
-    else {
-        $session = $script:CurrentOceanstorSession
-    }
-
-    $poolId = switch ($PSCmdlet.ParameterSetName) {
-        'ByObject' { $StoragePool.Id }
-        'ByName' {
-            $resolvedPool = @(Get-DMstoragePool -WebSession $session -Name $StoragePoolName)[0]
-            if ($null -eq $resolvedPool) { throw "Could not resolve 'StoragePoolName' - the object may have been removed since parameter validation." }
-            $resolvedPool.Id
-        }
-        'ById' { $StoragePoolId }
-    }
-
-    $defaultDisplaySet = "Id", "Location", "Health Status", "Disk Usage", "PoolName"
-
-    $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
-        'DefaultDisplayPropertySet',
-        [string[]]$defaultDisplaySet
-    )
-
-    $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
-
-    $response = Invoke-DMPagedRequest -WebSession $session -Resource "disk"
-    $Storagedisks = New-Object System.Collections.ArrayList
-
-    foreach ($tdisk in $response) {
-        $disk = [OceanStorDisks]::new($tdisk, $session)
-        [void]$Storagedisks.Add($disk)
-    }
-
-    $result = @($Storagedisks | Where-Object poolId -EQ $poolId)
-
-    $result | ForEach-Object {
-        $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
-    }
-
-    return $result
 }
 
 Set-Alias -Name Get-DMDisksByStoragePool -Value Get-DMDiskByStoragePool

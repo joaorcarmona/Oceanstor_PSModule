@@ -1,10 +1,10 @@
 function Get-DMDiskbyLocation {
     <#
 	.SYNOPSIS
-		To Get Huawei Oceanstor Storage disks by the location
+		Deprecated. To Get Huawei Oceanstor Storage disks by the location
 
 	.DESCRIPTION
-		Function to request Huawei Oceanstor Storage disks by location
+		Deprecated - use Get-DMdisk -Location instead. This command is a thin wrapper kept for backward compatibility and will be removed in a future release.
 
 	.PARAMETER webSession
 		Optional parameter to define the session to be use on the REST call. If not defined, the module's cached $script:CurrentOceanstorSession session will be used
@@ -31,6 +31,7 @@ function Get-DMDiskbyLocation {
 
 	.NOTES
 		Filename: Get-DMDiskbyLocation.ps1
+		Deprecated: use Get-DMdisk -Location instead.
 
 	.LINK
 	#>
@@ -42,35 +43,7 @@ function Get-DMDiskbyLocation {
         [pscustomobject]$location
     )
 
-    if ($WebSession) {
-        $session = $WebSession
-    }
-    else {
-        $session = $script:CurrentOceanstorSession
-    }
+    Write-Warning "Get-DMDiskbyLocation is deprecated and will be removed in a future release. Use Get-DMdisk -Location instead."
 
-    $defaultDisplaySet = "Id", "Location", "Health Status", "Disk Usage", "PoolName"
-
-    $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
-        'DefaultDisplayPropertySet',
-        [string[]]$defaultDisplaySet
-    )
-
-    $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
-
-    $response = Invoke-DMPagedRequest -WebSession $session -Resource "disk"
-    $Storagedisks = New-Object System.Collections.ArrayList
-
-    foreach ($tdisk in $response) {
-        $disk = [OceanStorDisks]::new($tdisk, $session)
-        [void]$Storagedisks.Add($disk)
-    }
-
-    $result = $Storagedisks | Where-Object location -Match $location
-
-    $result | ForEach-Object {
-        $_ | Add-Member MemberSet PSStandardMembers $standardMembers -Force
-    }
-
-    return $result
+    return Get-DMdisk -WebSession $WebSession -Location $location
 }
