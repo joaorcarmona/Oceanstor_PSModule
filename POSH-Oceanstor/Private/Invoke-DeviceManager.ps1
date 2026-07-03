@@ -72,7 +72,7 @@ function Write-DMRequestTrace {
 		[Parameter(Mandatory)][string]$Method,
 		[Parameter(Mandatory)][string]$Resource,
 		[Parameter(Mandatory)][string]$Uri,
-		[hashtable]$BodyData,
+		[object]$BodyData,
 		[switch]$ApiV2,
 		[object]$Response,
 		[string]$Exception
@@ -153,7 +153,7 @@ function Invoke-DeviceManager{
     [Parameter(ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,Position=2,Mandatory=$true)]
         [String]$Resource,
 	[Parameter(ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,Mandatory=$false)]
-		[System.Collections.Hashtable]$BodyData,
+		[object]$BodyData,
 	[Parameter(Mandatory=$false)]
 		[switch]$ApiV2
 	)

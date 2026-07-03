@@ -11,7 +11,9 @@ function New-DMNamedObjectUpdate {
         [AllowEmptyString()][string]$Description,
         [switch]$DescriptionSpecified,
         [System.Collections.IDictionary]$ApiProperties,
-        [string]$VstoreId
+        [string]$VstoreId,
+        [string]$NameField = 'NAME',
+        [string]$DescriptionField = 'DESCRIPTION'
     )
 
     if (-not $NewNameSpecified -and -not $DescriptionSpecified -and
@@ -43,10 +45,10 @@ function New-DMNamedObjectUpdate {
         }
     }
     if ($NewNameSpecified) {
-        $body.NAME = $NewName
+        $body[$NameField] = $NewName
     }
     if ($DescriptionSpecified) {
-        $body.DESCRIPTION = $Description
+        $body[$DescriptionField] = $Description
     }
 
     $resource = "$ResourceBase/$($item.Id)"

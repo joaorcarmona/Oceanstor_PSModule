@@ -4,7 +4,9 @@
 
 .DESCRIPTION
     Creates a protection group through the API v2 protection group interface.
-    LunGroupName and optional Vstore names are resolved to the IDs sent to the storage system.
+    LunGroupName/LunGroupId and the optional Vstore name are resolved to the IDs sent to the
+    storage system. The backing LUN group is optional; when neither LunGroupName nor LunGroupId is
+    supplied, the protection group is created without one.
 
 .PARAMETER WebSession
     Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
@@ -13,7 +15,10 @@
     Name of the protection group to create. The value must be 1 to 255 characters.
 
 .PARAMETER LunGroupName
-    Name of the LUN group that backs the protection group. The name is validated against existing OceanStor LUN groups.
+    Optional name of the LUN group that backs the protection group. The name is validated against existing OceanStor LUN groups and supports tab completion. Mutually exclusive with LunGroupId. When neither is supplied, the protection group is created without a backing LUN group.
+
+.PARAMETER LunGroupId
+    Optional Id of the LUN group that backs the protection group. Validated against existing OceanStor LUN groups, no tab completion. Mutually exclusive with LunGroupName.
 
 .PARAMETER Vstore
     Optional vStore name used to scope the protection group. The name is validated against existing OceanStor vStores.
@@ -38,13 +43,21 @@
 
     Creates a protection group scoped to vstore-a.
 
+.EXAMPLE
+    PS> New-DMProtectionGroup -Name 'pg-empty'
+
+    Creates a protection group with no backing LUN group.
+
+.EXAMPLE
+    PS> New-DMProtectionGroup -Name 'pg-production' -LunGroupId 12
+
 .NOTES
     Filename: New-DMProtectionGroup.ps1
 #>
 function New-DMProtectionGroup {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
 
-    [CmdletBinding(SupportsShouldProcess = $true)]
+    [CmdletBinding(SupportsShouldProcess = $true, DefaultParameterSetName = 'ByLunGroupName')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
@@ -53,7 +66,7 @@ function New-DMProtectionGroup {
         [ValidateLength(1, 255)]
         [string]$Name,
 
-        [Parameter(Mandatory = $true, Position = 2)]
+        [Parameter(ParameterSetName = 'ByLunGroupName', Position = 2)]
         [ValidateScript({
                 $session = if ($WebSession) {
                     $WebSession
@@ -69,7 +82,7 @@ function New-DMProtectionGroup {
                 if ($matchingItems.Count -gt 1) {
                     throw "LunGroupName is ambiguous because more than one LUN group is named '$_'."
                 }
-                throw "Invalid LunGroupName. Valid values are: $($lunGroups.Name -join ', ')"
+                throw 'Invalid LunGroupName.'
             })]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
@@ -82,6 +95,15 @@ function New-DMProtectionGroup {
                 (Get-DMlunGroup -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$LunGroupName,
+
+        [Parameter(ParameterSetName = 'ByLunGroupId')]
+        [ValidateScript({
+                $session = if ($WebSession) { $WebSession } else { $script:CurrentOceanstorSession }
+                $matchingItems = @(Get-DMlunGroup -WebSession $session -Id $_)
+                if ($matchingItems.Count -eq 1) { return $true }
+                throw 'Invalid LunGroupId.'
+            })]
+        [string]$LunGroupId,
 
         [Parameter(Position = 3)]
         [ValidateScript({
@@ -124,11 +146,17 @@ function New-DMProtectionGroup {
     else {
         $script:CurrentOceanstorSession
     }
-    $lunGroup = @(Get-DMlunGroup -WebSession $session | Where-Object Name -EQ $LunGroupName)[0]
-    if ($null -eq $lunGroup) { throw "Could not resolve 'lunGroup' — the object may have been removed since parameter validation." }
     $body = @{
         protectGroupName = $Name
-        lunGroupId       = $lunGroup.Id
+    }
+
+    if ($LunGroupName) {
+        $lunGroup = @(Get-DMlunGroup -WebSession $session | Where-Object Name -EQ $LunGroupName)[0]
+        if ($null -eq $lunGroup) { throw "Could not resolve 'LunGroupName' - the object may have been removed since parameter validation." }
+        $body.lunGroupId = $lunGroup.Id
+    }
+    elseif ($LunGroupId) {
+        $body.lunGroupId = $LunGroupId
     }
 
     if ($Vstore) {

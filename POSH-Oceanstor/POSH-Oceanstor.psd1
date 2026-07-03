@@ -85,6 +85,7 @@ FunctionsToExport = @(
     'Add-DMHostToHostGroup'
     'Add-DMLunGroupToMappingView'
     'Add-DMLunToLunGroup'
+    'Add-DMLunToProtectionGroup'
     'Add-DMmapLunGroupToHost'
     'Add-DMmapLunGroupToHostGroup'
     'Add-DMmapLunToHost'
@@ -179,6 +180,7 @@ FunctionsToExport = @(
     'Remove-DMIscsiInitiatorFromHost'
     'Remove-DMLun'
     'Remove-DMLunFromLunGroup'
+    'Remove-DMLunFromProtectionGroup'
     'Remove-DMLunGroup'
     'Remove-DMLunGroupFromMappingView'
     'Remove-DMLunSnapShot'
@@ -201,6 +203,7 @@ FunctionsToExport = @(
     'Rename-DMLun'
     'Rename-DMLunGroup'
     'Rename-DMPortGroup'
+    'Rename-DMProtectionGroup'
     'Resize-DMLunSnapshot'
     'Restart-DMLunSnapshot'
     'Restart-DMSnapshotConsistencyGroup'
@@ -214,6 +217,7 @@ FunctionsToExport = @(
     'Set-DMLun'
     'Set-DMLunGroup'
     'Set-DMPortGroup'
+    'Set-DMProtectionGroup'
 )
 
 # Cmdlets to export from this module
