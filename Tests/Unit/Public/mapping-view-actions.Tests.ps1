@@ -2,11 +2,11 @@ BeforeDiscovery {
     $script:mappingViewModule = New-Module -Name MappingViewTestModule -ArgumentList $PSScriptRoot -ScriptBlock {
         param($testRoot)
 
-        function Get-DMhostGroup { param([pscustomobject]$WebSession) }
-        function Get-DMlunGroup { param([pscustomobject]$WebSession, [string]$Name) }
+        function Get-DMhostGroup { param([pscustomobject]$WebSession, [string]$Name, [string]$Id) }
+        function Get-DMlunGroup { param([pscustomobject]$WebSession, [string]$Name, [string]$Id) }
         function Get-DMPortGroup { param([pscustomobject]$WebSession) }
-        function Get-DMhost { param([pscustomobject]$WebSession) }
-        function Get-DMlun { param([pscustomobject]$WebSession) }
+        function Get-DMhost { param([pscustomobject]$WebSession, [string]$Name, [string]$Id) }
+        function Get-DMlun { param([pscustomobject]$WebSession, [string]$Id) }
         function Get-DMhostbyName { param([pscustomobject]$WebSession, [string]$Name) }
         function Get-DMlunByName { param([pscustomobject]$WebSession, [string]$Name) }
         function Invoke-DeviceManager {
@@ -174,18 +174,48 @@ Describe 'Mapping view association commands' {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
         $script:view = [OceanStorMappingView]::new([pscustomobject]@{ ID = 'mv-01'; NAME = 'application' }, $script:session)
         Mock Get-DMMappingView { @($script:view) }
-        Mock Get-DMhostGroup { @([pscustomobject]@{ Id = 'hg-01'; Name = 'cluster01' }) }
+        Mock Get-DMhostGroup {
+            param($WebSession, $Name, $Id)
+            $groups = @([pscustomobject]@{ Id = 'hg-01'; Name = 'cluster01' })
+            if ($Id) {
+                return @($groups | Where-Object Id -EQ $Id)
+            }
+            if ($Name) {
+                return @($groups | Where-Object Name -EQ $Name)
+            }
+            return $groups
+        }
         Mock Get-DMlunGroup {
-            param($WebSession, $Name)
+            param($WebSession, $Name, $Id)
             $groups = @([pscustomobject]@{ Id = 'lg-01'; Name = 'production' })
+            if ($Id) {
+                return @($groups | Where-Object Id -EQ $Id)
+            }
             if ($Name) {
                 return @($groups | Where-Object Name -EQ $Name)
             }
             return $groups
         }
         Mock Get-DMPortGroup { @([pscustomobject]@{ Id = 'pg-01'; Name = 'front-end' }) }
-        Mock Get-DMhost { @([pscustomobject]@{ Id = 'host-01'; Name = 'esx01' }) }
-        Mock Get-DMlun { @([pscustomobject]@{ Id = 'lun-01'; Name = 'data-lun' }) }
+        Mock Get-DMhost {
+            param($WebSession, $Name, $Id)
+            $hosts = @([pscustomobject]@{ Id = 'host-01'; Name = 'esx01' })
+            if ($Id) {
+                return @($hosts | Where-Object Id -EQ $Id)
+            }
+            if ($Name) {
+                return @($hosts | Where-Object Name -EQ $Name)
+            }
+            return $hosts
+        }
+        Mock Get-DMlun {
+            param($WebSession, $Id)
+            $luns = @([pscustomobject]@{ Id = 'lun-01'; Name = 'data-lun' })
+            if ($Id) {
+                return @($luns | Where-Object Id -EQ $Id)
+            }
+            return $luns
+        }
         Mock Get-DMhostbyName { @([pscustomobject]@{ Id = 'host-01'; Name = 'esx01' } | Where-Object Name -EQ $Name) }
         Mock Get-DMlunByName { @([pscustomobject]@{ Id = 'lun-01'; Name = 'data-lun' } | Where-Object Name -EQ $Name) }
         Mock Invoke-DeviceManager {
@@ -596,6 +626,75 @@ Describe 'Mapping view association commands' {
         $null = Add-DMmapLunGroupToHost -WebSession $script:session -LunGroupName 'production' -HostName 'esx01' -WhatIf
         $null = Add-DMmapLunGroupToHostGroup -WebSession $script:session -LunGroupName 'production' -HostGroupName 'cluster01' -WhatIf
 
+        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
+    }
+
+    It '<Command> maps/unmaps by Id, validated but with no tab completion' -TestCases @(
+        @{ Command = 'Add-DMmapLunToHost'; Method = 'POST'; ExpectedApiV2 = $true; Parameters = @{ LunId = 'lun-01'; HostId = 'host-01' }; BodyKeys = @{ lunId = 'lun-01'; hostId = 'host-01' } }
+        @{ Command = 'Remove-DMmapLunFromHost'; Method = 'DELETE'; ExpectedApiV2 = $false; Parameters = @{ LunId = 'lun-01'; HostId = 'host-01' }; BodyKeys = @{ lunId = 'lun-01'; hostId = 'host-01' } }
+        @{ Command = 'Add-DMmapLunGroupToHost'; Method = 'POST'; ExpectedApiV2 = $true; Parameters = @{ LunGroupId = 'lg-01'; HostId = 'host-01' }; BodyKeys = @{ lunGroupId = 'lg-01'; hostId = 'host-01' } }
+        @{ Command = 'Remove-DMunmapLunGroupFromHost'; Method = 'DELETE'; ExpectedApiV2 = $false; Parameters = @{ LunGroupId = 'lg-01'; HostId = 'host-01' }; BodyKeys = @{ lunGroupId = 'lg-01'; hostId = 'host-01' } }
+        @{ Command = 'Add-DMmapLunGroupToHostGroup'; Method = 'POST'; ExpectedApiV2 = $true; Parameters = @{ LunGroupId = 'lg-01'; HostGroupId = 'hg-01' }; BodyKeys = @{ lunGroupId = 'lg-01'; hostGroupId = 'hg-01' } }
+        @{ Command = 'Remove-DMunmapLunGroupFromHostGroup'; Method = 'DELETE'; ExpectedApiV2 = $false; Parameters = @{ LunGroupId = 'lg-01'; HostGroupId = 'hg-01' }; BodyKeys = @{ lunGroupId = 'lg-01'; hostGroupId = 'hg-01' } }
+    ) {
+        param($Command, $Method, $ExpectedApiV2, $Parameters, $BodyKeys)
+
+        $result = & $Command -WebSession $script:session -Confirm:$false @Parameters
+
+        $script:method | Should -Be $Method
+        $script:resource | Should -Be 'mapping'
+        $script:apiV2 | Should -Be $ExpectedApiV2
+        foreach ($key in $BodyKeys.Keys) {
+            $script:request.$key | Should -Be $BodyKeys[$key]
+        }
+        if ($Method -eq 'POST') {
+            $result.GetType().Name | Should -Be 'OceanStorMappingView'
+        }
+        else {
+            $result.Code | Should -Be 0
+        }
+
+        $command = Get-Command $Command
+        foreach ($idParameterName in $Parameters.Keys) {
+            @($command.Parameters[$idParameterName].Attributes |
+                Where-Object { $_ -is [System.Management.Automation.ArgumentCompleterAttribute] }).Count |
+                Should -Be 0 -Because "$Command -$idParameterName should not support tab completion"
+        }
+    }
+
+    It '<Command> rejects supplying both Name and Id for the same slot' -TestCases @(
+        @{ Command = 'Add-DMmapLunToHost'; Parameters = @{ LunName = 'data-lun'; LunId = 'lun-01'; HostName = 'esx01' } }
+        @{ Command = 'Add-DMmapLunToHost'; Parameters = @{ LunName = 'data-lun'; HostName = 'esx01'; HostId = 'host-01' } }
+        @{ Command = 'Remove-DMmapLunFromHost'; Parameters = @{ LunName = 'data-lun'; LunId = 'lun-01'; HostName = 'esx01' } }
+        @{ Command = 'Add-DMmapLunGroupToHost'; Parameters = @{ LunGroupName = 'production'; LunGroupId = 'lg-01'; HostName = 'esx01' } }
+        @{ Command = 'Add-DMmapLunGroupToHost'; Parameters = @{ LunGroupName = 'production'; HostName = 'esx01'; HostId = 'host-01' } }
+        @{ Command = 'Remove-DMunmapLunGroupFromHost'; Parameters = @{ LunGroupName = 'production'; LunGroupId = 'lg-01'; HostName = 'esx01' } }
+        @{ Command = 'Add-DMmapLunGroupToHostGroup'; Parameters = @{ LunGroupName = 'production'; LunGroupId = 'lg-01'; HostGroupName = 'cluster01' } }
+        @{ Command = 'Add-DMmapLunGroupToHostGroup'; Parameters = @{ LunGroupName = 'production'; HostGroupName = 'cluster01'; HostGroupId = 'hg-01' } }
+        @{ Command = 'Remove-DMunmapLunGroupFromHostGroup'; Parameters = @{ LunGroupName = 'production'; HostGroupName = 'cluster01'; HostGroupId = 'hg-01' } }
+    ) {
+        param($Command, $Parameters)
+
+        { & $Command -WebSession $script:session -Confirm:$false @Parameters } | Should -Throw '*parameter set*'
+        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
+    }
+
+    It '<Command> rejects an unknown Id at parameter binding, with a short error message' -TestCases @(
+        @{ Command = 'Add-DMmapLunToHost'; Parameters = @{ LunId = 'missing'; HostName = 'esx01' }; ExpectedMessage = '*Invalid LunId.*' }
+        @{ Command = 'Add-DMmapLunToHost'; Parameters = @{ LunName = 'data-lun'; HostId = 'missing' }; ExpectedMessage = '*Invalid HostId.*' }
+        @{ Command = 'Add-DMmapLunGroupToHost'; Parameters = @{ LunGroupId = 'missing'; HostName = 'esx01' }; ExpectedMessage = '*Invalid LunGroupId.*' }
+        @{ Command = 'Add-DMmapLunGroupToHostGroup'; Parameters = @{ LunGroupName = 'production'; HostGroupId = 'missing' }; ExpectedMessage = '*Invalid HostGroupId.*' }
+    ) {
+        param($Command, $Parameters, $ExpectedMessage)
+
+        { & $Command -WebSession $script:session -Confirm:$false @Parameters } | Should -Throw $ExpectedMessage
+
+        try {
+            & $Command -WebSession $script:session -Confirm:$false @Parameters
+        }
+        catch {
+            $_.Exception.Message | Should -Not -BeLike '*Valid values are*'
+        }
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 }

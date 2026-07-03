@@ -3,9 +3,12 @@
     Maps an OceanStor LUN directly to a host.
 
 .DESCRIPTION
-    Creates a direct host-to-LUN mapping via the OceanStor v2 mapping interface. Both LunName and
-    HostName are validated at parameter-binding time (with tab completion) rather than after the
-    cmdlet starts running.
+    Creates a direct host-to-LUN mapping via the OceanStor v2 mapping interface. The LUN and the
+    host can each be identified by Name or by Id; Name and Id are mutually exclusive for the same
+    object, enforced by PowerShell parameter sets (supplying both -LunName and -LunId, or both
+    -HostName and -HostId, is a parameter-binding error). Both Name parameters are validated at
+    parameter-binding time with tab completion; both Id parameters are validated too, but have no
+    tab completion.
     Unlike Add-DMHostGroupToMappingView/Add-DMLunGroupToMappingView/Add-DMPortGroupToMappingView,
     this does not target an existing named mapping view -- the OceanStor REST API's legacy
     mappingview/CREATE_ASSOCIATE endpoint only accepts host group, LUN group, or port group
@@ -14,18 +17,24 @@
     there is no -MappingViewName parameter.
     The cmdlet supports -WhatIf and -Confirm.
 
-    Accepts multiple LUNs from the pipeline by property name. Each is resolved and mapped to the
-    same host independently: a REST error is reported as a non-terminating error and does not stop
-    the rest from being processed.
+    Accepts multiple LUNs from the pipeline by property name (Name only; Id is not pipeline-bound).
+    Each is resolved and mapped to the same host independently: a REST error is reported as a
+    non-terminating error and does not stop the rest from being processed.
 
 .PARAMETER WebSession
     Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 .PARAMETER LunName
-    Name of the LUN to map to the host. Validated against existing LUNs and supports tab completion.
+    Name of the LUN to map to the host. Validated against existing LUNs and supports tab completion. Mutually exclusive with LunId.
+
+.PARAMETER LunId
+    Id of the LUN to map to the host. Validated against existing LUNs, no tab completion. Mutually exclusive with LunName.
 
 .PARAMETER HostName
-    Name of the host to map the LUN to. Validated against existing hosts and supports tab completion.
+    Name of the host to map the LUN to. Validated against existing hosts and supports tab completion. Mutually exclusive with HostId.
+
+.PARAMETER HostId
+    Id of the host to map the LUN to. Validated against existing hosts, no tab completion. Mutually exclusive with HostName.
 
 .PARAMETER VstoreId
     Optional vStore ID used to scope the mapping operation.
@@ -42,18 +51,24 @@
 
     Shows what would happen if data-lun were mapped to esx01.
 
+.EXAMPLE
+    PS> Add-DMmapLunToHost -LunId '1' -HostId '3'
+
+    Maps LUN 1 to host 3 by Id.
+
 .NOTES
     Filename: Add-DMmapLunToHost.ps1
 #>
 function Add-DMmapLunToHost {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
 
-    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium', DefaultParameterSetName = 'LunByName_HostByName')]
     param(
         [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory = $true, Position = 1, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Mandatory = $true, ParameterSetName = 'LunByName_HostByName', ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Mandatory = $true, ParameterSetName = 'LunByName_HostById', ValueFromPipelineByPropertyName = $true)]
         [Alias('Name')]
         [ValidateNotNullOrEmpty()]
         [ValidateScript({
@@ -84,7 +99,26 @@ function Add-DMmapLunToHost {
             })]
         [string]$LunName,
 
-        [Parameter(Mandatory = $true, Position = 2)]
+        [Parameter(Mandatory = $true, ParameterSetName = 'LunById_HostByName')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'LunById_HostById')]
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({
+                $session = if ($WebSession) {
+                    $WebSession
+                }
+                else {
+                    $script:CurrentOceanstorSession
+                }
+                $matchingItems = @(Get-DMlun -WebSession $session -Id $_)
+                if ($matchingItems.Count -eq 1) {
+                    return $true
+                }
+                throw 'Invalid LunId.'
+            })]
+        [string]$LunId,
+
+        [Parameter(Mandatory = $true, ParameterSetName = 'LunByName_HostByName')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'LunById_HostByName')]
         [ValidateNotNullOrEmpty()]
         [ValidateScript({
                 $session = if ($WebSession) {
@@ -114,6 +148,24 @@ function Add-DMmapLunToHost {
             })]
         [string]$HostName,
 
+        [Parameter(Mandatory = $true, ParameterSetName = 'LunByName_HostById')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'LunById_HostById')]
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({
+                $session = if ($WebSession) {
+                    $WebSession
+                }
+                else {
+                    $script:CurrentOceanstorSession
+                }
+                $matchingItems = @(Get-DMhost -WebSession $session -Id $_)
+                if ($matchingItems.Count -eq 1) {
+                    return $true
+                }
+                throw 'Invalid HostId.'
+            })]
+        [string]$HostId,
+
         [string]$VstoreId
     )
 
@@ -126,14 +178,34 @@ function Add-DMmapLunToHost {
                 $script:CurrentOceanstorSession
             }
 
-            $lun = @(Get-DMlunByName -WebSession $session -Name $LunName)[0]
-            if ($null -eq $lun) {
-                throw "Could not resolve 'LunName' - the object may have been removed since parameter validation."
+            switch -Wildcard ($PSCmdlet.ParameterSetName) {
+                'LunByName_*' {
+                    $lun = @(Get-DMlunByName -WebSession $session -Name $LunName)[0]
+                    if ($null -eq $lun) {
+                        throw "Could not resolve 'LunName' - the object may have been removed since parameter validation."
+                    }
+                }
+                'LunById_*' {
+                    $lun = @(Get-DMlun -WebSession $session -Id $LunId)[0]
+                    if ($null -eq $lun) {
+                        throw "Could not resolve 'LunId' - the object may have been removed since parameter validation."
+                    }
+                }
             }
 
-            $hostObject = @(Get-DMhostbyName -WebSession $session -Name $HostName)[0]
-            if ($null -eq $hostObject) {
-                throw "Could not resolve 'HostName' - the object may have been removed since parameter validation."
+            switch -Wildcard ($PSCmdlet.ParameterSetName) {
+                '*_HostByName' {
+                    $hostObject = @(Get-DMhostbyName -WebSession $session -Name $HostName)[0]
+                    if ($null -eq $hostObject) {
+                        throw "Could not resolve 'HostName' - the object may have been removed since parameter validation."
+                    }
+                }
+                '*_HostById' {
+                    $hostObject = @(Get-DMhost -WebSession $session -Id $HostId)[0]
+                    if ($null -eq $hostObject) {
+                        throw "Could not resolve 'HostId' - the object may have been removed since parameter validation."
+                    }
+                }
             }
 
             $body = @{ hostId = $hostObject.Id; lunId = $lun.Id }
@@ -141,7 +213,7 @@ function Add-DMmapLunToHost {
                 $body.vstoreId = $VstoreId
             }
 
-            if ($PSCmdlet.ShouldProcess("$LunName -> $HostName", 'Map LUN to host')) {
+            if ($PSCmdlet.ShouldProcess("$($lun.Name) -> $($hostObject.Name)", 'Map LUN to host')) {
                 $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'mapping' -BodyData $body -ApiV2
                 $response = $response | Assert-DMApiSuccess
                 return [OceanStorMappingView]::new($response.data, $session)

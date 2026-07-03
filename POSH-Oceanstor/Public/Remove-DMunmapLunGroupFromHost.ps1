@@ -3,27 +3,36 @@
     Removes a direct OceanStor LUN-group-to-host mapping.
 
 .DESCRIPTION
-    Deletes a direct host-to-LUN-group mapping via the OceanStor mapping interface. Both
-    LunGroupName and HostName are validated at parameter-binding time (with tab completion)
-    rather than after the cmdlet starts running.
+    Deletes a direct host-to-LUN-group mapping via the OceanStor mapping interface. The LUN group
+    and the host can each be identified by Name or by Id; Name and Id are mutually exclusive for
+    the same object, enforced by PowerShell parameter sets (supplying both -LunGroupName and
+    -LunGroupId, or both -HostName and -HostId, is a parameter-binding error). Both Name parameters
+    are validated at parameter-binding time with tab completion; both Id parameters are validated
+    too, but have no tab completion.
     This does not target an existing named mapping view -- the OceanStor REST API's legacy
     mappingview/REMOVE_ASSOCIATE endpoint only accepts one group association at a time paired to
     a pre-created view. The recommended mapping interface used here deletes the underlying mapping
     from the host/LUN-group pair alone, so there is no -MappingViewName parameter.
     The cmdlet supports -WhatIf and -Confirm.
 
-    Accepts multiple LUN groups from the pipeline by property name. Each is resolved and unmapped
-    from the same host independently: a REST error is reported as a non-terminating error and does
-    not stop the rest from being processed.
+    Accepts multiple LUN groups from the pipeline by property name (Name only; Id is not
+    pipeline-bound). Each is resolved and unmapped from the same host independently: a REST error
+    is reported as a non-terminating error and does not stop the rest from being processed.
 
 .PARAMETER WebSession
     Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 .PARAMETER LunGroupName
-    Name of the LUN group to unmap from the host. Validated against existing LUN groups and supports tab completion.
+    Name of the LUN group to unmap from the host. Validated against existing LUN groups and supports tab completion. Mutually exclusive with LunGroupId.
+
+.PARAMETER LunGroupId
+    Id of the LUN group to unmap from the host. Validated against existing LUN groups, no tab completion. Mutually exclusive with LunGroupName.
 
 .PARAMETER HostName
-    Name of the host to unmap the LUN group from. Validated against existing hosts and supports tab completion.
+    Name of the host to unmap the LUN group from. Validated against existing hosts and supports tab completion. Mutually exclusive with HostId.
+
+.PARAMETER HostId
+    Id of the host to unmap the LUN group from. Validated against existing hosts, no tab completion. Mutually exclusive with HostName.
 
 .PARAMETER VstoreId
     Optional vStore ID used to scope the mapping operation.
@@ -40,18 +49,24 @@
 
     Shows what would happen if production-luns were unmapped from esx01.
 
+.EXAMPLE
+    PS> Remove-DMunmapLunGroupFromHost -LunGroupId '12' -HostId '3' -Confirm:$false
+
+    Unmaps LUN group 12 from host 3 by Id.
+
 .NOTES
     Filename: Remove-DMunmapLunGroupFromHost.ps1
 #>
 function Remove-DMunmapLunGroupFromHost {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
 
-    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High', DefaultParameterSetName = 'LunGroupByName_HostByName')]
     param(
         [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory = $true, Position = 1, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Mandatory = $true, ParameterSetName = 'LunGroupByName_HostByName', ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Mandatory = $true, ParameterSetName = 'LunGroupByName_HostById', ValueFromPipelineByPropertyName = $true)]
         [Alias('Name')]
         [ValidateNotNullOrEmpty()]
         [ValidateScript({
@@ -82,7 +97,26 @@ function Remove-DMunmapLunGroupFromHost {
             })]
         [string]$LunGroupName,
 
-        [Parameter(Mandatory = $true, Position = 2)]
+        [Parameter(Mandatory = $true, ParameterSetName = 'LunGroupById_HostByName')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'LunGroupById_HostById')]
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({
+                $session = if ($WebSession) {
+                    $WebSession
+                }
+                else {
+                    $script:CurrentOceanstorSession
+                }
+                $matchingItems = @(Get-DMlunGroup -WebSession $session -Id $_)
+                if ($matchingItems.Count -eq 1) {
+                    return $true
+                }
+                throw 'Invalid LunGroupId.'
+            })]
+        [string]$LunGroupId,
+
+        [Parameter(Mandatory = $true, ParameterSetName = 'LunGroupByName_HostByName')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'LunGroupById_HostByName')]
         [ValidateNotNullOrEmpty()]
         [ValidateScript({
                 $session = if ($WebSession) {
@@ -112,6 +146,24 @@ function Remove-DMunmapLunGroupFromHost {
             })]
         [string]$HostName,
 
+        [Parameter(Mandatory = $true, ParameterSetName = 'LunGroupByName_HostById')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'LunGroupById_HostById')]
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({
+                $session = if ($WebSession) {
+                    $WebSession
+                }
+                else {
+                    $script:CurrentOceanstorSession
+                }
+                $matchingItems = @(Get-DMhost -WebSession $session -Id $_)
+                if ($matchingItems.Count -eq 1) {
+                    return $true
+                }
+                throw 'Invalid HostId.'
+            })]
+        [string]$HostId,
+
         [string]$VstoreId
     )
 
@@ -124,14 +176,34 @@ function Remove-DMunmapLunGroupFromHost {
                 $script:CurrentOceanstorSession
             }
 
-            $lunGroup = @(Get-DMlunGroup -WebSession $session -Name $LunGroupName)[0]
-            if ($null -eq $lunGroup) {
-                throw "Could not resolve 'LunGroupName' - the object may have been removed since parameter validation."
+            switch -Wildcard ($PSCmdlet.ParameterSetName) {
+                'LunGroupByName_*' {
+                    $lunGroup = @(Get-DMlunGroup -WebSession $session -Name $LunGroupName)[0]
+                    if ($null -eq $lunGroup) {
+                        throw "Could not resolve 'LunGroupName' - the object may have been removed since parameter validation."
+                    }
+                }
+                'LunGroupById_*' {
+                    $lunGroup = @(Get-DMlunGroup -WebSession $session -Id $LunGroupId)[0]
+                    if ($null -eq $lunGroup) {
+                        throw "Could not resolve 'LunGroupId' - the object may have been removed since parameter validation."
+                    }
+                }
             }
 
-            $hostObject = @(Get-DMhostbyName -WebSession $session -Name $HostName)[0]
-            if ($null -eq $hostObject) {
-                throw "Could not resolve 'HostName' - the object may have been removed since parameter validation."
+            switch -Wildcard ($PSCmdlet.ParameterSetName) {
+                '*_HostByName' {
+                    $hostObject = @(Get-DMhostbyName -WebSession $session -Name $HostName)[0]
+                    if ($null -eq $hostObject) {
+                        throw "Could not resolve 'HostName' - the object may have been removed since parameter validation."
+                    }
+                }
+                '*_HostById' {
+                    $hostObject = @(Get-DMhost -WebSession $session -Id $HostId)[0]
+                    if ($null -eq $hostObject) {
+                        throw "Could not resolve 'HostId' - the object may have been removed since parameter validation."
+                    }
+                }
             }
 
             $body = @{ hostId = $hostObject.Id; lunGroupId = $lunGroup.Id }
@@ -139,7 +211,7 @@ function Remove-DMunmapLunGroupFromHost {
                 $body.vstoreId = $VstoreId
             }
 
-            if ($PSCmdlet.ShouldProcess("$LunGroupName <- $HostName", 'Remove LUN-group-host mapping')) {
+            if ($PSCmdlet.ShouldProcess("$($lunGroup.Name) <- $($hostObject.Name)", 'Remove LUN-group-host mapping')) {
                 $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource 'mapping' -BodyData $body
                 $response = $response | Assert-DMApiSuccess
                 return $response.error
