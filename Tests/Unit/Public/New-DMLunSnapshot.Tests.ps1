@@ -3,7 +3,7 @@ BeforeDiscovery {
         param($testRoot)
 
         function Get-DMlun {
-            param([pscustomobject]$WebSession)
+            param([pscustomobject]$WebSession, [string]$Id)
         }
 
         function Invoke-DeviceManager {
@@ -97,6 +97,62 @@ Describe 'New-DMLunSnapshot' {
             Should -Throw '*SourceLunName is ambiguous*'
 
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
+    }
+
+    It 'creates a snapshot for an existing LUN identified by Id' {
+        Mock Get-DMlun {
+            param($WebSession, $Id)
+            if ($Id -eq 'lun-01') { return @([pscustomobject]@{ Id = 'lun-01'; Name = 'data-lun' }) }
+            @()
+        }
+
+        $result = New-DMLunSnapshot -WebSession $script:session -SnapshotName 'before-patch' -SourceLunId 'lun-01'
+
+        $result.Id | Should -Be 'snap-01'
+        $script:snapshotRequest.PARENTID | Should -Be 'lun-01'
+    }
+
+    It 'rejects a source LUN Id that does not exist' {
+        Mock Get-DMlun {
+            param($WebSession, $Id)
+            @()
+        }
+
+        { New-DMLunSnapshot -WebSession $script:session -SnapshotName 'before-patch' -SourceLunId 'missing' } |
+            Should -Throw '*Invalid SourceLunId*'
+
+        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
+    }
+
+    It 'rejects supplying both SourceLunName and SourceLunId' {
+        { New-DMLunSnapshot -WebSession $script:session -SourceLunName 'data-lun' -SourceLunId 'lun-01' } |
+            Should -Throw '*parameter set*'
+    }
+
+    It 'accepts a source LUN from the pipeline by property Name' {
+        $lun = [pscustomobject]@{ Name = 'data-lun' }
+
+        $result = $lun | New-DMLunSnapshot -WebSession $script:session
+
+        $result.Id | Should -Be 'snap-01'
+        $script:snapshotRequest.PARENTID | Should -Be 'lun-01'
+    }
+
+    It 'creates a snapshot for every source LUN piped in, not just the last one' {
+        Mock Get-DMlun {
+            @(
+                [pscustomobject]@{ Id = 'lun-01'; Name = 'data-lun' }
+                [pscustomobject]@{ Id = 'lun-02'; Name = 'other-lun' }
+            )
+        }
+
+        $luns = @(
+            [pscustomobject]@{ Name = 'data-lun' }
+            [pscustomobject]@{ Name = 'other-lun' }
+        )
+        $null = $luns | New-DMLunSnapshot -WebSession $script:session
+
+        Should -Invoke Invoke-DeviceManager -Times 2 -Exactly
     }
 }
 }

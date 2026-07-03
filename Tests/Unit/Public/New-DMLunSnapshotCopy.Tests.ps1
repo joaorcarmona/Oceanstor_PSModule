@@ -3,7 +3,7 @@ BeforeDiscovery {
         param($testRoot)
 
         function Get-DMLunSnapshot {
-            param([pscustomobject]$WebSession)
+            param([pscustomobject]$WebSession, [string]$Id)
         }
 
         function Invoke-DeviceManager {
@@ -109,10 +109,50 @@ Describe 'New-DMLunSnapshotCopy' {
             @([pscustomobject]@{ Id = 'snap-long'; Name = $longName })
         }
 
-        { New-DMLunSnapshotCopy -WebSession $script:session -SourceSnapShotName $longName } |
-            Should -Throw '*generated SnapshotCopyName exceeds*'
+        $result = New-DMLunSnapshotCopy -WebSession $script:session -SourceSnapShotName $longName -ErrorAction SilentlyContinue -ErrorVariable copyErrors
+
+        $result | Should -BeNullOrEmpty
+        ($copyErrors.Exception.Message | Select-Object -Unique) | Should -BeLike '*generated SnapshotCopyName exceeds*'
+        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
+    }
+
+    It 'creates a snapshot copy from a source snapshot identified by Id' {
+        Mock Get-DMLunSnapshot {
+            param($WebSession, $Id)
+            if ($Id -eq 'snap-01') { return @([pscustomobject]@{ Id = 'snap-01'; Name = 'before-patch' }) }
+            @()
+        }
+
+        $result = New-DMLunSnapshotCopy -WebSession $script:session -SourceSnapShotId 'snap-01' -SnapshotCopyName 'patch-copy'
+
+        $result.Id | Should -Be 'snap-02'
+        $script:snapshotCopyRequest.ID | Should -Be 'snap-01'
+    }
+
+    It 'rejects a source snapshot Id that does not exist' {
+        Mock Get-DMLunSnapshot {
+            param($WebSession, $Id)
+            @()
+        }
+
+        { New-DMLunSnapshotCopy -WebSession $script:session -SourceSnapShotId 'missing' } |
+            Should -Throw '*Invalid SourceSnapShotId*'
 
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
+    }
+
+    It 'rejects supplying both SourceSnapShotName and SourceSnapShotId' {
+        { New-DMLunSnapshotCopy -WebSession $script:session -SourceSnapShotName 'before-patch' -SourceSnapShotId 'snap-01' } |
+            Should -Throw '*parameter set*'
+    }
+
+    It 'accepts a source snapshot from the pipeline by property Id' {
+        $piped = [pscustomobject]@{ Id = 'snap-01' }
+
+        $result = $piped | New-DMLunSnapshotCopy -WebSession $script:session
+
+        $result.Id | Should -Be 'snap-02'
+        $script:snapshotCopyRequest.ID | Should -Be 'snap-01'
     }
 }
 }

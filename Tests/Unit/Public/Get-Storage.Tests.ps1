@@ -304,6 +304,39 @@ Describe 'Public getter functions' {
                 Should -Throw '*Invalid LunName*'
         }
 
+        It 'gets a LUN snapshot by positional Name' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                $script:snapshotNameResource = $Resource
+                [pscustomobject]@{ data = @(New-TestLunSnapshot) }
+            }
+
+            $result = @(Get-DMLunSnapshot -WebSession $script:session 'before-patch')
+
+            $result.Count | Should -Be 1
+            $result[0].Name | Should -Be 'before-patch'
+            $script:snapshotNameResource | Should -BeLike 'snapshot*'
+        }
+
+        It 'gets a LUN snapshot by Id using an exact server-side filter' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                $script:snapshotIdResource = $Resource
+                [pscustomobject]@{ data = @(New-TestLunSnapshot) }
+            }
+
+            $result = @(Get-DMLunSnapshot -WebSession $script:session -Id 'snap-01')
+
+            $result.Count | Should -Be 1
+            $result[0].Id | Should -Be 'snap-01'
+            $script:snapshotIdResource | Should -BeLike 'snapshot?filter=ID::snap-01*'
+        }
+
+        It 'rejects supplying both Name and Id for Get-DMLunSnapshot' {
+            { Get-DMLunSnapshot -WebSession $script:session -Name 'before-patch' -Id 'snap-01' } |
+                Should -Throw '*parameter set*'
+        }
+
         It 'rejects a Filter that is not a real LUN property, before making any REST call' {
             Mock Invoke-DeviceManager {
                 param($WebSession, $Method, $Resource)

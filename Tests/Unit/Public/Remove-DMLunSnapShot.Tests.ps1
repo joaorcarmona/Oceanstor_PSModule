@@ -3,7 +3,7 @@ BeforeDiscovery {
         param($testRoot)
 
         function Get-DMLunSnapshot {
-            param([pscustomobject]$WebSession)
+            param([pscustomobject]$WebSession, [string]$Id)
         }
 
         function Invoke-DeviceManager {
@@ -58,16 +58,14 @@ Describe 'Remove-DMLunSnapShot' {
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 
-    It 'reports a non-terminating error for a snapshot name that does not exist' {
-        $result = Remove-DMLunSnapShot -WebSession $script:session -SnapShotName 'missing' -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable removeErrors
+    It 'rejects a snapshot name that does not exist' {
+        { Remove-DMLunSnapShot -WebSession $script:session -SnapShotName 'missing' -Confirm:$false } |
+            Should -Throw '*Invalid SnapShotName*'
 
-        $result | Should -BeNullOrEmpty
-        $removeErrors.Count | Should -BeGreaterOrEqual 1
-        ($removeErrors.Exception.Message | Select-Object -Unique) | Should -BeLike '*Invalid SnapShotName*'
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 
-    It 'reports a non-terminating error for a snapshot name that is not unique' {
+    It 'rejects a snapshot name that is not unique' {
         Mock Get-DMLunSnapshot {
             @(
                 [pscustomobject]@{ Id = 'snap-01'; Name = 'before-patch' }
@@ -75,11 +73,9 @@ Describe 'Remove-DMLunSnapShot' {
             )
         }
 
-        $result = Remove-DMLunSnapShot -WebSession $script:session -SnapShotName 'before-patch' -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable removeErrors
+        { Remove-DMLunSnapShot -WebSession $script:session -SnapShotName 'before-patch' -Confirm:$false } |
+            Should -Throw '*SnapShotName is ambiguous*'
 
-        $result | Should -BeNullOrEmpty
-        $removeErrors.Count | Should -BeGreaterOrEqual 1
-        ($removeErrors.Exception.Message | Select-Object -Unique) | Should -BeLike '*SnapShotName is ambiguous*'
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 
@@ -99,6 +95,36 @@ Describe 'Remove-DMLunSnapShot' {
 
         Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -eq 'snapshot/snap-01' }
         Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -eq 'snapshot/snap-02' }
+    }
+
+    It 'removes an existing snapshot by Id' {
+        Mock Get-DMLunSnapshot {
+            param($WebSession, $Id)
+            if ($Id -eq 'snap-01') { return @([pscustomobject]@{ Id = 'snap-01'; Name = 'before-patch' }) }
+            @()
+        }
+
+        $result = Remove-DMLunSnapShot -WebSession $script:session -SnapShotId 'snap-01' -Confirm:$false
+
+        $result.Code | Should -Be 0
+        $script:removeResource | Should -Be 'snapshot/snap-01'
+    }
+
+    It 'rejects a snapshot Id that does not exist' {
+        Mock Get-DMLunSnapshot {
+            param($WebSession, $Id)
+            @()
+        }
+
+        { Remove-DMLunSnapShot -WebSession $script:session -SnapShotId 'missing' -Confirm:$false } |
+            Should -Throw '*Invalid SnapShotId*'
+
+        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
+    }
+
+    It 'rejects supplying both SnapShotName and SnapShotId' {
+        { Remove-DMLunSnapShot -WebSession $script:session -SnapShotName 'before-patch' -SnapShotId 'snap-01' -Confirm:$false } |
+            Should -Throw '*parameter set*'
     }
 }
 }

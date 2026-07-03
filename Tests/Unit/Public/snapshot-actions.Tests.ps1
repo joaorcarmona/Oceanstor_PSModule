@@ -3,7 +3,7 @@ BeforeDiscovery {
         param($testRoot)
 
         function Get-DMLunSnapshot {
-            param([pscustomobject]$WebSession)
+            param([pscustomobject]$WebSession, [string]$Id)
         }
 
         function Invoke-DeviceManager {
@@ -125,10 +125,80 @@ Describe 'Snapshot action functions' {
             @([pscustomobject]@{ Id = 'snap-01'; Name = 'before-patch'; 'User Capacity' = [uint64]10485760 })
         }
 
-        { Resize-DMLunSnapshot -WebSession $script:session -SnapShotName 'before-patch' -UserCapacity 10485760 -Confirm:$false } |
-            Should -Throw '*greater than the current snapshot capacity*'
+        $result = Resize-DMLunSnapshot -WebSession $script:session -SnapShotName 'before-patch' -UserCapacity 10485760 -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable resizeErrors
+
+        $result | Should -BeNullOrEmpty
+        ($resizeErrors.Exception.Message | Select-Object -Unique) | Should -BeLike '*greater than the current snapshot capacity*'
+        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
+    }
+
+    It '<Command> resolves an existing snapshot by Id' -TestCases @(
+        @{ Command = 'Enable-DMLunSnapshot'; Parameters = @{}; ExpectedResource = 'snapshot/activate' }
+        @{ Command = 'Restart-DMLunSnapshot'; Parameters = @{}; ExpectedResource = 'snapshot/reactive' }
+        @{ Command = 'Resize-DMLunSnapshot'; Parameters = @{ UserCapacity = [uint64]10485760 }; ExpectedResource = 'snapshot/expand' }
+        @{ Command = 'Restore-DMLunSnapshot'; Parameters = @{}; ExpectedResource = 'snapshot/rollback' }
+    ) {
+        param($Command, $Parameters, $ExpectedResource)
+        Mock Get-DMLunSnapshot {
+            param($WebSession, $Id)
+            if ($Id -eq 'snap-01') { return @([pscustomobject]@{ Id = 'snap-01'; Name = 'before-patch' }) }
+            @()
+        }
+
+        $result = & $Command -WebSession $script:session -SnapShotId 'snap-01' -Confirm:$false @Parameters
+
+        $result.Code | Should -Be 0
+        $script:actionResource | Should -Be $ExpectedResource
+    }
+
+    It '<Command> rejects a snapshot Id that does not exist' -TestCases @(
+        @{ Command = 'Enable-DMLunSnapshot'; Parameters = @{} }
+        @{ Command = 'Restart-DMLunSnapshot'; Parameters = @{} }
+        @{ Command = 'Resize-DMLunSnapshot'; Parameters = @{ UserCapacity = [uint64]10485760 } }
+        @{ Command = 'Restore-DMLunSnapshot'; Parameters = @{} }
+    ) {
+        param($Command, $Parameters)
+        Mock Get-DMLunSnapshot {
+            param($WebSession, $Id)
+            @()
+        }
+
+        { & $Command -WebSession $script:session -SnapShotId 'missing' -Confirm:$false @Parameters } |
+            Should -Throw '*Invalid SnapShotId*'
 
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
+    }
+
+    It '<Command> rejects supplying both SnapShotName and SnapShotId' -TestCases @(
+        @{ Command = 'Enable-DMLunSnapshot'; Parameters = @{} }
+        @{ Command = 'Restart-DMLunSnapshot'; Parameters = @{} }
+        @{ Command = 'Resize-DMLunSnapshot'; Parameters = @{ UserCapacity = [uint64]10485760 } }
+        @{ Command = 'Restore-DMLunSnapshot'; Parameters = @{} }
+    ) {
+        param($Command, $Parameters)
+
+        { & $Command -WebSession $script:session -SnapShotName 'before-patch' -SnapShotId 'snap-01' -Confirm:$false @Parameters } |
+            Should -Throw '*parameter set*'
+    }
+
+    It '<Command> accepts a snapshot from the pipeline by property Id' -TestCases @(
+        @{ Command = 'Enable-DMLunSnapshot'; Parameters = @{}; ExpectedResource = 'snapshot/activate' }
+        @{ Command = 'Restart-DMLunSnapshot'; Parameters = @{}; ExpectedResource = 'snapshot/reactive' }
+        @{ Command = 'Resize-DMLunSnapshot'; Parameters = @{ UserCapacity = [uint64]10485760 }; ExpectedResource = 'snapshot/expand' }
+        @{ Command = 'Restore-DMLunSnapshot'; Parameters = @{}; ExpectedResource = 'snapshot/rollback' }
+    ) {
+        param($Command, $Parameters, $ExpectedResource)
+        Mock Get-DMLunSnapshot {
+            param($WebSession, $Id)
+            if ($Id -eq 'snap-01') { return @([pscustomobject]@{ Id = 'snap-01'; Name = 'before-patch' }) }
+            @()
+        }
+
+        $piped = [pscustomobject]@{ Id = 'snap-01' }
+        $result = $piped | & $Command -WebSession $script:session -Confirm:$false @Parameters
+
+        $result.Code | Should -Be 0
+        $script:actionResource | Should -Be $ExpectedResource
     }
 }
 }

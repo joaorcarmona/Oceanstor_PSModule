@@ -3,14 +3,24 @@
     Rolls back data using an OceanStor LUN snapshot.
 
 .DESCRIPTION
-    Resolves a snapshot name to its ID and starts a rollback operation through the OceanStor snapshot REST resource.
+    Resolves a snapshot name or Id to its ID and starts a rollback operation through the OceanStor snapshot REST resource.
     This operation overwrites newer LUN data. Use -WhatIf first when testing automation.
+    The snapshot can be identified by Name or by Id; Name and Id are mutually exclusive, enforced by PowerShell
+    parameter sets. SnapShotName is validated at parameter-binding time with tab completion; SnapShotId is
+    validated too, but has no tab completion.
+
+    Accepts multiple snapshots from the pipeline by property name. Each is rolled back independently: a
+    failure (e.g. an invalid/ambiguous name, or a REST error) is reported as a non-terminating error and
+    does not stop the remaining snapshots from being processed.
 
 .PARAMETER WebSession
     Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 .PARAMETER SnapShotName
-    Name of the snapshot to roll back. Valid values are checked against Get-DMLunSnapshot and support tab completion.
+    Name of the snapshot to roll back. Valid values are checked against Get-DMLunSnapshot and support tab completion. Mutually exclusive with SnapShotId.
+
+.PARAMETER SnapShotId
+    Id of the snapshot to roll back. Valid values are checked against Get-DMLunSnapshot, no tab completion. Mutually exclusive with SnapShotName.
 
 .PARAMETER RollbackSpeed
     Rate for the rollback operation. Valid values are Low, Medium, High, and Highest. The default is Medium.
@@ -27,18 +37,24 @@
 
     Shows what would happen if the LUN were rolled back from the selected snapshot at high speed.
 
+.EXAMPLE
+    PS> Get-DMLunSnapshot 'snap_lun01_before_patch' | Restore-DMLunSnapshot
+
+    Rolls back the LUN using the piped snapshot.
+
 .NOTES
     Filename: Restore-DMLunSnapshot.ps1
 #>
 function Restore-DMLunSnapshot {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
 
-    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High', DefaultParameterSetName = 'ByName')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, Position = 1)]
+        [Parameter(Mandatory = $true, ParameterSetName = 'ByName', ValueFromPipelineByPropertyName = $true, Position = 1)]
+        [Alias('Name')]
         [ValidateScript({
                 if ($WebSession) {
                     $session = $WebSession
@@ -57,7 +73,7 @@ function Restore-DMLunSnapshot {
                     throw "SnapShotName is ambiguous because more than one snapshot is named '$_'."
                 }
                 else {
-                    throw "Invalid SnapShotName. Valid values are: $($snapshots.Name -join ', ')"
+                    throw 'Invalid SnapShotName.'
                 }
             })]
         [ArgumentCompleter({
@@ -76,34 +92,65 @@ function Restore-DMLunSnapshot {
             })]
         [string]$SnapShotName,
 
+        [Parameter(Mandatory = $true, ParameterSetName = 'ById', ValueFromPipelineByPropertyName = $true)]
+        [Alias('Id')]
+        [ValidateScript({
+                $session = if ($WebSession) {
+                    $WebSession
+                }
+                else {
+                    $script:CurrentOceanstorSession
+                }
+                $matchingItems = @(Get-DMLunSnapshot -WebSession $session -Id $_)
+                if ($matchingItems.Count -eq 1) {
+                    return $true
+                }
+                throw 'Invalid SnapShotId.'
+            })]
+        [string]$SnapShotId,
+
         [Parameter(Position = 2)]
         [ValidateSet('Low', 'Medium', 'High', 'Highest')]
         [string]$RollbackSpeed = 'Medium'
     )
 
-    if ($WebSession) {
-        $session = $WebSession
-    }
-    else {
-        $session = $script:CurrentOceanstorSession
-    }
+    process {
+        try {
+            $session = if ($WebSession) {
+                $WebSession
+            }
+            else {
+                $script:CurrentOceanstorSession
+            }
 
-    $snapshot = @(Get-DMLunSnapshot -WebSession $session | Where-Object Name -EQ $SnapShotName)[0]
-    if ($null -eq $snapshot) { throw "Could not resolve 'snapshot' — the object may have been removed since parameter validation." }
-    $speedValue = @{
-        Low     = 1
-        Medium  = 2
-        High    = 3
-        Highest = 4
-    }[$RollbackSpeed]
+            if ($PSCmdlet.ParameterSetName -eq 'ById') {
+                $snapshot = @(Get-DMLunSnapshot -WebSession $session -Id $SnapShotId)[0]
+                if ($null -eq $snapshot) { throw "Could not resolve 'SnapShotId' - the object may have been removed since parameter validation." }
+            }
+            else {
+                $snapshot = @(Get-DMLunSnapshot -WebSession $session | Where-Object Name -EQ $SnapShotName)[0]
+                if ($null -eq $snapshot) { throw "Could not resolve 'SnapShotName' - the object may have been removed since parameter validation." }
+            }
 
-    if ($PSCmdlet.ShouldProcess($SnapShotName, 'Roll back LUN snapshot')) {
-        $body = @{
-            ID            = $snapshot.Id
-            ROLLBACKSPEED = $speedValue
+            $speedValue = @{
+                Low     = 1
+                Medium  = 2
+                High    = 3
+                Highest = 4
+            }[$RollbackSpeed]
+
+            if ($PSCmdlet.ShouldProcess($snapshot.Name, 'Roll back LUN snapshot')) {
+                $body = @{
+                    ID            = $snapshot.Id
+                    ROLLBACKSPEED = $speedValue
+                }
+                $response = Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'snapshot/rollback' -BodyData $body
+                $response = $response | Assert-DMApiSuccess
+                return $response.error
+            }
         }
-        $response = Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'snapshot/rollback' -BodyData $body
-        $response = $response | Assert-DMApiSuccess
-        return $response.error
+        catch {
+            $PSCmdlet.WriteError($_)
+        }
     }
 }

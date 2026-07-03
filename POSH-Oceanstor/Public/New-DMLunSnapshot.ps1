@@ -5,6 +5,13 @@
 .DESCRIPTION
     Creates a LUN snapshot through the OceanStor snapshot REST resource.
     When SnapshotName is omitted, the cmdlet generates a name from the source LUN name and current timestamp.
+    The source LUN can be identified by Name or by Id; Name and Id are mutually exclusive, enforced by
+    PowerShell parameter sets. SourceLunName is validated at parameter-binding time with tab completion;
+    SourceLunId is validated too, but has no tab completion.
+
+    Accepts multiple source LUNs from the pipeline by property name (Name only; Id is not pipeline-bound).
+    Each is snapshotted independently: a failure (e.g. an invalid/ambiguous name, or a REST error) is
+    reported as a non-terminating error and does not stop the remaining LUNs from being processed.
 
 .PARAMETER WebSession
     Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
@@ -13,7 +20,10 @@
     Optional name of the snapshot to create.
 
 .PARAMETER SourceLunName
-    Name of the source LUN. Valid values are checked against Get-DMlun and support tab completion. The selected LUN ID is sent to the API.
+    Name of the source LUN. Valid values are checked against Get-DMlun and support tab completion. Mutually exclusive with SourceLunId.
+
+.PARAMETER SourceLunId
+    Id of the source LUN. Valid values are checked against Get-DMlun, no tab completion. Mutually exclusive with SourceLunName.
 
 .PARAMETER Description
     Optional description of the snapshot.
@@ -38,13 +48,18 @@
 
     Creates a read-only snapshot using the supplied session.
 
+.EXAMPLE
+    PS> Get-DMLun 'production-db' | New-DMLunSnapshot
+
+    Creates a snapshot of production-db via the pipeline.
+
 .NOTES
     Filename: New-DMLunSnapshot.ps1
 #>
 function New-DMLunSnapshot {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
 
-    [CmdletBinding(SupportsShouldProcess = $true)]
+    [CmdletBinding(SupportsShouldProcess = $true, DefaultParameterSetName = 'ByName')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
@@ -52,7 +67,8 @@ function New-DMLunSnapshot {
         [Parameter(Mandatory = $false, Position = 1)]
         [string]$SnapshotName,
 
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, Position = 2)]
+        [Parameter(Mandatory = $true, ParameterSetName = 'ByName', ValueFromPipelineByPropertyName = $true, Position = 2)]
+        [Alias('Name')]
         [ValidateScript({
                 if ($WebSession) {
                     $session = $WebSession
@@ -71,7 +87,7 @@ function New-DMLunSnapshot {
                     throw "SourceLunName is ambiguous because more than one LUN is named '$_'."
                 }
                 else {
-                    throw "Invalid SourceLunName. Valid values are: $($luns.Name -join ', ')"
+                    throw 'Invalid SourceLunName.'
                 }
             })]
         [ArgumentCompleter({
@@ -90,6 +106,23 @@ function New-DMLunSnapshot {
             })]
         [string]$SourceLunName,
 
+        [Parameter(Mandatory = $true, ParameterSetName = 'ById', ValueFromPipelineByPropertyName = $true)]
+        [Alias('Id')]
+        [ValidateScript({
+                $session = if ($WebSession) {
+                    $WebSession
+                }
+                else {
+                    $script:CurrentOceanstorSession
+                }
+                $matchingItems = @(Get-DMlun -WebSession $session -Id $_)
+                if ($matchingItems.Count -eq 1) {
+                    return $true
+                }
+                throw 'Invalid SourceLunId.'
+            })]
+        [string]$SourceLunId,
+
         [Parameter(Position = 3)]
         [string]$Description,
 
@@ -97,45 +130,58 @@ function New-DMLunSnapshot {
         [switch]$ReadOnly
     )
 
-    if ($WebSession) {
-        $session = $WebSession
-    }
-    else {
-        $session = $script:CurrentOceanstorSession
-    }
+    process {
+        try {
+            $session = if ($WebSession) {
+                $WebSession
+            }
+            else {
+                $script:CurrentOceanstorSession
+            }
 
-    $sourceLun = @(Get-DMlun -WebSession $session | Where-Object Name -EQ $SourceLunName)[0]
-    if ($null -eq $sourceLun) { throw "Could not resolve 'sourceLun' — the object may have been removed since parameter validation." }
+            if ($PSCmdlet.ParameterSetName -eq 'ById') {
+                $sourceLun = @(Get-DMlun -WebSession $session -Id $SourceLunId)[0]
+                if ($null -eq $sourceLun) { throw "Could not resolve 'SourceLunId' - the object may have been removed since parameter validation." }
+            }
+            else {
+                $sourceLun = @(Get-DMlun -WebSession $session | Where-Object Name -EQ $SourceLunName)[0]
+                if ($null -eq $sourceLun) { throw "Could not resolve 'SourceLunName' - the object may have been removed since parameter validation." }
+            }
 
-    $body = @{
-        TYPE       = 27
-        PARENTTYPE = 11
-        PARENTID   = $sourceLun.Id
-    }
+            $body = @{
+                TYPE       = 27
+                PARENTTYPE = 11
+                PARENTID   = $sourceLun.Id
+            }
 
-    if ($SnapshotName) {
-        $body.Add('NAME', $SnapshotName)
-    }
-    else {
-        $body.Add('NAME', "snap_$($SourceLunName)-$(Get-Date -Format 'yyyyMMddHHmmss')")
-    }
+            if ($SnapshotName) {
+                $body.Add('NAME', $SnapshotName)
+            }
+            else {
+                $body.Add('NAME', "snap_$($sourceLun.Name)-$(Get-Date -Format 'yyyyMMddHHmmss')")
+            }
 
-    if ($Description) {
-        $body.Add('DESCRIPTION', $Description)
-    }
+            if ($Description) {
+                $body.Add('DESCRIPTION', $Description)
+            }
 
-    if ($ReadOnly) {
-        $body.Add('isReadOnly', $true)
-    }
+            if ($ReadOnly) {
+                $body.Add('isReadOnly', $true)
+            }
 
-    if ($PSCmdlet.ShouldProcess($SnapshotName, 'Create LUN snapshot')) {
-        $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'snapshot' -BodyData $body
-        $response = $response | Assert-DMApiSuccess
+            if ($PSCmdlet.ShouldProcess($sourceLun.Name, 'Create LUN snapshot')) {
+                $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'snapshot' -BodyData $body
+                $response = $response | Assert-DMApiSuccess
 
-        if ($response.error.Code -eq 0) {
-            return [OceanstorLunSnapshot]::new($response.data, $session)
+                if ($response.error.Code -eq 0) {
+                    return [OceanstorLunSnapshot]::new($response.data, $session)
+                }
+
+                return $response.error
+            }
         }
-
-        return $response.error
+        catch {
+            $PSCmdlet.WriteError($_)
+        }
     }
 }
