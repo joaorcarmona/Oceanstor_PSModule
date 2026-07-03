@@ -85,7 +85,7 @@ function Get-DMAlarm {
         }
     }
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "alarm/historyalarm?filter=alarmStatus:$statusAlarm" | Select-DMResponseData
+    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "alarm/historyalarm?filter=alarmStatus::$statusAlarm" | Select-DMResponseData
     $alarms = New-Object System.Collections.ArrayList
 
     foreach ($talarm in $response) {

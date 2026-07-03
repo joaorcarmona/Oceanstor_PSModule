@@ -2,7 +2,15 @@ BeforeDiscovery {
     $script:getHardwareModule = New-Module -Name GetHardwareTestModule -ArgumentList $PSScriptRoot -ScriptBlock {
         param($testRoot)
 
-        function Invoke-DeviceManager {}
+        function Invoke-DeviceManager {
+            param(
+                [pscustomobject]$WebSession,
+                [string]$Method,
+                [string]$Resource,
+                [hashtable]$BodyData,
+                [switch]$ApiV2
+            )
+        }
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Get-DMparsedElabel.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Set-DMHostInitiator.ps1"
@@ -47,6 +55,7 @@ Describe 'Public getter functions' {
     Describe 'Hardware getter functions' {
         It 'gets alarms using the requested alarm state' {
             Mock Invoke-DeviceManager {
+                $script:resource = $Resource
                 [pscustomobject]@{ data = @([pscustomobject]@{ name = 'warning'; alarmStatus = 2; level = 2; type = 1; eventType = 1; clearTime = 0; recoverTime = 0; startTime = 0 }) }
             }
 
@@ -57,6 +66,7 @@ Describe 'Public getter functions' {
                 Should -Be @('Name', 'Level', 'Alarm Status', 'Location', 'Start time')
             $result[0].'Event Type' | Should -Be 'alarm'
             $result[0].Session | Should -Be $script:session
+            $script:resource | Should -Be 'alarm/historyalarm?filter=alarmStatus::2'
         }
 
         It 'gets battery backup units' {
