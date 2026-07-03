@@ -123,6 +123,26 @@ Describe 'Mapping view commands' {
         $script:resource | Should -Be 'mappingview/mv-01?vstoreId=7'
     }
 
+    It 'removes every mapping view piped in, not just the last one' {
+        Mock Get-DMMappingView {
+            @(
+                [pscustomobject]@{ Id = 'mv-01'; Name = 'view-a' }
+                [pscustomobject]@{ Id = 'mv-02'; Name = 'view-b' }
+            )
+        }
+        $resources = [System.Collections.Generic.List[string]]::new()
+        Mock Invoke-DeviceManager {
+            $resources.Add($Resource)
+            [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 } }
+        }
+
+        $items = @([pscustomobject]@{ Name = 'view-a' }, [pscustomobject]@{ Name = 'view-b' })
+        $null = $items | Remove-DMMappingView -WebSession $script:session -Confirm:$false
+
+        $resources | Should -Contain 'mappingview/mv-01'
+        $resources | Should -Contain 'mappingview/mv-02'
+    }
+
     It 'exposes completion metadata for mapping view group filters' {
         $command = Get-Command Get-DMMappingView
 
@@ -273,10 +293,12 @@ Describe 'Mapping view association commands' {
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 
-    It 'rejects unknown mapping association targets before sending a request' {
-        { Add-DMLunGroupToMappingView -WebSession $script:session -MappingViewName 'application' -LunGroupName 'missing' -Confirm:$false } |
-            Should -Throw '*Invalid LunGroupName*'
+    It 'reports a non-terminating error for an unknown LUN group association target' {
+        $result = Add-DMLunGroupToMappingView -WebSession $script:session -MappingViewName 'application' -LunGroupName 'missing' -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable addErrors
 
+        $result | Should -BeNullOrEmpty
+        $addErrors.Count | Should -BeGreaterOrEqual 1
+        ($addErrors.Exception.Message | Select-Object -Unique) | Should -BeLike '*Invalid LunGroupName*'
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 

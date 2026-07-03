@@ -6,6 +6,11 @@
     Deletes an existing protection group by name through the API v2 protection group interface.
     The protection group name is validated before the delete request is sent. The cmdlet supports -WhatIf and -Confirm.
 
+    Accepts multiple protection groups from the pipeline by property name. Each protection group is
+    resolved and removed independently: a failure (e.g. an invalid/ambiguous name, or a REST error)
+    is reported as a non-terminating error and does not stop the remaining protection groups from
+    being processed.
+
 .PARAMETER WebSession
     Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
@@ -32,27 +37,11 @@ function Remove-DMProtectionGroup {
 
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory = $true, Position = 1)]
-        [ValidateScript({
-                $session = if ($WebSession) {
-                    $WebSession
-                }
-                else {
-                    $script:CurrentOceanstorSession
-                }
-                $groups = @(Get-DMProtectionGroup -WebSession $session)
-                $matchingItems = @($groups | Where-Object Name -EQ $_)
-                if ($matchingItems.Count -eq 1) {
-                    return $true
-                }
-                if ($matchingItems.Count -gt 1) {
-                    throw "Name is ambiguous because more than one protection group is named '$_'."
-                }
-                throw "Invalid protection group Name. Valid values are: $($groups.Name -join ', ')"
-            })]
+        [Parameter(Mandatory = $true, Position = 1, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
                 $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
@@ -66,18 +55,33 @@ function Remove-DMProtectionGroup {
         [string]$Name
     )
 
-    $session = if ($WebSession) {
-        $WebSession
-    }
-    else {
-        $script:CurrentOceanstorSession
-    }
-    $group = @(Get-DMProtectionGroup -WebSession $session | Where-Object Name -EQ $Name)[0]
-    if ($null -eq $group) { throw "Could not resolve 'group' — the object may have been removed since parameter validation." }
+    process {
+        try {
+            $session = if ($WebSession) {
+                $WebSession
+            }
+            else {
+                $script:CurrentOceanstorSession
+            }
 
-    if ($PSCmdlet.ShouldProcess($Name, 'Remove protection group')) {
-        $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource "protectgroup/$($group.Id)" -ApiV2
-        $response = $response | Assert-DMApiSuccess
-        return $response.error
+            $groups = @(Get-DMProtectionGroup -WebSession $session)
+            $matchingItems = @($groups | Where-Object Name -EQ $Name)
+            if ($matchingItems.Count -eq 0) {
+                throw "Invalid protection group Name. Valid values are: $($groups.Name -join ', ')"
+            }
+            if ($matchingItems.Count -gt 1) {
+                throw "Name is ambiguous because more than one protection group is named '$Name'."
+            }
+            $group = $matchingItems[0]
+
+            if ($PSCmdlet.ShouldProcess($Name, 'Remove protection group')) {
+                $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource "protectgroup/$($group.Id)" -ApiV2
+                $response = $response | Assert-DMApiSuccess
+                return $response.error
+            }
+        }
+        catch {
+            $PSCmdlet.WriteError($_)
+        }
     }
 }

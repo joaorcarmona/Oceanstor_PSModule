@@ -109,6 +109,26 @@ Describe 'Protection group commands and class' {
         $script:apiV2 | Should -BeTrue
     }
 
+    It 'removes every protection group piped in, not just the last one' {
+        Mock Get-DMProtectionGroup {
+            @(
+                [OceanstorProtectionGroup]::new([pscustomobject]@{ protectGroupId = '3'; protectGroupName = 'pg-a' }, $script:session)
+                [OceanstorProtectionGroup]::new([pscustomobject]@{ protectGroupId = '4'; protectGroupName = 'pg-b' }, $script:session)
+            )
+        }
+        $resources = [System.Collections.Generic.List[string]]::new()
+        Mock Invoke-DeviceManager {
+            $resources.Add($Resource)
+            [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 } }
+        }
+
+        $items = @([pscustomobject]@{ Name = 'pg-a' }, [pscustomobject]@{ Name = 'pg-b' })
+        $null = $items | Remove-DMProtectionGroup -WebSession $script:session -Confirm:$false
+
+        $resources | Should -Contain 'protectgroup/3'
+        $resources | Should -Contain 'protectgroup/4'
+    }
+
     It 'gets the associated LUN group and dispatches deletion from the model' {
         $ConfirmPreference = 'None'
         Mock Invoke-DeviceManager {

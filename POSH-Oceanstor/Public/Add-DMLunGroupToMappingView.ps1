@@ -6,6 +6,10 @@
     Adds an existing LUN group to an existing mapping view by resolving both objects by name.
     The cmdlet validates the mapping view and LUN group before calling the OceanStor API and supports -WhatIf and -Confirm.
 
+    Accepts multiple LUN groups from the pipeline by property name. Each is resolved and associated
+    independently: a failure (e.g. an invalid/ambiguous name, or a REST error) is reported as a
+    non-terminating error and does not stop the rest from being processed.
+
 .PARAMETER WebSession
     Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
@@ -38,57 +42,12 @@ function Add-DMLunGroupToMappingView {
 
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory = $true, Position = 1)]
-        [ValidateScript({
-                $session = if ($WebSession) {
-                    $WebSession
-                }
-                else {
-                    $script:CurrentOceanstorSession
-                }
-                $views = @(Get-DMMappingView -WebSession $session)
-                $matchingItems = @($views | Where-Object Name -EQ $_)
-                if ($matchingItems.Count -eq 1) {
-                    return $true
-                }
-                if ($matchingItems.Count -gt 1) {
-                    throw "MappingViewName is ambiguous because more than one mapping view is named '$_'."
-                }
-                throw "Invalid MappingViewName. Valid values are: $($views.Name -join ', ')"
-            })]
-        [ArgumentCompleter({
-                param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
-                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
-                    $fakeBoundParameters.WebSession
-                }
-                else {
-                    $script:CurrentOceanstorSession
-                }
-                (Get-DMMappingView -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
-            })]
-        [string]$MappingViewName,
-
-        [Parameter(Mandatory = $true, Position = 2)]
-        [ValidateScript({
-                $session = if ($WebSession) {
-                    $WebSession
-                }
-                else {
-                    $script:CurrentOceanstorSession
-                }
-                $groups = @(Get-DMlunGroup -WebSession $session)
-                $matchingItems = @($groups | Where-Object Name -EQ $_)
-                if ($matchingItems.Count -eq 1) {
-                    return $true
-                }
-                if ($matchingItems.Count -gt 1) {
-                    throw "LunGroupName is ambiguous because more than one LUN group is named '$_'."
-                }
-                throw "Invalid LunGroupName. Valid values are: $($groups.Name -join ', ')"
-            })]
+        [Parameter(Mandatory = $true, Position = 1, ValueFromPipelineByPropertyName = $true)]
+        [Alias('Name')]
+        [ValidateNotNullOrEmpty()]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
                 $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
@@ -101,31 +60,65 @@ function Add-DMLunGroupToMappingView {
             })]
         [string]$LunGroupName,
 
+        [Parameter(Mandatory = $true, Position = 2)]
+        [ValidateNotNullOrEmpty()]
+        [ArgumentCompleter({
+                param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
+                    $fakeBoundParameters.WebSession
+                }
+                else {
+                    $script:CurrentOceanstorSession
+                }
+                (Get-DMMappingView -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+            })]
+        [string]$MappingViewName,
+
         [string]$VstoreId
     )
 
-    $session = if ($WebSession) {
-        $WebSession
-    }
-    else {
-        $script:CurrentOceanstorSession
-    }
-    $view = @(Get-DMMappingView -WebSession $session | Where-Object Name -EQ $MappingViewName)[0]
-    if ($null -eq $view) { throw "Could not resolve 'view' — the object may have been removed since parameter validation." }
-    if (-not $view) {
-        throw "Mapping view '$MappingViewName' was not found."
-    }
-    $group = @(Get-DMlunGroup -WebSession $session | Where-Object Name -EQ $LunGroupName)[0]
-    if ($null -eq $group) { throw "Could not resolve 'group' — the object may have been removed since parameter validation." }
-    if (-not $group) {
-        throw "LUN group '$LunGroupName' was not found."
-    }
-    $body = @{ TYPE = 245; ID = $view.Id; ASSOCIATEOBJTYPE = 256; ASSOCIATEOBJID = $group.Id }
-    if ($VstoreId) {
-        $body.vstoreId = $VstoreId
-    }
+    process {
+        try {
+            $session = if ($WebSession) {
+                $WebSession
+            }
+            else {
+                $script:CurrentOceanstorSession
+            }
 
-    if ($PSCmdlet.ShouldProcess("$LunGroupName -> $MappingViewName", 'Associate LUN group with mapping view')) {
-        return ((Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'mappingview/CREATE_ASSOCIATE' -BodyData $body) | Assert-DMApiSuccess).error
+            $groups = @(Get-DMlunGroup -WebSession $session)
+            $matchingGroups = @($groups | Where-Object Name -EQ $LunGroupName)
+            if ($matchingGroups.Count -eq 0) {
+                throw "Invalid LunGroupName. Valid values are: $($groups.Name -join ', ')"
+            }
+            if ($matchingGroups.Count -gt 1) {
+                throw "LunGroupName is ambiguous because more than one LUN group is named '$LunGroupName'."
+            }
+            $group = $matchingGroups[0]
+
+            $views = @(Get-DMMappingView -WebSession $session)
+            $matchingViews = @($views | Where-Object Name -EQ $MappingViewName)
+            if ($matchingViews.Count -eq 0) {
+                throw "Invalid MappingViewName. Valid values are: $($views.Name -join ', ')"
+            }
+            if ($matchingViews.Count -gt 1) {
+                throw "MappingViewName is ambiguous because more than one mapping view is named '$MappingViewName'."
+            }
+            $view = $matchingViews[0]
+
+            $body = @{ TYPE = 245; ID = $view.Id; ASSOCIATEOBJTYPE = 256; ASSOCIATEOBJID = $group.Id }
+            if ($VstoreId) {
+                $body.vstoreId = $VstoreId
+            }
+
+            if ($PSCmdlet.ShouldProcess("$LunGroupName -> $MappingViewName", 'Associate LUN group with mapping view')) {
+                $response = Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'mappingview/CREATE_ASSOCIATE' -BodyData $body
+                $response = $response | Assert-DMApiSuccess
+                return $response.error
+            }
+        }
+        catch {
+            $PSCmdlet.WriteError($_)
+        }
     }
 }

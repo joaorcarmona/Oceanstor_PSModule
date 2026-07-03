@@ -6,6 +6,11 @@
     Deletes an existing snapshot consistency group by resolving its name to the group ID before calling the OceanStor API.
     The cmdlet supports -WhatIf and -Confirm.
 
+    Accepts multiple snapshot consistency groups from the pipeline by property name. Each group is
+    resolved and removed independently: a failure (e.g. an invalid/ambiguous name, or a REST error)
+    is reported as a non-terminating error and does not stop the remaining groups from being
+    processed.
+
 .PARAMETER WebSession
     Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
@@ -40,27 +45,11 @@ function Remove-DMSnapshotConsistencyGroup {
 
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory = $true, Position = 1)]
-        [ValidateScript({
-                $session = if ($WebSession) {
-                    $WebSession
-                }
-                else {
-                    $script:CurrentOceanstorSession
-                }
-                $groups = @(Get-DMSnapshotConsistencyGroup -WebSession $session)
-                $matchingItems = @($groups | Where-Object Name -EQ $_)
-                if ($matchingItems.Count -eq 1) {
-                    return $true
-                }
-                if ($matchingItems.Count -gt 1) {
-                    throw "Name is ambiguous because more than one snapshot consistency group is named '$_'."
-                }
-                throw "Invalid snapshot consistency group Name. Valid values are: $($groups.Name -join ', ')"
-            })]
+        [Parameter(Mandatory = $true, Position = 1, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
                 $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
@@ -77,22 +66,38 @@ function Remove-DMSnapshotConsistencyGroup {
         [switch]$DeleteDestinationLuns
     )
 
-    $session = if ($WebSession) {
-        $WebSession
-    }
-    else {
-        $script:CurrentOceanstorSession
-    }
-    $group = @(Get-DMSnapshotConsistencyGroup -WebSession $session | Where-Object Name -EQ $Name)[0]
-    if ($null -eq $group) { throw "Could not resolve 'group' — the object may have been removed since parameter validation." }
-    $resource = "SNAPSHOT_CONSISTENCY_GROUP/$($group.Id)"
-    if ($DeleteDestinationLuns.IsPresent) {
-        $resource = "$resource?isDeleteDstLun=1"
-    }
+    process {
+        try {
+            $session = if ($WebSession) {
+                $WebSession
+            }
+            else {
+                $script:CurrentOceanstorSession
+            }
 
-    if ($PSCmdlet.ShouldProcess($Name, 'Remove snapshot consistency group')) {
-        $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
-        $response = $response | Assert-DMApiSuccess
-        return $response.error
+            $groups = @(Get-DMSnapshotConsistencyGroup -WebSession $session)
+            $matchingItems = @($groups | Where-Object Name -EQ $Name)
+            if ($matchingItems.Count -eq 0) {
+                throw "Invalid snapshot consistency group Name. Valid values are: $($groups.Name -join ', ')"
+            }
+            if ($matchingItems.Count -gt 1) {
+                throw "Name is ambiguous because more than one snapshot consistency group is named '$Name'."
+            }
+            $group = $matchingItems[0]
+
+            $resource = "SNAPSHOT_CONSISTENCY_GROUP/$($group.Id)"
+            if ($DeleteDestinationLuns.IsPresent) {
+                $resource = "$resource?isDeleteDstLun=1"
+            }
+
+            if ($PSCmdlet.ShouldProcess($Name, 'Remove snapshot consistency group')) {
+                $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
+                $response = $response | Assert-DMApiSuccess
+                return $response.error
+            }
+        }
+        catch {
+            $PSCmdlet.WriteError($_)
+        }
     }
 }
