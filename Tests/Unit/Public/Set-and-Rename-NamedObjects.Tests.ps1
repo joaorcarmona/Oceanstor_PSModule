@@ -183,5 +183,13 @@ Describe 'Rename command delegation' {
         Should -Invoke Set-DMHostGroup -Times 1 -Exactly -ParameterFilter { $HostGroupName -eq 'item-a' -and $NewName -eq 'renamed' }
         Should -Invoke Set-DMHostGroup -Times 1 -Exactly -ParameterFilter { $HostGroupName -eq 'item-b' -and $NewName -eq 'renamed' }
     }
+
+    It 'Rename-DMFileSystem forwards every piped item, not just the last one' {
+        $items = @([pscustomobject]@{ Name = 'item-a' }, [pscustomobject]@{ Name = 'item-b' })
+        $null = $items | Rename-DMFileSystem -WebSession $script:session -NewName 'renamed' -Confirm:$false
+
+        Should -Invoke Set-DMFileSystem -Times 1 -Exactly -ParameterFilter { $FileSystemName -eq 'item-a' -and $NewName -eq 'renamed' }
+        Should -Invoke Set-DMFileSystem -Times 1 -Exactly -ParameterFilter { $FileSystemName -eq 'item-b' -and $NewName -eq 'renamed' }
+    }
 }
 }

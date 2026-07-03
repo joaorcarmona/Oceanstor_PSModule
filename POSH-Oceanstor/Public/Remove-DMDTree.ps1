@@ -6,6 +6,11 @@
     Deletes an existing dTree from a file system by resolving the file system and dTree names before calling the OceanStor API.
     The cmdlet validates both names and supports -WhatIf and -Confirm.
 
+    Accepts multiple dTrees from the pipeline by property name (all piped dTrees must belong to the
+    same FileSystemName). Each dTree is resolved and removed independently: a failure (e.g. an
+    invalid/ambiguous name, or a REST error) is reported as a non-terminating error and does not stop
+    the remaining dTrees from being processed.
+
 .PARAMETER WebSession
     Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
@@ -38,27 +43,11 @@ function Remove-DMDTree {
 
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
 
         [Parameter(Mandatory = $true, Position = 1)]
-        [ValidateScript({
-                $session = if ($WebSession) {
-                    $WebSession
-                }
-                else {
-                    $script:CurrentOceanstorSession
-                }
-                $fileSystems = @(Get-DMFileSystem -WebSession $session)
-                $matchingItems = @($fileSystems | Where-Object Name -EQ $_)
-                if ($matchingItems.Count -eq 1) {
-                    return $true
-                }
-                if ($matchingItems.Count -gt 1) {
-                    throw "FileSystemName is ambiguous because more than one file system is named '$_'."
-                }
-                throw "Invalid FileSystemName. Valid values are: $($fileSystems.Name -join ', ')"
-            })]
+        [ValidateNotNullOrEmpty()]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
                 $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
@@ -71,25 +60,9 @@ function Remove-DMDTree {
             })]
         [string]$FileSystemName,
 
-        [Parameter(Mandatory = $true, Position = 2)]
-        [ValidateScript({
-                $session = if ($WebSession) {
-                    $WebSession
-                }
-                else {
-                    $script:CurrentOceanstorSession
-                }
-                $fileSystem = @(Get-DMFileSystem -WebSession $session | Where-Object Name -EQ $FileSystemName)[0]
-                $dtrees = @((Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource "QUOTATREE?PARENTID=$($fileSystem.Id)").data)
-                $matchingItems = @($dtrees | Where-Object NAME -EQ $_)
-                if ($matchingItems.Count -eq 1) {
-                    return $true
-                }
-                if ($matchingItems.Count -gt 1) {
-                    throw "DTreeName is ambiguous because more than one dTree is named '$_'."
-                }
-                throw "Invalid DTreeName. Valid values are: $($dtrees.NAME -join ', ')"
-            })]
+        [Parameter(Mandatory = $true, Position = 2, ValueFromPipelineByPropertyName = $true)]
+        [Alias('Name')]
+        [ValidateNotNullOrEmpty()]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
                 if (-not $fakeBoundParameters.ContainsKey('FileSystemName')) {
@@ -114,25 +87,48 @@ function Remove-DMDTree {
         [string]$VstoreId
     )
 
-    $session = if ($WebSession) {
-        $WebSession
-    }
-    else {
-        $script:CurrentOceanstorSession
-    }
-    $fileSystem = @(Get-DMFileSystem -WebSession $session | Where-Object Name -EQ $FileSystemName)[0]
-    if ($null -eq $fileSystem) { throw "Could not resolve 'fileSystem' — the object may have been removed since parameter validation." }
-    $dtrees = @((Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource "QUOTATREE?PARENTID=$($fileSystem.Id)").data)
-    $dtree = @($dtrees | Where-Object NAME -EQ $DTreeName)[0]
-    if ($null -eq $dtree) { throw "Could not resolve 'dtree' — the object may have been removed since parameter validation." }
-    $resource = "QUOTATREE/$($dtree.ID)"
-    if ($VstoreId) {
-        $resource += "?vstoreId=$VstoreId"
-    }
+    process {
+        try {
+            $session = if ($WebSession) {
+                $WebSession
+            }
+            else {
+                $script:CurrentOceanstorSession
+            }
 
-    if ($PSCmdlet.ShouldProcess("$FileSystemName/$DTreeName", 'Remove dTree and its data')) {
-        $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
-        $response = $response | Assert-DMApiSuccess
-        return $response.error
+            $fileSystems = @(Get-DMFileSystem -WebSession $session)
+            $matchingFileSystems = @($fileSystems | Where-Object Name -EQ $FileSystemName)
+            if ($matchingFileSystems.Count -eq 0) {
+                throw "Invalid FileSystemName. Valid values are: $($fileSystems.Name -join ', ')"
+            }
+            if ($matchingFileSystems.Count -gt 1) {
+                throw "FileSystemName is ambiguous because more than one file system is named '$FileSystemName'."
+            }
+            $fileSystem = $matchingFileSystems[0]
+
+            $dtrees = @((Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource "QUOTATREE?PARENTID=$($fileSystem.Id)").data)
+            $matchingDtrees = @($dtrees | Where-Object NAME -EQ $DTreeName)
+            if ($matchingDtrees.Count -eq 0) {
+                throw "Invalid DTreeName. Valid values are: $($dtrees.NAME -join ', ')"
+            }
+            if ($matchingDtrees.Count -gt 1) {
+                throw "DTreeName is ambiguous because more than one dTree is named '$DTreeName'."
+            }
+            $dtree = $matchingDtrees[0]
+
+            $resource = "QUOTATREE/$($dtree.ID)"
+            if ($VstoreId) {
+                $resource += "?vstoreId=$VstoreId"
+            }
+
+            if ($PSCmdlet.ShouldProcess("$FileSystemName/$DTreeName", 'Remove dTree and its data')) {
+                $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
+                $response = $response | Assert-DMApiSuccess
+                return $response.error
+            }
+        }
+        catch {
+            $PSCmdlet.WriteError($_)
+        }
     }
 }

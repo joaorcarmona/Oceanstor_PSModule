@@ -6,6 +6,11 @@
     Deletes an existing file system by name, optionally scoped to a vStore.
     Force and WORM flags are passed through to the OceanStor API when specified. The cmdlet supports -WhatIf and -Confirm.
 
+    Accepts multiple file systems from the pipeline by property name. Each file system is resolved
+    and removed independently: a failure (e.g. an invalid/ambiguous name, or a REST error) is
+    reported as a non-terminating error and does not stop the remaining file systems from being
+    processed.
+
 .PARAMETER WebSession
     Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
@@ -46,27 +51,12 @@ function Remove-DMFileSystem {
 
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory = $true, Position = 1)]
-        [ValidateScript({
-                $session = if ($WebSession) {
-                    $WebSession
-                }
-                else {
-                    $script:CurrentOceanstorSession
-                }
-                $fileSystems = @(Get-DMFileSystem -WebSession $session)
-                $matchingItems = @($fileSystems | Where-Object Name -EQ $_)
-                if ($matchingItems.Count -eq 1) {
-                    return $true
-                }
-                if ($matchingItems.Count -gt 1) {
-                    throw "FileSystemName is ambiguous because more than one file system is named '$_'."
-                }
-                throw "Invalid FileSystemName. Valid values are: $($fileSystems.Name -join ', ')"
-            })]
+        [Parameter(Mandatory = $true, Position = 1, ValueFromPipelineByPropertyName = $true)]
+        [Alias('Name')]
+        [ValidateNotNullOrEmpty()]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
                 $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
@@ -86,32 +76,48 @@ function Remove-DMFileSystem {
         [string]$VstoreId
     )
 
-    $session = if ($WebSession) {
-        $WebSession
-    }
-    else {
-        $script:CurrentOceanstorSession
-    }
-    $fileSystem = @(Get-DMFileSystem -WebSession $session | Where-Object Name -EQ $FileSystemName)[0]
-    if ($null -eq $fileSystem) { throw "Could not resolve 'fileSystem' — the object may have been removed since parameter validation." }
-    $parameters = @()
-    if ($Force) {
-        $parameters += 'forceDeleteFs=true'
-    }
-    if ($Worm) {
-        $parameters += 'SUBTYPE=1'
-    }
-    if ($VstoreId) {
-        $parameters += "vstoreId=$VstoreId"
-    }
-    $resource = "filesystem/$($fileSystem.Id)"
-    if ($parameters.Count -gt 0) {
-        $resource += "?$($parameters -join '&')"
-    }
+    process {
+        try {
+            $session = if ($WebSession) {
+                $WebSession
+            }
+            else {
+                $script:CurrentOceanstorSession
+            }
 
-    if ($PSCmdlet.ShouldProcess($FileSystemName, 'Remove file system and its data')) {
-        $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
-        $response = $response | Assert-DMApiSuccess
-        return $response.error
+            $fileSystems = @(Get-DMFileSystem -WebSession $session)
+            $matchingItems = @($fileSystems | Where-Object Name -EQ $FileSystemName)
+            if ($matchingItems.Count -eq 0) {
+                throw "Invalid FileSystemName. Valid values are: $($fileSystems.Name -join ', ')"
+            }
+            if ($matchingItems.Count -gt 1) {
+                throw "FileSystemName is ambiguous because more than one file system is named '$FileSystemName'."
+            }
+            $fileSystem = $matchingItems[0]
+
+            $parameters = @()
+            if ($Force) {
+                $parameters += 'forceDeleteFs=true'
+            }
+            if ($Worm) {
+                $parameters += 'SUBTYPE=1'
+            }
+            if ($VstoreId) {
+                $parameters += "vstoreId=$VstoreId"
+            }
+            $resource = "filesystem/$($fileSystem.Id)"
+            if ($parameters.Count -gt 0) {
+                $resource += "?$($parameters -join '&')"
+            }
+
+            if ($PSCmdlet.ShouldProcess($FileSystemName, 'Remove file system and its data')) {
+                $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
+                $response = $response | Assert-DMApiSuccess
+                return $response.error
+            }
+        }
+        catch {
+            $PSCmdlet.WriteError($_)
+        }
     }
 }

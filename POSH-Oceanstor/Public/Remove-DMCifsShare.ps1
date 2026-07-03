@@ -6,6 +6,10 @@
     Deletes an existing CIFS share by name, optionally scoped to a vStore.
     The share name is validated against existing OceanStor CIFS shares before the delete request is sent. The cmdlet supports -WhatIf and -Confirm.
 
+    Accepts multiple shares from the pipeline by property name. Each share is resolved and removed
+    independently: a failure (e.g. an invalid/ambiguous name, or a REST error) is reported as a
+    non-terminating error and does not stop the remaining shares from being processed.
+
 .PARAMETER WebSession
     Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
@@ -35,27 +39,12 @@ function Remove-DMCifsShare {
 
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory = $true, Position = 1)]
-        [ValidateScript({
-                $session = if ($WebSession) {
-                    $WebSession
-                }
-                else {
-                    $script:CurrentOceanstorSession
-                }
-                $shares = @(Get-DMShare -WebSession $session -ShareType CIFS)
-                $matchingItems = @($shares | Where-Object Name -EQ $_)
-                if ($matchingItems.Count -eq 1) {
-                    return $true
-                }
-                if ($matchingItems.Count -gt 1) {
-                    throw "ShareName is ambiguous because more than one CIFS share is named '$_'."
-                }
-                throw "Invalid ShareName. Valid values are: $($shares.Name -join ', ')"
-            })]
+        [Parameter(Mandatory = $true, Position = 1, ValueFromPipelineByPropertyName = $true)]
+        [Alias('Name')]
+        [ValidateNotNullOrEmpty()]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
                 $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
@@ -72,22 +61,38 @@ function Remove-DMCifsShare {
         [string]$VstoreId
     )
 
-    $session = if ($WebSession) {
-        $WebSession
-    }
-    else {
-        $script:CurrentOceanstorSession
-    }
-    $share = @(Get-DMShare -WebSession $session -ShareType CIFS | Where-Object Name -EQ $ShareName)[0]
-    if ($null -eq $share) { throw "Could not resolve 'share' — the object may have been removed since parameter validation." }
-    $resource = "CIFSSHARE/$($share.Id)"
-    if ($VstoreId) {
-        $resource += "?vstoreId=$VstoreId"
-    }
+    process {
+        try {
+            $session = if ($WebSession) {
+                $WebSession
+            }
+            else {
+                $script:CurrentOceanstorSession
+            }
 
-    if ($PSCmdlet.ShouldProcess($ShareName, 'Remove CIFS share')) {
-        $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
-        $response = $response | Assert-DMApiSuccess
-        return $response.error
+            $shares = @(Get-DMShare -WebSession $session -ShareType CIFS)
+            $matchingItems = @($shares | Where-Object Name -EQ $ShareName)
+            if ($matchingItems.Count -eq 0) {
+                throw "Invalid ShareName. Valid values are: $($shares.Name -join ', ')"
+            }
+            if ($matchingItems.Count -gt 1) {
+                throw "ShareName is ambiguous because more than one CIFS share is named '$ShareName'."
+            }
+            $share = $matchingItems[0]
+
+            $resource = "CIFSSHARE/$($share.Id)"
+            if ($VstoreId) {
+                $resource += "?vstoreId=$VstoreId"
+            }
+
+            if ($PSCmdlet.ShouldProcess($ShareName, 'Remove CIFS share')) {
+                $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
+                $response = $response | Assert-DMApiSuccess
+                return $response.error
+            }
+        }
+        catch {
+            $PSCmdlet.WriteError($_)
+        }
     }
 }

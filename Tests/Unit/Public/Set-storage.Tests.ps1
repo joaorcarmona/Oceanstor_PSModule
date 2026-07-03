@@ -234,18 +234,32 @@ Describe 'Set-DMFileSystem' {
         $script:requests[0].Body.AUTOGROWTHRESHOLDPERCENT | Should -Be 90
     }
 
-    It 'rejects an unchanged file-system capacity' {
-        { Set-DMFileSystem -WebSession $script:session -FileSystemName 'documents' -Capacity '4GB' -Confirm:$false } |
-            Should -Throw '*already the current*'
+    It 'reports a non-terminating error for an unchanged file-system capacity' {
+        $result = Set-DMFileSystem -WebSession $script:session -FileSystemName 'documents' -Capacity '4GB' -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable setErrors
 
+        $result | Should -BeNullOrEmpty
+        $setErrors.Count | Should -BeGreaterOrEqual 1
+        ($setErrors.Exception.Message | Select-Object -Unique) | Should -BeLike '*already the current*'
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 
-    It 'rejects a duplicate new file-system name' {
-        { Set-DMFileSystem -WebSession $script:session -FileSystemName 'documents' -NewName 'archive' -Confirm:$false } |
-            Should -Throw '*already exists*'
+    It 'reports a non-terminating error for a duplicate new file-system name' {
+        $result = Set-DMFileSystem -WebSession $script:session -FileSystemName 'documents' -NewName 'archive' -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable setErrors
 
+        $result | Should -BeNullOrEmpty
+        $setErrors.Count | Should -BeGreaterOrEqual 1
+        ($setErrors.Exception.Message | Select-Object -Unique) | Should -BeLike '*already exists*'
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
+    }
+
+    It 'modifies every file system piped in, not just the last one' {
+        $null = @(
+            [pscustomobject]@{ Name = 'documents' }
+            [pscustomobject]@{ Name = 'archive' }
+        ) | Set-DMFileSystem -WebSession $script:session -Description 'batch update' -Confirm:$false
+
+        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -eq 'filesystem/fs-01' -and $BodyData.DESCRIPTION -eq 'batch update' }
+        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -eq 'filesystem/fs-02' -and $BodyData.DESCRIPTION -eq 'batch update' }
     }
 
     It 'does not modify a file system under WhatIf' {

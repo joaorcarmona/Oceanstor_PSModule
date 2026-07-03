@@ -99,7 +99,7 @@ Describe 'Storage and NAS removal commands' {
         $result.Code | Should -Be 0
         $script:method | Should -Be 'DELETE'
         $script:resource | Should -Be 'QUOTATREE/4097@17?vstoreId=7'
-        Should -Invoke Invoke-DeviceManager -ParameterFilter { $Method -eq 'GET' -and $Resource -eq 'QUOTATREE?PARENTID=fs-01' } -Times 2 -Exactly
+        Should -Invoke Invoke-DeviceManager -ParameterFilter { $Method -eq 'GET' -and $Resource -eq 'QUOTATREE?PARENTID=fs-01' } -Times 1 -Exactly
     }
 
     It 'rejects removal of an unknown LUN' {
@@ -142,6 +142,36 @@ Describe 'Storage and NAS removal commands' {
 
         Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -eq 'hostgroup/hg-01' }
         Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -eq 'hostgroup/hg-02' }
+    }
+
+    It 'removes every file system piped in, not just the last one' {
+        Mock Get-DMFileSystem {
+            @(
+                [pscustomobject]@{ Id = 'fs-01'; Name = 'fs-a' }
+                [pscustomobject]@{ Id = 'fs-02'; Name = 'fs-b' }
+            )
+        }
+
+        $items = @([pscustomobject]@{ Name = 'fs-a' }, [pscustomobject]@{ Name = 'fs-b' })
+        $null = $items | Remove-DMFileSystem -WebSession $script:session -Confirm:$false
+
+        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -eq 'filesystem/fs-01' }
+        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -eq 'filesystem/fs-02' }
+    }
+
+    It 'removes every NFS share piped in by Share Path, not just the last one' {
+        Mock Get-DMShare {
+            @(
+                [pscustomobject]@{ Id = 'nfs-01'; 'Share Path' = '/share-a/' }
+                [pscustomobject]@{ Id = 'nfs-02'; 'Share Path' = '/share-b/' }
+            )
+        }
+
+        $items = @([pscustomobject]@{ 'Share Path' = '/share-a/' }, [pscustomobject]@{ 'Share Path' = '/share-b/' })
+        $null = $items | Remove-DMNfsShare -WebSession $script:session -Confirm:$false
+
+        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -eq 'NFSSHARE/nfs-01' }
+        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -eq 'NFSSHARE/nfs-02' }
     }
 }
 
