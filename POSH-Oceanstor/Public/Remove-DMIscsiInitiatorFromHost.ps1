@@ -7,6 +7,11 @@ function Remove-DMIscsiInitiatorFromHost {
         Detaches an iSCSI initiator identifier from the specified host without deleting the initiator from the storage system.
         The cmdlet validates the host name and initiator membership before calling the OceanStor API. It supports -WhatIf and -Confirm.
 
+        Accepts multiple initiators from the pipeline by property name (all piped initiators must
+        belong to the same HostName). Each is resolved and processed independently: a failure (e.g. an
+        invalid identifier, or an invalid host name) is reported as a non-terminating error and does
+        not stop the remaining initiators from being processed.
+
     .PARAMETER WebSession
         Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
@@ -38,27 +43,11 @@ function Remove-DMIscsiInitiatorFromHost {
 
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
 
         [Parameter(Mandatory = $true, Position = 1)]
-        [ValidateScript({
-                $candidate = $_
-                $session = if ($WebSession) {
-                    $WebSession
-                }
-                else {
-                    $script:CurrentOceanstorSession
-                }
-                $matchingItems = @(Get-DMhostbyName -WebSession $session -Name $candidate)
-                if ($matchingItems.Count -eq 1) {
-                    return $true
-                }
-                if ($matchingItems.Count -gt 1) {
-                    throw "HostName is ambiguous because more than one host is named '$candidate'."
-                }
-                throw "Invalid HostName '$candidate'. No host with that name exists."
-            })]
+        [ValidateNotNullOrEmpty()]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
                 $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
@@ -71,23 +60,9 @@ function Remove-DMIscsiInitiatorFromHost {
             })]
         [string]$HostName,
 
-        [Parameter(Mandatory = $true, Position = 2)]
-        [ValidateScript({
-                $candidate = $_
-                $session = if ($WebSession) {
-                    $WebSession
-                }
-                else {
-                    $script:CurrentOceanstorSession
-                }
-                $selectedHostName = [string]$HostName
-                $hostObject = @(Get-DMhostbyName -WebSession $session -Name $selectedHostName)[0]
-                $initiators = @(Get-DMHostInitiator -WebSession $session -InitiatorType ISCSI -HostId $hostObject.Id)
-                if ($initiators.Id -contains $candidate) {
-                    return $true
-                }
-                throw "Invalid iSCSI initiator for host '$selectedHostName'. Valid values are: $($initiators.Id -join ', ')"
-            })]
+        [Parameter(Mandatory = $true, Position = 2, ValueFromPipelineByPropertyName = $true)]
+        [Alias('Id')]
+        [ValidateNotNullOrEmpty()]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
                 if (-not $fakeBoundParameters.ContainsKey('HostName')) {
@@ -106,17 +81,41 @@ function Remove-DMIscsiInitiatorFromHost {
         [string]$VstoreId
     )
 
-    $session = if ($WebSession) {
-        $WebSession
-    }
-    else {
-        $script:CurrentOceanstorSession
-    }
-    $body = @{ ID = $Identifier }
-    if ($VstoreId) {
-        $body.vstoreId = $VstoreId
-    }
-    if ($PSCmdlet.ShouldProcess("$HostName/$Identifier", 'Remove iSCSI initiator from host')) {
-        return ((Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'iscsi_initiator/remove_iscsi_from_host' -BodyData $body) | Assert-DMApiSuccess).error
+    process {
+        try {
+            $session = if ($WebSession) {
+                $WebSession
+            }
+            else {
+                $script:CurrentOceanstorSession
+            }
+
+            $matchingHosts = @(Get-DMhostbyName -WebSession $session -Name $HostName)
+            if ($matchingHosts.Count -eq 0) {
+                throw "Invalid HostName '$HostName'. No host with that name exists."
+            }
+            if ($matchingHosts.Count -gt 1) {
+                throw "HostName is ambiguous because more than one host is named '$HostName'."
+            }
+            $hostObject = $matchingHosts[0]
+
+            $initiators = @(Get-DMHostInitiator -WebSession $session -InitiatorType ISCSI -HostId $hostObject.Id)
+            if ($initiators.Id -notcontains $Identifier) {
+                throw "Invalid iSCSI initiator for host '$HostName'. Valid values are: $($initiators.Id -join ', ')"
+            }
+
+            $body = @{ ID = $Identifier }
+            if ($VstoreId) {
+                $body.vstoreId = $VstoreId
+            }
+            if ($PSCmdlet.ShouldProcess("$HostName/$Identifier", 'Remove iSCSI initiator from host')) {
+                $response = Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'iscsi_initiator/remove_iscsi_from_host' -BodyData $body
+                $response = $response | Assert-DMApiSuccess
+                return $response.error
+            }
+        }
+        catch {
+            $PSCmdlet.WriteError($_)
+        }
     }
 }

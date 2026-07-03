@@ -7,6 +7,10 @@ function Remove-DMIscsiInitiator {
         Deletes an existing free iSCSI initiator by identifier, optionally scoped to a vStore.
         Associated initiators must be removed from their host before deletion. The cmdlet supports -WhatIf and -Confirm.
 
+        Accepts multiple initiators from the pipeline by property name. Each is resolved and removed
+        independently: a failure (e.g. an invalid identifier, or a REST error) is reported as a
+        non-terminating error and does not stop the remaining initiators from being processed.
+
     .PARAMETER WebSession
         Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
@@ -35,24 +39,12 @@ function Remove-DMIscsiInitiator {
 
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory = $true, Position = 1)]
-        [ValidateScript({
-                $candidate = $_
-                $session = if ($WebSession) {
-                    $WebSession
-                }
-                else {
-                    $script:CurrentOceanstorSession
-                }
-                $initiators = @(Get-DMIscsiInitiator -WebSession $session -FreeInitiators)
-                if ($initiators.Id -contains $candidate) {
-                    return $true
-                }
-                throw "Invalid free iSCSI initiator identifier. Valid values are: $($initiators.Id -join ', ')"
-            })]
+        [Parameter(Mandatory = $true, Position = 1, ValueFromPipelineByPropertyName = $true)]
+        [Alias('Id')]
+        [ValidateNotNullOrEmpty()]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
                 $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
@@ -68,17 +60,32 @@ function Remove-DMIscsiInitiator {
         [string]$VstoreId
     )
 
-    $session = if ($WebSession) {
-        $WebSession
-    }
-    else {
-        $script:CurrentOceanstorSession
-    }
-    $resource = "iscsi_initiator/$Identifier"
-    if ($VstoreId) {
-        $resource += "?vstoreId=$VstoreId"
-    }
-    if ($PSCmdlet.ShouldProcess($Identifier, 'Remove free iSCSI initiator')) {
-        return ((Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource) | Assert-DMApiSuccess).error
+    process {
+        try {
+            $session = if ($WebSession) {
+                $WebSession
+            }
+            else {
+                $script:CurrentOceanstorSession
+            }
+
+            $initiators = @(Get-DMIscsiInitiator -WebSession $session -FreeInitiators)
+            if ($initiators.Id -notcontains $Identifier) {
+                throw "Invalid free iSCSI initiator identifier. Valid values are: $($initiators.Id -join ', ')"
+            }
+
+            $resource = "iscsi_initiator/$Identifier"
+            if ($VstoreId) {
+                $resource += "?vstoreId=$VstoreId"
+            }
+            if ($PSCmdlet.ShouldProcess($Identifier, 'Remove free iSCSI initiator')) {
+                $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
+                $response = $response | Assert-DMApiSuccess
+                return $response.error
+            }
+        }
+        catch {
+            $PSCmdlet.WriteError($_)
+        }
     }
 }

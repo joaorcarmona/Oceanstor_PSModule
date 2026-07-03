@@ -210,5 +210,39 @@ Describe 'Initiator removal commands' {
 
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
+
+    It 'removes every free Fibre Channel initiator piped in, not just the last one' {
+        Mock Get-DMFiberChannelInitiator {
+            @([pscustomobject]@{ Id = 'wwn-a' }, [pscustomobject]@{ Id = 'wwn-b' })
+        }
+        $resources = [System.Collections.Generic.List[string]]::new()
+        Mock Invoke-DeviceManager {
+            $resources.Add($Resource)
+            [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 } }
+        }
+
+        $items = @([pscustomobject]@{ Id = 'wwn-a' }, [pscustomobject]@{ Id = 'wwn-b' })
+        $null = $items | Remove-DMFiberChannelInitiator -WebSession $script:session -Confirm:$false
+
+        $resources | Should -Contain 'fc_initiator/wwn-a'
+        $resources | Should -Contain 'fc_initiator/wwn-b'
+    }
+
+    It 'removes every Fibre Channel initiator piped in from the same host, not just the last one' {
+        Mock Get-DMHostInitiator {
+            @([pscustomobject]@{ Id = 'wwn-a' }, [pscustomobject]@{ Id = 'wwn-b' })
+        }
+        $requests = [System.Collections.Generic.List[object]]::new()
+        Mock Invoke-DeviceManager {
+            $requests.Add([pscustomobject]@{ Resource = $Resource; Body = $BodyData })
+            [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 } }
+        }
+
+        $items = @([pscustomobject]@{ Id = 'wwn-a' }, [pscustomobject]@{ Id = 'wwn-b' })
+        $null = $items | Remove-DMFiberChannelInitiatorFromHost -WebSession $script:session -HostName 'server01' -Confirm:$false
+
+        ($requests | Where-Object { $_.Body.ID -eq 'wwn-a' }).Count | Should -Be 1
+        ($requests | Where-Object { $_.Body.ID -eq 'wwn-b' }).Count | Should -Be 1
+    }
 }
 }
