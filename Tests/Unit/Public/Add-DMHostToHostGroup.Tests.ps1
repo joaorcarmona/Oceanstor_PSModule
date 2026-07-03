@@ -64,17 +64,21 @@ Describe 'Add-DMHostToHostGroup' {
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 
-    It 'rejects a host name that does not exist' {
-        { Add-DMHostToHostGroup -WebSession $script:session -HostName 'missing' -HostGroupName 'prod-group' -Confirm:$false } |
-            Should -Throw '*Invalid HostName*'
+    It 'reports a non-terminating error for a host name that does not exist' {
+        $result = Add-DMHostToHostGroup -WebSession $script:session -HostName 'missing' -HostGroupName 'prod-group' -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable addErrors
 
+        $result | Should -BeNullOrEmpty
+        $addErrors.Count | Should -BeGreaterOrEqual 1
+        ($addErrors.Exception.Message | Select-Object -Unique) | Should -BeLike '*Invalid HostName*'
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 
-    It 'rejects a host group name that does not exist' {
-        { Add-DMHostToHostGroup -WebSession $script:session -HostName 'web-host' -HostGroupName 'missing' -Confirm:$false } |
-            Should -Throw '*Invalid HostGroupName*'
+    It 'reports a non-terminating error for a host group name that does not exist' {
+        $result = Add-DMHostToHostGroup -WebSession $script:session -HostName 'web-host' -HostGroupName 'missing' -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable addErrors
 
+        $result | Should -BeNullOrEmpty
+        $addErrors.Count | Should -BeGreaterOrEqual 1
+        ($addErrors.Exception.Message | Select-Object -Unique) | Should -BeLike '*Invalid HostGroupName*'
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 
@@ -84,6 +88,18 @@ Describe 'Add-DMHostToHostGroup' {
         Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter {
             $BodyData.vstoreId -eq 'vs-02'
         }
+    }
+
+    It 'associates every host piped in, not just the last one' {
+        Mock Get-DMhostbyName {
+            @([pscustomobject]@{ Id = "id-$Name"; Name = $Name })
+        }
+
+        $hosts = @([pscustomobject]@{ Name = 'host-a' }, [pscustomobject]@{ Name = 'host-b' })
+        $null = $hosts | Add-DMHostToHostGroup -WebSession $script:session -HostGroupName 'prod-group' -Confirm:$false
+
+        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $BodyData.ASSOCIATEOBJID -eq 'id-host-a' }
+        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $BodyData.ASSOCIATEOBJID -eq 'id-host-b' }
     }
 }
 }

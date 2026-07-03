@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Associates an OceanStor host with a host group.
 
@@ -6,14 +6,18 @@
     Adds an existing host to an existing host group by resolving both objects by name.
     The cmdlet validates the host and host group before calling the OceanStor API and supports -WhatIf and -Confirm.
 
+    Accepts multiple hosts from the pipeline by property name. Each host is resolved and associated
+    independently: a failure (e.g. an invalid/ambiguous name, or a REST error) is reported as a
+    non-terminating error and does not stop the remaining hosts from being processed.
+
 .PARAMETER WebSession
     Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
 .PARAMETER HostName
-    Name of the host to add to the host group. The name is validated against existing OceanStor hosts.
+    Name of the host to add to the host group. Resolved against existing OceanStor hosts when the command runs. Accepts pipeline input by property name (a piped object's Name property).
 
 .PARAMETER HostGroupName
-    Name of the host group that will receive the host. The name is validated against existing OceanStor host groups.
+    Name of the host group that will receive the host. Resolved against existing OceanStor host groups when the command runs.
 
 .PARAMETER VstoreId
     Optional vStore ID used to scope the association operation.
@@ -30,6 +34,12 @@
 
     Shows what would happen if host01 were added to the production-hosts host group.
 
+.EXAMPLE
+    PS> Get-DMhost | Where-Object Name -Like 'esx*' | Add-DMHostToHostGroup -HostGroupName 'production-hosts' -Confirm:$false
+
+    Adds every host whose name starts with esx to the production-hosts host group. A host that fails
+    is reported as a non-terminating error; the rest are still processed.
+
 .NOTES
     Filename: Add-DMHostToHostGroup.ps1
 #>
@@ -38,27 +48,12 @@ function Add-DMHostToHostGroup {
 
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory = $true, Position = 1)]
-        [ValidateScript({
-                $candidate = $_
-                $session = if ($WebSession) {
-                    $WebSession
-                }
-                else {
-                    $script:CurrentOceanstorSession
-                }
-                $script:_dmAddHostHosts = @(Get-DMhostbyName -WebSession $session -Name $candidate)
-                if ($script:_dmAddHostHosts.Count -eq 1) {
-                    return $true
-                }
-                if ($script:_dmAddHostHosts.Count -gt 1) {
-                    throw "HostName is ambiguous because more than one host is named '$candidate'."
-                }
-                throw "Invalid HostName '$candidate'. No host with that name exists."
-            })]
+        [Parameter(Mandatory = $true, Position = 1, ValueFromPipelineByPropertyName = $true)]
+        [Alias('Name')]
+        [ValidateNotNullOrEmpty()]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
                 $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
@@ -72,24 +67,7 @@ function Add-DMHostToHostGroup {
         [string]$HostName,
 
         [Parameter(Mandatory = $true, Position = 2)]
-        [ValidateScript({
-                $candidate = $_
-                $session = if ($WebSession) {
-                    $WebSession
-                }
-                else {
-                    $script:CurrentOceanstorSession
-                }
-                $script:_dmAddHostGroups = @(Get-DMhostGroup -WebSession $session)
-                $matchingItems = @($script:_dmAddHostGroups | Where-Object Name -EQ $candidate)
-                if ($matchingItems.Count -eq 1) {
-                    return $true
-                }
-                if ($matchingItems.Count -gt 1) {
-                    throw "HostGroupName is ambiguous because more than one host group is named '$candidate'."
-                }
-                throw "Invalid HostGroupName. Valid values are: $($script:_dmAddHostGroups.Name -join ', ')"
-            })]
+        [ValidateNotNullOrEmpty()]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
                 $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
@@ -105,26 +83,51 @@ function Add-DMHostToHostGroup {
         [string]$VstoreId
     )
 
-    $session = if ($WebSession) {
-        $WebSession
-    }
-    else {
-        $script:CurrentOceanstorSession
-    }
-    $hostObject = @($script:_dmAddHostHosts | Where-Object Name -EQ $HostName)[0]
-    if ($null -eq $hostObject) { throw "Could not resolve 'hostObject' — the object may have been removed since parameter validation." }
-    $group = @($script:_dmAddHostGroups | Where-Object Name -EQ $HostGroupName)[0]
-    if ($null -eq $group) { throw "Could not resolve 'group' — the object may have been removed since parameter validation." }
-    $body = @{
-        ID               = $group.Id
-        ASSOCIATEOBJTYPE = 21
-        ASSOCIATEOBJID   = $hostObject.Id
-    }
-    if ($VstoreId) {
-        $body.vstoreId = $VstoreId
-    }
+    process {
+        try {
+            $session = if ($WebSession) {
+                $WebSession
+            }
+            else {
+                $script:CurrentOceanstorSession
+            }
 
-    if ($PSCmdlet.ShouldProcess("$HostName -> $HostGroupName", 'Associate host with host group')) {
-        return ((Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'hostgroup/associate' -BodyData $body) | Assert-DMApiSuccess).error
+            $matchingHosts = @(Get-DMhostbyName -WebSession $session -Name $HostName)
+            if ($matchingHosts.Count -eq 0) {
+                throw "Invalid HostName '$HostName'. No host with that name exists."
+            }
+            if ($matchingHosts.Count -gt 1) {
+                throw "HostName is ambiguous because more than one host is named '$HostName'."
+            }
+            $hostObject = $matchingHosts[0]
+
+            $groups = @(Get-DMhostGroup -WebSession $session)
+            $matchingGroups = @($groups | Where-Object Name -EQ $HostGroupName)
+            if ($matchingGroups.Count -eq 0) {
+                throw "Invalid HostGroupName. Valid values are: $($groups.Name -join ', ')"
+            }
+            if ($matchingGroups.Count -gt 1) {
+                throw "HostGroupName is ambiguous because more than one host group is named '$HostGroupName'."
+            }
+            $group = $matchingGroups[0]
+
+            $body = @{
+                ID               = $group.Id
+                ASSOCIATEOBJTYPE = 21
+                ASSOCIATEOBJID   = $hostObject.Id
+            }
+            if ($VstoreId) {
+                $body.vstoreId = $VstoreId
+            }
+
+            if ($PSCmdlet.ShouldProcess("$HostName -> $HostGroupName", 'Associate host with host group')) {
+                $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'hostgroup/associate' -BodyData $body
+                $response = $response | Assert-DMApiSuccess
+                return $response.error
+            }
+        }
+        catch {
+            $PSCmdlet.WriteError($_)
+        }
     }
 }

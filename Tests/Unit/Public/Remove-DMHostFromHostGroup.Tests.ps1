@@ -68,27 +68,48 @@ Describe 'Remove-DMHostFromHostGroup' {
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 
-    It 'throws when the host is not a member of the host group' {
+    It 'reports a non-terminating error when the host is not a member of the host group' {
         Mock Get-DMhostbyHostGroup { @() }
 
-        { Remove-DMHostFromHostGroup -WebSession $script:session -HostName 'web-host' -HostGroupName 'prod-group' -Confirm:$false } |
-            Should -Throw "*not a member*"
+        $result = Remove-DMHostFromHostGroup -WebSession $script:session -HostName 'web-host' -HostGroupName 'prod-group' -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable removeErrors
 
+        $result | Should -BeNullOrEmpty
+        $removeErrors.Count | Should -BeGreaterOrEqual 1
+        ($removeErrors.Exception.Message | Select-Object -Unique) | Should -BeLike '*not a member*'
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 
-    It 'rejects a host name that does not exist' {
-        { Remove-DMHostFromHostGroup -WebSession $script:session -HostName 'missing' -HostGroupName 'prod-group' -Confirm:$false } |
-            Should -Throw '*Invalid HostName*'
+    It 'reports a non-terminating error for a host name that does not exist' {
+        $result = Remove-DMHostFromHostGroup -WebSession $script:session -HostName 'missing' -HostGroupName 'prod-group' -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable removeErrors
 
+        $result | Should -BeNullOrEmpty
+        $removeErrors.Count | Should -BeGreaterOrEqual 1
+        ($removeErrors.Exception.Message | Select-Object -Unique) | Should -BeLike '*Invalid HostName*'
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 
-    It 'rejects a host group name that does not exist' {
-        { Remove-DMHostFromHostGroup -WebSession $script:session -HostName 'web-host' -HostGroupName 'missing' -Confirm:$false } |
-            Should -Throw '*Invalid HostGroupName*'
+    It 'reports a non-terminating error for a host group name that does not exist' {
+        $result = Remove-DMHostFromHostGroup -WebSession $script:session -HostName 'web-host' -HostGroupName 'missing' -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable removeErrors
 
+        $result | Should -BeNullOrEmpty
+        $removeErrors.Count | Should -BeGreaterOrEqual 1
+        ($removeErrors.Exception.Message | Select-Object -Unique) | Should -BeLike '*Invalid HostGroupName*'
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
+    }
+
+    It 'removes every host piped in, not just the last one' {
+        Mock Get-DMhostbyName {
+            @([pscustomobject]@{ Id = "id-$Name"; Name = $Name })
+        }
+        Mock Get-DMhostbyHostGroup {
+            @([pscustomobject]@{ Id = 'id-host-a'; Name = 'host-a' }, [pscustomobject]@{ Id = 'id-host-b'; Name = 'host-b' })
+        }
+
+        $hosts = @([pscustomobject]@{ Name = 'host-a' }, [pscustomobject]@{ Name = 'host-b' })
+        $null = $hosts | Remove-DMHostFromHostGroup -WebSession $script:session -HostGroupName 'prod-group' -Confirm:$false
+
+        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $BodyData.ASSOCIATEOBJID -eq 'id-host-a' }
+        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $BodyData.ASSOCIATEOBJID -eq 'id-host-b' }
     }
 }
 }

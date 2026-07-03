@@ -71,12 +71,14 @@ Describe 'Host group membership commands' {
         $script:request.ASSOCIATEOBJID | Should -Be 'host-01'
     }
 
-    It 'rejects removal when the host is not a group member' {
+    It 'reports a non-terminating error when the host is not a group member' {
         Mock Get-DMhostbyHostGroup { @() }
 
-        { Remove-DMHostFromHostGroup -WebSession $script:session -HostName 'server01' -HostGroupName 'cluster01' -Confirm:$false } |
-            Should -Throw '*not a member*'
+        $result = Remove-DMHostFromHostGroup -WebSession $script:session -HostName 'server01' -HostGroupName 'cluster01' -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable removeErrors
 
+        $result | Should -BeNullOrEmpty
+        $removeErrors.Count | Should -BeGreaterOrEqual 1
+        ($removeErrors.Exception.Message | Select-Object -Unique) | Should -BeLike '*not a member*'
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 }

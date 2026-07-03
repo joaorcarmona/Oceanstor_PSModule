@@ -64,17 +64,21 @@ Describe 'Add-DMPortToPortGroup' {
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 
-    It 'rejects a port group name that does not exist' {
-        { Add-DMPortToPortGroup -WebSession $script:session -PortGroupName 'missing' -PortType FibreChannel -PortName 'CTE0.A.IOM0.P0' -Confirm:$false } |
-            Should -Throw '*Invalid PortGroupName*'
+    It 'reports a non-terminating error for a port group name that does not exist' {
+        $result = Add-DMPortToPortGroup -WebSession $script:session -PortGroupName 'missing' -PortType FibreChannel -PortName 'CTE0.A.IOM0.P0' -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable addErrors
 
+        $result | Should -BeNullOrEmpty
+        $addErrors.Count | Should -BeGreaterOrEqual 1
+        ($addErrors.Exception.Message | Select-Object -Unique) | Should -BeLike '*Invalid PortGroupName*'
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 
-    It 'rejects a port name that does not exist for the given type' {
-        { Add-DMPortToPortGroup -WebSession $script:session -PortGroupName 'fc-front-end' -PortType FibreChannel -PortName 'missing' -Confirm:$false } |
-            Should -Throw '*Invalid PortName*'
+    It 'reports a non-terminating error for a port name that does not exist for the given type' {
+        $result = Add-DMPortToPortGroup -WebSession $script:session -PortGroupName 'fc-front-end' -PortType FibreChannel -PortName 'missing' -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable addErrors
 
+        $result | Should -BeNullOrEmpty
+        $addErrors.Count | Should -BeGreaterOrEqual 1
+        ($addErrors.Exception.Message | Select-Object -Unique) | Should -BeLike '*Invalid PortName*'
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 
@@ -84,6 +88,18 @@ Describe 'Add-DMPortToPortGroup' {
         Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter {
             $BodyData.vstoreId -eq 'vs-02'
         }
+    }
+
+    It 'associates every port piped in, not just the last one' {
+        Mock Get-DMPortGroupCandidate {
+            @([pscustomobject]@{ Id = 'port-01'; Name = 'CTE0.A.IOM0.P0'; ObjectType = 212 }, [pscustomobject]@{ Id = 'port-02'; Name = 'CTE0.A.IOM0.P1'; ObjectType = 212 })
+        }
+
+        $ports = @([pscustomobject]@{ Name = 'CTE0.A.IOM0.P0' }, [pscustomobject]@{ Name = 'CTE0.A.IOM0.P1' })
+        $null = $ports | Add-DMPortToPortGroup -WebSession $script:session -PortGroupName 'fc-front-end' -PortType FibreChannel -Confirm:$false
+
+        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $BodyData.ASSOCIATEOBJID -eq 'port-01' }
+        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $BodyData.ASSOCIATEOBJID -eq 'port-02' }
     }
 }
 }
