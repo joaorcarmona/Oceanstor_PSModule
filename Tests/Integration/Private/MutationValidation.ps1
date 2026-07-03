@@ -3,6 +3,7 @@
 . (Join-Path $PSScriptRoot 'Workflows\Host.ps1')
 . (Join-Path $PSScriptRoot 'Workflows\Nas.ps1')
 . (Join-Path $PSScriptRoot 'Workflows\Mapping.ps1')
+. (Join-Path $PSScriptRoot 'Workflows\DirectMapping.ps1')
 . (Join-Path $PSScriptRoot 'Workflows\Protection.ps1')
 . (Join-Path $PSScriptRoot 'Workflows\Initiators.ps1')
 . (Join-Path $PSScriptRoot 'Workflows\ReadBack.ps1')
@@ -34,7 +35,10 @@ function Invoke-MutationValidation {
             'Remove-DMHost', 'Remove-DMHostGroup', 'New-DMLunGroup', 'Add-DMLunToLunGroup',
             'Remove-DMLunFromLunGroup', 'Remove-DMLunGroup', 'Add-DMHostGroupToMappingView',
             'Remove-DMHostGroupFromMappingView', 'Add-DMLunGroupToMappingView',
-            'Remove-DMLunGroupFromMappingView', 'New-DMProtectionGroup', 'Remove-DMProtectionGroup',
+            'Remove-DMLunGroupFromMappingView', 'Add-DMmapLunToHost', 'Remove-DMmapLunFromHost',
+            'Add-DMmapLunGroupToHost', 'Remove-DMunmapLunGroupFromHost',
+            'Add-DMmapLunGroupToHostGroup', 'Remove-DMunmapLunGroupFromHostGroup',
+            'New-DMProtectionGroup', 'Remove-DMProtectionGroup',
             'New-DMSnapshotConsistencyGroup', 'New-DMSnapshotConsistencyGroupCopy',
             'Enable-DMSnapshotConsistencyGroup', 'Restart-DMSnapshotConsistencyGroup',
             'Restore-DMSnapshotConsistencyGroup', 'Remove-DMSnapshotConsistencyGroup',
@@ -73,6 +77,9 @@ function Invoke-MutationValidation {
         $renamedHostName = New-TestName -Suffix 'host_renamed'
         $hostGroupName = New-TestName -Suffix 'hostgroup'
         $renamedHostGroupName = New-TestName -Suffix 'hostgroup_renamed'
+        $mapLunName = New-TestName -Suffix 'maplun'
+        $mapHostName = New-TestName -Suffix 'maphost'
+        $mapHostGroupName = New-TestName -Suffix 'maphostgroup'
         $lunGroupContainsLun = $false
         $hostGroupContainsHost = $false
         $mappingContainsHostGroup = $false
@@ -84,6 +91,7 @@ function Invoke-MutationValidation {
         . $script:HostMutationWorkflow
         . $script:NasMutationWorkflow
         . $script:MappingMutationWorkflow
+        . $script:DirectMappingMutationWorkflow
         . $script:ProtectionMutationWorkflow
         . $script:InitiatorsMutationWorkflow
         . $script:MutationReadBackWorkflow
