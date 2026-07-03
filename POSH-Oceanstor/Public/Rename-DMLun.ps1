@@ -7,11 +7,17 @@ function Rename-DMLun {
         Renames an OceanStor LUN by resolving the current name and issuing a PUT with the new name.
         Validates that the new name does not conflict with an existing object.
 
+        Accepts multiple LUNs from the pipeline by property name. Each LUN is forwarded to Set-DMLun
+        independently, so a failure renaming one LUN (e.g. a name collision) is reported as a
+        non-terminating error and does not stop the rest from being processed. Renaming a batch of more
+        than one LUN to the same NewName is not meaningful -- only the first will succeed, since every
+        LUN after it collides on the now-taken name.
+
     .PARAMETER WebSession
-        Optional session returned by Connect-deviceManager. The module's cached $script:CurrentOceanstorSession session is used by default.
+        Optional session returned by Connect-deviceManager. The module's cached $script:CurrentOceanstorSession session is used by default. When a LUN object piped from Get-DMlun carries its own session, that session is used instead.
 
     .PARAMETER LunName
-        Current name of the LUN to rename.
+        Current name of the LUN to rename. Accepts pipeline input by property name (a piped object's Name property).
 
     .PARAMETER NewName
         New name to assign to the LUN.
@@ -19,7 +25,6 @@ function Rename-DMLun {
     .INPUTS
         System.Management.Automation.PSCustomObject
 
-        You can pipe an OceanStor session object to WebSession.
     .OUTPUTS
         System.Management.Automation.PSCustomObject
 
@@ -29,7 +34,7 @@ function Rename-DMLun {
     #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
         [Parameter(Mandatory, ValueFromPipelineByPropertyName = $true, Position = 1)]
         [Alias('Name')][ValidateNotNullOrEmpty()][string]$LunName,
@@ -37,7 +42,9 @@ function Rename-DMLun {
         [ValidateLength(1, 255)][ValidatePattern('^[A-Za-z0-9_.-]+$')][string]$NewName
     )
 
-    if ($PSCmdlet.ShouldProcess($LunName, "Rename LUN to '$NewName'")) {
-        return Set-DMLun -WebSession $WebSession -LunName $LunName -NewName $NewName -Confirm:$false
+    process {
+        if ($PSCmdlet.ShouldProcess($LunName, "Rename LUN to '$NewName'")) {
+            return Set-DMLun -WebSession $WebSession -LunName $LunName -NewName $NewName -Confirm:$false
+        }
     }
 }

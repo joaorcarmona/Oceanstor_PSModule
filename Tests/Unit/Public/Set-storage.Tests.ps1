@@ -103,41 +103,86 @@ Describe 'Set-DMLun' {
             [pscustomobject]@{ error = [pscustomobject]@{ Code = 1; Description = 'simulated failure' } }
         }
 
-        { Set-DMLun -WebSession $script:session -LunName 'database' -NewName 'database-prod' `
-            -Capacity '2GB' -Confirm:$false } | Should -Throw '*simulated failure*'
+        $result = Set-DMLun -WebSession $script:session -LunName 'database' -NewName 'database-prod' `
+            -Capacity '2GB' -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable setErrors
 
+        $result | Should -BeNullOrEmpty
+        $setErrors.Count | Should -BeGreaterOrEqual 1
+        ($setErrors.Exception.Message | Select-Object -Unique) | Should -BeLike '*simulated failure*'
         $script:requests.Count | Should -Be 1
         $script:requests[0].Resource | Should -Be 'lun/lun-01'
     }
 
     It 'rejects LUN reduction' {
-        { Set-DMLun -WebSession $script:session -LunName 'database' -Capacity '512MB' -Confirm:$false } |
-            Should -Throw '*only be expanded*'
+        $result = Set-DMLun -WebSession $script:session -LunName 'database' -Capacity '512MB' -Confirm:$false `
+            -ErrorAction SilentlyContinue -ErrorVariable setErrors
 
+        $result | Should -BeNullOrEmpty
+        $setErrors.Count | Should -BeGreaterOrEqual 1
+        ($setErrors.Exception.Message | Select-Object -Unique) | Should -BeLike '*only be expanded*'
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 
     It 'rejects non-V6 sessions' {
         $v3Session = [pscustomobject]@{ version = 'V300R006' }
 
-        { Set-DMLun -WebSession $v3Session -LunName 'database' -NewName 'database-prod' -Confirm:$false } |
-            Should -Throw '*only OceanStor Dorado V6*'
+        $result = Set-DMLun -WebSession $v3Session -LunName 'database' -NewName 'database-prod' -Confirm:$false `
+            -ErrorAction SilentlyContinue -ErrorVariable setErrors
 
+        $result | Should -BeNullOrEmpty
+        $setErrors.Count | Should -BeGreaterOrEqual 1
+        ($setErrors.Exception.Message | Select-Object -Unique) | Should -BeLike '*only OceanStor Dorado V6*'
         Should -Invoke Get-DMlun -Times 0 -Exactly
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 
     It 'rejects reserved raw API fields' {
-        { Set-DMLun -WebSession $script:session -LunName 'database' -ApiProperties @{ CAPACITY = 4194304 } -Confirm:$false } |
-            Should -Throw '*reserved*'
+        $result = Set-DMLun -WebSession $script:session -LunName 'database' -ApiProperties @{ CAPACITY = 4194304 } -Confirm:$false `
+            -ErrorAction SilentlyContinue -ErrorVariable setErrors
 
+        $result | Should -BeNullOrEmpty
+        $setErrors.Count | Should -BeGreaterOrEqual 1
+        ($setErrors.Exception.Message | Select-Object -Unique) | Should -BeLike '*reserved*'
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
+    }
+
+    It 'throws immediately (before touching any LUN) when no change parameter is specified' {
+        { Set-DMLun -WebSession $script:session -LunName 'database' -Confirm:$false } |
+            Should -Throw '*Specify NewName, Capacity, Description*'
+
+        Should -Invoke Get-DMlun -Times 0 -Exactly
     }
 
     It 'does not modify a LUN under WhatIf' {
         $null = Set-DMLun -WebSession $script:session -LunName 'database' -NewName 'database-prod' -WhatIf
 
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
+    }
+
+    It 'modifies every LUN piped in, not just the last one' {
+        $null = @(
+            [pscustomobject]@{ Name = 'database' }
+            [pscustomobject]@{ Name = 'archive' }
+        ) | Set-DMLun -WebSession $script:session -Description 'batch update' -Confirm:$false
+
+        $script:requests.Count | Should -Be 2
+        ($script:requests | Where-Object Resource -EQ 'lun/lun-01').Body.DESCRIPTION | Should -Be 'batch update'
+        ($script:requests | Where-Object Resource -EQ 'lun/lun-02').Body.DESCRIPTION | Should -Be 'batch update'
+    }
+
+    It 'continues processing remaining piped LUNs after one fails to resolve' {
+        $null = @(
+            [pscustomobject]@{ Name = 'database' }
+            [pscustomobject]@{ Name = 'missing-lun' }
+            [pscustomobject]@{ Name = 'archive' }
+        ) | Set-DMLun -WebSession $script:session -Description 'batch update' -Confirm:$false `
+            -ErrorAction SilentlyContinue -ErrorVariable setErrors
+
+        $setErrors.Count | Should -BeGreaterOrEqual 1
+        ($setErrors.Exception.Message | Select-Object -Unique) | Should -BeLike "*Invalid LunName 'missing-lun'*"
+        $script:requests.Count | Should -Be 2
+        ($script:requests | Where-Object Resource -EQ 'lun/lun-01').Body.DESCRIPTION | Should -Be 'batch update'
+        ($script:requests | Where-Object Resource -EQ 'lun/lun-02').Body.DESCRIPTION | Should -Be 'batch update'
     }
 }
 

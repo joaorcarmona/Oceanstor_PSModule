@@ -103,9 +103,11 @@ Describe 'Storage and NAS removal commands' {
     }
 
     It 'rejects removal of an unknown LUN' {
-        { Remove-DMLun -WebSession $script:session -LunName 'missing' -Confirm:$false } |
-            Should -Throw '*Invalid LunName*'
+        $result = Remove-DMLun -WebSession $script:session -LunName 'missing' -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable removeErrors
 
+        $result | Should -BeNullOrEmpty
+        $removeErrors.Count | Should -BeGreaterOrEqual 1
+        ($removeErrors.Exception.Message | Select-Object -Unique) | Should -BeLike '*Invalid LunName*'
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 

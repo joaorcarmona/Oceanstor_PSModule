@@ -11,6 +11,12 @@ function Set-DMLun {
         ApiProperties can contain additional fields supported by the Huawei LUN modification API. Values
         are passed through unchanged. ID, NAME, and CAPACITY are reserved; use LunName, NewName, and Capacity.
 
+        Accepts multiple LUNs from the pipeline by property name (e.g. Get-DMlun output, matching its Name
+        property). Each LUN is resolved and modified independently: a failure modifying one LUN (e.g. an
+        invalid/ambiguous name, a name collision, or a REST error) is reported as a non-terminating error
+        and does not stop the remaining LUNs from being processed. NewName is not meaningful for a batch of
+        more than one LUN, since every LUN would collide on the same new name after the first is renamed.
+
     .PARAMETER WebSession
         Optional session returned by Connect-deviceManager. The module's cached $script:CurrentOceanstorSession session is used by default.
 
@@ -48,10 +54,16 @@ function Set-DMLun {
 
     .EXAMPLE
         PS> Set-DMLun -LunName 'database' -ApiProperties @{ IOPRIORITY = 3 }
+
+    .EXAMPLE
+        PS> Get-DMlun | Where-Object Name -Like 'temp-*' | Set-DMLun -Description 'Scheduled for review' -Confirm:$false
+
+        Updates the description on every LUN whose name starts with temp-. A LUN that fails is reported as
+        a non-terminating error; the rest are still processed.
     #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
 
         [Parameter(Mandatory, ValueFromPipelineByPropertyName = $true, Position = 1)]
@@ -71,85 +83,94 @@ function Set-DMLun {
         [System.Collections.IDictionary]$ApiProperties
     )
 
-    $session = if ($WebSession) { $WebSession } else { $script:CurrentOceanstorSession }
-    if (-not $session -or [string]$session.version -notmatch '^V6') {
-        $version = if ($session) { [string]$session.version } else { '<none>' }
-        throw "Set-DMLun supports only OceanStor Dorado V6 API sessions. Connected version: $version."
-    }
-
-    $hasPropertyChanges = $PSBoundParameters.ContainsKey('NewName') -or
-        $PSBoundParameters.ContainsKey('Description') -or
-        ($ApiProperties -and $ApiProperties.Count -gt 0)
-    $hasCapacityChange = $PSBoundParameters.ContainsKey('Capacity')
-    if (-not $hasPropertyChanges -and -not $hasCapacityChange) {
-        throw 'Specify NewName, Capacity, Description, or at least one ApiProperties entry.'
-    }
-
-    $luns = @(Get-DMlun -WebSession $session)
-    $matchingItems = @($luns | Where-Object Name -CEQ $LunName)
-    if ($matchingItems.Count -ne 1) {
-        if ($matchingItems.Count -gt 1) {
-            throw "LunName '$LunName' is ambiguous."
+    begin {
+        $hasPropertyChanges = $PSBoundParameters.ContainsKey('NewName') -or
+            $PSBoundParameters.ContainsKey('Description') -or
+            ($ApiProperties -and $ApiProperties.Count -gt 0)
+        $hasCapacityChange = $PSBoundParameters.ContainsKey('Capacity')
+        if (-not $hasPropertyChanges -and -not $hasCapacityChange) {
+            throw 'Specify NewName, Capacity, Description, or at least one ApiProperties entry.'
         }
-        throw "Invalid LunName '$LunName'. Valid values are: $($luns.Name -join ', ')"
-    }
-    $lun = $matchingItems[0]
-
-    if ($PSBoundParameters.ContainsKey('NewName') -and $NewName -cne $LunName -and $luns.Name -contains $NewName) {
-        throw "A LUN named '$NewName' already exists."
     }
 
-    $propertyBody = @{ ID = $lun.Id }
-    if ($ApiProperties) {
-        foreach ($key in $ApiProperties.Keys) {
-            $apiName = ([string]$key).ToUpperInvariant()
-            if ($apiName -in @('ID', 'NAME', 'CAPACITY')) {
-                throw "ApiProperties field '$key' is reserved. Use the corresponding command parameter."
+    process {
+        try {
+            $session = if ($WebSession) { $WebSession } else { $script:CurrentOceanstorSession }
+            if (-not $session -or [string]$session.version -notmatch '^V6') {
+                $version = if ($session) { [string]$session.version } else { '<none>' }
+                throw "Set-DMLun supports only OceanStor Dorado V6 API sessions. Connected version: $version."
             }
-            $propertyBody[[string]$key] = $ApiProperties[$key]
-        }
-    }
-    if ($PSBoundParameters.ContainsKey('NewName')) {
-        $propertyBody.NAME = $NewName
-    }
-    if ($PSBoundParameters.ContainsKey('Description')) {
-        $propertyBody.DESCRIPTION = $Description
-    }
 
-    $newCapacityBlocks = $null
-    if ($hasCapacityChange) {
-        $newCapacityBlocks = ConvertTo-DMCapacityBlock -Capacity $Capacity -UnitlessUnit Blocks
-        $currentCapacityBlocks = if ($null -ne $lun.PSObject.Properties['RealCapacity']) {
-            [long]$lun.RealCapacity
-        }
-        else {
-            [long]([decimal]$lun.'Lun Size' * [decimal]1GB / [decimal]$lun.'Sector Size')
-        }
-        if ($newCapacityBlocks -le $currentCapacityBlocks) {
-            throw "LUN capacity can only be expanded. Requested $newCapacityBlocks blocks; current capacity is $currentCapacityBlocks blocks."
-        }
-    }
+            $luns = @(Get-DMlun -WebSession $session)
+            $matchingItems = @($luns | Where-Object Name -CEQ $LunName)
+            if ($matchingItems.Count -ne 1) {
+                if ($matchingItems.Count -gt 1) {
+                    throw "LunName '$LunName' is ambiguous."
+                }
+                throw "Invalid LunName '$LunName'. Valid values are: $($luns.Name -join ', ')"
+            }
+            $lun = $matchingItems[0]
 
-    $actions = @()
-    if ($hasPropertyChanges) { $actions += 'modify properties' }
-    if ($hasCapacityChange) { $actions += "expand to $Capacity" }
-    if (-not $PSCmdlet.ShouldProcess($LunName, ($actions -join ' and '))) {
-        return
-    }
+            if ($PSBoundParameters.ContainsKey('NewName') -and $NewName -cne $LunName -and $luns.Name -contains $NewName) {
+                throw "A LUN named '$NewName' already exists."
+            }
 
-    if ($hasPropertyChanges) {
-        $response = Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource "lun/$($lun.Id)" -BodyData $propertyBody
-        $response = $response | Assert-DMApiSuccess
-        if ($response.error.Code -ne 0 -or -not $hasCapacityChange) {
-            return $response.error
+            $propertyBody = @{ ID = $lun.Id }
+            if ($ApiProperties) {
+                foreach ($key in $ApiProperties.Keys) {
+                    $apiName = ([string]$key).ToUpperInvariant()
+                    if ($apiName -in @('ID', 'NAME', 'CAPACITY')) {
+                        throw "ApiProperties field '$key' is reserved. Use the corresponding command parameter."
+                    }
+                    $propertyBody[[string]$key] = $ApiProperties[$key]
+                }
+            }
+            if ($PSBoundParameters.ContainsKey('NewName')) {
+                $propertyBody.NAME = $NewName
+            }
+            if ($PSBoundParameters.ContainsKey('Description')) {
+                $propertyBody.DESCRIPTION = $Description
+            }
+
+            $newCapacityBlocks = $null
+            if ($hasCapacityChange) {
+                $newCapacityBlocks = ConvertTo-DMCapacityBlock -Capacity $Capacity -UnitlessUnit Blocks
+                $currentCapacityBlocks = if ($null -ne $lun.PSObject.Properties['RealCapacity']) {
+                    [long]$lun.RealCapacity
+                }
+                else {
+                    [long]([decimal]$lun.'Lun Size' * [decimal]1GB / [decimal]$lun.'Sector Size')
+                }
+                if ($newCapacityBlocks -le $currentCapacityBlocks) {
+                    throw "LUN capacity can only be expanded. Requested $newCapacityBlocks blocks; current capacity is $currentCapacityBlocks blocks."
+                }
+            }
+
+            $actions = @()
+            if ($hasPropertyChanges) { $actions += 'modify properties' }
+            if ($hasCapacityChange) { $actions += "expand to $Capacity" }
+            if (-not $PSCmdlet.ShouldProcess($LunName, ($actions -join ' and '))) {
+                return
+            }
+
+            if ($hasPropertyChanges) {
+                $response = Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource "lun/$($lun.Id)" -BodyData $propertyBody
+                $response = $response | Assert-DMApiSuccess
+                if ($response.error.Code -ne 0 -or -not $hasCapacityChange) {
+                    return $response.error
+                }
+            }
+            if ($hasCapacityChange) {
+                $response = Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'lun/expand' -BodyData @{
+                    ID       = $lun.Id
+                    CAPACITY = $newCapacityBlocks
+                }
+                $response = $response | Assert-DMApiSuccess
+                return $response.error
+            }
         }
-    }
-    if ($hasCapacityChange) {
-        $response = Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'lun/expand' -BodyData @{
-            ID       = $lun.Id
-            CAPACITY = $newCapacityBlocks
+        catch {
+            $PSCmdlet.WriteError($_)
         }
-        $response = $response | Assert-DMApiSuccess
-        return $response.error
     }
 }

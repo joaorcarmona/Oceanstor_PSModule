@@ -134,5 +134,16 @@ Describe 'Rename command delegation' {
 
         Should -Invoke Set-DMHost -Times 0 -Exactly
     }
+
+    It 'Rename-DMLun forwards every LUN piped in, not just the last one' {
+        $luns = @(
+            [pscustomobject]@{ Name = 'lun-a' }
+            [pscustomobject]@{ Name = 'lun-b' }
+        )
+        $null = $luns | Rename-DMLun -WebSession $script:session -NewName 'renamed' -Confirm:$false
+
+        Should -Invoke Set-DMLun -Times 1 -Exactly -ParameterFilter { $LunName -eq 'lun-a' -and $NewName -eq 'renamed' }
+        Should -Invoke Set-DMLun -Times 1 -Exactly -ParameterFilter { $LunName -eq 'lun-b' -and $NewName -eq 'renamed' }
+    }
 }
 }

@@ -138,5 +138,52 @@ Describe 'LUN group membership commands' {
 
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
+
+    It 'associates every LUN piped in, not just the last one' {
+        Mock Get-DMlun {
+            @(
+                [pscustomobject]@{ Id = 'lun-01'; Name = 'lun-a' }
+                [pscustomobject]@{ Id = 'lun-02'; Name = 'lun-b' }
+            )
+        }
+        $requests = [System.Collections.Generic.List[object]]::new()
+        Mock Invoke-DeviceManager {
+            $requests.Add([pscustomobject]@{ Resource = $Resource; Body = $BodyData })
+            [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 } }
+        }
+
+        $luns = @(
+            [pscustomobject]@{ Name = 'lun-a' }
+            [pscustomobject]@{ Name = 'lun-b' }
+        )
+        $null = $luns | Add-DMLunToLunGroup -WebSession $script:session -LunGroupName 'production' -Confirm:$false
+
+        $requests.Count | Should -Be 2
+        ($requests | Where-Object { $_.Body.ASSOCIATEOBJID -eq 'lun-01' }).Count | Should -Be 1
+        ($requests | Where-Object { $_.Body.ASSOCIATEOBJID -eq 'lun-02' }).Count | Should -Be 1
+    }
+
+    It 'continues processing remaining piped LUNs after one fails to resolve' {
+        Mock Get-DMlun {
+            @([pscustomobject]@{ Id = 'lun-01'; Name = 'lun-a' })
+        }
+        $requests = [System.Collections.Generic.List[object]]::new()
+        Mock Invoke-DeviceManager {
+            $requests.Add([pscustomobject]@{ Resource = $Resource; Body = $BodyData })
+            [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 } }
+        }
+
+        $luns = @(
+            [pscustomobject]@{ Name = 'lun-a' }
+            [pscustomobject]@{ Name = 'missing-lun' }
+        )
+        $null = $luns | Add-DMLunToLunGroup -WebSession $script:session -LunGroupName 'production' -Confirm:$false `
+            -ErrorAction SilentlyContinue -ErrorVariable addErrors
+
+        $addErrors.Count | Should -BeGreaterOrEqual 1
+        ($addErrors.Exception.Message | Select-Object -Unique) | Should -BeLike '*Invalid LunName*'
+        $requests.Count | Should -Be 1
+        $requests[0].Body.ASSOCIATEOBJID | Should -Be 'lun-01'
+    }
 }
 }

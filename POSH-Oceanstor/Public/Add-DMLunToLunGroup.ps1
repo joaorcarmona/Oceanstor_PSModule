@@ -1,22 +1,26 @@
-﻿<#
+<#
 .SYNOPSIS
     Associates an OceanStor LUN with a LUN group.
 
 .DESCRIPTION
-    Adds an existing LUN to an existing LUN group. The LUN can be supplied by name or by piping a LUN object with a Name property.
-    Optional host LUN ID settings can be supplied for the association. The cmdlet supports -WhatIf and -Confirm.
+    Adds an existing LUN to an existing LUN group. Optional host LUN ID settings can be supplied for the
+    association. The cmdlet supports -WhatIf and -Confirm.
+
+    Accepts multiple LUNs from the pipeline by property name (e.g. Get-DMlun output, matching its Name
+    property). Each LUN is resolved and associated independently: a failure associating one LUN (e.g. an
+    invalid/ambiguous LunName, or a REST error) is reported as a non-terminating error and does not stop
+    the remaining LUNs from being processed. LunGroupName is resolved per item against that item's own
+    session, so LUNs piped from different arrays are each associated with the matching LUN group on their
+    own array.
 
 .PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
-
-.PARAMETER Lun
-    LUN object to add to the LUN group. The object must expose a Name property and can be supplied from the pipeline.
+    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used. When a LUN object piped from Get-DMlun carries its own session, that session is used instead.
 
 .PARAMETER LunName
-    Name of the LUN to add to the LUN group. This is required when a LUN object is not supplied through the pipeline.
+    Name of the LUN to add to the LUN group. Resolved against existing OceanStor LUNs (on the applicable session) when the command runs. Accepts pipeline input by property name (a piped object's Name property).
 
 .PARAMETER LunGroupName
-    Name of the LUN group that will receive the LUN. The name is validated against existing OceanStor LUN groups.
+    Name of the LUN group that will receive the LUN. Resolved against existing OceanStor LUN groups (on the applicable session) when the command runs.
 
 .PARAMETER HostLunId
     Specific host LUN ID to assign to the LUN association. Cannot be used with StartHostLunId.
@@ -47,6 +51,12 @@
 
     Adds lun02 to the production-luns LUN group and requests host LUN ID 12.
 
+.EXAMPLE
+    PS> Get-DMlun | Where-Object Name -Like 'temp-*' | Add-DMLunToLunGroup -LunGroupName 'production-luns' -Confirm:$false
+
+    Adds every LUN whose name starts with temp- to the production-luns LUN group. A LUN that fails is
+    reported as a non-terminating error; the rest are still processed.
+
 .NOTES
     Filename: Add-DMLunToLunGroup.ps1
 #>
@@ -55,31 +65,12 @@ function Add-DMLunToLunGroup {
 
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param(
-        [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
 
-        [Parameter(ValueFromPipeline = $true, Position = 1)]
-        [pscustomobject]$Lun,
-
-        [Parameter(Position = 2)]
-        [ValidateScript({
-                $candidate = $_
-                $session = if ($WebSession) {
-                    $WebSession
-                }
-                else {
-                    $script:CurrentOceanstorSession
-                }
-                $luns = @(Get-DMlun -WebSession $session)
-                $matchingItems = @($luns | Where-Object Name -EQ $candidate)
-                if ($matchingItems.Count -eq 1) {
-                    return $true
-                }
-                if ($matchingItems.Count -gt 1) {
-                    throw "LunName is ambiguous because more than one LUN is named '$candidate'."
-                }
-                throw "Invalid LunName. Valid values are: $($luns.Name -join ', ')"
-            })]
+        [Parameter(Mandatory = $true, Position = 1, ValueFromPipelineByPropertyName = $true)]
+        [Alias('Name')]
+        [ValidateNotNullOrEmpty()]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
                 $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
@@ -92,25 +83,8 @@ function Add-DMLunToLunGroup {
             })]
         [string]$LunName,
 
-        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, Position = 3)]
-        [ValidateScript({
-                $candidate = $_
-                $session = if ($WebSession) {
-                    $WebSession
-                }
-                else {
-                    $script:CurrentOceanstorSession
-                }
-                $groups = @(Get-DMlunGroup -WebSession $session)
-                $matchingItems = @($groups | Where-Object Name -EQ $candidate)
-                if ($matchingItems.Count -eq 1) {
-                    return $true
-                }
-                if ($matchingItems.Count -gt 1) {
-                    throw "LunGroupName is ambiguous because more than one LUN group is named '$candidate'."
-                }
-                throw "Invalid LunGroupName. Valid values are: $($groups.Name -join ', ')"
-            })]
+        [Parameter(Mandatory = $true, Position = 2)]
+        [ValidateNotNullOrEmpty()]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
                 $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
@@ -134,50 +108,67 @@ function Add-DMLunToLunGroup {
         [string]$VstoreId
     )
 
-    if ($PSBoundParameters.ContainsKey('HostLunId') -and $PSBoundParameters.ContainsKey('StartHostLunId')) {
-        throw 'HostLunId and StartHostLunId cannot be specified together.'
+    begin {
+        if ($PSBoundParameters.ContainsKey('HostLunId') -and $PSBoundParameters.ContainsKey('StartHostLunId')) {
+            throw 'HostLunId and StartHostLunId cannot be specified together.'
+        }
     }
 
-    $session = if ($WebSession) {
-        $WebSession
-    }
-    else {
-        $script:CurrentOceanstorSession
-    }
+    process {
+        try {
+            $session = if ($WebSession) {
+                $WebSession
+            }
+            else {
+                $script:CurrentOceanstorSession
+            }
 
-    $resolvedLunName = if ($Lun -and $Lun.PSObject.Properties.Name -contains 'Name') {
-        $Lun.Name
-    }
-    elseif ($LunName) {
-        $LunName
-    }
-    else {
-        throw 'LunName is required. Pass a LUN name or pipe a LUN object with a Name property.'
-    }
+            $luns = @(Get-DMlun -WebSession $session)
+            $matchingLuns = @($luns | Where-Object Name -EQ $LunName)
+            if ($matchingLuns.Count -eq 0) {
+                throw "Invalid LunName. Valid values are: $($luns.Name -join ', ')"
+            }
+            if ($matchingLuns.Count -gt 1) {
+                throw "LunName is ambiguous because more than one LUN is named '$LunName'."
+            }
+            $lun = $matchingLuns[0]
 
-    $lun = @(Get-DMlun -WebSession $session | Where-Object Name -EQ $resolvedLunName)[0]
-    if ($null -eq $lun) { throw "Could not resolve 'lun' — the object may have been removed since parameter validation." }
-    $group = @(Get-DMlunGroup -WebSession $session | Where-Object Name -EQ $LunGroupName)[0]
-    if ($null -eq $group) { throw "Could not resolve 'group' — the object may have been removed since parameter validation." }
-    $body = @{
-        ID               = $group.Id
-        ASSOCIATEOBJTYPE = 11
-        ASSOCIATEOBJID   = $lun.Id
-    }
-    if ($PSBoundParameters.ContainsKey('HostLunId')) {
-        $body.hostLunID = $HostLunId
-    }
-    if ($PSBoundParameters.ContainsKey('StartHostLunId')) {
-        $body.startHostLunId = $StartHostLunId
-    }
-    if ($Force) {
-        $body.force = $true
-    }
-    if ($VstoreId) {
-        $body.vstoreId = $VstoreId
-    }
+            $groups = @(Get-DMlunGroup -WebSession $session)
+            $matchingGroups = @($groups | Where-Object Name -EQ $LunGroupName)
+            if ($matchingGroups.Count -eq 0) {
+                throw "Invalid LunGroupName. Valid values are: $($groups.Name -join ', ')"
+            }
+            if ($matchingGroups.Count -gt 1) {
+                throw "LunGroupName is ambiguous because more than one LUN group is named '$LunGroupName'."
+            }
+            $group = $matchingGroups[0]
 
-    if ($PSCmdlet.ShouldProcess("$resolvedLunName -> $LunGroupName", 'Associate LUN with LUN group')) {
-        return ((Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'lungroup/associate' -BodyData $body) | Assert-DMApiSuccess).error
+            $body = @{
+                ID               = $group.Id
+                ASSOCIATEOBJTYPE = 11
+                ASSOCIATEOBJID   = $lun.Id
+            }
+            if ($PSBoundParameters.ContainsKey('HostLunId')) {
+                $body.hostLunID = $HostLunId
+            }
+            if ($PSBoundParameters.ContainsKey('StartHostLunId')) {
+                $body.startHostLunId = $StartHostLunId
+            }
+            if ($Force) {
+                $body.force = $true
+            }
+            if ($VstoreId) {
+                $body.vstoreId = $VstoreId
+            }
+
+            if ($PSCmdlet.ShouldProcess("$LunName -> $LunGroupName", 'Associate LUN with LUN group')) {
+                $response = Invoke-DeviceManager -WebSession $session -Method 'POST' -Resource 'lungroup/associate' -BodyData $body
+                $response = $response | Assert-DMApiSuccess
+                return $response.error
+            }
+        }
+        catch {
+            $PSCmdlet.WriteError($_)
+        }
     }
 }

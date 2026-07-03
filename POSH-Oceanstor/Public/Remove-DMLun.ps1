@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Removes an OceanStor LUN.
 
@@ -6,11 +6,16 @@
     Deletes an existing LUN by name, optionally scoped to a vStore.
     By default the storage system delete behavior is used; specify ImmediateDelete to request non-delayed deletion. The cmdlet supports -WhatIf and -Confirm.
 
+    Accepts multiple LUNs from the pipeline by property name (e.g. Get-DMlun output, matching its Name
+    property). Each LUN is resolved and processed independently: a failure removing one LUN (e.g. an invalid
+    or ambiguous name, a REST error, or the LUN being currently mapped) is reported as a non-terminating
+    error and does not stop the remaining LUNs from being processed.
+
 .PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
+    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used. When a LUN object piped from Get-DMlun carries its own session, that session is used instead.
 
 .PARAMETER LunName
-    Name of the LUN to remove. The name is validated against existing OceanStor LUNs.
+    Name of the LUN to remove. Resolved against existing OceanStor LUNs (on the applicable session) when the command runs. Accepts pipeline input by property name (a piped object's Name property).
 
 .PARAMETER ImmediateDelete
     Requests immediate deletion by sending isDelayDelete=false to the OceanStor API.
@@ -35,6 +40,12 @@
 
     Prompts for confirmation and requests immediate deletion of lun01.
 
+.EXAMPLE
+    PS> Get-DMlun | Where-Object Name -Like 'temp-*' | Remove-DMLun -Confirm:$false
+
+    Removes every LUN whose name starts with temp-. A LUN that fails (e.g. because it is mapped) is
+    reported as a non-terminating error; the rest are still processed.
+
 .NOTES
     Filename: Remove-DMLun.ps1
 #>
@@ -43,27 +54,12 @@ function Remove-DMLun {
 
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory = $true, Position = 1)]
-        [ValidateScript({
-                $session = if ($WebSession) {
-                    $WebSession
-                }
-                else {
-                    $script:CurrentOceanstorSession
-                }
-                $luns = @(Get-DMlun -WebSession $session)
-                $matchingItems = @($luns | Where-Object Name -EQ $_)
-                if ($matchingItems.Count -eq 1) {
-                    return $true
-                }
-                if ($matchingItems.Count -gt 1) {
-                    throw "LunName is ambiguous because more than one LUN is named '$_'."
-                }
-                throw "Invalid LunName. Valid values are: $($luns.Name -join ', ')"
-            })]
+        [Parameter(Mandatory = $true, Position = 1, ValueFromPipelineByPropertyName = $true)]
+        [Alias('Name')]
+        [ValidateNotNullOrEmpty()]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
                 $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
@@ -81,34 +77,49 @@ function Remove-DMLun {
         [string]$VstoreId
     )
 
-    $session = if ($WebSession) {
-        $WebSession
-    }
-    else {
-        $script:CurrentOceanstorSession
-    }
-    $lun = @(Get-DMlun -WebSession $session | Where-Object Name -EQ $LunName)[0]
-    if ($null -eq $lun) { throw "Could not resolve 'lun' — the object may have been removed since parameter validation." }
+    process {
+        $session = if ($WebSession) {
+            $WebSession
+        }
+        else {
+            $script:CurrentOceanstorSession
+        }
 
-    if ($lun.'is Mapped' -eq 'mapped') {
-        throw "Cannot remove LUN '$LunName': it is currently mapped to a host. Remove the mapping view first."
-    }
+        try {
+            $luns = @(Get-DMlun -WebSession $session)
+            $matchingItems = @($luns | Where-Object Name -EQ $LunName)
+            if ($matchingItems.Count -eq 0) {
+                throw "Invalid LunName. Valid values are: $($luns.Name -join ', ')"
+            }
+            if ($matchingItems.Count -gt 1) {
+                throw "LunName is ambiguous because more than one LUN is named '$LunName'."
+            }
+            $lun = $matchingItems[0]
 
-    $parameters = @()
-    if ($ImmediateDelete) {
-        $parameters += 'isDelayDelete=false'
-    }
-    if ($VstoreId) {
-        $parameters += "vstoreId=$VstoreId"
-    }
-    $resource = "lun/$($lun.Id)"
-    if ($parameters.Count -gt 0) {
-        $resource += "?$($parameters -join '&')"
-    }
+            if ($lun.'is Mapped' -eq 'mapped') {
+                throw "Cannot remove LUN '$LunName': it is currently mapped to a host. Remove the mapping view first."
+            }
 
-    if ($PSCmdlet.ShouldProcess($LunName, 'Remove LUN and its data')) {
-        $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
-        $response = $response | Assert-DMApiSuccess
-        return $response.error
+            $parameters = @()
+            if ($ImmediateDelete) {
+                $parameters += 'isDelayDelete=false'
+            }
+            if ($VstoreId) {
+                $parameters += "vstoreId=$VstoreId"
+            }
+            $resource = "lun/$($lun.Id)"
+            if ($parameters.Count -gt 0) {
+                $resource += "?$($parameters -join '&')"
+            }
+
+            if ($PSCmdlet.ShouldProcess($LunName, 'Remove LUN and its data')) {
+                $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
+                $response = $response | Assert-DMApiSuccess
+                return $response.error
+            }
+        }
+        catch {
+            $PSCmdlet.WriteError($_)
+        }
     }
 }

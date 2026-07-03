@@ -61,6 +61,119 @@ $script:LunGroupMutationWorkflow = {
                     }
                 }
             }
+
+            if ($owned.LunGroup.Contains($lunGroupName)) {
+                # Multi-object pipeline coverage: proves Get-DMlun | Set-DMLun / Add-DMLunToLunGroup /
+                # Remove-DMLun each process every piped LUN (not just the last one), and that a
+                # deliberately invalid item among real ones is reported as a non-terminating error
+                # without aborting the rest -- the exact regression this workflow exists to catch.
+                $pipeLunNames = @(1..3 | ForEach-Object { New-TestName -Suffix "lun_pipe$_" })
+                $pipeLunsCreated = [System.Collections.Generic.List[string]]::new()
+                foreach ($pipeLunName in $pipeLunNames) {
+                    $created = @(Invoke-MutationStep -Name "New-DMLun:$pipeLunName" -Action {
+                        if (@(Get-DMlun -WebSession $session | Where-Object Name -EQ $pipeLunName).Count -gt 0) {
+                            throw "A LUN named '$pipeLunName' already exists; refusing to claim it as test-owned."
+                        }
+                        New-DMLun -WebSession $session -LunName $pipeLunName -Capacity $configuration.Lun.CapacityMB `
+                            -StoragePoolID $configuration.StoragePoolId -AllocType $configuration.Lun.AllocationType `
+                            -Description "Integrity validation pipeline $runId"
+                    })
+                    if ($created.Count -gt 0 -and $created[0].Name -eq $pipeLunName) {
+                        Register-TestOwnedResource -Kind Lun -Identity $pipeLunName
+                        Register-CleanupAction -Name "Remove-DMLun:$pipeLunName" -Action {
+                            Invoke-OwnedRemoval -Name "Remove-DMLun:$pipeLunName" -Kind Lun -Identity $pipeLunName -Action {
+                                Remove-DMLun -WebSession $session -LunName $pipeLunName -ImmediateDelete -Confirm:$false
+                            }
+                        }
+                        [void]$pipeLunsCreated.Add($pipeLunName)
+                    }
+                }
+
+                if ($pipeLunsCreated.Count -eq 3) {
+                    Invoke-MutationStep -Name 'Set-DMLun:PipelineBatch' -Action {
+                        foreach ($n in $pipeLunsCreated) { Assert-TestOwnedResource -Kind Lun -Identity $n }
+                        $pipeLunsCreated | ForEach-Object { [pscustomobject]@{ Name = $_ } } |
+                            Set-DMLun -WebSession $session -Description "Integrity validation pipeline batch $runId" -Confirm:$false
+                    } | Out-Null
+                    Add-MutationReadVerification -Name 'Set-DMLun:PipelineBatch:ReadBack' -Action {
+                        $updated = @(Get-DMlun -WebSession $session | Where-Object {
+                                $pipeLunsCreated -contains $_.Name -and $_.Description -eq "Integrity validation pipeline batch $runId"
+                            })
+                        if ($updated.Count -ne $pipeLunsCreated.Count) {
+                            throw "Set-DMLun pipeline batch mismatch: expected $($pipeLunsCreated.Count) LUNs updated, found $($updated.Count) -- exactly the 'only the last piped item is processed' regression this checks for."
+                        }
+                        $updated
+                    } | Out-Null
+
+                    Invoke-MutationStep -Name 'Add-DMLunToLunGroup:PipelineBatch' -Action {
+                        foreach ($n in $pipeLunsCreated) { Assert-TestOwnedResource -Kind Lun -Identity $n }
+                        Assert-TestOwnedResource -Kind LunGroup -Identity $lunGroupName
+                        $pipeLunsCreated | ForEach-Object { [pscustomobject]@{ Name = $_ } } |
+                            Add-DMLunToLunGroup -WebSession $session -LunGroupName $lunGroupName -Confirm:$false
+                    } | Out-Null
+                    Add-MutationReadVerification -Name 'Add-DMLunToLunGroup:PipelineBatch:ReadBack' -Action {
+                        $group = @(Get-DMlunGroup -WebSession $session | Where-Object Name -EQ $lunGroupName)[0]
+                        $members = @(Get-DMlunbyLunGroup -WebSession $session -LunGroup $group)
+                        $missing = @($pipeLunsCreated | Where-Object { $members.Name -notcontains $_ })
+                        if ($missing.Count -gt 0) {
+                            throw "Add-DMLunToLunGroup pipeline batch did not associate: $($missing -join ', ')."
+                        }
+                        $members
+                    } | Out-Null
+                    # Only the LUN that survives to the end of this workflow still needs its
+                    # membership torn down via registered cleanup; the array requires
+                    # disassociation before a LUN can be deleted (confirmed live: deleting a LUN
+                    # still in a group fails with "The specified LUN already exists in the LUN
+                    # group"), so the other two are disassociated explicitly below before they're
+                    # removed in the same step.
+                    Register-CleanupAction -Name "Remove-DMLunFromLunGroup:$($pipeLunsCreated[2])" -Action {
+                        Invoke-MutationStep -Name "Remove-DMLunFromLunGroup:$($pipeLunsCreated[2])" -Action {
+                            Assert-TestOwnedResource -Kind Lun -Identity $pipeLunsCreated[2]
+                            Assert-TestOwnedResource -Kind LunGroup -Identity $lunGroupName
+                            Remove-DMLunFromLunGroup -WebSession $session -LunName $pipeLunsCreated[2] -LunGroupName $lunGroupName -Confirm:$false
+                        } | Out-Null
+                    }
+
+                    Invoke-MutationStep -Name 'Remove-DMLunFromLunGroup:PipelineBatch' -Action {
+                        foreach ($n in $pipeLunsCreated[0, 1]) {
+                            Assert-TestOwnedResource -Kind Lun -Identity $n
+                            Assert-TestOwnedResource -Kind LunGroup -Identity $lunGroupName
+                            Remove-DMLunFromLunGroup -WebSession $session -LunName $n -LunGroupName $lunGroupName -Confirm:$false
+                        }
+                    } | Out-Null
+
+                    # Note: Remove-DMLun's "Invalid LunName" message lists the *valid* names, it
+                    # does not echo back the requested (invalid) name, so this only asserts that a
+                    # non-terminating error occurred and that the two real LUNs still got removed
+                    # despite it -- not the exact wording.
+                    $bogusLunName = New-TestName -Suffix 'lun_pipe_missing'
+                    $continueOnErrorResult = @(Invoke-MutationStep -Name 'Remove-DMLun:PipelineBatchContinueOnError' -Action {
+                        foreach ($n in $pipeLunsCreated[0, 1]) { Assert-TestOwnedResource -Kind Lun -Identity $n }
+                        $removeErrors = $null
+                        @($pipeLunsCreated[0], $bogusLunName, $pipeLunsCreated[1]) | ForEach-Object { [pscustomobject]@{ Name = $_ } } |
+                            Remove-DMLun -WebSession $session -ImmediateDelete -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable removeErrors |
+                            Out-Null
+                        if ($removeErrors.Count -eq 0) {
+                            throw "Expected a non-terminating error for the deliberately invalid LUN name '$bogusLunName', but none was reported -- the pipeline may have stopped instead of continuing."
+                        }
+                        $stillPresent = @(Get-DMlun -WebSession $session | Where-Object { $_.Name -in @($pipeLunsCreated[0], $pipeLunsCreated[1]) })
+                        if ($stillPresent.Count -gt 0) {
+                            throw "Expected both real pipelined LUNs to be removed despite the invalid third item; still present: $($stillPresent.Name -join ', ')."
+                        }
+                        [pscustomobject]@{ Code = 0 }
+                    })
+                    if ($continueOnErrorResult.Count -gt 0) {
+                        # Only mark these complete once the read-back inside the step above
+                        # actually confirmed removal -- if the step failed, leave both test-owned
+                        # so their normal per-LUN cleanup (registered at creation time) still runs
+                        # instead of silently orphaning them.
+                        Complete-TestOwnedResource -Kind Lun -Identity $pipeLunsCreated[0]
+                        Complete-TestOwnedResource -Kind Lun -Identity $pipeLunsCreated[1]
+                    }
+                    # pipeLunsCreated[2] remains test-owned; its registered cleanup actions above
+                    # (membership removal, then LUN removal) handle it at the end of the run.
+                }
+            }
         }
         else {
             Add-SkippedResult -Name @('New-DMLunGroup', 'Set-DMLunGroup', 'Rename-DMLunGroup', 'Add-DMLunToLunGroup', 'Remove-DMLunFromLunGroup', 'Remove-DMLunGroup') `
