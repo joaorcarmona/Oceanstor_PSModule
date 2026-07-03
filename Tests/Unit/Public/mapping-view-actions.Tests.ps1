@@ -34,18 +34,12 @@ BeforeDiscovery {
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Remove-DMLunGroupFromMappingView.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Add-DMPortGroupToMappingView.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Remove-DMPortGroupFromMappingView.ps1"
-        . "$testRoot\..\..\..\POSH-Oceanstor\Public\Add-DMHostToMappingView.ps1"
-        . "$testRoot\..\..\..\POSH-Oceanstor\Public\Add-DMLunToMappingView.ps1"
-        . "$testRoot\..\..\..\POSH-Oceanstor\Public\Remove-DMHostFromMappingView.ps1"
-        . "$testRoot\..\..\..\POSH-Oceanstor\Public\Remove-DMLunFromMappingView.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Add-DMmapLunToHost.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Remove-DMmapLunFromHost.ps1"
 
         Export-ModuleMember -Function '*-DMMappingView', '*-DMHostGroupToMappingView', '*-DMHostGroupFromMappingView',
             '*-DMLunGroupToMappingView', '*-DMLunGroupFromMappingView', '*-DMPortGroupToMappingView',
-            '*-DMPortGroupFromMappingView', 'Add-DMHostToMappingView', 'Add-DMLunToMappingView',
-            'Remove-DMHostFromMappingView', 'Remove-DMLunFromMappingView', 'Add-DMmapLunToHost',
-            'Remove-DMmapLunFromHost'
+            '*-DMPortGroupFromMappingView', 'Add-DMmapLunToHost', 'Remove-DMmapLunFromHost'
     }
 
     Import-Module $script:mappingViewModule -Force
@@ -339,10 +333,6 @@ Describe 'Mapping view association commands' {
             'Remove-DMHostGroupFromMappingView' = @('MappingViewName', 'HostGroupName')
             'Remove-DMLunGroupFromMappingView'  = @('MappingViewName', 'LunGroupName')
             'Remove-DMPortGroupFromMappingView' = @('MappingViewName', 'PortGroupName')
-            'Add-DMHostToMappingView'           = @('HostName', 'LunName')
-            'Add-DMLunToMappingView'            = @('LunName', 'HostName')
-            'Remove-DMHostFromMappingView'      = @('HostName', 'LunName')
-            'Remove-DMLunFromMappingView'       = @('LunName', 'HostName')
         }
 
         foreach ($commandName in $referenceParameters.Keys) {
@@ -353,95 +343,6 @@ Describe 'Mapping view association commands' {
                     Should -BeGreaterThan 0 -Because "$commandName -$parameterName should support tab completion"
             }
         }
-    }
-
-    It '<Command> maps a host directly to a LUN via the v2 mapping interface' -TestCases @(
-        @{ Command = 'Add-DMHostToMappingView' }
-        @{ Command = 'Add-DMLunToMappingView' }
-    ) {
-        param($Command)
-
-        $result = & $Command -WebSession $script:session -HostName 'esx01' -LunName 'data-lun' -VstoreId '7' -Confirm:$false
-
-        $result.GetType().Name | Should -Be 'OceanStorMappingView'
-        $script:method | Should -Be 'POST'
-        $script:resource | Should -Be 'mapping'
-        $script:apiV2 | Should -BeTrue
-        $script:request.hostId | Should -Be 'host-01'
-        $script:request.lunId | Should -Be 'lun-01'
-        $script:request.vstoreId | Should -Be '7'
-    }
-
-    It '<Command> removes a direct host-LUN mapping' -TestCases @(
-        @{ Command = 'Remove-DMHostFromMappingView' }
-        @{ Command = 'Remove-DMLunFromMappingView' }
-    ) {
-        param($Command)
-
-        $result = & $Command -WebSession $script:session -HostName 'esx01' -LunName 'data-lun' -Confirm:$false
-
-        $result.Code | Should -Be 0
-        $script:method | Should -Be 'DELETE'
-        $script:resource | Should -Be 'mapping'
-        $script:apiV2 | Should -BeFalse
-        $script:request.hostId | Should -Be 'host-01'
-        $script:request.lunId | Should -Be 'lun-01'
-    }
-
-    It '<Command> reports a non-terminating error for an unknown HostName' -TestCases @(
-        @{ Command = 'Add-DMHostToMappingView' }
-        @{ Command = 'Add-DMLunToMappingView' }
-        @{ Command = 'Remove-DMHostFromMappingView' }
-        @{ Command = 'Remove-DMLunFromMappingView' }
-    ) {
-        param($Command)
-
-        $result = & $Command -WebSession $script:session -HostName 'missing' -LunName 'data-lun' -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable mappingErrors
-
-        $result | Should -BeNullOrEmpty
-        $mappingErrors.Count | Should -BeGreaterOrEqual 1
-        ($mappingErrors.Exception.Message | Select-Object -Unique) | Should -BeLike '*Invalid HostName*'
-        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
-    }
-
-    It '<Command> reports a non-terminating error for an unknown LunName' -TestCases @(
-        @{ Command = 'Add-DMHostToMappingView' }
-        @{ Command = 'Add-DMLunToMappingView' }
-        @{ Command = 'Remove-DMHostFromMappingView' }
-        @{ Command = 'Remove-DMLunFromMappingView' }
-    ) {
-        param($Command)
-
-        $result = & $Command -WebSession $script:session -HostName 'esx01' -LunName 'missing' -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable mappingErrors
-
-        $result | Should -BeNullOrEmpty
-        $mappingErrors.Count | Should -BeGreaterOrEqual 1
-        ($mappingErrors.Exception.Message | Select-Object -Unique) | Should -BeLike '*Invalid LunName*'
-        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
-    }
-
-    It 'maps every host piped in to the same LUN, not just the last one' {
-        Mock Get-DMhostbyName {
-            @([pscustomobject]@{ Id = 'host-01'; Name = 'esx01' }, [pscustomobject]@{ Id = 'host-02'; Name = 'esx02' } | Where-Object Name -EQ $Name)
-        }
-        $requests = [System.Collections.Generic.List[object]]::new()
-        Mock Invoke-DeviceManager {
-            $requests.Add([pscustomobject]@{ Body = $BodyData })
-            [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 }; data = [pscustomobject]@{ ID = 'mv-02'; NAME = 'map_auto'; TYPE = 245 } }
-        }
-
-        $hosts = @([pscustomobject]@{ Name = 'esx01' }, [pscustomobject]@{ Name = 'esx02' })
-        $null = $hosts | Add-DMHostToMappingView -WebSession $script:session -LunName 'data-lun' -Confirm:$false
-
-        $requests.Count | Should -Be 2
-        ($requests | Where-Object { $_.Body.hostId -eq 'host-01' }).Count | Should -Be 1
-        ($requests | Where-Object { $_.Body.hostId -eq 'host-02' }).Count | Should -Be 1
-    }
-
-    It 'honors WhatIf for direct host-LUN mapping creation' {
-        $null = Add-DMHostToMappingView -WebSession $script:session -HostName 'esx01' -LunName 'data-lun' -WhatIf
-
-        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 
     It '<Command> maps/unmaps a LUN and host validated as parameters' -TestCases @(
