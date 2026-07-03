@@ -38,11 +38,14 @@ BeforeDiscovery {
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Add-DMLunToMappingView.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Remove-DMHostFromMappingView.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Remove-DMLunFromMappingView.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Public\Add-DMmapLunToHost.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Public\Remove-DMmapLunFromHost.ps1"
 
         Export-ModuleMember -Function '*-DMMappingView', '*-DMHostGroupToMappingView', '*-DMHostGroupFromMappingView',
             '*-DMLunGroupToMappingView', '*-DMLunGroupFromMappingView', '*-DMPortGroupToMappingView',
             '*-DMPortGroupFromMappingView', 'Add-DMHostToMappingView', 'Add-DMLunToMappingView',
-            'Remove-DMHostFromMappingView', 'Remove-DMLunFromMappingView'
+            'Remove-DMHostFromMappingView', 'Remove-DMLunFromMappingView', 'Add-DMmapLunToHost',
+            'Remove-DMmapLunFromHost'
     }
 
     Import-Module $script:mappingViewModule -Force
@@ -437,6 +440,99 @@ Describe 'Mapping view association commands' {
 
     It 'honors WhatIf for direct host-LUN mapping creation' {
         $null = Add-DMHostToMappingView -WebSession $script:session -HostName 'esx01' -LunName 'data-lun' -WhatIf
+
+        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
+    }
+
+    It '<Command> maps/unmaps a LUN and host validated as parameters' -TestCases @(
+        @{ Command = 'Add-DMmapLunToHost'; Method = 'POST'; ExpectedApiV2 = $true }
+        @{ Command = 'Remove-DMmapLunFromHost'; Method = 'DELETE'; ExpectedApiV2 = $false }
+    ) {
+        param($Command, $Method, $ExpectedApiV2)
+
+        $result = & $Command -WebSession $script:session -LunName 'data-lun' -HostName 'esx01' -VstoreId '7' -Confirm:$false
+
+        $script:method | Should -Be $Method
+        $script:resource | Should -Be 'mapping'
+        $script:apiV2 | Should -Be $ExpectedApiV2
+        $script:request.hostId | Should -Be 'host-01'
+        $script:request.lunId | Should -Be 'lun-01'
+        $script:request.vstoreId | Should -Be '7'
+        if ($Method -eq 'POST') {
+            $result.GetType().Name | Should -Be 'OceanStorMappingView'
+        }
+        else {
+            $result.Code | Should -Be 0
+        }
+    }
+
+    It '<Command> rejects an unknown LunName at parameter binding, with a short error message' -TestCases @(
+        @{ Command = 'Add-DMmapLunToHost' }
+        @{ Command = 'Remove-DMmapLunFromHost' }
+    ) {
+        param($Command)
+
+        { & $Command -WebSession $script:session -LunName 'missing' -HostName 'esx01' -Confirm:$false } |
+            Should -Throw '*Invalid LunName.*'
+
+        try {
+            & $Command -WebSession $script:session -LunName 'missing' -HostName 'esx01' -Confirm:$false
+        }
+        catch {
+            $_.Exception.Message | Should -Not -BeLike '*Valid values are*'
+        }
+        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
+    }
+
+    It '<Command> rejects an unknown HostName at parameter binding, with a short error message' -TestCases @(
+        @{ Command = 'Add-DMmapLunToHost' }
+        @{ Command = 'Remove-DMmapLunFromHost' }
+    ) {
+        param($Command)
+
+        { & $Command -WebSession $script:session -LunName 'data-lun' -HostName 'missing' -Confirm:$false } |
+            Should -Throw '*Invalid HostName.*'
+
+        try {
+            & $Command -WebSession $script:session -LunName 'data-lun' -HostName 'missing' -Confirm:$false
+        }
+        catch {
+            $_.Exception.Message | Should -Not -BeLike '*Valid values are*'
+        }
+        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
+    }
+
+    It 'exposes completion metadata for Add-DMmapLunToHost/Remove-DMmapLunFromHost LunName and HostName' {
+        foreach ($commandName in @('Add-DMmapLunToHost', 'Remove-DMmapLunFromHost')) {
+            $command = Get-Command $commandName
+            foreach ($parameterName in @('LunName', 'HostName')) {
+                @($command.Parameters[$parameterName].Attributes |
+                    Where-Object { $_ -is [System.Management.Automation.ArgumentCompleterAttribute] }).Count |
+                    Should -BeGreaterThan 0 -Because "$commandName -$parameterName should support tab completion"
+            }
+        }
+    }
+
+    It 'maps every LUN piped into Add-DMmapLunToHost to the same host, not just the last one' {
+        Mock Get-DMlunByName {
+            @([pscustomobject]@{ Id = 'lun-01'; Name = 'data-lun' }, [pscustomobject]@{ Id = 'lun-02'; Name = 'archive-lun' } | Where-Object Name -EQ $Name)
+        }
+        $requests = [System.Collections.Generic.List[object]]::new()
+        Mock Invoke-DeviceManager {
+            $requests.Add([pscustomobject]@{ Body = $BodyData })
+            [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 }; data = [pscustomobject]@{ ID = 'mv-02'; NAME = 'map_auto'; TYPE = 245 } }
+        }
+
+        $luns = @([pscustomobject]@{ Name = 'data-lun' }, [pscustomobject]@{ Name = 'archive-lun' })
+        $null = $luns | Add-DMmapLunToHost -WebSession $script:session -HostName 'esx01' -Confirm:$false
+
+        $requests.Count | Should -Be 2
+        ($requests | Where-Object { $_.Body.lunId -eq 'lun-01' }).Count | Should -Be 1
+        ($requests | Where-Object { $_.Body.lunId -eq 'lun-02' }).Count | Should -Be 1
+    }
+
+    It 'honors WhatIf for Add-DMmapLunToHost' {
+        $null = Add-DMmapLunToHost -WebSession $script:session -LunName 'data-lun' -HostName 'esx01' -WhatIf
 
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
