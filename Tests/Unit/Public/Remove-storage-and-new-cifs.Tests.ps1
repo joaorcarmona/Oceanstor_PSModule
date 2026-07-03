@@ -116,6 +116,33 @@ Describe 'Storage and NAS removal commands' {
 
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
+
+    It 'removes every host piped in, not just the last one' {
+        Mock Get-DMhostbyName {
+            @([pscustomobject]@{ Id = "host-$Name" ; Name = $Name })
+        }
+
+        $hosts = @([pscustomobject]@{ Name = 'esx01' }, [pscustomobject]@{ Name = 'esx02' })
+        $null = $hosts | Remove-DMHost -WebSession $script:session -Confirm:$false
+
+        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -eq 'host/host-esx01' }
+        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -eq 'host/host-esx02' }
+    }
+
+    It 'removes every host group piped in, not just the last one' {
+        Mock Get-DMhostGroup {
+            @(
+                [pscustomobject]@{ Id = 'hg-01'; Name = 'cluster-a' }
+                [pscustomobject]@{ Id = 'hg-02'; Name = 'cluster-b' }
+            )
+        }
+
+        $groups = @([pscustomobject]@{ Name = 'cluster-a' }, [pscustomobject]@{ Name = 'cluster-b' })
+        $null = $groups | Remove-DMHostGroup -WebSession $script:session -Confirm:$false
+
+        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -eq 'hostgroup/hg-01' }
+        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -eq 'hostgroup/hg-02' }
+    }
 }
 
 Describe 'New-DMCifsShare' {

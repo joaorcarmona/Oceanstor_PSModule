@@ -6,6 +6,10 @@
     Deletes an existing host by name, optionally scoped to a vStore.
     The host name is validated against existing OceanStor hosts before the delete request is sent. The cmdlet supports -WhatIf and -Confirm.
 
+    Accepts multiple hosts from the pipeline by property name. Each host is resolved and removed
+    independently: a failure (e.g. an invalid/ambiguous name, or a REST error) is reported as a
+    non-terminating error and does not stop the remaining hosts from being processed.
+
 .PARAMETER WebSession
     Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
@@ -35,26 +39,12 @@ function Remove-DMHost {
 
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory = $true, Position = 1)]
-        [ValidateScript({
-                $session = if ($WebSession) {
-                    $WebSession
-                }
-                else {
-                    $script:CurrentOceanstorSession
-                }
-                $matchingItems = @(Get-DMhostbyName -WebSession $session -Name $_)
-                if ($matchingItems.Count -eq 1) {
-                    return $true
-                }
-                if ($matchingItems.Count -gt 1) {
-                    throw "HostName is ambiguous because more than one host is named '$_'."
-                }
-                throw "Invalid HostName '$_'. No host with that name exists."
-            })]
+        [Parameter(Mandatory = $true, Position = 1, ValueFromPipelineByPropertyName = $true)]
+        [Alias('Name')]
+        [ValidateNotNullOrEmpty()]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
                 $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
@@ -70,22 +60,37 @@ function Remove-DMHost {
         [string]$VstoreId
     )
 
-    $session = if ($WebSession) {
-        $WebSession
-    }
-    else {
-        $script:CurrentOceanstorSession
-    }
-    $hostObject = @(Get-DMhostbyName -WebSession $session -Name $HostName)[0]
-    if ($null -eq $hostObject) { throw "Could not resolve 'hostObject' — the object may have been removed since parameter validation." }
-    $resource = "host/$($hostObject.Id)"
-    if ($VstoreId) {
-        $resource += "?vstoreId=$VstoreId"
-    }
+    process {
+        try {
+            $session = if ($WebSession) {
+                $WebSession
+            }
+            else {
+                $script:CurrentOceanstorSession
+            }
 
-    if ($PSCmdlet.ShouldProcess($HostName, 'Remove host')) {
-        $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
-        $response = $response | Assert-DMApiSuccess
-        return $response.error
+            $matchingItems = @(Get-DMhostbyName -WebSession $session -Name $HostName)
+            if ($matchingItems.Count -eq 0) {
+                throw "Invalid HostName '$HostName'. No host with that name exists."
+            }
+            if ($matchingItems.Count -gt 1) {
+                throw "HostName is ambiguous because more than one host is named '$HostName'."
+            }
+            $hostObject = $matchingItems[0]
+
+            $resource = "host/$($hostObject.Id)"
+            if ($VstoreId) {
+                $resource += "?vstoreId=$VstoreId"
+            }
+
+            if ($PSCmdlet.ShouldProcess($HostName, 'Remove host')) {
+                $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
+                $response = $response | Assert-DMApiSuccess
+                return $response.error
+            }
+        }
+        catch {
+            $PSCmdlet.WriteError($_)
+        }
     }
 }

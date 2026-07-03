@@ -6,6 +6,10 @@
     Deletes an existing host group by name, optionally scoped to a vStore.
     The host group name is validated against existing OceanStor host groups before the delete request is sent. The cmdlet supports -WhatIf and -Confirm.
 
+    Accepts multiple host groups from the pipeline by property name. Each host group is resolved and
+    removed independently: a failure (e.g. an invalid/ambiguous name, or a REST error) is reported as
+    a non-terminating error and does not stop the remaining host groups from being processed.
+
 .PARAMETER WebSession
     Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
@@ -35,27 +39,12 @@ function Remove-DMHostGroup {
 
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory = $true, Position = 1)]
-        [ValidateScript({
-                $session = if ($WebSession) {
-                    $WebSession
-                }
-                else {
-                    $script:CurrentOceanstorSession
-                }
-                $groups = @(Get-DMhostGroup -WebSession $session)
-                $matchingItems = @($groups | Where-Object Name -EQ $_)
-                if ($matchingItems.Count -eq 1) {
-                    return $true
-                }
-                if ($matchingItems.Count -gt 1) {
-                    throw "HostGroupName is ambiguous because more than one host group is named '$_'."
-                }
-                throw "Invalid HostGroupName. Valid values are: $($groups.Name -join ', ')"
-            })]
+        [Parameter(Mandatory = $true, Position = 1, ValueFromPipelineByPropertyName = $true)]
+        [Alias('Name')]
+        [ValidateNotNullOrEmpty()]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
                 $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
@@ -71,22 +60,38 @@ function Remove-DMHostGroup {
         [string]$VstoreId
     )
 
-    $session = if ($WebSession) {
-        $WebSession
-    }
-    else {
-        $script:CurrentOceanstorSession
-    }
-    $group = @(Get-DMhostGroup -WebSession $session | Where-Object Name -EQ $HostGroupName)[0]
-    if ($null -eq $group) { throw "Could not resolve 'group' — the object may have been removed since parameter validation." }
-    $resource = "hostgroup/$($group.Id)"
-    if ($VstoreId) {
-        $resource += "?vstoreId=$VstoreId"
-    }
+    process {
+        try {
+            $session = if ($WebSession) {
+                $WebSession
+            }
+            else {
+                $script:CurrentOceanstorSession
+            }
 
-    if ($PSCmdlet.ShouldProcess($HostGroupName, 'Remove host group')) {
-        $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
-        $response = $response | Assert-DMApiSuccess
-        return $response.error
+            $groups = @(Get-DMhostGroup -WebSession $session)
+            $matchingItems = @($groups | Where-Object Name -EQ $HostGroupName)
+            if ($matchingItems.Count -eq 0) {
+                throw "Invalid HostGroupName. Valid values are: $($groups.Name -join ', ')"
+            }
+            if ($matchingItems.Count -gt 1) {
+                throw "HostGroupName is ambiguous because more than one host group is named '$HostGroupName'."
+            }
+            $group = $matchingItems[0]
+
+            $resource = "hostgroup/$($group.Id)"
+            if ($VstoreId) {
+                $resource += "?vstoreId=$VstoreId"
+            }
+
+            if ($PSCmdlet.ShouldProcess($HostGroupName, 'Remove host group')) {
+                $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
+                $response = $response | Assert-DMApiSuccess
+                return $response.error
+            }
+        }
+        catch {
+            $PSCmdlet.WriteError($_)
+        }
     }
 }

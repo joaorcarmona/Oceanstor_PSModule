@@ -85,16 +85,21 @@ Describe 'Named object Set commands' {
         $script:request.Body.LOCATION | Should -Be 'rack-01'
     }
 
-    It 'rejects duplicate names before calling the API' {
-        { Set-DMHost -WebSession $script:session -HostName 'host-old' -NewName 'taken' -Confirm:$false } |
-            Should -Throw '*already exists*'
+    It 'reports a non-terminating error for a duplicate name instead of calling the API' {
+        $result = Set-DMHost -WebSession $script:session -HostName 'host-old' -NewName 'taken' -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable setErrors
 
+        $result | Should -BeNullOrEmpty
+        $setErrors.Count | Should -BeGreaterOrEqual 1
+        ($setErrors.Exception.Message | Select-Object -Unique) | Should -BeLike '*already exists*'
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 
-    It 'rejects reserved API properties' {
-        { Set-DMHost -WebSession $script:session -HostName 'host-old' -ApiProperties @{ NAME = 'bypass' } -Confirm:$false } |
-            Should -Throw '*reserved*'
+    It 'reports a non-terminating error for reserved API properties' {
+        $result = Set-DMHost -WebSession $script:session -HostName 'host-old' -ApiProperties @{ NAME = 'bypass' } -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable setErrors
+
+        $result | Should -BeNullOrEmpty
+        $setErrors.Count | Should -BeGreaterOrEqual 1
+        ($setErrors.Exception.Message | Select-Object -Unique) | Should -BeLike '*reserved*'
     }
 
     It 'honors WhatIf' {
@@ -103,15 +108,16 @@ Describe 'Named object Set commands' {
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 
-    It 'Set-DMLunGroup modifies every LUN group piped in, not just the last one' {
-        $groups = @(
-            [pscustomobject]@{ Name = 'lungroup-old' }
-            [pscustomobject]@{ Name = 'taken' }
-        )
-        $null = $groups | Set-DMLunGroup -WebSession $script:session -Description 'batch update' -Confirm:$false
+    It '<Command> modifies every <Noun> piped in, not just the last one' -ForEach @(
+        @{ Command = 'Set-DMLunGroup'; Identities = @('lungroup-old', 'taken'); ResourcePrefix = 'lungroup'; Ids = @('lg-01', 'lg-02'); Noun = 'LUN group' }
+        @{ Command = 'Set-DMHost';     Identities = @('host-old', 'taken');     ResourcePrefix = 'host';     Ids = @('host-01', 'host-02'); Noun = 'host' }
+        @{ Command = 'Set-DMHostGroup'; Identities = @('hostgroup-old', 'taken'); ResourcePrefix = 'hostgroup'; Ids = @('hg-01', 'hg-02'); Noun = 'host group' }
+    ) {
+        $items = $Identities | ForEach-Object { [pscustomobject]@{ Name = $_ } }
+        $null = $items | & $Command -WebSession $script:session -Description 'batch update' -Confirm:$false
 
-        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -like 'lungroup/lg-01*' }
-        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -like 'lungroup/lg-02*' }
+        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -like "$ResourcePrefix/$($Ids[0])*" }
+        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -like "$ResourcePrefix/$($Ids[1])*" }
     }
 }
 
@@ -146,26 +152,36 @@ Describe 'Rename command delegation' {
         Should -Invoke Set-DMHost -Times 0 -Exactly
     }
 
-    It 'Rename-DMLun forwards every LUN piped in, not just the last one' {
-        $luns = @(
-            [pscustomobject]@{ Name = 'lun-a' }
-            [pscustomobject]@{ Name = 'lun-b' }
-        )
-        $null = $luns | Rename-DMLun -WebSession $script:session -NewName 'renamed' -Confirm:$false
+    It 'Rename-DMLun forwards every piped item, not just the last one' {
+        $items = @([pscustomobject]@{ Name = 'item-a' }, [pscustomobject]@{ Name = 'item-b' })
+        $null = $items | Rename-DMLun -WebSession $script:session -NewName 'renamed' -Confirm:$false
 
-        Should -Invoke Set-DMLun -Times 1 -Exactly -ParameterFilter { $LunName -eq 'lun-a' -and $NewName -eq 'renamed' }
-        Should -Invoke Set-DMLun -Times 1 -Exactly -ParameterFilter { $LunName -eq 'lun-b' -and $NewName -eq 'renamed' }
+        Should -Invoke Set-DMLun -Times 1 -Exactly -ParameterFilter { $LunName -eq 'item-a' -and $NewName -eq 'renamed' }
+        Should -Invoke Set-DMLun -Times 1 -Exactly -ParameterFilter { $LunName -eq 'item-b' -and $NewName -eq 'renamed' }
     }
 
-    It 'Rename-DMLunGroup forwards every LUN group piped in, not just the last one' {
-        $groups = @(
-            [pscustomobject]@{ Name = 'group-a' }
-            [pscustomobject]@{ Name = 'group-b' }
-        )
-        $null = $groups | Rename-DMLunGroup -WebSession $script:session -NewName 'renamed' -Confirm:$false
+    It 'Rename-DMLunGroup forwards every piped item, not just the last one' {
+        $items = @([pscustomobject]@{ Name = 'item-a' }, [pscustomobject]@{ Name = 'item-b' })
+        $null = $items | Rename-DMLunGroup -WebSession $script:session -NewName 'renamed' -Confirm:$false
 
-        Should -Invoke Set-DMLunGroup -Times 1 -Exactly -ParameterFilter { $LunGroupName -eq 'group-a' -and $NewName -eq 'renamed' }
-        Should -Invoke Set-DMLunGroup -Times 1 -Exactly -ParameterFilter { $LunGroupName -eq 'group-b' -and $NewName -eq 'renamed' }
+        Should -Invoke Set-DMLunGroup -Times 1 -Exactly -ParameterFilter { $LunGroupName -eq 'item-a' -and $NewName -eq 'renamed' }
+        Should -Invoke Set-DMLunGroup -Times 1 -Exactly -ParameterFilter { $LunGroupName -eq 'item-b' -and $NewName -eq 'renamed' }
+    }
+
+    It 'Rename-DMHost forwards every piped item, not just the last one' {
+        $items = @([pscustomobject]@{ Name = 'item-a' }, [pscustomobject]@{ Name = 'item-b' })
+        $null = $items | Rename-DMHost -WebSession $script:session -NewName 'renamed' -Confirm:$false
+
+        Should -Invoke Set-DMHost -Times 1 -Exactly -ParameterFilter { $HostName -eq 'item-a' -and $NewName -eq 'renamed' }
+        Should -Invoke Set-DMHost -Times 1 -Exactly -ParameterFilter { $HostName -eq 'item-b' -and $NewName -eq 'renamed' }
+    }
+
+    It 'Rename-DMHostGroup forwards every piped item, not just the last one' {
+        $items = @([pscustomobject]@{ Name = 'item-a' }, [pscustomobject]@{ Name = 'item-b' })
+        $null = $items | Rename-DMHostGroup -WebSession $script:session -NewName 'renamed' -Confirm:$false
+
+        Should -Invoke Set-DMHostGroup -Times 1 -Exactly -ParameterFilter { $HostGroupName -eq 'item-a' -and $NewName -eq 'renamed' }
+        Should -Invoke Set-DMHostGroup -Times 1 -Exactly -ParameterFilter { $HostGroupName -eq 'item-b' -and $NewName -eq 'renamed' }
     }
 }
 }

@@ -6,6 +6,11 @@ function Set-DMHost {
         Modifies a host by name. NewName and Description are first-class properties; ApiProperties passes
         additional Huawei host API fields through unchanged. ID and NAME are reserved ApiProperties keys.
 
+        Accepts multiple hosts from the pipeline by property name. Each host is modified independently:
+        a failure (e.g. an invalid/ambiguous name, a name collision, or a REST error) is reported as a
+        non-terminating error and does not stop the rest from being processed. NewName is not
+        meaningful for a batch of more than one host.
+
     .PARAMETER WebSession
         Optional session returned by Connect-deviceManager. The module's cached $script:CurrentOceanstorSession session is used by default.
 
@@ -39,7 +44,7 @@ function Set-DMHost {
     #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
         [Parameter(Mandatory, ValueFromPipelineByPropertyName = $true, Position = 1)]
         [Alias('Name')][ValidateNotNullOrEmpty()][string]$HostName,
@@ -49,13 +54,22 @@ function Set-DMHost {
         [string]$VstoreId
     )
 
-    $session = if ($WebSession) { $WebSession } else { $script:CurrentOceanstorSession }
-    $update = New-DMNamedObjectUpdate -Objects @(Get-DMhost -WebSession $session -VstoreId $VstoreId) `
-        -CurrentName $HostName -EntityName 'host' -ResourceBase 'host' -NewName $NewName `
-        -NewNameSpecified:$($PSBoundParameters.ContainsKey('NewName')) -Description $Description `
-        -DescriptionSpecified:$($PSBoundParameters.ContainsKey('Description')) -ApiProperties $ApiProperties -VstoreId $VstoreId
+    process {
+        try {
+            $session = if ($WebSession) { $WebSession } else { $script:CurrentOceanstorSession }
+            $update = New-DMNamedObjectUpdate -Objects @(Get-DMhost -WebSession $session -VstoreId $VstoreId) `
+                -CurrentName $HostName -EntityName 'host' -ResourceBase 'host' -NewName $NewName `
+                -NewNameSpecified:$($PSBoundParameters.ContainsKey('NewName')) -Description $Description `
+                -DescriptionSpecified:$($PSBoundParameters.ContainsKey('Description')) -ApiProperties $ApiProperties -VstoreId $VstoreId
 
-    if ($PSCmdlet.ShouldProcess($HostName, $update.Action)) {
-        return ((Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource $update.Resource -BodyData $update.Body) | Assert-DMApiSuccess).error
+            if ($PSCmdlet.ShouldProcess($HostName, $update.Action)) {
+                $response = Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource $update.Resource -BodyData $update.Body
+                $response = $response | Assert-DMApiSuccess
+                return $response.error
+            }
+        }
+        catch {
+            $PSCmdlet.WriteError($_)
+        }
     }
 }
