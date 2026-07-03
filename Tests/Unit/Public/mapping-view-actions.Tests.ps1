@@ -184,6 +184,31 @@ Describe 'Mapping view association commands' {
         $script:request.ASSOCIATEOBJTYPE | Should -Be 257
     }
 
+    It 'removes every LUN group piped in from the mapping view, not just the last one' {
+        Mock Get-DMlunGroup {
+            @(
+                [pscustomobject]@{ Id = 'lg-01'; Name = 'group-a' }
+                [pscustomobject]@{ Id = 'lg-02'; Name = 'group-b' }
+            )
+        }
+        $requests = [System.Collections.Generic.List[object]]::new()
+        Mock Invoke-DeviceManager {
+            $requests.Add([pscustomobject]@{ Resource = $Resource; Body = $BodyData })
+            [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 } }
+        }
+
+        $groups = @(
+            [pscustomobject]@{ Name = 'group-a' }
+            [pscustomobject]@{ Name = 'group-b' }
+        )
+        $null = $groups | Remove-DMLunGroupFromMappingView -WebSession $script:session -MappingViewName 'application' -Confirm:$false
+
+        $putRequests = @($requests | Where-Object Resource -EQ 'mappingview/REMOVE_ASSOCIATE')
+        $putRequests.Count | Should -Be 2
+        ($putRequests | Where-Object { $_.Body.ASSOCIATEOBJID -eq 'lg-01' }).Count | Should -Be 1
+        ($putRequests | Where-Object { $_.Body.ASSOCIATEOBJID -eq 'lg-02' }).Count | Should -Be 1
+    }
+
     It 'rejects removal when the group is not associated with the mapping view' {
         Mock Get-DMMappingView {
             if ($PortGroupName) { return @() }

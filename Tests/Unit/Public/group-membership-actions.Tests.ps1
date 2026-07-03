@@ -22,8 +22,9 @@ BeforeDiscovery {
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Remove-DMHostFromHostGroup.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Add-DMLunToLunGroup.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Remove-DMLunFromLunGroup.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Public\Remove-DMLunGroup.ps1"
 
-        Export-ModuleMember -Function 'Add-DMHostToHostGroup', 'Remove-DMHostFromHostGroup', 'Add-DMLunToLunGroup', 'Remove-DMLunFromLunGroup'
+        Export-ModuleMember -Function 'Add-DMHostToHostGroup', 'Remove-DMHostFromHostGroup', 'Add-DMLunToLunGroup', 'Remove-DMLunFromLunGroup', 'Remove-DMLunGroup'
     }
 
     Import-Module $script:groupMembershipModule -Force
@@ -184,6 +185,74 @@ Describe 'LUN group membership commands' {
         ($addErrors.Exception.Message | Select-Object -Unique) | Should -BeLike '*Invalid LunName*'
         $requests.Count | Should -Be 1
         $requests[0].Body.ASSOCIATEOBJID | Should -Be 'lun-01'
+    }
+
+    It 'removes every LUN membership piped in, not just the last one' {
+        Mock Get-DMlun {
+            @(
+                [pscustomobject]@{ Id = 'lun-01'; Name = 'lun-a' }
+                [pscustomobject]@{ Id = 'lun-02'; Name = 'lun-b' }
+            )
+        }
+        Mock Get-DMlunbyLunGroup {
+            @(
+                [pscustomobject]@{ Id = 'lun-01'; Name = 'lun-a' }
+                [pscustomobject]@{ Id = 'lun-02'; Name = 'lun-b' }
+            )
+        }
+        $requests = [System.Collections.Generic.List[object]]::new()
+        Mock Invoke-DeviceManager {
+            $requests.Add([pscustomobject]@{ Resource = $Resource })
+            [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 } }
+        }
+
+        $luns = @(
+            [pscustomobject]@{ Name = 'lun-a' }
+            [pscustomobject]@{ Name = 'lun-b' }
+        )
+        $null = $luns | Remove-DMLunFromLunGroup -WebSession $script:session -LunGroupName 'production' -Confirm:$false
+
+        $requests.Count | Should -Be 2
+        ($requests | Where-Object { $_.Resource -like '*ASSOCIATEOBJID=lun-01*' }).Count | Should -Be 1
+        ($requests | Where-Object { $_.Resource -like '*ASSOCIATEOBJID=lun-02*' }).Count | Should -Be 1
+    }
+}
+
+Describe 'Remove-DMLunGroup' {
+    BeforeEach {
+        $script:session = [pscustomobject]@{ version = 'V600R001' }
+        Mock Get-DMlunGroup {
+            @(
+                [pscustomobject]@{ Id = 'lg-01'; Name = 'group-a' }
+                [pscustomobject]@{ Id = 'lg-02'; Name = 'group-b' }
+            )
+        }
+        Mock Invoke-DeviceManager {
+            [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 } }
+        }
+    }
+
+    It 'removes every LUN group piped in, not just the last one' {
+        $groups = @(
+            [pscustomobject]@{ Name = 'group-a' }
+            [pscustomobject]@{ Name = 'group-b' }
+        )
+        $null = $groups | Remove-DMLunGroup -WebSession $script:session -Confirm:$false
+
+        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -eq 'lungroup/lg-01' }
+        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -eq 'lungroup/lg-02' }
+    }
+
+    It 'continues processing remaining piped LUN groups after one fails to resolve' {
+        $groups = @(
+            [pscustomobject]@{ Name = 'group-a' }
+            [pscustomobject]@{ Name = 'missing-group' }
+        )
+        $null = $groups | Remove-DMLunGroup -WebSession $script:session -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable removeErrors
+
+        $removeErrors.Count | Should -BeGreaterOrEqual 1
+        ($removeErrors.Exception.Message | Select-Object -Unique) | Should -BeLike '*Invalid LunGroupName*'
+        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -eq 'lungroup/lg-01' }
     }
 }
 }

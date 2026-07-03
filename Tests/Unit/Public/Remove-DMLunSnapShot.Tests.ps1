@@ -58,14 +58,16 @@ Describe 'Remove-DMLunSnapShot' {
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 
-    It 'rejects a snapshot name that does not exist' {
-        { Remove-DMLunSnapShot -WebSession $script:session -SnapShotName 'missing' -Confirm:$false } |
-            Should -Throw '*Invalid SnapShotName*'
+    It 'reports a non-terminating error for a snapshot name that does not exist' {
+        $result = Remove-DMLunSnapShot -WebSession $script:session -SnapShotName 'missing' -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable removeErrors
 
+        $result | Should -BeNullOrEmpty
+        $removeErrors.Count | Should -BeGreaterOrEqual 1
+        ($removeErrors.Exception.Message | Select-Object -Unique) | Should -BeLike '*Invalid SnapShotName*'
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 
-    It 'rejects a snapshot name that is not unique' {
+    It 'reports a non-terminating error for a snapshot name that is not unique' {
         Mock Get-DMLunSnapshot {
             @(
                 [pscustomobject]@{ Id = 'snap-01'; Name = 'before-patch' }
@@ -73,10 +75,30 @@ Describe 'Remove-DMLunSnapShot' {
             )
         }
 
-        { Remove-DMLunSnapShot -WebSession $script:session -SnapShotName 'before-patch' -Confirm:$false } |
-            Should -Throw '*SnapShotName is ambiguous*'
+        $result = Remove-DMLunSnapShot -WebSession $script:session -SnapShotName 'before-patch' -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable removeErrors
 
+        $result | Should -BeNullOrEmpty
+        $removeErrors.Count | Should -BeGreaterOrEqual 1
+        ($removeErrors.Exception.Message | Select-Object -Unique) | Should -BeLike '*SnapShotName is ambiguous*'
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
+    }
+
+    It 'removes every snapshot piped in, not just the last one' {
+        Mock Get-DMLunSnapshot {
+            @(
+                [pscustomobject]@{ Id = 'snap-01'; Name = 'snap-a' }
+                [pscustomobject]@{ Id = 'snap-02'; Name = 'snap-b' }
+            )
+        }
+
+        $snapshots = @(
+            [pscustomobject]@{ Name = 'snap-a' }
+            [pscustomobject]@{ Name = 'snap-b' }
+        )
+        $null = $snapshots | Remove-DMLunSnapShot -WebSession $script:session -Confirm:$false
+
+        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -eq 'snapshot/snap-01' }
+        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -eq 'snapshot/snap-02' }
     }
 }
 }

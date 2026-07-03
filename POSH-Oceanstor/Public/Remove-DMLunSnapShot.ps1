@@ -6,6 +6,10 @@
     Resolves a LUN snapshot name to its snapshot ID and removes the snapshot through the OceanStor snapshot REST resource.
     The cmdlet validates the snapshot name and supports -WhatIf and -Confirm.
 
+    Accepts multiple snapshots from the pipeline by property name. Each snapshot is resolved and
+    removed independently: a failure (e.g. an invalid/ambiguous name, or a REST error) is reported as
+    a non-terminating error and does not stop the remaining snapshots from being processed.
+
 .PARAMETER WebSession
     Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
@@ -37,31 +41,12 @@ function Remove-DMLunSnapShot {
 
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
 
         [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, Position = 1)]
-        [ValidateScript({
-                if ($WebSession) {
-                    $session = $WebSession
-                }
-                else {
-                    $session = $script:CurrentOceanstorSession
-                }
-
-                $snapshots = @(Get-DMLunSnapshot -WebSession $session)
-                $matchingSnapshots = @($snapshots | Where-Object Name -EQ $_)
-
-                if ($matchingSnapshots.Count -eq 1) {
-                    $true
-                }
-                elseif ($matchingSnapshots.Count -gt 1) {
-                    throw "SnapShotName is ambiguous because more than one snapshot is named '$_'."
-                }
-                else {
-                    throw "Invalid SnapShotName. Valid values are: $($snapshots.Name -join ', ')"
-                }
-            })]
+        [Alias('Name')]
+        [ValidateNotNullOrEmpty()]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
 
@@ -79,19 +64,33 @@ function Remove-DMLunSnapShot {
         [string]$SnapShotName
     )
 
-    if ($WebSession) {
-        $session = $WebSession
-    }
-    else {
-        $session = $script:CurrentOceanstorSession
-    }
+    process {
+        try {
+            $session = if ($WebSession) {
+                $WebSession
+            }
+            else {
+                $script:CurrentOceanstorSession
+            }
 
-    $snapshot = @(Get-DMLunSnapshot -WebSession $session | Where-Object Name -EQ $SnapShotName)[0]
-    if ($null -eq $snapshot) { throw "Could not resolve 'snapshot' — the object may have been removed since parameter validation." }
+            $snapshots = @(Get-DMLunSnapshot -WebSession $session)
+            $matchingSnapshots = @($snapshots | Where-Object Name -EQ $SnapShotName)
+            if ($matchingSnapshots.Count -eq 0) {
+                throw "Invalid SnapShotName. Valid values are: $($snapshots.Name -join ', ')"
+            }
+            if ($matchingSnapshots.Count -gt 1) {
+                throw "SnapShotName is ambiguous because more than one snapshot is named '$SnapShotName'."
+            }
+            $snapshot = $matchingSnapshots[0]
 
-    if ($PSCmdlet.ShouldProcess($SnapShotName, 'Remove LUN snapshot')) {
-        $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource "snapshot/$($snapshot.Id)"
-        $response = $response | Assert-DMApiSuccess
-        return $response.error
+            if ($PSCmdlet.ShouldProcess($SnapShotName, 'Remove LUN snapshot')) {
+                $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource "snapshot/$($snapshot.Id)"
+                $response = $response | Assert-DMApiSuccess
+                return $response.error
+            }
+        }
+        catch {
+            $PSCmdlet.WriteError($_)
+        }
     }
 }

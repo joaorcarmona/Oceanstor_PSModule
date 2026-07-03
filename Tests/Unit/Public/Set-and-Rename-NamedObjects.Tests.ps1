@@ -102,6 +102,17 @@ Describe 'Named object Set commands' {
 
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
+
+    It 'Set-DMLunGroup modifies every LUN group piped in, not just the last one' {
+        $groups = @(
+            [pscustomobject]@{ Name = 'lungroup-old' }
+            [pscustomobject]@{ Name = 'taken' }
+        )
+        $null = $groups | Set-DMLunGroup -WebSession $script:session -Description 'batch update' -Confirm:$false
+
+        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -like 'lungroup/lg-01*' }
+        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -like 'lungroup/lg-02*' }
+    }
 }
 
 Describe 'Rename command delegation' {
@@ -144,6 +155,17 @@ Describe 'Rename command delegation' {
 
         Should -Invoke Set-DMLun -Times 1 -Exactly -ParameterFilter { $LunName -eq 'lun-a' -and $NewName -eq 'renamed' }
         Should -Invoke Set-DMLun -Times 1 -Exactly -ParameterFilter { $LunName -eq 'lun-b' -and $NewName -eq 'renamed' }
+    }
+
+    It 'Rename-DMLunGroup forwards every LUN group piped in, not just the last one' {
+        $groups = @(
+            [pscustomobject]@{ Name = 'group-a' }
+            [pscustomobject]@{ Name = 'group-b' }
+        )
+        $null = $groups | Rename-DMLunGroup -WebSession $script:session -NewName 'renamed' -Confirm:$false
+
+        Should -Invoke Set-DMLunGroup -Times 1 -Exactly -ParameterFilter { $LunGroupName -eq 'group-a' -and $NewName -eq 'renamed' }
+        Should -Invoke Set-DMLunGroup -Times 1 -Exactly -ParameterFilter { $LunGroupName -eq 'group-b' -and $NewName -eq 'renamed' }
     }
 }
 }
