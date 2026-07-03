@@ -253,15 +253,17 @@ Describe 'Mapping view association commands' {
         ($putRequests | Where-Object { $_.Body.ASSOCIATEOBJID -eq 'hg-02' }).Count | Should -Be 1
     }
 
-    It 'rejects removal when the group is not associated with the mapping view' {
+    It 'reports a non-terminating error when the group is not associated with the mapping view' {
         Mock Get-DMMappingView {
             if ($PortGroupName) { return @() }
             return @($script:view)
         }
 
-        { Remove-DMPortGroupFromMappingView -WebSession $script:session -MappingViewName 'application' -PortGroupName 'front-end' -Confirm:$false } |
-            Should -Throw '*not associated*'
+        $result = Remove-DMPortGroupFromMappingView -WebSession $script:session -MappingViewName 'application' -PortGroupName 'front-end' -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable removeErrors
 
+        $result | Should -BeNullOrEmpty
+        $removeErrors.Count | Should -BeGreaterOrEqual 1
+        ($removeErrors.Exception.Message | Select-Object -Unique) | Should -BeLike '*not associated*'
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 
@@ -275,9 +277,15 @@ Describe 'Mapping view association commands' {
         { Add-DMLunGroupToMappingView -WebSession $script:session -MappingViewName 'application' -LunGroupName 'missing' -Confirm:$false } |
             Should -Throw '*Invalid LunGroupName*'
 
-        { Add-DMPortGroupToMappingView -WebSession $script:session -MappingViewName 'application' -PortGroupName 'missing' -Confirm:$false } |
-            Should -Throw '*Invalid PortGroupName*'
+        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
+    }
 
+    It 'reports a non-terminating error for an unknown port group association target' {
+        $result = Add-DMPortGroupToMappingView -WebSession $script:session -MappingViewName 'application' -PortGroupName 'missing' -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable addErrors
+
+        $result | Should -BeNullOrEmpty
+        $addErrors.Count | Should -BeGreaterOrEqual 1
+        ($addErrors.Exception.Message | Select-Object -Unique) | Should -BeLike '*Invalid PortGroupName*'
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 

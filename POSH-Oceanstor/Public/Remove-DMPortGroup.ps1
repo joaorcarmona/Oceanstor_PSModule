@@ -6,6 +6,10 @@
     Deletes an existing port group by name, optionally scoped to a vStore.
     The port group name is validated against existing OceanStor port groups before the delete request is sent. The cmdlet supports -WhatIf and -Confirm.
 
+    Accepts multiple port groups from the pipeline by property name. Each port group is resolved and
+    removed independently: a failure (e.g. an invalid/ambiguous name, or a REST error) is reported as
+    a non-terminating error and does not stop the remaining port groups from being processed.
+
 .PARAMETER WebSession
     Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
@@ -35,28 +39,12 @@ function Remove-DMPortGroup {
 
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory = $true, Position = 1)]
-        [ValidateScript({
-                $candidate = $_
-                $session = if ($WebSession) {
-                    $WebSession
-                }
-                else {
-                    $script:CurrentOceanstorSession
-                }
-                $groups = @(Get-DMPortGroup -WebSession $session)
-                $matchingItems = @($groups | Where-Object Name -EQ $candidate)
-                if ($matchingItems.Count -eq 1) {
-                    return $true
-                }
-                if ($matchingItems.Count -gt 1) {
-                    throw "PortGroupName is ambiguous because more than one port group is named '$candidate'."
-                }
-                throw "Invalid PortGroupName. Valid values are: $($groups.Name -join ', ')"
-            })]
+        [Parameter(Mandatory = $true, Position = 1, ValueFromPipelineByPropertyName = $true)]
+        [Alias('Name')]
+        [ValidateNotNullOrEmpty()]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
                 $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
@@ -72,20 +60,38 @@ function Remove-DMPortGroup {
         [string]$VstoreId
     )
 
-    $session = if ($WebSession) {
-        $WebSession
-    }
-    else {
-        $script:CurrentOceanstorSession
-    }
-    $group = @(Get-DMPortGroup -WebSession $session | Where-Object Name -EQ $PortGroupName)[0]
-    if ($null -eq $group) { throw "Could not resolve 'group' — the object may have been removed since parameter validation." }
-    $resource = "portgroup/$($group.Id)"
-    if ($VstoreId) {
-        $resource += "?vstoreId=$VstoreId"
-    }
+    process {
+        try {
+            $session = if ($WebSession) {
+                $WebSession
+            }
+            else {
+                $script:CurrentOceanstorSession
+            }
 
-    if ($PSCmdlet.ShouldProcess($PortGroupName, 'Remove port group')) {
-        return ((Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource) | Assert-DMApiSuccess).error
+            $groups = @(Get-DMPortGroup -WebSession $session)
+            $matchingItems = @($groups | Where-Object Name -EQ $PortGroupName)
+            if ($matchingItems.Count -eq 0) {
+                throw "Invalid PortGroupName. Valid values are: $($groups.Name -join ', ')"
+            }
+            if ($matchingItems.Count -gt 1) {
+                throw "PortGroupName is ambiguous because more than one port group is named '$PortGroupName'."
+            }
+            $group = $matchingItems[0]
+
+            $resource = "portgroup/$($group.Id)"
+            if ($VstoreId) {
+                $resource += "?vstoreId=$VstoreId"
+            }
+
+            if ($PSCmdlet.ShouldProcess($PortGroupName, 'Remove port group')) {
+                $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
+                $response = $response | Assert-DMApiSuccess
+                return $response.error
+            }
+        }
+        catch {
+            $PSCmdlet.WriteError($_)
+        }
     }
 }

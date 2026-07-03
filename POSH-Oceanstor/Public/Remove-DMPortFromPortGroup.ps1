@@ -7,6 +7,11 @@
     The cmdlet resolves candidate ports by PortType, validates the selected port and group, checks current membership, then calls the OceanStor API.
     It supports -WhatIf and -Confirm.
 
+    Accepts multiple ports from the pipeline by property name (all piped ports must share the same
+    PortType). Each port is resolved and processed independently: a failure (e.g. an invalid/ambiguous
+    name, or the port not being a member) is reported as a non-terminating error and does not stop the
+    remaining ports from being processed.
+
 .PARAMETER WebSession
     Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
@@ -42,28 +47,11 @@ function Remove-DMPortFromPortGroup {
 
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0)]
         [pscustomobject]$WebSession,
 
         [Parameter(Mandatory = $true, Position = 1)]
-        [ValidateScript({
-                $candidate = $_
-                $session = if ($WebSession) {
-                    $WebSession
-                }
-                else {
-                    $script:CurrentOceanstorSession
-                }
-                $groups = @(Get-DMPortGroup -WebSession $session)
-                $matchingItems = @($groups | Where-Object Name -EQ $candidate)
-                if ($matchingItems.Count -eq 1) {
-                    return $true
-                }
-                if ($matchingItems.Count -gt 1) {
-                    throw "PortGroupName is ambiguous because more than one port group is named '$candidate'."
-                }
-                throw "Invalid PortGroupName. Valid values are: $($groups.Name -join ', ')"
-            })]
+        [ValidateNotNullOrEmpty()]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
                 $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
@@ -80,25 +68,9 @@ function Remove-DMPortFromPortGroup {
         [ValidateSet('FibreChannel', 'Ethernet', 'LogicalPort')]
         [string]$PortType,
 
-        [Parameter(Mandatory = $true, Position = 3)]
-        [ValidateScript({
-                $candidate = $_
-                $session = if ($WebSession) {
-                    $WebSession
-                }
-                else {
-                    $script:CurrentOceanstorSession
-                }
-                $ports = @(Get-DMPortGroupCandidate -WebSession $session -PortType $PortType)
-                $matchingItems = @($ports | Where-Object Name -EQ $candidate)
-                if ($matchingItems.Count -eq 1) {
-                    return $true
-                }
-                if ($matchingItems.Count -gt 1) {
-                    throw "PortName is ambiguous because more than one $PortType port is named '$candidate'."
-                }
-                throw "Invalid PortName for $PortType. Valid values are: $($ports.Name -join ', ')"
-            })]
+        [Parameter(Mandatory = $true, Position = 3, ValueFromPipelineByPropertyName = $true)]
+        [Alias('Name')]
+        [ValidateNotNullOrEmpty()]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
                 if (-not $fakeBoundParameters.ContainsKey('PortType')) {
@@ -126,37 +98,63 @@ function Remove-DMPortFromPortGroup {
         [string]$VstoreId
     )
 
-    $session = if ($WebSession) {
-        $WebSession
-    }
-    else {
-        $script:CurrentOceanstorSession
-    }
-    $group = @(Get-DMPortGroup -WebSession $session | Where-Object Name -EQ $PortGroupName)[0]
-    if ($null -eq $group) { throw "Could not resolve 'group' — the object may have been removed since parameter validation." }
-    $port = @(Get-DMPortGroupCandidate -WebSession $session -PortType $PortType | Where-Object Name -EQ $PortName)[0]
-    if ($null -eq $port) { throw "Could not resolve 'port' — the object may have been removed since parameter validation." }
-    $associationResource = "portgroup/associate?ASSOCIATEOBJTYPE=$($port.ObjectType)&ASSOCIATEOBJID=$($port.Id)"
-    if ($VstoreId) {
-        $associationResource += "&vstoreId=$VstoreId"
-    }
+    process {
+        try {
+            $session = if ($WebSession) {
+                $WebSession
+            }
+            else {
+                $script:CurrentOceanstorSession
+            }
 
-    $associations = @(Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource $associationResource |
-            Select-DMResponseData)
-    if (-not @($associations | Where-Object ID -EQ $group.Id)) {
-        throw "Port '$PortName' is not a member of port group '$PortGroupName'."
-    }
+            $groups = @(Get-DMPortGroup -WebSession $session)
+            $matchingGroups = @($groups | Where-Object Name -EQ $PortGroupName)
+            if ($matchingGroups.Count -eq 0) {
+                throw "Invalid PortGroupName. Valid values are: $($groups.Name -join ', ')"
+            }
+            if ($matchingGroups.Count -gt 1) {
+                throw "PortGroupName is ambiguous because more than one port group is named '$PortGroupName'."
+            }
+            $group = $matchingGroups[0]
 
-    $body = @{
-        ID               = $group.Id
-        ASSOCIATEOBJTYPE = $port.ObjectType
-        ASSOCIATEOBJID   = $port.Id
-    }
-    if ($VstoreId) {
-        $body.vstoreId = $VstoreId
-    }
+            $ports = @(Get-DMPortGroupCandidate -WebSession $session -PortType $PortType)
+            $matchingPorts = @($ports | Where-Object Name -EQ $PortName)
+            if ($matchingPorts.Count -eq 0) {
+                throw "Invalid PortName for $PortType. Valid values are: $($ports.Name -join ', ')"
+            }
+            if ($matchingPorts.Count -gt 1) {
+                throw "PortName is ambiguous because more than one $PortType port is named '$PortName'."
+            }
+            $port = $matchingPorts[0]
 
-    if ($PSCmdlet.ShouldProcess("$PortName <- $PortGroupName", 'Remove port from port group')) {
-        return ((Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource 'port/associate/portgroup' -BodyData $body) | Assert-DMApiSuccess).error
+            $associationResource = "portgroup/associate?ASSOCIATEOBJTYPE=$($port.ObjectType)&ASSOCIATEOBJID=$($port.Id)"
+            if ($VstoreId) {
+                $associationResource += "&vstoreId=$VstoreId"
+            }
+
+            $associations = @(Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource $associationResource |
+                    Select-DMResponseData)
+            if (-not @($associations | Where-Object ID -EQ $group.Id)) {
+                throw "Port '$PortName' is not a member of port group '$PortGroupName'."
+            }
+
+            $body = @{
+                ID               = $group.Id
+                ASSOCIATEOBJTYPE = $port.ObjectType
+                ASSOCIATEOBJID   = $port.Id
+            }
+            if ($VstoreId) {
+                $body.vstoreId = $VstoreId
+            }
+
+            if ($PSCmdlet.ShouldProcess("$PortName <- $PortGroupName", 'Remove port from port group')) {
+                $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource 'port/associate/portgroup' -BodyData $body
+                $response = $response | Assert-DMApiSuccess
+                return $response.error
+            }
+        }
+        catch {
+            $PSCmdlet.WriteError($_)
+        }
     }
 }

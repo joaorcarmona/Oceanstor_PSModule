@@ -112,6 +112,7 @@ Describe 'Named object Set commands' {
         @{ Command = 'Set-DMLunGroup'; Identities = @('lungroup-old', 'taken'); ResourcePrefix = 'lungroup'; Ids = @('lg-01', 'lg-02'); Noun = 'LUN group' }
         @{ Command = 'Set-DMHost';     Identities = @('host-old', 'taken');     ResourcePrefix = 'host';     Ids = @('host-01', 'host-02'); Noun = 'host' }
         @{ Command = 'Set-DMHostGroup'; Identities = @('hostgroup-old', 'taken'); ResourcePrefix = 'hostgroup'; Ids = @('hg-01', 'hg-02'); Noun = 'host group' }
+        @{ Command = 'Set-DMPortGroup'; Identities = @('portgroup-old', 'taken'); ResourcePrefix = 'portgroup'; Ids = @('pg-01', 'pg-02'); Noun = 'port group' }
     ) {
         $items = $Identities | ForEach-Object { [pscustomobject]@{ Name = $_ } }
         $null = $items | & $Command -WebSession $script:session -Description 'batch update' -Confirm:$false
@@ -190,6 +191,14 @@ Describe 'Rename command delegation' {
 
         Should -Invoke Set-DMFileSystem -Times 1 -Exactly -ParameterFilter { $FileSystemName -eq 'item-a' -and $NewName -eq 'renamed' }
         Should -Invoke Set-DMFileSystem -Times 1 -Exactly -ParameterFilter { $FileSystemName -eq 'item-b' -and $NewName -eq 'renamed' }
+    }
+
+    It 'Rename-DMPortGroup forwards every piped item, not just the last one' {
+        $items = @([pscustomobject]@{ Name = 'item-a' }, [pscustomobject]@{ Name = 'item-b' })
+        $null = $items | Rename-DMPortGroup -WebSession $script:session -NewName 'renamed' -Confirm:$false
+
+        Should -Invoke Set-DMPortGroup -Times 1 -Exactly -ParameterFilter { $PortGroupName -eq 'item-a' -and $NewName -eq 'renamed' }
+        Should -Invoke Set-DMPortGroup -Times 1 -Exactly -ParameterFilter { $PortGroupName -eq 'item-b' -and $NewName -eq 'renamed' }
     }
 }
 }

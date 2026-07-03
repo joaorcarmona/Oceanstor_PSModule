@@ -97,6 +97,26 @@ Describe 'Port group commands' {
         $script:method | Should -Be 'DELETE'
         $script:resource | Should -Be 'portgroup/pg-01?vstoreId=7'
     }
+
+    It 'removes every port group piped in, not just the last one' {
+        Mock Get-DMPortGroup {
+            @(
+                [pscustomobject]@{ Id = 'pg-01'; Name = 'group-a' }
+                [pscustomobject]@{ Id = 'pg-02'; Name = 'group-b' }
+            )
+        }
+        $resources = [System.Collections.Generic.List[string]]::new()
+        Mock Invoke-DeviceManager {
+            $resources.Add($Resource)
+            [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 } }
+        }
+
+        $items = @([pscustomobject]@{ Name = 'group-a' }, [pscustomobject]@{ Name = 'group-b' })
+        $null = $items | Remove-DMPortGroup -WebSession $script:session -Confirm:$false
+
+        $resources | Should -Contain 'portgroup/pg-01'
+        $resources | Should -Contain 'portgroup/pg-02'
+    }
 }
 
 Describe 'Port group membership commands' {
@@ -159,12 +179,14 @@ Describe 'Port group membership commands' {
         $script:request.ASSOCIATEOBJID | Should -Be 'eth-01'
     }
 
-    It 'rejects removal if the port is not associated with the requested group' {
+    It 'reports a non-terminating error if the port is not associated with the requested group' {
         Mock Invoke-DeviceManager { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'other' }) } }
 
-        { Remove-DMPortFromPortGroup -WebSession $script:session -PortGroupName 'front-end' -PortType FibreChannel -PortName 'CTE0.A.IOM0.P0' -Confirm:$false } |
-            Should -Throw '*not a member*'
+        $result = Remove-DMPortFromPortGroup -WebSession $script:session -PortGroupName 'front-end' -PortType FibreChannel -PortName 'CTE0.A.IOM0.P0' -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable removeErrors
 
+        $result | Should -BeNullOrEmpty
+        $removeErrors.Count | Should -BeGreaterOrEqual 1
+        ($removeErrors.Exception.Message | Select-Object -Unique) | Should -BeLike '*not a member*'
         Should -Invoke Invoke-DeviceManager -ParameterFilter { $Method -eq 'DELETE' } -Times 0 -Exactly
     }
 
