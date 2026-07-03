@@ -15,7 +15,10 @@ function Get-DMlun {
 		Optional parameter to define the session to be use on the REST call. If not defined, the module's cached $script:CurrentOceanstorSession session will be used
 
 	.PARAMETER Keyword
-		Optional LUN Name or WWN to search for, positional. When omitted, every LUN is returned. Name is tried first, WWN is a fallback when Name finds nothing. Supports PowerShell wildcards (*, ?, [...]); without one, the comparison is an exact match.
+		Optional LUN Name or WWN to search for, positional. When omitted, every LUN is returned. Name is tried first, WWN is a fallback when Name finds nothing. Supports PowerShell wildcards (*, ?, [...]); without one, the comparison is an exact match. Also available as -Name.
+
+	.PARAMETER Id
+		Optional LUN ID to search for. Mutually exclusive with Keyword/Name (enforced by parameter set). Returns exactly one LUN, exact match only, no wildcard support.
 
 	.INPUTS
 		System.Management.Automation.PSCustomObject
@@ -44,20 +47,29 @@ function Get-DMlun {
 
 		PS C:\> Get-DMlun '658be72100f6793b6bb9512e000000e1'
 
+		OR
+
+		PS C:\> Get-DMlun -Id '1'
+
 	.NOTES
 		Filename: Get-DMlun.ps1
 
 	.LINK
 	#>
-    [Cmdletbinding()]
+    [Cmdletbinding(DefaultParameterSetName = 'ByName')]
     [OutputType([System.Collections.ArrayList])]
     [OutputType([System.Object[]])]
     param(
         [Parameter(ValueFromPipelineByPropertyName = $true, Mandatory = $false)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Position = 0, Mandatory = $false)]
-        [string]$Keyword
+        [Parameter(ParameterSetName = 'ByName', Position = 0, Mandatory = $false)]
+        [Alias('Name')]
+        [string]$Keyword,
+
+        [Parameter(ParameterSetName = 'ById', Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Id
     )
 
     if ($WebSession) {
@@ -65,6 +77,10 @@ function Get-DMlun {
     }
     else {
         $session = $script:CurrentOceanstorSession
+    }
+
+    if ($PSCmdlet.ParameterSetName -eq 'ById') {
+        return @(Get-DMLunbyFilter -WebSession $session -Filter 'Id' -Keyword $Id)
     }
 
     if ($Keyword) {

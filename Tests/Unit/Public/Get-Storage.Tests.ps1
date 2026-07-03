@@ -112,6 +112,29 @@ Describe 'Public getter functions' {
             $result.Description | Should -BeNullOrEmpty
         }
 
+        It 'gets a LUN group by Id using an exact server-side filter' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                $script:lunGroupIdResource = $Resource
+                [pscustomobject]@{ data = @([pscustomobject]@{ ID = 12; NAME = 'luns'; GROUPTYPE = 0; CAPCITY = 1GB }) }
+            }
+
+            $result = (Get-DMlunGroup -WebSession $script:session -Id 12)[0]
+
+            $result.Id | Should -Be 12
+            $script:lunGroupIdResource | Should -BeLike 'lungroup?filter=ID::12*'
+        }
+
+        It 'rejects an unknown LUN group Id' {
+            Mock Invoke-DeviceManager { [pscustomobject]@{ data = @() } }
+
+            @(Get-DMlunGroup -WebSession $script:session -Id 'missing') | Should -BeNullOrEmpty
+        }
+
+        It 'rejects supplying both Name and Id for Get-DMlunGroup' {
+            { Get-DMlunGroup -WebSession $script:session -Name 'luns' -Id 12 } | Should -Throw '*parameter set*'
+        }
+
         It 'retrieves LUN objects associated with a LUN group through its method' {
             Mock Invoke-DeviceManager {
                 param($WebSession, $Method, $Resource)
@@ -193,6 +216,24 @@ Describe 'Public getter functions' {
             $result[0].Id | Should -Be 'lun-02'
             $script:keywordResources[0] | Should -BeLike 'lun?filter=NAME::658be72100f6793b6bb9512e000000e1*'
             $script:keywordResources[1] | Should -BeLike 'lun?filter=WWN::658be72100f6793b6bb9512e000000e1*'
+        }
+
+        It 'gets a LUN by Id using an exact server-side filter' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                $script:idResource = $Resource
+                [pscustomobject]@{ data = @(New-TestLun -Id 'lun-01' -Name 'finance') }
+            }
+
+            $result = @(Get-DMlun -WebSession $script:session -Id 'lun-01')
+
+            $result.Count | Should -Be 1
+            $result[0].Id | Should -Be 'lun-01'
+            $script:idResource | Should -BeLike 'lun?filter=ID::lun-01*'
+        }
+
+        It 'rejects supplying both Keyword and Id for Get-DMlun' {
+            { Get-DMlun -WebSession $script:session -Keyword 'finance' -Id 'lun-01' } | Should -Throw '*parameter set*'
         }
 
         It 'supports a wildcard Keyword' {

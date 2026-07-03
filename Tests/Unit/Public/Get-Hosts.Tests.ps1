@@ -69,6 +69,44 @@ Describe 'Public getter functions' {
             $result[1].initiators | Should -BeNullOrEmpty
         }
 
+        It 'gets a host by Name, delegating to the filtered endpoint' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                if ($Resource -like 'host?filter=NAME::server-a*') {
+                    $script:nameResource = $Resource
+                    return [pscustomobject]@{ data = @($script:hostRecords[0]) }
+                }
+                [pscustomobject]@{ data = @() }
+            }
+
+            $result = @(Get-DMhost -WebSession $script:session -Name 'server-a')
+
+            $result.Count | Should -Be 1
+            $result[0].id | Should -Be 'host-01'
+            $script:nameResource | Should -BeLike 'host?filter=NAME::server-a*'
+        }
+
+        It 'gets a host by Id, delegating to the filtered endpoint' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                if ($Resource -like 'host?filter=ID::host-01*') {
+                    $script:idResource = $Resource
+                    return [pscustomobject]@{ data = @($script:hostRecords[0]) }
+                }
+                [pscustomobject]@{ data = @() }
+            }
+
+            $result = @(Get-DMhost -WebSession $script:session -Id 'host-01')
+
+            $result.Count | Should -Be 1
+            $result[0].id | Should -Be 'host-01'
+            $script:idResource | Should -BeLike 'host?filter=ID::host-01*'
+        }
+
+        It 'rejects supplying both Name and Id for Get-DMhost' {
+            { Get-DMhost -WebSession $script:session -Name 'server-a' -Id 'host-01' } | Should -Throw '*parameter set*'
+        }
+
         It 'throws a descriptive error when the API reports a failure retrieving hosts' {
             Mock Invoke-DeviceManager {
                 [pscustomobject]@{ error = [pscustomobject]@{ Code = 1077939726; description = 'session expired' } }
@@ -222,6 +260,36 @@ Describe 'Public getter functions' {
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
                 Should -Be @('Id', 'Name', 'Is Mapped', 'Host Member Number', 'vStore Name')
             $result.Description | Should -BeNullOrEmpty
+        }
+
+        It 'gets a host group by positional Name using an exact server-side filter' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                $script:hostGroupNameResource = $Resource
+                [pscustomobject]@{ data = @([pscustomobject]@{ ID = 4; NAME = 'cluster'; TYPE = 0; ISADD2MAPPINGVIEW = 'true' }) }
+            }
+
+            $result = (Get-DMhostGroup -WebSession $script:session 'cluster')[0]
+
+            $result.Name | Should -Be 'cluster'
+            $script:hostGroupNameResource | Should -BeLike 'hostgroup?filter=NAME::cluster*'
+        }
+
+        It 'gets a host group by Id using an exact server-side filter' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                $script:hostGroupIdResource = $Resource
+                [pscustomobject]@{ data = @([pscustomobject]@{ ID = 4; NAME = 'cluster'; TYPE = 0; ISADD2MAPPINGVIEW = 'true' }) }
+            }
+
+            $result = (Get-DMhostGroup -WebSession $script:session -Id 4)[0]
+
+            $result.Id | Should -Be 4
+            $script:hostGroupIdResource | Should -BeLike 'hostgroup?filter=ID::4*'
+        }
+
+        It 'rejects supplying both Name and Id for Get-DMhostGroup' {
+            { Get-DMhostGroup -WebSession $script:session -Name 'cluster' -Id 4 } | Should -Throw '*parameter set*'
         }
 
         It 'gets FC host links for a host' {

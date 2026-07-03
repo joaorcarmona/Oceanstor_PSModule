@@ -20,6 +20,9 @@ function Get-DMlunGroup {
 	.PARAMETER Name
 		Optional LUN group name to search for, positional. When omitted, every LUN group is returned. Supports PowerShell wildcards (*, ?, [...]); without one, the comparison is an exact match.
 
+	.PARAMETER Id
+		Optional LUN group ID to search for. Mutually exclusive with Name (enforced by parameter set). Returns exactly one LUN group, exact match only, no wildcard support.
+
 	.INPUTS
 		System.Management.Automation.PSCustomObject
 
@@ -48,6 +51,10 @@ function Get-DMlunGroup {
 
 	.EXAMPLE
 
+		PS C:\> Get-DMlunGroup -Id '12'
+
+	.EXAMPLE
+
 		PS C:\> $lunGroup = (Get-DMlunGroup -WebSession $session)[0]
 		PS C:\> $memberLuns = $lunGroup.GetLuns()
 
@@ -56,14 +63,18 @@ function Get-DMlunGroup {
 
 	.LINK
 	#>
-    [Cmdletbinding()]
+    [Cmdletbinding(DefaultParameterSetName = 'ByName')]
     [OutputType([System.Collections.ArrayList])]
     param(
         [Parameter(ValueFromPipelineByPropertyName = $true, Mandatory = $false)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Position = 0, Mandatory = $false)]
+        [Parameter(ParameterSetName = 'ByName', Position = 0, Mandatory = $false)]
         [string]$Name,
+
+        [Parameter(ParameterSetName = 'ById', Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Id,
 
         [string]$VstoreId
     )
@@ -87,7 +98,11 @@ function Get-DMlunGroup {
     $resource = 'lungroup'
     $queryParams = [System.Collections.Generic.List[string]]::new()
 
-    if ($Name) {
+    if ($Id) {
+        # An ID is either an exact match or not found -- no fuzzy/wildcard use case.
+        $queryParams.Add("filter=ID::$([uri]::EscapeDataString($Id))")
+    }
+    elseif ($Name) {
         $hasWildcard = $Name -match '[*?\[\]]'
         if (-not $hasWildcard) {
             # No wildcard: request an exact match server-side (double colon).
@@ -117,7 +132,11 @@ function Get-DMlunGroup {
         [void]$lunGroups.Add($lunGroup)
     }
 
-    if ($Name) {
+    if ($Id) {
+        # Always re-verify client-side, even after a server-side filter.
+        $lunGroups = [System.Collections.ArrayList]@($lunGroups | Where-Object Id -EQ $Id)
+    }
+    elseif ($Name) {
         # Always re-verify against the exact requested pattern client-side, even
         # after a server-side filter. -Like enforces the full wildcard pattern when
         # Name has one, and behaves as an exact match when it doesn't.

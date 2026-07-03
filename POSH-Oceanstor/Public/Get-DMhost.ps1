@@ -9,6 +9,12 @@ function Get-DMhost {
 .PARAMETER webSession
     Optional parameter to define the session to be use on the REST call. If not defined, the module's cached $script:CurrentOceanstorSession session will be used
 
+.PARAMETER Name
+    Optional host name to search for, positional. When omitted, every host is returned. Supports PowerShell wildcards (*, ?, [...]); without one, the comparison is an exact match.
+
+.PARAMETER Id
+    Optional host ID to search for. Mutually exclusive with Name (enforced by parameter set). Returns exactly one host, exact match only, no wildcard support.
+
 .INPUTS
     System.Management.Automation.PSCustomObject
 
@@ -27,16 +33,31 @@ function Get-DMhost {
 
     PS C:\> $hosts = Get-DMhost
 
+    OR
+
+    PS C:\> Get-DMhost 'esx01'
+
+    OR
+
+    PS C:\> Get-DMhost -Id '1'
+
 .NOTES
     Filename: Get-DMhost.ps1
 
 .LINK
 #>
-    [Cmdletbinding()]
+    [Cmdletbinding(DefaultParameterSetName = 'ByName')]
     [OutputType([System.Object[]])]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0, Mandatory = $false)]
         [pscustomobject]$WebSession,
+
+        [Parameter(ParameterSetName = 'ByName', Position = 1, Mandatory = $false)]
+        [string]$Name,
+
+        [Parameter(ParameterSetName = 'ById', Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Id,
 
         [string]$VstoreId
     )
@@ -46,6 +67,14 @@ function Get-DMhost {
     }
     else {
         $session = $script:CurrentOceanstorSession
+    }
+
+    if ($PSCmdlet.ParameterSetName -eq 'ById') {
+        return @(Get-DMhostbyFilter -WebSession $session -Filter 'Id' -Keyword $Id)
+    }
+
+    if ($Name) {
+        return @(Get-DMhostbyFilter -WebSession $session -Filter 'Name' -Keyword $Name)
     }
 
     $defaultDisplaySet = "Id", "Name", "Health Status", "Operation System", "Parent Name"
