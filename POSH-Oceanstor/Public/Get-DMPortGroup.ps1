@@ -1,53 +1,53 @@
-<#
-.SYNOPSIS
-    Retrieves OceanStor port groups.
-
-.DESCRIPTION
-    Gets port groups from OceanStor, optionally scoped to a vStore. With no Name
-    argument, returns every port group. When Name is supplied (positionally or
-    named), filters server-side: an exact match when Name has no wildcard, a fuzzy
-    substring hint when Name has a leading and/or trailing * (per OceanStor REST API
-    reference: a single colon in filter=field:value requests a fuzzy match, a double
-    colon requests an exact match). Any other wildcard shape falls back to fetching
-    every port group and filtering client-side. Either way the exact requested
-    pattern is always re-verified client-side (-Like) before returning, so an
-    imprecise server-side result never produces a wrong final answer.
-    Returned objects use the OceanstorPortGroup class and include a default display set for common port group properties.
-
-.PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
-
-.PARAMETER Name
-    Optional port group name to search for, positional. If omitted, every port group is returned. Supports PowerShell wildcards (*, ?, [...]); without one, the comparison is an exact match.
-
-.PARAMETER VstoreId
-    Optional vStore ID used to scope the port group query.
-
-.INPUTS
-    System.Management.Automation.PSCustomObject
-
-.OUTPUTS
-    OceanstorPortGroup
-
-.EXAMPLE
-    PS> Get-DMPortGroup 'fc-front-end'
-
-    Returns the port group named fc-front-end.
-
-.EXAMPLE
-    PS> Get-DMPortGroup 'fc-*'
-
-    Returns port groups whose name starts with fc-.
-
-.EXAMPLE
-    PS> Get-DMPortGroup -VstoreId '1'
-
-    Returns port groups scoped to vStore ID 1.
-
-.NOTES
-    Filename: Get-DMPortGroup.ps1
-#>
 function Get-DMPortGroup {
+    <#
+    .SYNOPSIS
+        Retrieves OceanStor port groups.
+
+    .DESCRIPTION
+        Gets port groups from OceanStor, optionally scoped to a vStore. With no Name
+        argument, returns every port group. When Name is supplied (positionally or
+        named), filters server-side: an exact match when Name has no wildcard, a fuzzy
+        substring hint when Name has a leading and/or trailing * (per OceanStor REST API
+        reference: a single colon in filter=field:value requests a fuzzy match, a double
+        colon requests an exact match). Any other wildcard shape falls back to fetching
+        every port group and filtering client-side. Either way the exact requested
+        pattern is always re-verified client-side (-Like) before returning, so an
+        imprecise server-side result never produces a wrong final answer.
+        Returned objects use the OceanstorPortGroup class and include a default display set for common port group properties.
+
+    .PARAMETER WebSession
+        Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
+
+    .PARAMETER Name
+        Optional port group name to search for, positional. If omitted, every port group is returned. Supports PowerShell wildcards (*, ?, [...]); without one, the comparison is an exact match.
+
+    .PARAMETER VstoreId
+        Optional vStore ID used to scope the port group query.
+
+    .INPUTS
+        System.Management.Automation.PSCustomObject
+
+    .OUTPUTS
+        OceanstorPortGroup
+
+    .EXAMPLE
+        PS> Get-DMPortGroup 'fc-front-end'
+
+        Returns the port group named fc-front-end.
+
+    .EXAMPLE
+        PS> Get-DMPortGroup 'fc-*'
+
+        Returns port groups whose name starts with fc-.
+
+    .EXAMPLE
+        PS> Get-DMPortGroup -VstoreId '1'
+
+        Returns port groups scoped to vStore ID 1.
+
+    .NOTES
+        Filename: Get-DMPortGroup.ps1
+    #>
     [CmdletBinding()]
     [OutputType([System.Collections.ArrayList])]
     param(

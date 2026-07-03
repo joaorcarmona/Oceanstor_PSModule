@@ -1,36 +1,36 @@
-<#
-.SYNOPSIS
-    Removes a free NVMe over RoCE initiator from the OceanStor system.
-
-.DESCRIPTION
-    Deletes an existing free NVMe over RoCE initiator by NQN, optionally scoped to a vStore.
-    Associated initiators must be removed from their host before deletion. The cmdlet supports -WhatIf and -Confirm.
-
-.PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
-
-.PARAMETER Nqn
-    NQN of the free NVMe over RoCE initiator to remove.
-
-.PARAMETER VstoreId
-    Optional vStore ID used to scope the initiator operation.
-
-.INPUTS
-    System.Management.Automation.PSCustomObject
-
-.OUTPUTS
-    System.Management.Automation.PSCustomObject
-    Returns the OceanStor API error object.
-
-.EXAMPLE
-    PS> Remove-DMNvmeInitiator -Nqn 'nqn.2026-06.test:host01' -WhatIf
-
-    Shows what would happen if the free NVMe over RoCE initiator were removed.
-
-.NOTES
-    Filename: Remove-DMNvmeInitiator.ps1
-#>
 function Remove-DMNvmeInitiator {
+    <#
+    .SYNOPSIS
+        Removes a free NVMe over RoCE initiator from the OceanStor system.
+
+    .DESCRIPTION
+        Deletes an existing free NVMe over RoCE initiator by NQN, optionally scoped to a vStore.
+        Associated initiators must be removed from their host before deletion. The cmdlet supports -WhatIf and -Confirm.
+
+    .PARAMETER WebSession
+        Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
+
+    .PARAMETER Nqn
+        NQN of the free NVMe over RoCE initiator to remove.
+
+    .PARAMETER VstoreId
+        Optional vStore ID used to scope the initiator operation.
+
+    .INPUTS
+        System.Management.Automation.PSCustomObject
+
+    .OUTPUTS
+        System.Management.Automation.PSCustomObject
+        Returns the OceanStor API error object.
+
+    .EXAMPLE
+        PS> Remove-DMNvmeInitiator -Nqn 'nqn.2026-06.test:host01' -WhatIf
+
+        Shows what would happen if the free NVMe over RoCE initiator were removed.
+
+    .NOTES
+        Filename: Remove-DMNvmeInitiator.ps1
+    #>
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
 
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]

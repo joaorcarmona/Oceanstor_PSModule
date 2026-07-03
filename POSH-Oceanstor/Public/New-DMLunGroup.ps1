@@ -1,42 +1,42 @@
-<#
-.SYNOPSIS
-    Creates an OceanStor LUN group.
-
-.DESCRIPTION
-    Creates a LUN group in OceanStor with a name, application type, optional description, and optional vStore scope.
-    The cmdlet returns the created LUN group object when the API call succeeds.
-
-.PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
-
-.PARAMETER Name
-    Name of the LUN group to create. The value must be 1 to 255 characters and may contain letters, numbers, underscores, periods, or hyphens.
-
-.PARAMETER ApplicationType
-    Application type metadata for the LUN group. Valid values are Other, Oracle, Exchange, SQL Server, VMWare, and Hyper-V.
-
-.PARAMETER Description
-    Optional description for the LUN group. The value can be up to 255 characters.
-
-.PARAMETER VstoreId
-    Optional vStore ID used to scope the LUN group creation operation.
-
-.INPUTS
-    System.Management.Automation.PSCustomObject
-
-.OUTPUTS
-    OceanStorLunGroup
-    Returns the created LUN group object on success, or the API error object on failure.
-
-.EXAMPLE
-    PS> New-DMLunGroup -Name 'production-luns' -ApplicationType 'VMWare' -Description 'VMware datastore LUNs'
-
-    Creates a LUN group named production-luns with VMware application metadata.
-
-.NOTES
-    Filename: New-DMLunGroup.ps1
-#>
 function New-DMLunGroup {
+    <#
+    .SYNOPSIS
+        Creates an OceanStor LUN group.
+
+    .DESCRIPTION
+        Creates a LUN group in OceanStor with a name, application type, optional description, and optional vStore scope.
+        The cmdlet returns the created LUN group object when the API call succeeds.
+
+    .PARAMETER WebSession
+        Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
+
+    .PARAMETER Name
+        Name of the LUN group to create. The value must be 1 to 255 characters and may contain letters, numbers, underscores, periods, or hyphens.
+
+    .PARAMETER ApplicationType
+        Application type metadata for the LUN group. Valid values are Other, Oracle, Exchange, SQL Server, VMWare, and Hyper-V.
+
+    .PARAMETER Description
+        Optional description for the LUN group. The value can be up to 255 characters.
+
+    .PARAMETER VstoreId
+        Optional vStore ID used to scope the LUN group creation operation.
+
+    .INPUTS
+        System.Management.Automation.PSCustomObject
+
+    .OUTPUTS
+        OceanStorLunGroup
+        Returns the created LUN group object on success, or the API error object on failure.
+
+    .EXAMPLE
+        PS> New-DMLunGroup -Name 'production-luns' -ApplicationType 'VMWare' -Description 'VMware datastore LUNs'
+
+        Creates a LUN group named production-luns with VMware application metadata.
+
+    .NOTES
+        Filename: New-DMLunGroup.ps1
+    #>
     [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]

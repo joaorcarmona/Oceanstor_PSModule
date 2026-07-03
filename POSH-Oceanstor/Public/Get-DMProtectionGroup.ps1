@@ -1,37 +1,37 @@
-<#
-.SYNOPSIS
-    Retrieves OceanStor protection groups.
-
-.DESCRIPTION
-    Gets protection groups from OceanStor through the API v2 protection group interface.
-    Results can be filtered by name after retrieval and are returned as OceanstorProtectionGroup objects.
-
-.PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
-
-.PARAMETER Name
-    Optional protection group name to return. When omitted, all visible protection groups are returned.
-
-.INPUTS
-    System.Management.Automation.PSCustomObject
-
-.OUTPUTS
-    OceanstorProtectionGroup
-
-.EXAMPLE
-    PS> Get-DMProtectionGroup -Name 'pg-production'
-
-    Returns the protection group named pg-production.
-
-.EXAMPLE
-    PS> Get-DMProtectionGroup
-
-    Returns all visible protection groups.
-
-.NOTES
-    Filename: Get-DMProtectionGroup.ps1
-#>
 function Get-DMProtectionGroup {
+    <#
+    .SYNOPSIS
+        Retrieves OceanStor protection groups.
+
+    .DESCRIPTION
+        Gets protection groups from OceanStor through the API v2 protection group interface.
+        Results can be filtered by name after retrieval and are returned as OceanstorProtectionGroup objects.
+
+    .PARAMETER WebSession
+        Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
+
+    .PARAMETER Name
+        Optional protection group name to return. When omitted, all visible protection groups are returned.
+
+    .INPUTS
+        System.Management.Automation.PSCustomObject
+
+    .OUTPUTS
+        OceanstorProtectionGroup
+
+    .EXAMPLE
+        PS> Get-DMProtectionGroup -Name 'pg-production'
+
+        Returns the protection group named pg-production.
+
+    .EXAMPLE
+        PS> Get-DMProtectionGroup
+
+        Returns all visible protection groups.
+
+    .NOTES
+        Filename: Get-DMProtectionGroup.ps1
+    #>
     [CmdletBinding()]
     [OutputType([System.Collections.ArrayList])]
     param(

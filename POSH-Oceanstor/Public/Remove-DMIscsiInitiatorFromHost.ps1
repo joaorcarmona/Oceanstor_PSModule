@@ -1,39 +1,39 @@
-<#
-.SYNOPSIS
-    Removes an iSCSI initiator association from an OceanStor host.
-
-.DESCRIPTION
-    Detaches an iSCSI initiator identifier from the specified host without deleting the initiator from the storage system.
-    The cmdlet validates the host name and initiator membership before calling the OceanStor API. It supports -WhatIf and -Confirm.
-
-.PARAMETER WebSession
-    Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
-
-.PARAMETER HostName
-    Name of the host from which the iSCSI initiator should be removed.
-
-.PARAMETER Identifier
-    iSCSI initiator identifier to remove from the host.
-
-.PARAMETER VstoreId
-    Optional vStore ID used to scope the initiator operation.
-
-.INPUTS
-    System.Management.Automation.PSCustomObject
-
-.OUTPUTS
-    System.Management.Automation.PSCustomObject
-    Returns the OceanStor API error object.
-
-.EXAMPLE
-    PS> Remove-DMIscsiInitiatorFromHost -HostName 'host01' -Identifier 'iqn.2026-06.test:host01' -WhatIf
-
-    Shows what would happen if the iSCSI initiator were detached from host01.
-
-.NOTES
-    Filename: Remove-DMIscsiInitiatorFromHost.ps1
-#>
 function Remove-DMIscsiInitiatorFromHost {
+    <#
+    .SYNOPSIS
+        Removes an iSCSI initiator association from an OceanStor host.
+
+    .DESCRIPTION
+        Detaches an iSCSI initiator identifier from the specified host without deleting the initiator from the storage system.
+        The cmdlet validates the host name and initiator membership before calling the OceanStor API. It supports -WhatIf and -Confirm.
+
+    .PARAMETER WebSession
+        Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
+
+    .PARAMETER HostName
+        Name of the host from which the iSCSI initiator should be removed.
+
+    .PARAMETER Identifier
+        iSCSI initiator identifier to remove from the host.
+
+    .PARAMETER VstoreId
+        Optional vStore ID used to scope the initiator operation.
+
+    .INPUTS
+        System.Management.Automation.PSCustomObject
+
+    .OUTPUTS
+        System.Management.Automation.PSCustomObject
+        Returns the OceanStor API error object.
+
+    .EXAMPLE
+        PS> Remove-DMIscsiInitiatorFromHost -HostName 'host01' -Identifier 'iqn.2026-06.test:host01' -WhatIf
+
+        Shows what would happen if the iSCSI initiator were detached from host01.
+
+    .NOTES
+        Filename: Remove-DMIscsiInitiatorFromHost.ps1
+    #>
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
 
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
