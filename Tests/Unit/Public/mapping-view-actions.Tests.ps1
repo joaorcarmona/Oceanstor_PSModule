@@ -18,6 +18,8 @@ BeforeDiscovery {
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorMappingView.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Select-DMResponseData.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Assert-DMApiSuccess.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Get-DMApiErrorMessage.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Invoke-DMPagedRequest.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\New-DMMappingView.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMMappingView.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Remove-DMMappingView.ps1"
@@ -85,7 +87,7 @@ Describe 'Mapping view commands' {
 
         $result[0].GetType().Name | Should -Be 'OceanStorMappingView'
         $script:method | Should -Be 'GET'
-        $script:resource | Should -Be 'mappingview/associate?TYPE=245&ASSOCIATEOBJTYPE=14&ASSOCIATEOBJID=hg-01&vstoreId=7'
+        $script:resource | Should -BeLike 'mappingview/associate?TYPE=245&ASSOCIATEOBJTYPE=14&ASSOCIATEOBJID=hg-01&vstoreId=7*'
     }
 
     It 'queries associated mapping views for LUN and port groups with their REST object types' {
@@ -98,8 +100,8 @@ Describe 'Mapping view commands' {
         $null = Get-DMMappingView -WebSession $script:session -LunGroupName 'production'
         $null = Get-DMMappingView -WebSession $script:session -PortGroupName 'front-end'
 
-        $script:resources | Should -Contain 'mappingview/associate?TYPE=245&ASSOCIATEOBJTYPE=256&ASSOCIATEOBJID=lg-01'
-        $script:resources | Should -Contain 'mappingview/associate?TYPE=245&ASSOCIATEOBJTYPE=257&ASSOCIATEOBJID=pg-01'
+        @($script:resources -like 'mappingview/associate?TYPE=245&ASSOCIATEOBJTYPE=256&ASSOCIATEOBJID=lg-01*').Count | Should -BeGreaterThan 0
+        @($script:resources -like 'mappingview/associate?TYPE=245&ASSOCIATEOBJTYPE=257&ASSOCIATEOBJID=pg-01*').Count | Should -BeGreaterThan 0
     }
 
     It 'returns no mapping views when the API contains no data property' {

@@ -185,11 +185,7 @@
         $resource += "${separator}vstoreId=$VstoreId"
     }
 
-    $queryResult = Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource $resource
-    $response = @()
-    if ($null -ne $queryResult -and $null -ne $queryResult.PSObject.Properties['data']) {
-        $response = @($queryResult.data)
-    }
+    $response = Invoke-DMPagedRequest -WebSession $session -Resource $resource
     $defaultDisplaySet = 'Id', 'Name', 'Host Group Id', 'LUN Group Id', 'Port Group Id', 'vStore Name'
     $displayPropertySet = New-Object System.Management.Automation.PSPropertySet('DefaultDisplayPropertySet', [string[]]$defaultDisplaySet)
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)

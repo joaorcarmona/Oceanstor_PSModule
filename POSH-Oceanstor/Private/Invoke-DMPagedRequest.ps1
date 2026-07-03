@@ -33,6 +33,11 @@ function Invoke-DMPagedRequest {
     .PARAMETER PageSize
         Number of results to request per page. Defaults to 100, the OceanStor maximum per
         single request.
+
+    .PARAMETER ApiV2
+        Routes the request through the /api/v2/ endpoint instead of the default
+        /deviceManager/rest/ path, forwarded as-is to Invoke-DeviceManager on every page
+        and on the unpaged fallback request.
     #>
     param(
         [pscustomobject]$WebSession,
@@ -41,7 +46,9 @@ function Invoke-DMPagedRequest {
         [string]$Resource,
 
         [ValidateRange(1, 100)]
-        [int]$PageSize = 100
+        [int]$PageSize = 100,
+
+        [switch]$ApiV2
     )
 
     $allData = [System.Collections.Generic.List[object]]::new()
@@ -52,12 +59,12 @@ function Invoke-DMPagedRequest {
         $end = $start + $PageSize
         $pagedResource = "${Resource}${separator}range=[$start-$end]"
 
-        $response = Invoke-DeviceManager -WebSession $WebSession -Method 'GET' -Resource $pagedResource
+        $response = Invoke-DeviceManager -WebSession $WebSession -Method 'GET' -Resource $pagedResource -ApiV2:$ApiV2
         $errorProperty = if ($null -ne $response) { $response.PSObject.Properties['error'] } else { $null }
         if ($null -ne $errorProperty -and $errorProperty.Value.Code -ne 0) {
             if ($start -eq 0 -and $errorProperty.Value.Code -eq 50331651) {
                 Write-Warning "Resource '$Resource' rejected the range parameter (code 50331651); falling back to a single unpaged request. If the collection exceeds $PageSize items and the array's unpaged endpoint truncates rather than erroring, this may silently return an incomplete result."
-                $response = Invoke-DeviceManager -WebSession $WebSession -Method 'GET' -Resource $Resource
+                $response = Invoke-DeviceManager -WebSession $WebSession -Method 'GET' -Resource $Resource -ApiV2:$ApiV2
                 $errorProperty = if ($null -ne $response) { $response.PSObject.Properties['error'] } else { $null }
                 if ($null -eq $errorProperty -or $errorProperty.Value.Code -eq 0) {
                     $dataProperty = if ($null -ne $response) { $response.PSObject.Properties['data'] } else { $null }

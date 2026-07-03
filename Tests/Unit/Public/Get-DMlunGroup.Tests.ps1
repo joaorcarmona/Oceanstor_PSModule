@@ -7,6 +7,8 @@ BeforeDiscovery {
         }
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Select-DMResponseData.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Get-DMApiErrorMessage.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Invoke-DMPagedRequest.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorLunGroup.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMlunGroup.ps1"
@@ -35,13 +37,13 @@ Describe 'Get-DMlunGroup' {
     It 'queries the lungroup endpoint without a query string by default' {
         $null = Get-DMlunGroup -WebSession $script:session
 
-        $script:resource | Should -Be 'lungroup'
+        $script:resource | Should -BeLike 'lungroup*'
     }
 
     It 'appends ?vstoreId when VstoreId is supplied' {
         $null = Get-DMlunGroup -WebSession $script:session -VstoreId 'vs-01'
 
-        $script:resource | Should -Be 'lungroup?vstoreId=vs-01'
+        $script:resource | Should -BeLike 'lungroup?vstoreId=vs-01*'
     }
 
     It 'does not append vstoreId when VstoreId is omitted' {
@@ -66,13 +68,13 @@ Describe 'Get-DMlunGroup' {
 
         $result.Count | Should -Be 1
         $result[0].Name | Should -Be 'production-luns'
-        $script:resource | Should -Be 'lungroup?filter=NAME::production-luns'
+        $script:resource | Should -BeLike 'lungroup?filter=NAME::production-luns*'
     }
 
     It 'filters by Name using a fuzzy server-side hint for a wildcard keyword' {
         Mock Invoke-DeviceManager {
             $script:resource = $Resource
-            if ($Resource -eq 'lungroup?filter=NAME:prod') {
+            if ($Resource -like 'lungroup?filter=NAME:prod*') {
                 return [pscustomobject]@{ data = @([pscustomobject]@{ ID = '1'; NAME = 'production-luns'; TYPE = 256; ISADD2MAPPINGVIEW = 'false' }) }
             }
             [pscustomobject]@{ data = @() }
@@ -82,7 +84,7 @@ Describe 'Get-DMlunGroup' {
 
         $result.Count | Should -Be 1
         $result[0].Name | Should -Be 'production-luns'
-        $script:resource | Should -Be 'lungroup?filter=NAME:prod'
+        $script:resource | Should -BeLike 'lungroup?filter=NAME:prod*'
     }
 
     It 'combines Name and VstoreId in the same query string' {
@@ -93,7 +95,7 @@ Describe 'Get-DMlunGroup' {
 
         $null = Get-DMlunGroup -WebSession $script:session -Name 'production-luns' -VstoreId 'vs-01'
 
-        $script:resource | Should -Be 'lungroup?filter=NAME::production-luns&vstoreId=vs-01'
+        $script:resource | Should -BeLike 'lungroup?filter=NAME::production-luns&vstoreId=vs-01*'
     }
 }
 }

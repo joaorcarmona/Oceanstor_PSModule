@@ -123,7 +123,7 @@ function Get-DMShare {
         # fetched and the client-side -Like re-check below narrows it down.
     }
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource $resourceQuery | Select-DMResponseData
+    $response = Invoke-DMPagedRequest -WebSession $session -Resource $resourceQuery
     $shares = New-Object System.Collections.ArrayList
 
     foreach ($tshare in $response) {

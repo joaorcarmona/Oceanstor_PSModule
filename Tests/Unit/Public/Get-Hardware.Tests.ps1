@@ -15,6 +15,8 @@ BeforeDiscovery {
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Get-DMparsedElabel.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Set-DMHostInitiator.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Select-DMResponseData.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Get-DMApiErrorMessage.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Invoke-DMPagedRequest.ps1"
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
         Get-ChildItem -LiteralPath "$testRoot\..\..\..\POSH-Oceanstor\Private" -Filter 'class-*.ps1' |
@@ -66,7 +68,7 @@ Describe 'Public getter functions' {
                 Should -Be @('Name', 'Level', 'Alarm Status', 'Location', 'Start time')
             $result[0].'Event Type' | Should -Be 'alarm'
             $result[0].Session | Should -Be $script:session
-            $script:resource | Should -Be 'alarm/historyalarm?filter=alarmStatus::2'
+            $script:resource | Should -BeLike 'alarm/historyalarm?filter=alarmStatus::2*'
         }
 
         It 'gets battery backup units' {

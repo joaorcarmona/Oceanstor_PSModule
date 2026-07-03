@@ -3,7 +3,8 @@ BeforeAll {
         param(
             [pscustomobject]$WebSession,
             [string]$Method,
-            [string]$Resource
+            [string]$Resource,
+            [switch]$ApiV2
         )
     }
 
@@ -151,5 +152,35 @@ Describe 'Invoke-DMPagedRequest' {
         }
 
         { Invoke-DMPagedRequest -WebSession $script:session -Resource 'lun' } | Should -Not -Throw
+    }
+
+    It 'forwards -ApiV2 to Invoke-DeviceManager on the paged request' {
+        $script:capturedApiV2 = $null
+        Mock Invoke-DeviceManager {
+            $script:capturedApiV2 = $ApiV2.IsPresent
+            [pscustomobject]@{ data = @() }
+        }
+
+        Invoke-DMPagedRequest -WebSession $script:session -Resource 'protectgroup' -ApiV2
+
+        $script:capturedApiV2 | Should -BeTrue
+    }
+
+    It 'forwards -ApiV2 to Invoke-DeviceManager on the unpaged fallback request' {
+        $global:PagedCalls = [System.Collections.Generic.List[bool]]::new()
+        Mock Invoke-DeviceManager {
+            $global:PagedCalls.Add($ApiV2.IsPresent)
+            if ($Resource -like '*range=*') {
+                [pscustomobject]@{ error = [pscustomobject]@{ Code = 50331651; description = 'The entered parameter is incorrect.' } }
+            }
+            else {
+                [pscustomobject]@{ data = @([pscustomobject]@{ Id = '1' }) }
+            }
+        }
+
+        Invoke-DMPagedRequest -WebSession $script:session -Resource 'protectgroup' -ApiV2 -WarningAction SilentlyContinue
+
+        $global:PagedCalls[0] | Should -BeTrue
+        $global:PagedCalls[1] | Should -BeTrue
     }
 }

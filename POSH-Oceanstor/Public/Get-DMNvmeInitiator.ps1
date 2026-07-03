@@ -116,11 +116,7 @@ function Get-DMNvmeInitiator {
         }
     }
 
-    $queryResult = Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource $resource
-    $response = @()
-    if ($null -ne $queryResult -and $null -ne $queryResult.PSObject.Properties['data']) {
-        $response = @($queryResult.data)
-    }
+    $response = Invoke-DMPagedRequest -WebSession $session -Resource $resource
     $result = @()
     foreach ($initiator in $response) {
         $item = [OceanstorHostinitiatorNVMe]::new($initiator, $session)

@@ -95,7 +95,7 @@ function Get-DMnfsFileClient {
         # fetched and the client-side -Like re-check below narrows it down.
     }
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource $resource | Select-DMResponseData
+    $response = Invoke-DMPagedRequest -WebSession $session -Resource $resource
     $exports = New-Object System.Collections.ArrayList
 
     foreach ($fs in $response) {

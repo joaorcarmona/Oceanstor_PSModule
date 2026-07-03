@@ -7,6 +7,8 @@ BeforeDiscovery {
         }
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Select-DMResponseData.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Get-DMApiErrorMessage.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Invoke-DMPagedRequest.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMhostGroup.ps1"
 
         Export-ModuleMember -Function Get-DMhostGroup
@@ -33,13 +35,13 @@ Describe 'Get-DMhostGroup' {
     It 'queries the hostgroup endpoint without a query string by default' {
         $null = Get-DMhostGroup -WebSession $script:session
 
-        $script:resource | Should -Be 'hostgroup'
+        $script:resource | Should -BeLike 'hostgroup*'
     }
 
     It 'appends ?vstoreId when VstoreId is supplied' {
         $null = Get-DMhostGroup -WebSession $script:session -VstoreId 'vs-01'
 
-        $script:resource | Should -Be 'hostgroup?vstoreId=vs-01'
+        $script:resource | Should -BeLike 'hostgroup?vstoreId=vs-01*'
     }
 
     It 'does not append vstoreId when VstoreId is omitted' {

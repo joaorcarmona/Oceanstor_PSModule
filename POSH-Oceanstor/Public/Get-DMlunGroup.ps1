@@ -109,7 +109,7 @@ function Get-DMlunGroup {
         $resource += '?' + ($queryParams -join '&')
     }
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource $resource | Select-DMResponseData
+    $response = Invoke-DMPagedRequest -WebSession $session -Resource $resource
     $lunGroups = New-Object System.Collections.ArrayList
 
     foreach ($lgroup in $response) {

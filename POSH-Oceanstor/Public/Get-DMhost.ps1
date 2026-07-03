@@ -61,12 +61,7 @@ function Get-DMhost {
     if ($VstoreId) {
         $resource += "?vstoreId=$VstoreId"
     }
-    $queryResult = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource $resource
-    $errorProperty = if ($null -ne $queryResult) { $queryResult.PSObject.Properties['error'] } else { $null }
-    if ($null -ne $errorProperty -and $errorProperty.Value.Code -ne 0) {
-        throw (Get-DMApiErrorMessage -Code $errorProperty.Value.Code -Description $errorProperty.Value.description -ResourceContext $resource)
-    }
-    $response = $queryResult.data
+    $response = Invoke-DMPagedRequest -WebSession $session -Resource $resource
     $hosts = New-Object System.Collections.ArrayList
 
     foreach ($thost in $response) {

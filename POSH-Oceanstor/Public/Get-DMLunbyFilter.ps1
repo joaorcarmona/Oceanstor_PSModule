@@ -143,7 +143,7 @@ function Get-DMLunbyFilter {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource $resource | Select-DMResponseData
+    $response = Invoke-DMPagedRequest -WebSession $session -Resource $resource
     $StorageLuns = New-Object System.Collections.ArrayList
 
     foreach ($tlun in $response) {

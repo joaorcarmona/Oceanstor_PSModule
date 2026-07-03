@@ -48,8 +48,7 @@ function Get-DMProtectionGroup {
     else {
         $script:CurrentOceanstorSession
     }
-    $response = Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource 'protectgroup' -ApiV2 |
-        Select-DMResponseData
+    $response = Invoke-DMPagedRequest -WebSession $session -Resource 'protectgroup' -ApiV2
     $defaultDisplaySet = 'Id', 'Name', 'Lun Group Name', 'Lun Count', 'Snapshot Group Count', 'vStore Name'
     $displayPropertySet = New-Object System.Management.Automation.PSPropertySet('DefaultDisplayPropertySet', [string[]]$defaultDisplaySet)
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)

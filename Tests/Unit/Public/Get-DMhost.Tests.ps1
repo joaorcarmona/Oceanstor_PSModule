@@ -10,6 +10,8 @@ BeforeDiscovery {
             $InputObject
         }
 
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Get-DMApiErrorMessage.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Invoke-DMPagedRequest.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMhost.ps1"
 
         Export-ModuleMember -Function Get-DMhost
@@ -36,13 +38,13 @@ Describe 'Get-DMhost' {
     It 'queries the host endpoint without a query string by default' {
         $null = Get-DMhost -WebSession $script:session
 
-        $script:resource | Should -Be 'host'
+        $script:resource | Should -BeLike 'host*'
     }
 
     It 'appends ?vstoreId when VstoreId is supplied' {
         $null = Get-DMhost -WebSession $script:session -VstoreId 'vs-01'
 
-        $script:resource | Should -Be 'host?vstoreId=vs-01'
+        $script:resource | Should -BeLike 'host?vstoreId=vs-01*'
     }
 
     It 'does not append vstoreId when VstoreId is omitted' {

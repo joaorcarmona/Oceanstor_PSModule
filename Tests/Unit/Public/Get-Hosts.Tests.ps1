@@ -10,6 +10,7 @@ BeforeDiscovery {
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Select-DMResponseData.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Get-DMFilterableProperty.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Assert-DMValidFilterProperty.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Invoke-DMPagedRequest.ps1"
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
         Get-ChildItem -LiteralPath "$testRoot\..\..\..\POSH-Oceanstor\Private" -Filter 'class-*.ps1' |
@@ -49,10 +50,11 @@ Describe 'Public getter functions' {
             Mock Invoke-DeviceManager {
                 param($WebSession, $Method, $Resource)
 
-                switch ($Resource) {
+                switch -Wildcard ($Resource) {
                     'host' { [pscustomobject]@{ data = $script:hostRecords } }
-                    'fc_initiator?PARENTID=host-01' { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'fc-01'; TYPE = 223; PARENTID = 'host-01' }) } }
-                    'iscsi_initiator?PARENTID=host-01' { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'iscsi-01'; TYPE = 222; PARENTID = 'host-01' }) } }
+                    'host?range=*' { [pscustomobject]@{ data = $script:hostRecords } }
+                    'fc_initiator?PARENTID=host-01*' { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'fc-01'; TYPE = 223; PARENTID = 'host-01' }) } }
+                    'iscsi_initiator?PARENTID=host-01*' { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'iscsi-01'; TYPE = 222; PARENTID = 'host-01' }) } }
                     default { [pscustomobject]@{ data = @() } }
                 }
             }
@@ -109,7 +111,7 @@ Describe 'Public getter functions' {
             $script:capturedResource = $null
             Mock Invoke-DeviceManager {
                 param($WebSession, $Method, $Resource)
-                if ($Resource -eq 'host?filter=ID::host-01') {
+                if ($Resource -like 'host?filter=ID::host-01*') {
                     $script:capturedResource = $Resource
                     return [pscustomobject]@{ data = @($script:hostRecords[0]) }
                 }
@@ -119,14 +121,14 @@ Describe 'Public getter functions' {
             $result = (Get-DMhostbyFilter -WebSession $script:session -Filter 'Id' -Keyword 'host-01')[0]
 
             $result.id | Should -Be 'host-01'
-            $script:capturedResource | Should -Be 'host?filter=ID::host-01'
+            $script:capturedResource | Should -BeLike 'host?filter=ID::host-01*'
         }
 
         It 'filters hosts by a known field through a fuzzy server-side hint when Keyword has a trailing wildcard' {
             $script:capturedResource = $null
             Mock Invoke-DeviceManager {
                 param($WebSession, $Method, $Resource)
-                if ($Resource -eq 'host?filter=NAME:server-a') {
+                if ($Resource -like 'host?filter=NAME:server-a*') {
                     $script:capturedResource = $Resource
                     return [pscustomobject]@{ data = $script:hostRecords }
                 }
@@ -137,7 +139,7 @@ Describe 'Public getter functions' {
 
             $result.Count | Should -Be 1
             $result[0].id | Should -Be 'host-01'
-            $script:capturedResource | Should -Be 'host?filter=NAME:server-a'
+            $script:capturedResource | Should -BeLike 'host?filter=NAME:server-a*'
         }
 
         It 'exposes completion metadata for -Filter, sourced from a live host sample' {
@@ -162,7 +164,7 @@ Describe 'Public getter functions' {
             $script:capturedResource = $null
             Mock Invoke-DeviceManager {
                 param($WebSession, $Method, $Resource)
-                if ($Resource -eq 'host') {
+                if ($Resource -like 'host?range=*') {
                     $script:capturedResource = $Resource
                     return [pscustomobject]@{ data = $script:hostRecords }
                 }
@@ -173,7 +175,7 @@ Describe 'Public getter functions' {
 
             $result.Count | Should -Be 1
             $result[0].id | Should -Be 'host-02'
-            $script:capturedResource | Should -Be 'host'
+            $script:capturedResource | Should -BeLike 'host?range=*'
         }
 
         It 'gets hosts by host group id' {
@@ -196,9 +198,9 @@ Describe 'Public getter functions' {
         It 'gets hosts by host group name' {
             Mock Invoke-DeviceManager {
                 param($WebSession, $Method, $Resource)
-                switch ($Resource) {
-                    'hostgroup' { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 2; NAME = 'cluster-b'; TYPE = 0; ISADD2MAPPINGVIEW = 'true' }) } }
-                    'host/associate?ASSOCIATEOBJTYPE=14&ASSOCIATEOBJID=2' { [pscustomobject]@{ data = @($script:hostRecords[1]) } }
+                switch -Wildcard ($Resource) {
+                    'host/associate?ASSOCIATEOBJTYPE=14&ASSOCIATEOBJID=2*' { [pscustomobject]@{ data = @($script:hostRecords[1]) }; break }
+                    'hostgroup*' { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 2; NAME = 'cluster-b'; TYPE = 0; ISADD2MAPPINGVIEW = 'true' }) }; break }
                     default { [pscustomobject]@{ data = @() } }
                 }
             }

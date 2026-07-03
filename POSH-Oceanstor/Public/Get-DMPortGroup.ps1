@@ -91,8 +91,7 @@ function Get-DMPortGroup {
         $resource += '?' + ($queryParams -join '&')
     }
 
-    $response = Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource $resource |
-        Select-DMResponseData
+    $response = Invoke-DMPagedRequest -WebSession $session -Resource $resource
     $defaultDisplaySet = 'Id', 'Name', 'Port Type', 'Port Count', 'Is Mapped', 'vStore Name'
     $displayPropertySet = New-Object System.Management.Automation.PSPropertySet('DefaultDisplayPropertySet', [string[]]$defaultDisplaySet)
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)

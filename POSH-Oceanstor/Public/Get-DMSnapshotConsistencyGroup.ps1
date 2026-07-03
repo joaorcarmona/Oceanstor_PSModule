@@ -48,8 +48,7 @@ function Get-DMSnapshotConsistencyGroup {
     else {
         $script:CurrentOceanstorSession
     }
-    $response = Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource 'SNAPSHOT_CONSISTENCY_GROUP' |
-        Select-DMResponseData
+    $response = Invoke-DMPagedRequest -WebSession $session -Resource 'SNAPSHOT_CONSISTENCY_GROUP'
     $defaultDisplaySet = 'Id', 'Name', 'Protection Group Name', 'Running Status', 'Restore Speed', 'vStore Name'
     $displayPropertySet = New-Object System.Management.Automation.PSPropertySet('DefaultDisplayPropertySet', [string[]]$defaultDisplaySet)
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)

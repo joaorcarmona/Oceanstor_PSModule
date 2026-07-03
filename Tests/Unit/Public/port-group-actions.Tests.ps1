@@ -19,6 +19,8 @@ BeforeDiscovery {
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Get-DMPortGroupCandidate.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Select-DMResponseData.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Assert-DMApiSuccess.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Get-DMApiErrorMessage.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Invoke-DMPagedRequest.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\New-DMPortGroup.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMPortGroup.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Remove-DMPortGroup.ps1"
@@ -80,7 +82,7 @@ Describe 'Port group commands' {
         $result[0].GetType().Name | Should -Be 'OceanstorPortGroup'
         $result[0].'Port Type' | Should -Be 'Physical Port'
         $script:method | Should -Be 'GET'
-        $script:resource | Should -Be 'portgroup?vstoreId=7'
+        $script:resource | Should -BeLike 'portgroup?vstoreId=7*'
     }
 
     It 'removes a resolved port group by ID' {

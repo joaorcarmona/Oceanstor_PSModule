@@ -135,7 +135,7 @@ function Get-DMhostbyFilter {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource $resource | Select-DMResponseData
+    $response = Invoke-DMPagedRequest -WebSession $session -Resource $resource
     $hosts = New-Object System.Collections.ArrayList
 
     foreach ($thost in $response) {

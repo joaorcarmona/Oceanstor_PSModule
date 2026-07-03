@@ -54,7 +54,7 @@ function Get-DMfreeDisk {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource "disk" | Select-DMResponseData
+    $response = Invoke-DMPagedRequest -WebSession $session -Resource "disk"
     $Storagedisks = New-Object System.Collections.ArrayList
 
     foreach ($tdisk in $response) {

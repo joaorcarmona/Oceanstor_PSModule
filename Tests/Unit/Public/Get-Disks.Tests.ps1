@@ -7,6 +7,8 @@ BeforeDiscovery {
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Get-DMparsedElabel.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Set-DMHostInitiator.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Select-DMResponseData.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Get-DMApiErrorMessage.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Invoke-DMPagedRequest.ps1"
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
         Get-ChildItem -LiteralPath "$testRoot\..\..\..\POSH-Oceanstor\Private" -Filter 'class-*.ps1' |
@@ -80,7 +82,7 @@ Describe 'Public getter functions' {
             Mock Invoke-DeviceManager {
                 param($WebSession, $Method, $Resource)
                 switch -Wildcard ($Resource) {
-                    'disk' { [pscustomobject]@{ data = @(New-TestDiskFixture) } }
+                    'disk*' { [pscustomobject]@{ data = @(New-TestDiskFixture) } }
                     'storagepool*' {
                         [pscustomobject]@{ data = @(
                             (New-TestStoragePool -Id 'pool-01' -Name 'performance')

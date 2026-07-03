@@ -112,12 +112,7 @@ function Get-DMHostInitiator {
         }
     }
 
-    $queryResult = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource $resource
-    $response = @()
-
-    if ($null -ne $queryResult -and $null -ne $queryResult.PSObject.Properties['data']) {
-        $response = @($queryResult.data)
-    }
+    $response = Invoke-DMPagedRequest -WebSession $session -Resource $resource
 
     $HostInitiators = New-Object System.Collections.ArrayList
 

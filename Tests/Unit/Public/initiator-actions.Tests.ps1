@@ -22,6 +22,8 @@ BeforeDiscovery {
         }
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Test-WWNAddress.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Get-DMApiErrorMessage.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Invoke-DMPagedRequest.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorHostinitiatorFC.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
@@ -132,7 +134,7 @@ Describe 'Initiator creation and query commands' {
         $result[0].GetType().Name | Should -Be 'OceanstorHostinitiatorNVMe'
         $result[0].PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
             Should -Be @('Id', 'Type', 'Host Name', 'Running Status', 'Is Free')
-        $script:resource | Should -Be 'NVMe_over_RoCE_initiator/associate?ASSOCIATEOBJTYPE=21&ASSOCIATEOBJID=host-01'
+        $script:resource | Should -BeLike 'NVMe_over_RoCE_initiator/associate?ASSOCIATEOBJTYPE=21&ASSOCIATEOBJID=host-01*'
     }
 
     It 'returns no NVMe objects when the API contains no data property' {

@@ -137,9 +137,9 @@ Describe 'Public getter functions' {
             Mock Invoke-DeviceManager {
                 param($WebSession, $Method, $Resource)
 
-                switch ($Resource) {
-                    'lungroup' { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 12; NAME = 'empty-luns'; GROUPTYPE = 0; CAPCITY = 0 }) } }
-                    'lungroup/12' { [pscustomobject]@{ data = [pscustomobject]@{ ASSOCIATELUNIDLIST = '[]' } } }
+                switch -Wildcard ($Resource) {
+                    'lungroup/12' { [pscustomobject]@{ data = [pscustomobject]@{ ASSOCIATELUNIDLIST = '[]' } }; break }
+                    'lungroup*'   { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 12; NAME = 'empty-luns'; GROUPTYPE = 0; CAPCITY = 0 }) }; break }
                 }
             }
 
@@ -163,7 +163,7 @@ Describe 'Public getter functions' {
             Mock Invoke-DeviceManager {
                 param($WebSession, $Method, $Resource)
                 $script:keywordResource = $Resource
-                if ($Resource -eq 'lun?filter=NAME::finance') {
+                if ($Resource -like 'lun?filter=NAME::finance*') {
                     return [pscustomobject]@{ data = @(New-TestLun -Id 'lun-01' -Name 'finance') }
                 }
                 [pscustomobject]@{ data = @() }
@@ -173,14 +173,14 @@ Describe 'Public getter functions' {
 
             $result.Count | Should -Be 1
             $result[0].Id | Should -Be 'lun-01'
-            $script:keywordResource | Should -Be 'lun?filter=NAME::finance'
+            $script:keywordResource | Should -BeLike 'lun?filter=NAME::finance*'
         }
 
         It 'falls back to WWN when Keyword matches no LUN by Name' {
             Mock Invoke-DeviceManager {
                 param($WebSession, $Method, $Resource)
                 $script:keywordResources += $Resource
-                if ($Resource -eq 'lun?filter=WWN::658be72100f6793b6bb9512e000000e1') {
+                if ($Resource -like 'lun?filter=WWN::658be72100f6793b6bb9512e000000e1*') {
                     return [pscustomobject]@{ data = @(New-TestLun -Id 'lun-02' -WWN '658be72100f6793b6bb9512e000000e1') }
                 }
                 [pscustomobject]@{ data = @() }
@@ -191,17 +191,15 @@ Describe 'Public getter functions' {
 
             $result.Count | Should -Be 1
             $result[0].Id | Should -Be 'lun-02'
-            $script:keywordResources | Should -Be @(
-                'lun?filter=NAME::658be72100f6793b6bb9512e000000e1',
-                'lun?filter=WWN::658be72100f6793b6bb9512e000000e1'
-            )
+            $script:keywordResources[0] | Should -BeLike 'lun?filter=NAME::658be72100f6793b6bb9512e000000e1*'
+            $script:keywordResources[1] | Should -BeLike 'lun?filter=WWN::658be72100f6793b6bb9512e000000e1*'
         }
 
         It 'supports a wildcard Keyword' {
             Mock Invoke-DeviceManager {
                 param($WebSession, $Method, $Resource)
                 $script:keywordResource = $Resource
-                if ($Resource -eq 'lun?filter=NAME:fin') {
+                if ($Resource -like 'lun?filter=NAME:fin*') {
                     return [pscustomobject]@{ data = @(New-TestLun -Id 'lun-01' -Name 'finance') }
                 }
                 [pscustomobject]@{ data = @() }
@@ -211,7 +209,7 @@ Describe 'Public getter functions' {
 
             $result.Count | Should -Be 1
             $result[0].Id | Should -Be 'lun-01'
-            $script:keywordResource | Should -Be 'lun?filter=NAME:fin'
+            $script:keywordResource | Should -BeLike 'lun?filter=NAME:fin*'
         }
 
         It 'gets LUN snapshots' {
@@ -287,7 +285,7 @@ Describe 'Public getter functions' {
             $result = (Get-DMLunbyFilter -WebSession $script:session -Filter Name -Keyword finance)[0]
 
             $result.Id | Should -Be 'lun-01'
-            $script:filterResource | Should -Be 'lun?filter=NAME::finance'
+            $script:filterResource | Should -BeLike 'lun?filter=NAME::finance*'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
                 Should -Be @('Id', 'Name', 'Health Status', 'Lun Size', 'WWN')
             $result.'Allocation Type' | Should -Be 'Thin'
@@ -297,7 +295,7 @@ Describe 'Public getter functions' {
             Mock Invoke-DeviceManager {
                 param($WebSession, $Method, $Resource)
                 $script:filterResource = $Resource
-                if ($Resource -eq 'lun?filter=NAME:fin') {
+                if ($Resource -like 'lun?filter=NAME:fin*') {
                     return [pscustomobject]@{ data = @(New-TestLun -Id 'lun-01' -Name 'finance') }
                 }
                 [pscustomobject]@{ data = @() }
@@ -307,7 +305,7 @@ Describe 'Public getter functions' {
 
             $result.Count | Should -Be 1
             $result[0].Id | Should -Be 'lun-01'
-            $script:filterResource | Should -Be 'lun?filter=NAME:fin'
+            $script:filterResource | Should -BeLike 'lun?filter=NAME:fin*'
         }
 
         It 'exposes completion metadata for -Filter, sourced from a live LUN sample' {
@@ -337,7 +335,7 @@ Describe 'Public getter functions' {
 
             $result = @(Get-DMLunbyFilter -WebSession $script:session -Filter 'Allocation Type' -Keyword 'Thin')
 
-            $script:filterResource | Should -Be 'lun'
+            $script:filterResource | Should -BeLike 'lun?range=*'
             $result.Count | Should -Be 2
         }
 
@@ -351,7 +349,7 @@ Describe 'Public getter functions' {
             $result = (Get-DMlunByWWN -WebSession $script:session -WWN 'wwn-b')[0]
 
             $result.Id | Should -Be 'lun-02'
-            $script:wwnResource | Should -Be 'lun?filter=WWN::wwn-b'
+            $script:wwnResource | Should -BeLike 'lun?filter=WWN::wwn-b*'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
                 Should -Be @('Id', 'Name', 'Health Status', 'Lun Size', 'WWN')
             $result.'Allocation Type' | Should -Be 'Thin'
@@ -361,7 +359,7 @@ Describe 'Public getter functions' {
             Mock Invoke-DeviceManager {
                 param($WebSession, $Method, $Resource)
                 $script:wwnResource = $Resource
-                if ($Resource -eq 'lun?filter=WWN:wwn-') {
+                if ($Resource -like 'lun?filter=WWN:wwn-*') {
                     return [pscustomobject]@{ data = @(New-TestLun -Id 'lun-02' -WWN 'wwn-b') }
                 }
                 [pscustomobject]@{ data = @() }
@@ -371,7 +369,7 @@ Describe 'Public getter functions' {
 
             $result.Count | Should -Be 1
             $result[0].Id | Should -Be 'lun-02'
-            $script:wwnResource | Should -Be 'lun?filter=WWN:wwn-'
+            $script:wwnResource | Should -BeLike 'lun?filter=WWN:wwn-*'
         }
 
         It 'gets a LUN by name using an exact server-side filter' {
@@ -384,7 +382,7 @@ Describe 'Public getter functions' {
             $result = (Get-DMlunByName -WebSession $script:session -Name 'finance')[0]
 
             $result.Id | Should -Be 'lun-01'
-            $script:nameResource | Should -Be 'lun?filter=NAME::finance'
+            $script:nameResource | Should -BeLike 'lun?filter=NAME::finance*'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
                 Should -Be @('Id', 'Name', 'Health Status', 'Lun Size', 'WWN')
             $result.'Allocation Type' | Should -Be 'Thin'
@@ -394,7 +392,7 @@ Describe 'Public getter functions' {
             Mock Invoke-DeviceManager {
                 param($WebSession, $Method, $Resource)
                 $script:nameResource = $Resource
-                if ($Resource -eq 'lun?filter=NAME:fin') {
+                if ($Resource -like 'lun?filter=NAME:fin*') {
                     return [pscustomobject]@{ data = @(New-TestLun -Id 'lun-01' -Name 'finance') }
                 }
                 [pscustomobject]@{ data = @() }
@@ -404,7 +402,7 @@ Describe 'Public getter functions' {
 
             $result.Count | Should -Be 1
             $result[0].Id | Should -Be 'lun-01'
-            $script:nameResource | Should -Be 'lun?filter=NAME:fin'
+            $script:nameResource | Should -BeLike 'lun?filter=NAME:fin*'
         }
 
         It 'gets NFS file clients' {
@@ -429,14 +427,14 @@ Describe 'Public getter functions' {
 
             $result.Count | Should -Be 1
             $result[0].Name | Should -Be '10.0.0.0/24'
-            $script:clientResource | Should -Be 'NFS_SHARE_AUTH_CLIENT?filter=NAME::10.0.0.0%2F24'
+            $script:clientResource | Should -BeLike 'NFS_SHARE_AUTH_CLIENT?filter=NAME::10.0.0.0%2F24*'
         }
 
         It 'gets NFS file clients by Name using a fuzzy server-side hint for a wildcard keyword' {
             Mock Invoke-DeviceManager {
                 param($WebSession, $Method, $Resource)
                 $script:clientResource = $Resource
-                if ($Resource -eq 'NFS_SHARE_AUTH_CLIENT?filter=NAME:10.0.0') {
+                if ($Resource -like 'NFS_SHARE_AUTH_CLIENT?filter=NAME:10.0.0*') {
                     return [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'client-01'; NAME = '10.0.0.0/24'; ACCESSVAL = 1; CHARSET = 0 }) }
                 }
                 [pscustomobject]@{ data = @() }
@@ -446,7 +444,7 @@ Describe 'Public getter functions' {
 
             $result.Count | Should -Be 1
             $result[0].Name | Should -Be '10.0.0.0/24'
-            $script:clientResource | Should -Be 'NFS_SHARE_AUTH_CLIENT?filter=NAME:10.0.0'
+            $script:clientResource | Should -BeLike 'NFS_SHARE_AUTH_CLIENT?filter=NAME:10.0.0*'
         }
 
         It 'gets CIFS shares' {
@@ -471,14 +469,14 @@ Describe 'Public getter functions' {
 
             $result.Count | Should -Be 1
             $result[0].Name | Should -Be 'finance'
-            $script:cifsResource | Should -Be 'CIFSHARE?filter=NAME::finance'
+            $script:cifsResource | Should -BeLike 'CIFSHARE?filter=NAME::finance*'
         }
 
         It 'gets CIFS shares by Name using a fuzzy server-side hint for a wildcard keyword' {
             Mock Invoke-DeviceManager {
                 param($WebSession, $Method, $Resource)
                 $script:cifsResource = $Resource
-                if ($Resource -eq 'CIFSHARE?filter=NAME:fin') {
+                if ($Resource -like 'CIFSHARE?filter=NAME:fin*') {
                     return [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'cifs-01'; NAME = 'finance'; subType = 0 }) }
                 }
                 [pscustomobject]@{ data = @() }
@@ -488,7 +486,7 @@ Describe 'Public getter functions' {
 
             $result.Count | Should -Be 1
             $result[0].Name | Should -Be 'finance'
-            $script:cifsResource | Should -Be 'CIFSHARE?filter=NAME:fin'
+            $script:cifsResource | Should -BeLike 'CIFSHARE?filter=NAME:fin*'
         }
 
         It 'gets NFS shares' {
@@ -506,7 +504,7 @@ Describe 'Public getter functions' {
             Mock Invoke-DeviceManager {
                 param($WebSession, $Method, $Resource)
                 $script:nfsResource = $Resource
-                if ($Resource -eq 'NFSHARE?filter=SHAREPATH:documents') {
+                if ($Resource -like 'NFSHARE?filter=SHAREPATH:documents*') {
                     return [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'nfs-01'; NAME = ''; SHAREPATH = '/documents/'; CHARACTERENCODING = 0 }) }
                 }
                 [pscustomobject]@{ data = @() }
@@ -516,14 +514,14 @@ Describe 'Public getter functions' {
 
             $result.Count | Should -Be 1
             $result[0].'Share Path' | Should -Be '/documents/'
-            $script:nfsResource | Should -Be 'NFSHARE?filter=SHAREPATH:documents'
+            $script:nfsResource | Should -BeLike 'NFSHARE?filter=SHAREPATH:documents*'
         }
 
         It 'never requests an exact double-colon filter for NFS shares, since SHAREPATH is fuzzy-match only' {
             Mock Invoke-DeviceManager {
                 param($WebSession, $Method, $Resource)
                 $script:nfsResource = $Resource
-                if ($Resource -eq 'NFSHARE?filter=SHAREPATH:%2Fdocuments%2F') {
+                if ($Resource -like 'NFSHARE?filter=SHAREPATH:%2Fdocuments%2F*') {
                     return [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'nfs-01'; NAME = ''; SHAREPATH = '/documents/'; CHARACTERENCODING = 0 }) }
                 }
                 [pscustomobject]@{ data = @() }
@@ -532,7 +530,7 @@ Describe 'Public getter functions' {
             $result = @(Get-DMShare -WebSession $script:session -Name '/documents/' -ShareType NFS)
 
             $result.Count | Should -Be 1
-            $script:nfsResource | Should -Be 'NFSHARE?filter=SHAREPATH:%2Fdocuments%2F'
+            $script:nfsResource | Should -BeLike 'NFSHARE?filter=SHAREPATH:%2Fdocuments%2F*'
         }
 
         It 'gets storage pools' {
