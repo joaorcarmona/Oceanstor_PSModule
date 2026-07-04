@@ -33,6 +33,7 @@
     <Test Name="New-DMLunSnapshot.Tests.ps1" Function="New-DMLunSnapshot" Order="220" Priority="Mutation" DependsOn="None" />
     <Test Name="New-DMLunSnapshotCopy.Tests.ps1" Function="New-DMLunSnapshotCopy" Order="230" Priority="Mutation" DependsOn="None" />
     <Test Name="snapshot-actions.Tests.ps1" Function="Enable, Restart, Resize and Restore LUN snapshots" Order="240" Priority="Mutation" DependsOn="None" />
+    <Test Name="HyperCDPSchedule.Tests.ps1" Function="HyperCDP schedule commands" Order="245" Priority="Mutation" DependsOn="None" />
     <Test Name="Remove-DMLunSnapShot.Tests.ps1" Function="Remove-DMLunSnapShot" Order="250" Priority="Mutation" DependsOn="None" />
     <Test Name="New-host-and-groups.Tests.ps1" Function="Create host, host group and LUN group commands" Order="260" Priority="Mutation" DependsOn="None" />
     <Test Name="group-membership-actions.Tests.ps1" Function="Host-group and LUN-group membership commands" Order="270" Priority="Mutation" DependsOn="None" />

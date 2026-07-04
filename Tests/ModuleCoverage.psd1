@@ -28,6 +28,7 @@
         'OceanstorHostinitiatorFC'
         'OceanstorHostinitiatorISCSI'
         'OceanstorHostinitiatorNVMe'
+        'OceanstorHyperCDPSchedule'
         'OceanstorInterfaceModule'
         'OceanstorLIF'
         'OceanstorLunSnapshot'

@@ -14,6 +14,9 @@ function Invoke-ReadValidation {
     Add-ValidationResult -Name 'Get-DMLunSnapshot' -ExpectedType 'OceanstorLunSnapshot' -Action {
         Get-DMLunSnapshot -WebSession $session
     } | Out-Null
+    Add-ValidationResult -Name 'Get-DMHyperCDPSchedule' -ExpectedType 'OceanstorHyperCDPSchedule' -Action {
+        Get-DMHyperCDPSchedule -WebSession $session
+    } | Out-Null
     Add-ValidationResult -Name 'Get-DMProtectionGroup' -ExpectedType 'OceanstorProtectionGroup' -Action {
         Get-DMProtectionGroup -WebSession $session
     } | Out-Null

@@ -230,6 +230,17 @@ function Test-MutatingConfiguration {
     if ($configuration.Protection.Enabled -and (-not $configuration.Lun.Enabled -or -not $configuration.LunGroup.Enabled)) {
         throw 'Lun.Enabled and LunGroup.Enabled must be true when Protection.Enabled is true so protection tests use only test-owned storage.'
     }
+    if ($configuration.HyperCDPSchedule.Enabled -and -not $configuration.Lun.Enabled) {
+        throw 'Lun.Enabled must be true when HyperCDPSchedule.Enabled is true so schedule association tests use a test-owned LUN.'
+    }
+    if ($configuration.HyperCDPSchedule.Enabled) {
+        if ($configuration.HyperCDPSchedule.FrequencyValueSeconds -lt 3 -or $configuration.HyperCDPSchedule.FrequencyValueSeconds -gt 86400) {
+            throw 'HyperCDPSchedule.FrequencyValueSeconds must be between 3 and 86400.'
+        }
+        if ($configuration.HyperCDPSchedule.FrequencySnapshotCount -lt 1) {
+            throw 'HyperCDPSchedule.FrequencySnapshotCount must be greater than zero.'
+        }
+    }
 }
 
 function Wait-DMSnapshotConsistencyGroupReadyForRemoval {

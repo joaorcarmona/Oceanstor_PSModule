@@ -159,6 +159,20 @@ arrays where LUN creation or removal is slow. The same coverage can be enabled
 in a custom configuration file with `LunGroup.EnablePipelineBatchCoverage =
 $true`.
 
+Enable the non-secure HyperCDP schedule workflow in the configuration file:
+
+```powershell
+HyperCDPSchedule = @{
+    Enabled = $true
+    FrequencyValueSeconds = 3600
+    FrequencySnapshotCount = 2
+}
+```
+
+This workflow creates a disabled block HyperCDP schedule, associates the
+test-owned LUN, removes that association, toggles the schedule, and deletes it.
+It does not use protection groups or secure snapshots.
+
 Use a separate configuration file when testing a different array or subset of
 workflows:
 

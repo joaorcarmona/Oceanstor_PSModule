@@ -1,4 +1,5 @@
 . (Join-Path $PSScriptRoot 'Workflows\Lun.ps1')
+. (Join-Path $PSScriptRoot 'Workflows\HyperCDPSchedule.ps1')
 . (Join-Path $PSScriptRoot 'Workflows\LunGroup.ps1')
 . (Join-Path $PSScriptRoot 'Workflows\Host.ps1')
 . (Join-Path $PSScriptRoot 'Workflows\Nas.ps1')
@@ -36,6 +37,9 @@ function Invoke-MutationValidation {
         Add-SkippedResult -Name @(
             'New-DMLun', 'New-DMLunSnapshot', 'New-DMLunSnapshotCopy', 'Enable-DMLunSnapshot',
             'Restart-DMLunSnapshot', 'Resize-DMLunSnapshot', 'Restore-DMLunSnapshot', 'Remove-DMLunSnapShot',
+            'New-DMHyperCDPSchedule', 'Set-DMHyperCDPSchedule', 'Add-DMLunToHyperCDPSchedule',
+            'Remove-DMLunFromHyperCDPSchedule', 'Enable-DMHyperCDPSchedule', 'Disable-DMHyperCDPSchedule',
+            'Remove-DMHyperCDPSchedule',
             'Remove-DMLun', 'New-DMFileSystem', 'New-DMdTree', 'Set-DMdTree', 'Remove-DMDTree',
             'New-DMFileSystemSnapshot', 'Restore-DMFileSystemSnapshot', 'Remove-DMFileSystemSnapshot',
             'New-DMnfsShare', 'Set-DMnfsShare', 'New-DMnfsClient', 'Set-DMnfsClient', 'Remove-DMNfsClient', 'Remove-DMNfsShare',
@@ -100,13 +104,17 @@ function Invoke-MutationValidation {
         $mapLunName = New-TestName -Suffix 'maplun'
         $mapHostName = New-TestName -Suffix 'maphost'
         $mapHostGroupName = New-TestName -Suffix 'maphostgroup'
+        $hyperCdpScheduleName = New-TestName -Suffix 'hypercdp'
+        $hyperCdpScheduleId = $null
         $lunGroupContainsLun = $false
+        $hyperCdpScheduleContainsLun = $false
         $hostGroupContainsHost = $false
         $mappingContainsHostGroup = $false
         $mappingContainsLunGroup = $false
         $mappingContainsPortGroup = $false
 
         . $script:LunMutationWorkflow
+        . $script:HyperCDPScheduleMutationWorkflow
         . $script:LunGroupMutationWorkflow
         . $script:HostMutationWorkflow
         . $script:NasMutationWorkflow

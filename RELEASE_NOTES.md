@@ -6,6 +6,12 @@
 
 ## Performance Improvements
 
+- Added non-secure HyperCDP schedule management with
+  `Get/New/Set/Remove/Enable/Disable-DMHyperCDPSchedule` plus
+  `Add/Remove-DMLun*HyperCDPSchedule` LUN association commands. The live
+  integrity workflow can validate schedule create/read/update/LUN
+  associate/remove/enable/disable/delete without using protection groups or
+  secure snapshots.
 - Optimized `Get-DMhost` host initiator enrichment. Host objects still expose
   their `initiators` array, but `Set-DMHostInitiator` now bulk-loads all Fibre
   Channel and iSCSI initiators once and groups them by host ID instead of making

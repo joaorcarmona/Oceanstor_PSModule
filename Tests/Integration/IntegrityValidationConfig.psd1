@@ -58,6 +58,16 @@
         EnablePipelineBatchCoverage = $false
     }
 
+    HyperCDPSchedule = @{
+        # Non-secure block HyperCDP schedule validation. The workflow creates a
+        # disabled schedule, associates the test-owned LUN, removes the
+        # association, toggles the schedule, and deletes it. It deliberately
+        # avoids protection groups and secure snapshots.
+        Enabled = $false
+        FrequencyValueSeconds = 3600
+        FrequencySnapshotCount = 2
+    }
+
     Protection = @{
         # Requires Lun.Enabled and LunGroup.Enabled. Snapshot consistency
         # rollback targets only the LUN created during this test run.
