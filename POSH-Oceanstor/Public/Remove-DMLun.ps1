@@ -3,7 +3,7 @@
     Removes an OceanStor LUN.
 
 .DESCRIPTION
-    Deletes an existing LUN by name, optionally scoped to a vStore.
+    Deletes an existing LUN by name or ID, optionally scoped to a vStore.
     By default the storage system delete behavior is used; specify ImmediateDelete to request non-delayed deletion. The cmdlet supports -WhatIf and -Confirm.
 
     Accepts multiple LUNs from the pipeline by property name (e.g. Get-DMlun output, matching its Name
@@ -16,6 +16,9 @@
 
 .PARAMETER LunName
     Name of the LUN to remove. Resolved against existing OceanStor LUNs (on the applicable session) when the command runs. Accepts pipeline input by property name (a piped object's Name property).
+
+.PARAMETER LunId
+    ID of the LUN to remove. This avoids name resolution and is the fastest path when the caller already has the LUN ID.
 
 .PARAMETER ImmediateDelete
     Requests immediate deletion by sending isDelayDelete=false to the OceanStor API.
@@ -52,12 +55,12 @@
 function Remove-DMLun {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
 
-    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High', DefaultParameterSetName = 'ByName')]
     param(
         [Parameter(ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory = $true, Position = 0, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Mandatory = $true, ParameterSetName = 'ByName', Position = 0, ValueFromPipelineByPropertyName = $true)]
         [Alias('Name')]
         [ValidateNotNullOrEmpty()]
         [ArgumentCompleter({
@@ -69,8 +72,12 @@ function Remove-DMLun {
                     $script:CurrentOceanstorSession
                 }
                 (Get-DMlun -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
-            })]
+        })]
         [string]$LunName,
+
+        [Parameter(Mandatory = $true, ParameterSetName = 'ById')]
+        [ValidateNotNullOrEmpty()]
+        [string]$LunId,
 
         [switch]$ImmediateDelete,
 
@@ -86,18 +93,29 @@ function Remove-DMLun {
         }
 
         try {
-            $luns = @(Get-DMlun -WebSession $session)
-            $matchingItems = @($luns | Where-Object Name -EQ $LunName)
-            if ($matchingItems.Count -eq 0) {
-                throw "Invalid LunName. Valid values are: $($luns.Name -join ', ')"
+            if ($PSCmdlet.ParameterSetName -eq 'ById') {
+                $matchingItems = @(Get-DMlun -WebSession $session -Id $LunId)
+                if ($matchingItems.Count -eq 0) {
+                    throw "Invalid LunId '$LunId'."
+                }
+            }
+            else {
+                $matchingItems = @(Get-DMlun -WebSession $session -Name $LunName | Where-Object Name -EQ $LunName)
+                if ($matchingItems.Count -eq 0) {
+                    throw "Invalid LunName '$LunName'."
+                }
             }
             if ($matchingItems.Count -gt 1) {
+                if ($PSCmdlet.ParameterSetName -eq 'ById') {
+                    throw "LunId is ambiguous because more than one LUN has ID '$LunId'."
+                }
                 throw "LunName is ambiguous because more than one LUN is named '$LunName'."
             }
             $lun = $matchingItems[0]
+            $targetName = if ($LunName) { $LunName } else { $lun.Name }
 
             if ($lun.'is Mapped' -eq 'mapped') {
-                throw "Cannot remove LUN '$LunName': it is currently mapped to a host. Remove the mapping view first."
+                throw "Cannot remove LUN '$targetName': it is currently mapped to a host. Remove the mapping view first."
             }
 
             $parameters = @()
@@ -112,7 +130,7 @@ function Remove-DMLun {
                 $resource += "?$($parameters -join '&')"
             }
 
-            if ($PSCmdlet.ShouldProcess($LunName, 'Remove LUN and its data')) {
+            if ($PSCmdlet.ShouldProcess($targetName, 'Remove LUN and its data')) {
                 $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
                 $response = $response | Assert-DMApiSuccess
                 return $response.error

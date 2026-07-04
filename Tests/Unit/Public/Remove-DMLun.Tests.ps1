@@ -3,7 +3,7 @@ BeforeDiscovery {
         param($testRoot)
 
         function Get-DMlun {
-            param([pscustomobject]$WebSession)
+            param([pscustomobject]$WebSession, [string]$Name, [string]$Id)
         }
 
         function Invoke-DeviceManager {
@@ -32,7 +32,14 @@ Describe 'Remove-DMLun' {
     BeforeEach {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
         Mock Get-DMlun {
-            @([pscustomobject]@{ Id = 'lun-01'; Name = 'data-lun'; 'is Mapped' = 'not mapped' })
+            $items = @([pscustomobject]@{ Id = 'lun-01'; Name = 'data-lun'; 'is Mapped' = 'not mapped' })
+            if ($Id) {
+                return @($items | Where-Object Id -EQ $Id)
+            }
+            if ($Name) {
+                return @($items | Where-Object Name -EQ $Name)
+            }
+            return $items
         }
         Mock Invoke-DeviceManager {
             [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 } }
@@ -43,6 +50,17 @@ Describe 'Remove-DMLun' {
         $result = Remove-DMLun -WebSession $script:session -LunName 'data-lun' -Confirm:$false
 
         $result.Code | Should -Be 0
+        Should -Invoke Get-DMlun -Times 1 -Exactly -ParameterFilter { $Name -eq 'data-lun' -and -not $Id }
+        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter {
+            $Method -eq 'DELETE' -and $Resource -eq 'lun/lun-01'
+        }
+    }
+
+    It 'removes an existing LUN by ID without name resolution' {
+        $result = Remove-DMLun -WebSession $script:session -LunId 'lun-01' -Confirm:$false
+
+        $result.Code | Should -Be 0
+        Should -Invoke Get-DMlun -Times 1 -Exactly -ParameterFilter { $Id -eq 'lun-01' -and -not $Name }
         Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter {
             $Method -eq 'DELETE' -and $Resource -eq 'lun/lun-01'
         }

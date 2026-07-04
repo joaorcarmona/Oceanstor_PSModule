@@ -1,7 +1,7 @@
 $script:LunMutationWorkflow = {
         if ($configuration.Lun.Enabled) {
             $lun = @(Invoke-MutationStep -Name 'New-DMLun' -Action {
-                if (@(Get-DMlun -WebSession $session | Where-Object Name -EQ $lunName).Count -gt 0) {
+                if (@(Get-DMlun -WebSession $session -Name $lunName | Where-Object Name -EQ $lunName).Count -gt 0) {
                     throw "A LUN named '$lunName' already exists; refusing to claim it as test-owned."
                 }
                 New-DMLun -WebSession $session -LunName $lunName -Capacity $configuration.Lun.CapacityMB `
@@ -9,17 +9,17 @@ $script:LunMutationWorkflow = {
                     -Description "Integrity validation run $runId"
             })
             if ($lun.Count -gt 0 -and $lun[0].Name -eq $lunName) {
+                $lunId = $lun[0].Id
                 Register-TestOwnedResource -Kind Lun -Identity $lunName
                 Register-CleanupAction -Name 'Remove-DMLun' -Action {
                     Invoke-OwnedRemoval -Name 'Remove-DMLun' -Kind Lun -Identity $lunName -Action {
-                        Remove-DMLun -WebSession $session -LunName $lunName -ImmediateDelete -Confirm:$false
+                        Remove-DMLun -WebSession $session -LunId $lunId -ImmediateDelete -Confirm:$false
                     }
                 }
             }
 
             if ($owned.Lun.Contains($lunName)) {
                 if ([string]$session.version -match '^V6') {
-                    $lunId = $lun[0].Id
                     Invoke-MutationStep -Name 'Set-DMLun' -Action {
                         Assert-TestOwnedResource -Kind Lun -Identity $lunName
                         Set-DMLun -WebSession $session -LunId $lunId `

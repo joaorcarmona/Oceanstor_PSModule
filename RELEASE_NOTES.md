@@ -25,6 +25,9 @@
 - Optimized `Set-DMLun` and `Rename-DMLun` resolution paths. Both commands now
   support `-LunId`, and `Set-DMLun` uses filtered `Get-DMlun -Name/-Id` lookups
   instead of loading the full LUN inventory before every modification.
+- Optimized `Remove-DMLun` resolution paths. The command now supports `-LunId`
+  and uses filtered `Get-DMlun -Name/-Id` lookups instead of loading the full
+  LUN inventory before deleting one LUN.
 
 ## Bug Fixes
 
