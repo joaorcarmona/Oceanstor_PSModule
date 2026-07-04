@@ -80,8 +80,7 @@ function New-DMLunSnapshot {
                     $session = $script:CurrentOceanstorSession
                 }
 
-                $luns = Get-DMlun -WebSession $session
-                $matchingLuns = @($luns | Where-Object Name -EQ $_)
+                $matchingLuns = @(Get-DMlun -WebSession $session -Name $_ | Where-Object Name -EQ $_)
 
                 if ($matchingLuns.Count -eq 1) {
                     $true
@@ -155,7 +154,7 @@ function New-DMLunSnapshot {
                     if ($null -eq $sourceLun) { throw "Could not resolve piped LUN Id '$($InputObject.Id)' - the object may have been removed." }
                 }
                 elseif ($InputObject.Name) {
-                    $matchingLuns = @(Get-DMlun -WebSession $session | Where-Object Name -EQ $InputObject.Name)
+                    $matchingLuns = @(Get-DMlun -WebSession $session -Name $InputObject.Name | Where-Object Name -EQ $InputObject.Name)
                     if ($matchingLuns.Count -eq 1) {
                         $sourceLun = $matchingLuns[0]
                     }
@@ -175,7 +174,7 @@ function New-DMLunSnapshot {
                 if ($null -eq $sourceLun) { throw "Could not resolve 'SourceLunId' - the object may have been removed since parameter validation." }
             }
             elseif ($PSBoundParameters.ContainsKey('SourceLunName')) {
-                $sourceLun = @(Get-DMlun -WebSession $session | Where-Object Name -EQ $SourceLunName)[0]
+                $sourceLun = @(Get-DMlun -WebSession $session -Name $SourceLunName | Where-Object Name -EQ $SourceLunName)[0]
                 if ($null -eq $sourceLun) { throw "Could not resolve 'SourceLunName' - the object may have been removed since parameter validation." }
             }
             else {

@@ -304,7 +304,7 @@ Describe 'Public getter functions' {
                 Should -Throw '*Invalid LunName*'
         }
 
-        It 'gets a LUN snapshot by positional Name' {
+        It 'gets a LUN snapshot by positional Name using a server-side filter' {
             Mock Invoke-DeviceManager {
                 param($WebSession, $Method, $Resource)
                 $script:snapshotNameResource = $Resource
@@ -315,7 +315,7 @@ Describe 'Public getter functions' {
 
             $result.Count | Should -Be 1
             $result[0].Name | Should -Be 'before-patch'
-            $script:snapshotNameResource | Should -BeLike 'snapshot*'
+            $script:snapshotNameResource | Should -BeLike 'snapshot?filter=NAME::before-patch*'
         }
 
         It 'gets a LUN snapshot by Id using an exact server-side filter' {

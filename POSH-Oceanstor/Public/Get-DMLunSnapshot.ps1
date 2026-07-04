@@ -132,8 +132,17 @@ function Get-DMLunSnapshot {
         # containing "5"), which would leak unrelated snapshots.
         $resource = "snapshot?filter=ID::$Id"
     }
+    elseif ($PSCmdlet.ParameterSetName -eq 'ByName' -and $Name) {
+        $hasWildcard = $Name -match '[*?\[\]]'
+        if (-not $hasWildcard) {
+            $resource = "snapshot?filter=NAME::$([uri]::EscapeDataString($Name))"
+        }
+        elseif ($Name -match '^\*?([^*?\[\]]+)\*?$') {
+            $resource = "snapshot?filter=NAME:$([uri]::EscapeDataString($Matches[1]))"
+        }
+    }
     elseif ($LunName) {
-        $sourceLun = @(Get-DMlun -WebSession $session | Where-Object Name -EQ $LunName)[0]
+        $sourceLun = @(Get-DMlun -WebSession $session -Name $LunName | Where-Object Name -EQ $LunName)[0]
         if ($null -eq $sourceLun) { throw "Could not resolve 'sourceLun' — the object may have been removed since parameter validation." }
         $resource = "snapshot?filter=SOURCELUNID::$($sourceLun.Id)"
     }

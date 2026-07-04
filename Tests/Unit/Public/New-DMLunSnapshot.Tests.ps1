@@ -3,7 +3,7 @@ BeforeDiscovery {
         param($testRoot)
 
         function Get-DMlun {
-            param([pscustomobject]$WebSession, [string]$Id)
+            param([pscustomobject]$WebSession, [string]$Id, [string]$Name)
         }
 
         function Invoke-DeviceManager {
@@ -35,7 +35,14 @@ Describe 'New-DMLunSnapshot' {
     BeforeEach {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
         Mock Get-DMlun {
-            @([pscustomobject]@{ Id = 'lun-01'; Name = 'data-lun' })
+            $items = @([pscustomobject]@{ Id = 'lun-01'; Name = 'data-lun' })
+            if ($Id) {
+                return @($items | Where-Object Id -EQ $Id)
+            }
+            if ($Name) {
+                return @($items | Where-Object Name -EQ $Name)
+            }
+            return $items
         }
         Mock Invoke-DeviceManager {
             $script:snapshotRequest = $BodyData
@@ -69,6 +76,8 @@ Describe 'New-DMLunSnapshot' {
         $script:snapshotRequest.PARENTID | Should -Be 'lun-01'
         $script:snapshotRequest.DESCRIPTION | Should -Be 'Patch checkpoint'
         $script:snapshotRequest.isReadOnly | Should -BeTrue
+        Should -Invoke Get-DMlun -Times 2 -Exactly -ParameterFilter { $Name -eq 'data-lun' -and -not $Id }
+        Should -Invoke Get-DMlun -Times 0 -Exactly -ParameterFilter { -not $Name -and -not $Id }
     }
 
     It 'generates a snapshot name when one is not supplied' {
@@ -76,6 +85,7 @@ Describe 'New-DMLunSnapshot' {
 
         $script:snapshotRequest.NAME | Should -Match '^data-lun_SNAP_[0-9A-Z]+$'
         $script:snapshotRequest.PARENTID | Should -Be 'lun-01'
+        Should -Invoke Get-DMlun -Times 0 -Exactly -ParameterFilter { -not $Name -and -not $Id }
     }
 
     It 'generates a snapshot name when the supplied name is empty' {
@@ -108,7 +118,7 @@ Describe 'New-DMLunSnapshot' {
 
     It 'creates a snapshot for an existing LUN identified by Id' {
         Mock Get-DMlun {
-            param($WebSession, $Id)
+            param($WebSession, $Id, $Name)
             if ($Id -eq 'lun-01') { return @([pscustomobject]@{ Id = 'lun-01'; Name = 'data-lun' }) }
             @()
         }
@@ -117,11 +127,13 @@ Describe 'New-DMLunSnapshot' {
 
         $result.Id | Should -Be 'snap-01'
         $script:snapshotRequest.PARENTID | Should -Be 'lun-01'
+        Should -Invoke Get-DMlun -Times 2 -Exactly -ParameterFilter { $Id -eq 'lun-01' -and -not $Name }
+        Should -Invoke Get-DMlun -Times 0 -Exactly -ParameterFilter { -not $Name -and -not $Id }
     }
 
     It 'rejects a source LUN Id that does not exist' {
         Mock Get-DMlun {
-            param($WebSession, $Id)
+            param($WebSession, $Id, $Name)
             @()
         }
 
@@ -143,11 +155,13 @@ Describe 'New-DMLunSnapshot' {
 
         $result.Id | Should -Be 'snap-01'
         $script:snapshotRequest.PARENTID | Should -Be 'lun-01'
+        Should -Invoke Get-DMlun -Times 1 -Exactly -ParameterFilter { $Name -eq 'data-lun' -and -not $Id }
+        Should -Invoke Get-DMlun -Times 0 -Exactly -ParameterFilter { -not $Name -and -not $Id }
     }
 
     It 'accepts a full LUN object from the pipeline without binding it as WebSession' {
         Mock Get-DMlun {
-            param($WebSession, $Id)
+            param($WebSession, $Id, $Name)
             $script:getLunWebSession = $WebSession
             if ($Id -eq 'lun-01') { return @([pscustomobject]@{ Id = 'lun-01'; Name = 'data-lun' }) }
             @()
@@ -159,14 +173,23 @@ Describe 'New-DMLunSnapshot' {
         $result.Id | Should -Be 'snap-01'
         $script:snapshotRequest.PARENTID | Should -Be 'lun-01'
         $script:getLunWebSession | Should -Be $script:session
+        Should -Invoke Get-DMlun -Times 1 -Exactly -ParameterFilter { $Id -eq 'lun-01' -and -not $Name }
+        Should -Invoke Get-DMlun -Times 0 -Exactly -ParameterFilter { -not $Name -and -not $Id }
     }
 
     It 'creates a snapshot for every source LUN piped in, not just the last one' {
         Mock Get-DMlun {
-            @(
+            $items = @(
                 [pscustomobject]@{ Id = 'lun-01'; Name = 'data-lun' }
                 [pscustomobject]@{ Id = 'lun-02'; Name = 'other-lun' }
             )
+            if ($Id) {
+                return @($items | Where-Object Id -EQ $Id)
+            }
+            if ($Name) {
+                return @($items | Where-Object Name -EQ $Name)
+            }
+            return $items
         }
 
         $luns = @(
@@ -176,6 +199,7 @@ Describe 'New-DMLunSnapshot' {
         $null = $luns | New-DMLunSnapshot -WebSession $script:session
 
         Should -Invoke Invoke-DeviceManager -Times 2 -Exactly
+        Should -Invoke Get-DMlun -Times 0 -Exactly -ParameterFilter { -not $Name -and -not $Id }
     }
 }
 }

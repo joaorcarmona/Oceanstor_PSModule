@@ -28,6 +28,10 @@
 - Optimized `Remove-DMLun` resolution paths. The command now supports `-LunId`
   and uses filtered `Get-DMlun -Name/-Id` lookups instead of loading the full
   LUN inventory before deleting one LUN.
+- Optimized `New-DMLunSnapshot` source LUN resolution and adjacent snapshot
+  checks. Source LUN name paths now use filtered `Get-DMlun -Name` lookups, the
+  integrity workflow creates snapshots with the known LUN ID, and
+  `Get-DMLunSnapshot -Name` now narrows requests server-side.
 
 ## Bug Fixes
 

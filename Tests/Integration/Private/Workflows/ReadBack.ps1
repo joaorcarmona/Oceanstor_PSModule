@@ -7,7 +7,7 @@ $script:MutationReadBackWorkflow = {
         }
         if ($owned.LunSnapshot.Contains($snapshotName)) {
             Add-MutationReadVerification -Name 'Get-DMLunSnapshot:Created' -ExpectedType 'OceanstorLunSnapshot' -Action {
-                Get-DMLunSnapshot -WebSession $session | Where-Object Name -EQ $snapshotName
+                Get-DMLunSnapshot -WebSession $session -Name $snapshotName | Where-Object Name -EQ $snapshotName
             } | Out-Null
         }
         if ($owned.LunGroup.Contains($lunGroupName)) {
