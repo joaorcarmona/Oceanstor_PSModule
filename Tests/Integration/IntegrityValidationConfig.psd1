@@ -50,6 +50,11 @@
     LunGroup = @{
         Enabled = $true
         ApplicationType = 'Other'
+
+        # Expensive regression coverage for multi-LUN pipeline handling. This
+        # creates three extra LUNs and can add several minutes on arrays where
+        # LUN create/remove operations are slow.
+        EnablePipelineBatchCoverage = $false
     }
 
     Protection = @{

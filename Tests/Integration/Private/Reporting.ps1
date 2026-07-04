@@ -73,6 +73,23 @@ function Write-ValidationMarkdownReport {
         $lines.Add('')
     }
 
+    $slowChecks = @(
+        $Report.Checks |
+            Where-Object { $null -ne $_.DurationMs } |
+            Sort-Object DurationMs -Descending |
+            Select-Object -First 10
+    )
+    if ($slowChecks.Count -gt 0) {
+        $lines.Add('## Slowest Checks')
+        $lines.Add('')
+        $lines.Add('| Category | Check | Duration | Status | Count |')
+        $lines.Add('|---|---|---|---|---|')
+        foreach ($check in $slowChecks) {
+            $lines.Add("| $($check.Category) | $($check.Name) | $(Format-ValidationDuration $check.DurationMs) | $($check.Status) | $($check.Count) |")
+        }
+        $lines.Add('')
+    }
+
     $lines.Add('## Checks')
     $lines.Add('')
 

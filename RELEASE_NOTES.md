@@ -18,6 +18,18 @@
   like `Get-DMhostGroup Name`, `Get-DMlunByName Name`, and
   `New-DMFileSystem Name PoolId` bind to resource parameters instead of the
   session parameter.
+- Reduced the default duration of mutating integrity validation by making the
+  expensive multi-LUN pipeline batch regression workflow opt-in via
+  `LunGroup.EnablePipelineBatchCoverage`. Integrity Markdown reports now include
+  a `Slowest Checks` section to make runtime hot spots visible.
+
+## Bug Fixes
+
+- Fixed `New-DMLunSnapshot` pipeline input so LUN objects from `Get-DMlun` bind
+  as source LUNs instead of being mistaken for the `WebSession` parameter.
+- Made `New-DMLunSnapshot -SnapshotName` optional and allowed an empty value.
+  When omitted or blank, the command now generates
+  `<LunName>_SNAP_<compact UTC tick serial>`.
 
 ## Output Improvements
 

@@ -74,7 +74,14 @@ Describe 'New-DMLunSnapshot' {
     It 'generates a snapshot name when one is not supplied' {
         $null = New-DMLunSnapshot -WebSession $script:session -SourceLunName 'data-lun'
 
-        $script:snapshotRequest.NAME | Should -Match '^snap_data-lun-\d{14}$'
+        $script:snapshotRequest.NAME | Should -Match '^data-lun_SNAP_[0-9A-Z]+$'
+        $script:snapshotRequest.PARENTID | Should -Be 'lun-01'
+    }
+
+    It 'generates a snapshot name when the supplied name is empty' {
+        $null = New-DMLunSnapshot -WebSession $script:session -SnapshotName '' -SourceLunName 'data-lun'
+
+        $script:snapshotRequest.NAME | Should -Match '^data-lun_SNAP_[0-9A-Z]+$'
         $script:snapshotRequest.PARENTID | Should -Be 'lun-01'
     }
 
@@ -125,8 +132,8 @@ Describe 'New-DMLunSnapshot' {
     }
 
     It 'rejects supplying both SourceLunName and SourceLunId' {
-        { New-DMLunSnapshot -WebSession $script:session -SourceLunName 'data-lun' -SourceLunId 'lun-01' } |
-            Should -Throw '*parameter set*'
+        { New-DMLunSnapshot -WebSession $script:session -SourceLunName 'data-lun' -SourceLunId 'lun-01' -ErrorAction Stop } |
+            Should -Throw '*SourceLunName and SourceLunId cannot be used together*'
     }
 
     It 'accepts a source LUN from the pipeline by property Name' {
@@ -136,6 +143,22 @@ Describe 'New-DMLunSnapshot' {
 
         $result.Id | Should -Be 'snap-01'
         $script:snapshotRequest.PARENTID | Should -Be 'lun-01'
+    }
+
+    It 'accepts a full LUN object from the pipeline without binding it as WebSession' {
+        Mock Get-DMlun {
+            param($WebSession, $Id)
+            $script:getLunWebSession = $WebSession
+            if ($Id -eq 'lun-01') { return @([pscustomobject]@{ Id = 'lun-01'; Name = 'data-lun' }) }
+            @()
+        }
+        $lun = [pscustomobject]@{ Id = 'lun-01'; Name = 'data-lun' }
+
+        $result = $lun | New-DMLunSnapshot -WebSession $script:session
+
+        $result.Id | Should -Be 'snap-01'
+        $script:snapshotRequest.PARENTID | Should -Be 'lun-01'
+        $script:getLunWebSession | Should -Be $script:session
     }
 
     It 'creates a snapshot for every source LUN piped in, not just the last one' {

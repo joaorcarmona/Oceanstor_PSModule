@@ -62,7 +62,7 @@ $script:LunGroupMutationWorkflow = {
                 }
             }
 
-            if ($owned.LunGroup.Contains($lunGroupName)) {
+            if ($owned.LunGroup.Contains($lunGroupName) -and $configuration.LunGroup.EnablePipelineBatchCoverage) {
                 # Multi-object pipeline coverage: proves Get-DMlun | Set-DMLun / Add-DMLunToLunGroup /
                 # Remove-DMLun each process every piped LUN (not just the last one), and that a
                 # deliberately invalid item among real ones is reported as a non-terminating error
@@ -173,6 +173,15 @@ $script:LunGroupMutationWorkflow = {
                     # pipeLunsCreated[2] remains test-owned; its registered cleanup actions above
                     # (membership removal, then LUN removal) handle it at the end of the run.
                 }
+            }
+            elseif ($owned.LunGroup.Contains($lunGroupName)) {
+                Add-SkippedResult -Name @(
+                    'New-DMLun:PipelineBatch',
+                    'Set-DMLun:PipelineBatch',
+                    'Add-DMLunToLunGroup:PipelineBatch',
+                    'Remove-DMLunFromLunGroup:PipelineBatch',
+                    'Remove-DMLun:PipelineBatchContinueOnError'
+                ) -Status 'NotConfigured' -Reason 'Set LunGroup.EnablePipelineBatchCoverage = $true to run expensive multi-LUN pipeline regression coverage.'
             }
         }
         else {
