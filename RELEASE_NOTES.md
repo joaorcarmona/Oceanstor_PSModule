@@ -42,6 +42,10 @@
   with filtered lookups where the workflow already knows the target name or ID.
   `Get-DMlun -LunGroup`, `-LunGroupName`, and `-LunGroupId` now resolve group
   member IDs directly instead of loading every LUN before filtering locally.
+- Optimized LUN snapshot name paths. `Get-DMLunSnapshot -LunName` now resolves
+  the source LUN with a filtered lookup, and LUN snapshot action/copy commands
+  use `Get-DMLunSnapshot -Name` instead of loading every snapshot before
+  filtering by name.
 
 ## Bug Fixes
 

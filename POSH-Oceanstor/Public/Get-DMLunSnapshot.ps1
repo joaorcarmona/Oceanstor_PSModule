@@ -79,8 +79,7 @@ function Get-DMLunSnapshot {
                     $session = $script:CurrentOceanstorSession
                 }
 
-                $luns = Get-DMlun -WebSession $session
-                $matchingLuns = @($luns | Where-Object Name -EQ $_)
+                $matchingLuns = @(Get-DMlun -WebSession $session -Name $_ | Where-Object Name -EQ $_)
 
                 if ($matchingLuns.Count -eq 1) {
                     $true

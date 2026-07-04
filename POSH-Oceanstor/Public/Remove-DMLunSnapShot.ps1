@@ -65,7 +65,7 @@ function Remove-DMLunSnapShot {
                 else {
                     $script:CurrentOceanstorSession
                 }
-                $matchingItems = @(Get-DMLunSnapshot -WebSession $session | Where-Object Name -EQ $_)
+                $matchingItems = @(Get-DMLunSnapshot -WebSession $session -Name $_ | Where-Object Name -EQ $_)
                 if ($matchingItems.Count -eq 1) {
                     return $true
                 }
@@ -122,7 +122,7 @@ function Remove-DMLunSnapShot {
                 if ($null -eq $snapshot) { throw "Could not resolve 'SnapShotId' - the object may have been removed since parameter validation." }
             }
             else {
-                $snapshot = @(Get-DMLunSnapshot -WebSession $session | Where-Object Name -EQ $SnapShotName)[0]
+                $snapshot = @(Get-DMLunSnapshot -WebSession $session -Name $SnapShotName | Where-Object Name -EQ $SnapShotName)[0]
                 if ($null -eq $snapshot) { throw "Could not resolve 'SnapShotName' - the object may have been removed since parameter validation." }
             }
 

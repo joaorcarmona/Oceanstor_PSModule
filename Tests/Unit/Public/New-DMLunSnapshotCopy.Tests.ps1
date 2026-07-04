@@ -3,7 +3,7 @@ BeforeDiscovery {
         param($testRoot)
 
         function Get-DMLunSnapshot {
-            param([pscustomobject]$WebSession, [string]$Id)
+            param([pscustomobject]$WebSession, [string]$Name, [string]$Id)
         }
 
         function Invoke-DeviceManager {
@@ -35,7 +35,10 @@ Describe 'New-DMLunSnapshotCopy' {
     BeforeEach {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
         Mock Get-DMLunSnapshot {
-            @([pscustomobject]@{ Id = 'snap-01'; Name = 'before-patch' })
+            $items = @([pscustomobject]@{ Id = 'snap-01'; Name = 'before-patch' })
+            if ($Id) { return @($items | Where-Object Id -EQ $Id) }
+            if ($Name) { return @($items | Where-Object Name -EQ $Name) }
+            return $items
         }
         Mock Invoke-DeviceManager {
             $script:snapshotCopyRequest = $BodyData
@@ -65,6 +68,8 @@ Describe 'New-DMLunSnapshotCopy' {
         $script:snapshotCopyRequest.ID | Should -Be 'snap-01'
         $script:snapshotCopyRequest.NAME | Should -Be 'patch-copy'
         $script:snapshotCopyRequest.DESCRIPTION | Should -Be 'Copy for testing'
+        Should -Invoke Get-DMLunSnapshot -Times 2 -Exactly -ParameterFilter { $Name -eq 'before-patch' -and -not $Id }
+        Should -Invoke Get-DMLunSnapshot -Times 0 -Exactly -ParameterFilter { -not $Name -and -not $Id }
     }
 
     It 'creates a default copy name from the original snapshot name' {
@@ -84,10 +89,13 @@ Describe 'New-DMLunSnapshotCopy' {
 
     It 'rejects a source snapshot name that is not unique' {
         Mock Get-DMLunSnapshot {
-            @(
+            $items = @(
                 [pscustomobject]@{ Id = 'snap-01'; Name = 'before-patch' }
                 [pscustomobject]@{ Id = 'snap-02'; Name = 'before-patch' }
             )
+            if ($Id) { return @($items | Where-Object Id -EQ $Id) }
+            if ($Name) { return @($items | Where-Object Name -EQ $Name) }
+            return $items
         }
 
         { New-DMLunSnapshotCopy -WebSession $script:session -SourceSnapShotName 'before-patch' } |
@@ -106,7 +114,10 @@ Describe 'New-DMLunSnapshotCopy' {
     It 'requires an explicit copy name when the generated name exceeds the API limit' {
         $longName = 'a' * 252
         Mock Get-DMLunSnapshot {
-            @([pscustomobject]@{ Id = 'snap-long'; Name = $longName })
+            $items = @([pscustomobject]@{ Id = 'snap-long'; Name = $longName })
+            if ($Id) { return @($items | Where-Object Id -EQ $Id) }
+            if ($Name) { return @($items | Where-Object Name -EQ $Name) }
+            return $items
         }
 
         $result = New-DMLunSnapshotCopy -WebSession $script:session -SourceSnapShotName $longName -ErrorAction SilentlyContinue -ErrorVariable copyErrors

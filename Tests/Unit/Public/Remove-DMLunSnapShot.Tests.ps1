@@ -3,7 +3,7 @@ BeforeDiscovery {
         param($testRoot)
 
         function Get-DMLunSnapshot {
-            param([pscustomobject]$WebSession, [string]$Id)
+            param([pscustomobject]$WebSession, [string]$Name, [string]$Id)
         }
 
         function Invoke-DeviceManager {
@@ -32,7 +32,10 @@ Describe 'Remove-DMLunSnapShot' {
     BeforeEach {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
         Mock Get-DMLunSnapshot {
-            @([pscustomobject]@{ Id = 'snap-01'; Name = 'before-patch' })
+            $items = @([pscustomobject]@{ Id = 'snap-01'; Name = 'before-patch' })
+            if ($Id) { return @($items | Where-Object Id -EQ $Id) }
+            if ($Name) { return @($items | Where-Object Name -EQ $Name) }
+            return $items
         }
         Mock Invoke-DeviceManager {
             $script:removeMethod = $Method
@@ -50,6 +53,8 @@ Describe 'Remove-DMLunSnapShot' {
         Should -Invoke Invoke-DeviceManager -Times 1 -Exactly
         $script:removeMethod | Should -Be 'DELETE'
         $script:removeResource | Should -Be 'snapshot/snap-01'
+        Should -Invoke Get-DMLunSnapshot -Times 2 -Exactly -ParameterFilter { $Name -eq 'before-patch' -and -not $Id }
+        Should -Invoke Get-DMLunSnapshot -Times 0 -Exactly -ParameterFilter { -not $Name -and -not $Id }
     }
 
     It 'does not call the API when WhatIf is specified' {
@@ -67,10 +72,13 @@ Describe 'Remove-DMLunSnapShot' {
 
     It 'rejects a snapshot name that is not unique' {
         Mock Get-DMLunSnapshot {
-            @(
+            $items = @(
                 [pscustomobject]@{ Id = 'snap-01'; Name = 'before-patch' }
                 [pscustomobject]@{ Id = 'snap-02'; Name = 'before-patch' }
             )
+            if ($Id) { return @($items | Where-Object Id -EQ $Id) }
+            if ($Name) { return @($items | Where-Object Name -EQ $Name) }
+            return $items
         }
 
         { Remove-DMLunSnapShot -WebSession $script:session -SnapShotName 'before-patch' -Confirm:$false } |
@@ -81,10 +89,13 @@ Describe 'Remove-DMLunSnapShot' {
 
     It 'removes every snapshot piped in, not just the last one' {
         Mock Get-DMLunSnapshot {
-            @(
+            $items = @(
                 [pscustomobject]@{ Id = 'snap-01'; Name = 'snap-a' }
                 [pscustomobject]@{ Id = 'snap-02'; Name = 'snap-b' }
             )
+            if ($Id) { return @($items | Where-Object Id -EQ $Id) }
+            if ($Name) { return @($items | Where-Object Name -EQ $Name) }
+            return $items
         }
 
         $snapshots = @(

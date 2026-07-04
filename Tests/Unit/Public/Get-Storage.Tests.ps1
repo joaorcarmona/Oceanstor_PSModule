@@ -280,7 +280,8 @@ Describe 'Public getter functions' {
                 param($WebSession, $Method, $Resource)
 
                 switch -Wildcard ($Resource) {
-                    'lun*' { [pscustomobject]@{ data = @(New-TestLun) } }
+                    'lun?filter=NAME::data-lun*' { [pscustomobject]@{ data = @(New-TestLun) } }
+                    'lun' { throw 'Get-DMLunSnapshot -LunName should not materialize the full LUN inventory.' }
                     'snapshot?filter=SOURCELUNID::lun-01*' {
                         $script:snapshotFilterResource = $Resource
                         [pscustomobject]@{ data = @(New-TestLunSnapshot) }

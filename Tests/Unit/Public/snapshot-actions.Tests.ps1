@@ -3,7 +3,7 @@ BeforeDiscovery {
         param($testRoot)
 
         function Get-DMLunSnapshot {
-            param([pscustomobject]$WebSession, [string]$Id)
+            param([pscustomobject]$WebSession, [string]$Name, [string]$Id)
         }
 
         function Invoke-DeviceManager {
@@ -36,7 +36,10 @@ Describe 'Snapshot action functions' {
     BeforeEach {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
         Mock Get-DMLunSnapshot {
-            @([pscustomobject]@{ Id = 'snap-01'; Name = 'before-patch' })
+            $items = @([pscustomobject]@{ Id = 'snap-01'; Name = 'before-patch' })
+            if ($Id) { return @($items | Where-Object Id -EQ $Id) }
+            if ($Name) { return @($items | Where-Object Name -EQ $Name) }
+            return $items
         }
         Mock Invoke-DeviceManager {
             $script:actionMethod = $Method
@@ -55,6 +58,8 @@ Describe 'Snapshot action functions' {
         $script:actionMethod | Should -Be 'POST'
         $script:actionResource | Should -Be 'snapshot/activate'
         $script:actionBody.SNAPSHOTLIST | Should -Be @('snap-01')
+        Should -Invoke Get-DMLunSnapshot -Times 2 -Exactly -ParameterFilter { $Name -eq 'before-patch' -and -not $Id }
+        Should -Invoke Get-DMLunSnapshot -Times 0 -Exactly -ParameterFilter { -not $Name -and -not $Id }
     }
 
     It 'reactivates an existing snapshot' {
@@ -64,6 +69,8 @@ Describe 'Snapshot action functions' {
         $script:actionMethod | Should -Be 'PUT'
         $script:actionResource | Should -Be 'snapshot/reactive'
         $script:actionBody.ID | Should -Be 'snap-01'
+        Should -Invoke Get-DMLunSnapshot -Times 2 -Exactly -ParameterFilter { $Name -eq 'before-patch' -and -not $Id }
+        Should -Invoke Get-DMLunSnapshot -Times 0 -Exactly -ParameterFilter { -not $Name -and -not $Id }
     }
 
     It 'expands an existing snapshot using sector capacity' {
@@ -74,6 +81,8 @@ Describe 'Snapshot action functions' {
         $script:actionResource | Should -Be 'snapshot/expand'
         $script:actionBody.ID | Should -Be 'snap-01'
         $script:actionBody.USERCAPACITY | Should -Be 10485760
+        Should -Invoke Get-DMLunSnapshot -Times 2 -Exactly -ParameterFilter { $Name -eq 'before-patch' -and -not $Id }
+        Should -Invoke Get-DMLunSnapshot -Times 0 -Exactly -ParameterFilter { -not $Name -and -not $Id }
     }
 
     It 'rolls back an existing snapshot using the selected speed' {
@@ -84,6 +93,8 @@ Describe 'Snapshot action functions' {
         $script:actionResource | Should -Be 'snapshot/rollback'
         $script:actionBody.ID | Should -Be 'snap-01'
         $script:actionBody.ROLLBACKSPEED | Should -Be 3
+        Should -Invoke Get-DMLunSnapshot -Times 2 -Exactly -ParameterFilter { $Name -eq 'before-patch' -and -not $Id }
+        Should -Invoke Get-DMLunSnapshot -Times 0 -Exactly -ParameterFilter { -not $Name -and -not $Id }
     }
 
     It '<Command> does not call the API when WhatIf is specified' -TestCases @(
@@ -122,7 +133,10 @@ Describe 'Snapshot action functions' {
 
     It 'rejects an expansion capacity that is not greater than the existing snapshot capacity' {
         Mock Get-DMLunSnapshot {
-            @([pscustomobject]@{ Id = 'snap-01'; Name = 'before-patch'; 'User Capacity' = [uint64]10485760 })
+            $items = @([pscustomobject]@{ Id = 'snap-01'; Name = 'before-patch'; 'User Capacity' = [uint64]10485760 })
+            if ($Id) { return @($items | Where-Object Id -EQ $Id) }
+            if ($Name) { return @($items | Where-Object Name -EQ $Name) }
+            return $items
         }
 
         $result = Resize-DMLunSnapshot -WebSession $script:session -SnapShotName 'before-patch' -UserCapacity 10485760 -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable resizeErrors

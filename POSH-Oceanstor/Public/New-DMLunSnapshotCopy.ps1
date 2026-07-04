@@ -71,8 +71,7 @@ function New-DMLunSnapshotCopy {
                     $session = $script:CurrentOceanstorSession
                 }
 
-                $snapshots = @(Get-DMLunSnapshot -WebSession $session)
-                $matchingSnapshots = @($snapshots | Where-Object Name -EQ $_)
+                $matchingSnapshots = @(Get-DMLunSnapshot -WebSession $session -Name $_ | Where-Object Name -EQ $_)
 
                 if ($matchingSnapshots.Count -eq 1) {
                     $true
@@ -142,7 +141,7 @@ function New-DMLunSnapshotCopy {
                 if ($null -eq $sourceSnapshot) { throw "Could not resolve 'SourceSnapShotId' - the object may have been removed since parameter validation." }
             }
             else {
-                $sourceSnapshot = @(Get-DMLunSnapshot -WebSession $session | Where-Object Name -EQ $SourceSnapShotName)[0]
+                $sourceSnapshot = @(Get-DMLunSnapshot -WebSession $session -Name $SourceSnapShotName | Where-Object Name -EQ $SourceSnapShotName)[0]
                 if ($null -eq $sourceSnapshot) { throw "Could not resolve 'SourceSnapShotName' - the object may have been removed since parameter validation." }
             }
 
