@@ -12,7 +12,8 @@ LONG DESCRIPTION
     The module includes commands for connecting to arrays, reading inventory
     and configuration data, exporting reports, managing hosts and initiators,
     creating storage resources, managing mapping views and groups, and working
-    with LUN and file-system snapshots.
+    with LUN and file-system snapshots. Array system configuration commands
+    cover NTP, SNMP, syslog, local users, and roles.
 
     The module was originally focused on OceanStor V3 arrays. Current commands
     also include support for V6 object shapes where the module can detect the
@@ -66,6 +67,15 @@ COMMAND AREAS
         Get-DMdisk
         Get-DMAlarm
 
+    Array system configuration:
+
+        Get-DMNtpServer
+        Get-DMSnmpConfig
+        Get-DMSnmpTrapServer
+        Get-DMSyslogNotification
+        Get-DMLocalUser
+        Get-DMRole
+
     Connectivity and host access:
 
         Get-DMFiberChannelInitiator
@@ -114,6 +124,7 @@ REPORTING
 
         $storage = Export-DeviceManager -Hostname 10.0.0.1
         Export-DMStorageToExcel -OceanStor $storage -ReportFile C:\Temp\OceanStor.xlsx -IncludeObject full
+        Export-DMStorageToExcel -OceanStor $storage -ReportFile C:\Temp\OceanStor-Config.xlsx -IncludeObject configuration
 
 SAFETY AND CONFIRMATION
     Many create, association, remove, restore, and snapshot commands support
@@ -131,7 +142,7 @@ SAFETY AND CONFIRMATION
         Get-Help Restore-DMFileSystemSnapshot -Full
 
 NOTES
-    Module version: 0.9.4
+    Module version: 0.9.5
     Minimum PowerShell version: 6.0
 
     Command help is available for all public commands. Use Get-Command

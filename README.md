@@ -11,8 +11,9 @@ Oceanstor PowerShell Module, is a module to operate with Huawei Oceanstor device
 Current module version: 0.9.5
 
 The module includes commands for inventory, reporting, host and initiator
-management, storage-resource creation, mapping-view operations, and snapshot
-management.
+management, storage-resource creation, mapping-view operations, snapshot
+management, and array system configuration such as NTP, SNMP, syslog, local
+users, and roles.
 
 ## How to Install
 
@@ -80,8 +81,22 @@ $storage = Connect-deviceManager -Hostname "10.0.0.1" -PassThru
 #export all storage data to excel
 Export-DMStorageToExcel -OceanStor $storage -ReportFile "c:\temp\MyStorage.xlsx" -IncludeObject full
 
-#export some properties to excel (can me choosen multiple from: "luns","system","hostgroups","lungroups","disks","hosts","vstores","storagepools",)
+#export some properties to excel (can be chosen multiple from: "luns","system","configuration","hostgroups","lungroups","disks","hosts","vstores","storagepools")
 Export-DMStorageToExcel -OceanStor $storage -ReportFile "c:\temp\MyStorage.xlsx" -IncludeObject luns, lungroups
+
+#export array configuration audit data such as NTP, SNMP, syslog, users, and roles
+Export-DMStorageToExcel -OceanStor $storage -ReportFile "c:\temp\MyStorage.xlsx" -IncludeObject configuration
+```
+
+#### Array System Configuration
+```powershell
+# Review NTP, SNMP, syslog, local users, and roles.
+Get-DMNtpServer -WebSession $storage
+Get-DMSnmpConfig -WebSession $storage
+Get-DMSnmpTrapServer -WebSession $storage
+Get-DMSyslogNotification -WebSession $storage
+Get-DMLocalUser -WebSession $storage
+Get-DMRole -WebSession $storage
 ```
 
 #### Search one lun by WWN

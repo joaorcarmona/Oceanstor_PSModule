@@ -67,6 +67,14 @@ function Invoke-MutationValidation {
             'Set-DMLun', 'Rename-DMLun', 'Set-DMFileSystem', 'Rename-DMFileSystem',
             'Set-DMHost', 'Rename-DMHost', 'Set-DMHostGroup', 'Rename-DMHostGroup',
             'Set-DMLunGroup', 'Rename-DMLunGroup', 'Set-DMPortGroup', 'Rename-DMPortGroup',
+            'Set-DMNtpServer', 'Test-DMNtpServer', 'New-DMSnmpTrapServer', 'Set-DMSnmpTrapServer',
+            'Remove-DMSnmpTrapServer', 'Test-DMSnmpTrapServer', 'Set-DMSnmpConfig',
+            'Set-DMSnmpSecurityPolicy', 'Set-DMSnmpCommunity', 'New-DMSnmpUsmUser',
+            'Set-DMSnmpUsmUser', 'Remove-DMSnmpUsmUser', 'Set-DMSyslogNotification',
+            'Add-DMSyslogServer', 'Remove-DMSyslogServer', 'New-DMLocalUser', 'Set-DMLocalUser',
+            'Remove-DMLocalUser', 'Lock-DMLocalUser', 'Unlock-DMLocalUser',
+            'Disable-DMLocalUserSession', 'Reset-DMLocalUserPassword', 'New-DMRole',
+            'Set-DMRole', 'Remove-DMRole',
             'Disconnect-deviceManager'
         ) -Status 'NotRequested' -Reason 'Call the runner with -RunMutatingTests and enable the desired section in IntegrityValidationConfig.psd1.'
     }

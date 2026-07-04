@@ -10,6 +10,27 @@ class OceanstorViewStorage{
 	#define System Array
 	[PSCustomObject]$System
 
+	#Define System Configuration
+	[PSCustomObject]$NtpServer
+
+	[PSCustomObject]$NtpStatus
+
+	[PSCustomObject]$SnmpConfig
+
+	[PSCustomObject]$SnmpSecurityPolicy
+
+	[array]$SnmpTrapServers
+
+	[array]$SnmpUsmUsers
+
+	[PSCustomObject]$SyslogNotification
+
+	[array]$LocalUsers
+
+	[array]$Roles
+
+	[array]$RolePermissions
+
 	#TODO
 	#Define Alarm Count
 	#[int64]${Number of Alarms}
@@ -68,6 +89,16 @@ class OceanstorViewStorage{
 		$this.WebSession = $storageConnection
 		$this.Hostname = $Hostname
 		$this.System = Get-DMSystem -WebSession $storageConnection
+		$this.NtpServer = Get-DMNtpServer -WebSession $storageConnection
+		$this.NtpStatus = Get-DMNtpStatus -WebSession $storageConnection
+		$this.SnmpConfig = Get-DMSnmpConfig -WebSession $storageConnection
+		$this.SnmpSecurityPolicy = Get-DMSnmpSecurityPolicy -WebSession $storageConnection
+		$this.SnmpTrapServers = Get-DMSnmpTrapServer -WebSession $storageConnection
+		$this.SnmpUsmUsers = Get-DMSnmpUsmUser -WebSession $storageConnection
+		$this.SyslogNotification = Get-DMSyslogNotification -WebSession $storageConnection
+		$this.LocalUsers = Get-DMLocalUser -WebSession $storageConnection
+		$this.Roles = Get-DMRole -WebSession $storageConnection
+		$this.RolePermissions = Get-DMRolePermission -WebSession $storageConnection -RoleOwnerGroup '1'
 		$this.Luns = Get-DMlun -WebSession $storageConnection
 		$this.LunGroups = Get-DMlunGroup -WebSession $storageConnection
 		$this.disks = Get-DMdisk -WebSession $storageConnection
