@@ -174,15 +174,14 @@ function Get-DMlun {
                 else {
                     $script:CurrentOceanstorSession
                 }
-                $groups = @(Get-DMlunGroup -WebSession $session)
-                $matchingItems = @($groups | Where-Object Name -EQ $_)
+                $matchingItems = @(Get-DMlunGroup -WebSession $session -Name $_ | Where-Object Name -EQ $_)
                 if ($matchingItems.Count -eq 1) {
                     return $true
                 }
                 if ($matchingItems.Count -gt 1) {
                     throw "LunGroupName is ambiguous because more than one LUN group is named '$_'."
                 }
-                throw "Invalid LunGroupName. Valid values are: $($groups.Name -join ', ')"
+                throw "Invalid LunGroupName '$_'."
             })]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
@@ -316,7 +315,14 @@ function Get-DMlun {
             return @()
         }
 
-        return @(Get-DMlunAllInternal -session $session | Where-Object { $associatedLunIds -contains $_.Id })
+        $memberLuns = [System.Collections.ArrayList]::new()
+        foreach ($associatedLunId in $associatedLunIds) {
+            foreach ($lun in @(Get-DMlunFilteredInternal -session $session -Filter 'Id' -Keyword $associatedLunId)) {
+                [void]$memberLuns.Add($lun)
+            }
+        }
+
+        return $memberLuns
     }
 
     $result = switch ($PSCmdlet.ParameterSetName) {
@@ -326,7 +332,7 @@ function Get-DMlun {
         'ByFilter' { Get-DMlunFilteredInternal -session $session -Filter $Filter -Keyword $Value }
         'ByLunGroupObject' { Get-DMlunGroupMembersInternal -session $session -groupId $LunGroup.Id }
         'ByLunGroupName' {
-            $resolvedGroup = @(Get-DMlunGroup -WebSession $session | Where-Object Name -EQ $LunGroupName)[0]
+            $resolvedGroup = @(Get-DMlunGroup -WebSession $session -Name $LunGroupName | Where-Object Name -EQ $LunGroupName)[0]
             if ($null -eq $resolvedGroup) { throw "Could not resolve 'LunGroupName' - the object may have been removed since parameter validation." }
             Get-DMlunGroupMembersInternal -session $session -groupId $resolvedGroup.Id
         }

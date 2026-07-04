@@ -2,7 +2,7 @@ $script:MutationReadBackWorkflow = {
 
         if ($owned.Lun.Contains($lunName)) {
             Add-MutationReadVerification -Name 'Get-DMlun:Created' -Action {
-                Get-DMlun -WebSession $session | Where-Object Name -EQ $lunName
+                Get-DMlun -WebSession $session -Name $lunName | Where-Object Name -EQ $lunName
             } | Out-Null
         }
         if ($owned.LunSnapshot.Contains($snapshotName)) {
@@ -12,7 +12,7 @@ $script:MutationReadBackWorkflow = {
         }
         if ($owned.LunGroup.Contains($lunGroupName)) {
             Add-MutationReadVerification -Name 'Get-DMlunGroup:Created' -ExpectedType 'OceanStorLunGroup' -Action {
-                Get-DMlunGroup -WebSession $session | Where-Object Name -EQ $lunGroupName
+                Get-DMlunGroup -WebSession $session -Name $lunGroupName | Where-Object Name -EQ $lunGroupName
             } | Out-Null
         }
         if ($lunGroupContainsLun) {
@@ -35,7 +35,7 @@ $script:MutationReadBackWorkflow = {
         }
         if ($owned.FileSystem.Contains($fileSystemName)) {
             Add-MutationReadVerification -Name 'Get-DMFileSystem:Created' -ExpectedType 'OceanstorFileSystem' -Action {
-                Get-DMFileSystem -WebSession $session | Where-Object Name -EQ $fileSystemName
+                Get-DMFileSystem -WebSession $session -Name $fileSystemName | Where-Object Name -EQ $fileSystemName
             } | Out-Null
         }
         if ($owned.FileSystemSnapshot.Contains($fileSystemSnapshotName)) {
@@ -75,12 +75,12 @@ $script:MutationReadBackWorkflow = {
         }
         if ($owned.ProtectionGroup.Contains($protectionGroupName)) {
             Add-MutationReadVerification -Name 'Get-DMProtectionGroup:Created' -ExpectedType 'OceanstorProtectionGroup' -Action {
-                Get-DMProtectionGroup -WebSession $session | Where-Object Name -EQ $protectionGroupName
+                Get-DMProtectionGroup -WebSession $session -Name $protectionGroupName | Where-Object Name -EQ $protectionGroupName
             } | Out-Null
         }
         if ($owned.SnapshotConsistencyGroup.Contains($consistencyGroupName)) {
             Add-MutationReadVerification -Name 'Get-DMSnapshotConsistencyGroup:Created' -ExpectedType 'OceanstorSnapshotConsistencyGroup' -Action {
-                Get-DMSnapshotConsistencyGroup -WebSession $session | Where-Object Name -EQ $consistencyGroupName
+                Get-DMSnapshotConsistencyGroup -WebSession $session -Name $consistencyGroupName | Where-Object Name -EQ $consistencyGroupName
             } | Out-Null
         }
 

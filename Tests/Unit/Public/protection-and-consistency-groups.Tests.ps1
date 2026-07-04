@@ -3,7 +3,7 @@ BeforeDiscovery {
         param($testRoot)
 
         function Get-DMlunGroup { param([pscustomobject]$WebSession, [string]$Name, [string]$Id) }
-        function Get-DMlun { param([pscustomobject]$WebSession, [string]$Id) }
+        function Get-DMlun { param([pscustomobject]$WebSession, [string]$Id, [string]$Name) }
         function Get-DMvStore { param([pscustomobject]$WebSession) }
         function Invoke-DeviceManager {
             param(
@@ -154,7 +154,12 @@ Describe 'Protection group commands and class' {
     }
 
     It 'gets protection groups associated with a LUN by LunName' {
-        Mock Get-DMlun { @([pscustomobject]@{ Id = 'lun-01'; Name = 'data-lun' }) }
+        Mock Get-DMlun {
+            $items = @([pscustomobject]@{ Id = 'lun-01'; Name = 'data-lun' })
+            if ($Id) { return @($items | Where-Object Id -EQ $Id) }
+            if ($Name) { return @($items | Where-Object Name -EQ $Name) }
+            return $items
+        }
         Mock Invoke-DeviceManager {
             param($WebSession, $Method, $Resource, $BodyData, $ApiV2)
             $script:assocResource = $Resource
@@ -168,7 +173,12 @@ Describe 'Protection group commands and class' {
     }
 
     It 'gets protection groups associated with a LUN by LunId' {
-        Mock Get-DMlun { @([pscustomobject]@{ Id = 'lun-01'; Name = 'data-lun' }) }
+        Mock Get-DMlun {
+            $items = @([pscustomobject]@{ Id = 'lun-01'; Name = 'data-lun' })
+            if ($Id) { return @($items | Where-Object Id -EQ $Id) }
+            if ($Name) { return @($items | Where-Object Name -EQ $Name) }
+            return $items
+        }
         Mock Invoke-DeviceManager {
             param($WebSession, $Method, $Resource, $BodyData, $ApiV2)
             $script:assocResource = $Resource
@@ -323,12 +333,16 @@ Describe 'Add-DMLunToProtectionGroup and Remove-DMLunFromProtectionGroup' {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
         Mock Get-DMProtectionGroup { @([pscustomobject]@{ Id = '3'; Name = 'pg-db' }) }
         Mock Get-DMlun {
-            param($WebSession, $Id)
+            param($WebSession, $Id, $Name)
+            $items = @([pscustomobject]@{ Id = '10'; Name = 'data-lun' })
             if ($Id) {
                 if ($Id -in '10', '11', '12') { return @([pscustomobject]@{ Id = $Id; Name = "lun-$Id" }) }
                 return @()
             }
-            @([pscustomobject]@{ Id = '10'; Name = 'data-lun' })
+            if ($Name) {
+                return @($items | Where-Object Name -EQ $Name)
+            }
+            return $items
         }
         Mock Invoke-DeviceManager {
             $script:method = $Method
@@ -349,6 +363,8 @@ Describe 'Add-DMLunToProtectionGroup and Remove-DMLunFromProtectionGroup' {
         $script:request.protectGroupId | Should -Be '3'
         $script:request.ASSOCIATEOBJTYPE | Should -Be 11
         $script:request.ASSOCIATEOBJID | Should -Be '10'
+        Should -Invoke Get-DMlun -Times 2 -Exactly -ParameterFilter { $Name -eq 'data-lun' -and -not $Id }
+        Should -Invoke Get-DMlun -Times 0 -Exactly -ParameterFilter { -not $Name -and -not $Id }
     }
 
     It 'adds a single LUN by id using the single-LUN interface' {
@@ -401,6 +417,8 @@ Describe 'Add-DMLunToProtectionGroup and Remove-DMLunFromProtectionGroup' {
         $script:method | Should -Be 'DELETE'
         $script:resource | Should -BeLike 'protectgroup/associate?protectGroupId=3&ASSOCIATEOBJTYPE=11&ASSOCIATEOBJID=10*'
         $script:apiV2 | Should -BeTrue
+        Should -Invoke Get-DMlun -Times 2 -Exactly -ParameterFilter { $Name -eq 'data-lun' -and -not $Id }
+        Should -Invoke Get-DMlun -Times 0 -Exactly -ParameterFilter { -not $Name -and -not $Id }
     }
 
     It 'removes multiple LUNs using the batch interface' {

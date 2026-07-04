@@ -95,7 +95,7 @@ function Get-DMProtectionGroup {
         [Parameter(ParameterSetName = 'ByLunName', Mandatory = $true)]
         [ValidateScript({
                 $session = if ($WebSession) { $WebSession } else { $script:CurrentOceanstorSession }
-                $matchingItems = @(Get-DMlun -WebSession $session | Where-Object Name -EQ $_)
+                $matchingItems = @(Get-DMlun -WebSession $session -Name $_ | Where-Object Name -EQ $_)
                 if ($matchingItems.Count -eq 1) { return $true }
                 if ($matchingItems.Count -gt 1) { throw "LunName is ambiguous because more than one LUN is named '$_'." }
                 throw 'Invalid LunName.'
@@ -165,7 +165,7 @@ function Get-DMProtectionGroup {
 
     switch ($PSCmdlet.ParameterSetName) {
         'ByLunName' {
-            $lun = @(Get-DMlun -WebSession $session | Where-Object Name -EQ $LunName)[0]
+            $lun = @(Get-DMlun -WebSession $session -Name $LunName | Where-Object Name -EQ $LunName)[0]
             if ($null -eq $lun) { throw "Could not resolve 'LunName' - the object may have been removed since parameter validation." }
             $associateObjType = 11
             $associateObjId = $lun.Id

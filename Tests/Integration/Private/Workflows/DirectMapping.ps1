@@ -1,7 +1,7 @@
 $script:DirectMappingMutationWorkflow = {
         if ($configuration.Mapping.Enabled) {
             $mapLun = @(Invoke-MutationStep -Name 'New-DMLun:DirectMapping' -Action {
-                if (@(Get-DMlun -WebSession $session | Where-Object Name -EQ $mapLunName).Count -gt 0) {
+                if (@(Get-DMlun -WebSession $session -Name $mapLunName | Where-Object Name -EQ $mapLunName).Count -gt 0) {
                     throw "A LUN named '$mapLunName' already exists; refusing to claim it as test-owned."
                 }
                 New-DMLun -WebSession $session -LunName $mapLunName -Capacity $configuration.Lun.CapacityMB `
@@ -9,10 +9,11 @@ $script:DirectMappingMutationWorkflow = {
                     -Description "Integrity validation run $runId"
             })
             if ($mapLun.Count -gt 0 -and $mapLun[0].Name -eq $mapLunName) {
+                $mapLunId = $mapLun[0].Id
                 Register-TestOwnedResource -Kind Lun -Identity $mapLunName
                 Register-CleanupAction -Name 'Remove-DMLun:DirectMapping' -Action {
                     Invoke-OwnedRemoval -Name 'Remove-DMLun:DirectMapping' -Kind Lun -Identity $mapLunName -Action {
-                        Remove-DMLun -WebSession $session -LunName $mapLunName -ImmediateDelete -Confirm:$false
+                        Remove-DMLun -WebSession $session -LunId $mapLunId -ImmediateDelete -Confirm:$false
                     }
                 }
             }

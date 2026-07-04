@@ -78,7 +78,7 @@ function Add-DMLunToProtectionGroup {
         [ValidateNotNullOrEmpty()]
         [ValidateScript({
                 $session = if ($WebSession) { $WebSession } else { $script:CurrentOceanstorSession }
-                $matchingItems = @(Get-DMProtectionGroup -WebSession $session | Where-Object Name -EQ $_)
+                $matchingItems = @(Get-DMProtectionGroup -WebSession $session -Name $_ | Where-Object Name -EQ $_)
                 if ($matchingItems.Count -eq 1) { return $true }
                 if ($matchingItems.Count -gt 1) { throw "Name is ambiguous because more than one protection group is named '$_'." }
                 throw 'Invalid Name.'
@@ -110,7 +110,7 @@ function Add-DMLunToProtectionGroup {
         [Parameter(Mandatory = $true, ParameterSetName = 'ProtectionGroupById_LunByName')]
         [ValidateScript({
                 $session = if ($WebSession) { $WebSession } else { $script:CurrentOceanstorSession }
-                $matchingItems = @(Get-DMlun -WebSession $session | Where-Object Name -EQ $_)
+                $matchingItems = @(Get-DMlun -WebSession $session -Name $_ | Where-Object Name -EQ $_)
                 if ($matchingItems.Count -eq 1) { return $true }
                 if ($matchingItems.Count -gt 1) { throw "LunName is ambiguous because more than one LUN is named '$_'." }
                 throw 'Invalid LunName.'
@@ -158,7 +158,7 @@ function Add-DMLunToProtectionGroup {
 
             switch -Wildcard ($PSCmdlet.ParameterSetName) {
                 'ProtectionGroupByName_*' {
-                    $protectionGroup = @(Get-DMProtectionGroup -WebSession $session | Where-Object Name -EQ $Name)[0]
+                    $protectionGroup = @(Get-DMProtectionGroup -WebSession $session -Name $Name | Where-Object Name -EQ $Name)[0]
                     if ($null -eq $protectionGroup) { throw "Could not resolve 'Name' - the object may have been removed since parameter validation." }
                 }
                 'ProtectionGroupById_*' {
@@ -169,7 +169,7 @@ function Add-DMLunToProtectionGroup {
 
             $lunIds = @(switch -Wildcard ($PSCmdlet.ParameterSetName) {
                 '*_LunByName' {
-                    $lun = @(Get-DMlun -WebSession $session | Where-Object Name -EQ $LunName)[0]
+                    $lun = @(Get-DMlun -WebSession $session -Name $LunName | Where-Object Name -EQ $LunName)[0]
                     if ($null -eq $lun) { throw "Could not resolve 'LunName' - the object may have been removed since parameter validation." }
                     @($lun.Id)
                 }

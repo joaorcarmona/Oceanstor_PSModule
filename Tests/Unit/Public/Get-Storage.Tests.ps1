@@ -142,7 +142,8 @@ Describe 'Public getter functions' {
                 switch -Wildcard ($Resource) {
                     'lungroup/12'  { [pscustomobject]@{ data = [pscustomobject]@{ ASSOCIATELUNIDLIST = '["lun-02"]' } }; break }
                     'lungroup*'    { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 12; NAME = 'luns'; GROUPTYPE = 0; CAPCITY = 1GB }) }; break }
-                    'lun*'         { [pscustomobject]@{ data = @((New-TestLun -Id 'lun-01' -Name 'database'), (New-TestLun -Id 'lun-02' -Name 'archive')) }; break }
+                    'lun?filter=ID::lun-02*' { [pscustomobject]@{ data = @(New-TestLun -Id 'lun-02' -Name 'archive') }; break }
+                    'lun'          { throw 'GetLuns should not materialize the full LUN inventory.' }
                     default        { [pscustomobject]@{ data = @() } }
                 }
             }
@@ -523,7 +524,8 @@ Describe 'Public getter functions' {
                 param($WebSession, $Method, $Resource)
                 switch -Wildcard ($Resource) {
                     'lungroup/lg-01' { [pscustomobject]@{ data = [pscustomobject]@{ ASSOCIATELUNIDLIST = '["lun-02"]' } }; break }
-                    'lun*' { [pscustomobject]@{ data = @((New-TestLun -Id 'lun-01' -Name 'database'), (New-TestLun -Id 'lun-02' -Name 'archive')) }; break }
+                    'lun?filter=ID::lun-02*' { [pscustomobject]@{ data = @(New-TestLun -Id 'lun-02' -Name 'archive') }; break }
+                    'lun' { throw 'Get-DMlun -LunGroupId should not materialize the full LUN inventory.' }
                     default { [pscustomobject]@{ data = @() } }
                 }
             }
@@ -539,8 +541,10 @@ Describe 'Public getter functions' {
                 param($WebSession, $Method, $Resource)
                 switch -Wildcard ($Resource) {
                     'lungroup/1' { [pscustomobject]@{ data = [pscustomobject]@{ ASSOCIATELUNIDLIST = '["lun-02"]' } }; break }
-                    'lungroup*' { [pscustomobject]@{ data = @([pscustomobject]@{ ID = '1'; NAME = 'production-luns'; GROUPTYPE = 0; CAPCITY = 1GB }) }; break }
-                    'lun*' { [pscustomobject]@{ data = @((New-TestLun -Id 'lun-01' -Name 'database'), (New-TestLun -Id 'lun-02' -Name 'archive')) }; break }
+                    'lungroup?filter=NAME::production-luns*' { [pscustomobject]@{ data = @([pscustomobject]@{ ID = '1'; NAME = 'production-luns'; GROUPTYPE = 0; CAPCITY = 1GB }) }; break }
+                    'lungroup' { throw 'Get-DMlun -LunGroupName should not materialize the full LUN group inventory.' }
+                    'lun?filter=ID::lun-02*' { [pscustomobject]@{ data = @(New-TestLun -Id 'lun-02' -Name 'archive') }; break }
+                    'lun' { throw 'Get-DMlun -LunGroupName should not materialize the full LUN inventory.' }
                     default { [pscustomobject]@{ data = @() } }
                 }
             }
@@ -556,7 +560,8 @@ Describe 'Public getter functions' {
                 param($WebSession, $Method, $Resource)
                 switch -Wildcard ($Resource) {
                     'lungroup/lg-01' { [pscustomobject]@{ data = [pscustomobject]@{ ASSOCIATELUNIDLIST = '["lun-02"]' } }; break }
-                    'lun*' { [pscustomobject]@{ data = @((New-TestLun -Id 'lun-01' -Name 'database'), (New-TestLun -Id 'lun-02' -Name 'archive')) }; break }
+                    'lun?filter=ID::lun-02*' { [pscustomobject]@{ data = @(New-TestLun -Id 'lun-02' -Name 'archive') }; break }
+                    'lun' { throw 'Piped Get-DMlun -LunGroup should not materialize the full LUN inventory.' }
                     default { [pscustomobject]@{ data = @() } }
                 }
             }

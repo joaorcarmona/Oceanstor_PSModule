@@ -123,20 +123,19 @@ function Add-DMLunToLunGroup {
                 $script:CurrentOceanstorSession
             }
 
-            $luns = @(Get-DMlun -WebSession $session)
-            $matchingLuns = @($luns | Where-Object Name -EQ $LunName)
+            $matchingLuns = @(Get-DMlun -WebSession $session -Name $LunName | Where-Object Name -EQ $LunName)
             if ($matchingLuns.Count -eq 0) {
-                throw "Invalid LunName. Valid values are: $($luns.Name -join ', ')"
+                throw "Invalid LunName '$LunName'."
             }
             if ($matchingLuns.Count -gt 1) {
                 throw "LunName is ambiguous because more than one LUN is named '$LunName'."
             }
             $lun = $matchingLuns[0]
 
-            $groups = @(Get-DMlunGroup -WebSession $session)
+            $groups = @(Get-DMlunGroup -WebSession $session -Name $LunGroupName)
             $matchingGroups = @($groups | Where-Object Name -EQ $LunGroupName)
             if ($matchingGroups.Count -eq 0) {
-                throw "Invalid LunGroupName. Valid values are: $($groups.Name -join ', ')"
+                throw "Invalid LunGroupName '$LunGroupName'."
             }
             if ($matchingGroups.Count -gt 1) {
                 throw "LunGroupName is ambiguous because more than one LUN group is named '$LunGroupName'."

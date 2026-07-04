@@ -2,7 +2,7 @@ $script:ProtectionMutationWorkflow = {
         if ($configuration.Protection.Enabled -and $lunGroupContainsLun) {
             $protectionGroup = @(Invoke-MutationStep -Name 'New-DMProtectionGroup' -ExpectedType 'OceanstorProtectionGroup' -Action {
                 Assert-TestOwnedResource -Kind LunGroup -Identity $lunGroupName
-                if (@(Get-DMProtectionGroup -WebSession $session | Where-Object Name -EQ $protectionGroupName).Count -gt 0) {
+                if (@(Get-DMProtectionGroup -WebSession $session -Name $protectionGroupName | Where-Object Name -EQ $protectionGroupName).Count -gt 0) {
                     throw "A protection group named '$protectionGroupName' already exists; refusing to claim it as test-owned."
                 }
                 New-DMProtectionGroup -WebSession $session -Name $protectionGroupName -LunGroupName $lunGroupName `
@@ -24,7 +24,7 @@ $script:ProtectionMutationWorkflow = {
                         -Description "Integrity validation updated $runId" -Confirm:$false
                 } | Out-Null
                 Add-MutationReadVerification -Name 'Set-DMProtectionGroup:ReadBack' -ExpectedType 'OceanstorProtectionGroup' -Action {
-                    $updated = @(Get-DMProtectionGroup -WebSession $session | Where-Object Name -EQ $protectionGroupName)
+                    $updated = @(Get-DMProtectionGroup -WebSession $session -Name $protectionGroupName | Where-Object Name -EQ $protectionGroupName)
                     if ($updated.Count -gt 0 -and $updated[0].Description -ne "Integrity validation updated $runId") {
                         throw "Set-DMProtectionGroup description mismatch: expected 'Integrity validation updated $runId', got '$($updated[0].Description)'."
                     }
@@ -32,7 +32,7 @@ $script:ProtectionMutationWorkflow = {
                 } | Out-Null
                 $renameResult = @(Invoke-MutationStep -Name 'Rename-DMProtectionGroup' -Action {
                     Assert-TestOwnedResource -Kind ProtectionGroup -Identity $protectionGroupName
-                    if (@(Get-DMProtectionGroup -WebSession $session | Where-Object Name -EQ $renamedProtectionGroupName).Count -gt 0) {
+                    if (@(Get-DMProtectionGroup -WebSession $session -Name $renamedProtectionGroupName | Where-Object Name -EQ $renamedProtectionGroupName).Count -gt 0) {
                         throw "A protection group named '$renamedProtectionGroupName' already exists; refusing to overwrite it."
                     }
                     Rename-DMProtectionGroup -WebSession $session -Name $protectionGroupName `
@@ -42,7 +42,7 @@ $script:ProtectionMutationWorkflow = {
                     Update-TestOwnedResourceIdentity -Kind ProtectionGroup -OldIdentity $protectionGroupName -NewIdentity $renamedProtectionGroupName
                     $protectionGroupName = $renamedProtectionGroupName
                     Add-MutationReadVerification -Name 'Rename-DMProtectionGroup:ReadBack' -ExpectedType 'OceanstorProtectionGroup' -Action {
-                        Get-DMProtectionGroup -WebSession $session | Where-Object Name -EQ $protectionGroupName
+                        Get-DMProtectionGroup -WebSession $session -Name $protectionGroupName | Where-Object Name -EQ $protectionGroupName
                     } | Out-Null
                 }
                 # Add/Remove-DMLunToProtectionGroup are exercised below against a second, LUN-type
@@ -51,7 +51,7 @@ $script:ProtectionMutationWorkflow = {
                 # LUN-group-backed protection group (error 1073807382), so the first protection group
                 # (bound to $lunGroupName) cannot be reused for it.
                 $protectionAssociationLun = @(Invoke-MutationStep -Name 'New-DMLun:ProtectionAssociation' -Action {
-                    if (@(Get-DMlun -WebSession $session | Where-Object Name -EQ $protectionLunName).Count -gt 0) {
+                    if (@(Get-DMlun -WebSession $session -Name $protectionLunName | Where-Object Name -EQ $protectionLunName).Count -gt 0) {
                         throw "A LUN named '$protectionLunName' already exists; refusing to claim it as test-owned."
                     }
                     New-DMLun -WebSession $session -LunName $protectionLunName -Capacity $configuration.Lun.CapacityMB `
@@ -59,15 +59,16 @@ $script:ProtectionMutationWorkflow = {
                         -Description "Integrity validation run $runId"
                 })
                 if ($protectionAssociationLun.Count -gt 0 -and $protectionAssociationLun[0].Name -eq $protectionLunName) {
+                    $protectionLunId = $protectionAssociationLun[0].Id
                     Register-TestOwnedResource -Kind Lun -Identity $protectionLunName
                     Register-CleanupAction -Name 'Remove-DMLun:ProtectionAssociation' -Action {
                         Invoke-OwnedRemoval -Name 'Remove-DMLun:ProtectionAssociation' -Kind Lun -Identity $protectionLunName -Action {
-                            Remove-DMLun -WebSession $session -LunName $protectionLunName -ImmediateDelete -Confirm:$false
+                            Remove-DMLun -WebSession $session -LunId $protectionLunId -ImmediateDelete -Confirm:$false
                         }
                     }
 
                     $lunProtectionGroup = @(Invoke-MutationStep -Name 'New-DMProtectionGroup:LunType' -ExpectedType 'OceanstorProtectionGroup' -Action {
-                        if (@(Get-DMProtectionGroup -WebSession $session | Where-Object Name -EQ $lunProtectionGroupName).Count -gt 0) {
+                        if (@(Get-DMProtectionGroup -WebSession $session -Name $lunProtectionGroupName | Where-Object Name -EQ $lunProtectionGroupName).Count -gt 0) {
                             throw "A protection group named '$lunProtectionGroupName' already exists; refusing to claim it as test-owned."
                         }
                         New-DMProtectionGroup -WebSession $session -Name $lunProtectionGroupName -Description "Integrity validation run $runId"
@@ -99,7 +100,7 @@ $script:ProtectionMutationWorkflow = {
 
                 $consistencyGroup = @(Invoke-MutationStep -Name 'New-DMSnapshotConsistencyGroup' -ExpectedType 'OceanstorSnapshotConsistencyGroup' -Action {
                     Assert-TestOwnedResource -Kind ProtectionGroup -Identity $protectionGroupName
-                    if (@(Get-DMSnapshotConsistencyGroup -WebSession $session | Where-Object Name -EQ $consistencyGroupName).Count -gt 0) {
+                    if (@(Get-DMSnapshotConsistencyGroup -WebSession $session -Name $consistencyGroupName | Where-Object Name -EQ $consistencyGroupName).Count -gt 0) {
                         throw "A snapshot consistency group named '$consistencyGroupName' already exists; refusing to claim it as test-owned."
                     }
                     New-DMSnapshotConsistencyGroup -WebSession $session -Name $consistencyGroupName `
@@ -130,7 +131,7 @@ $script:ProtectionMutationWorkflow = {
                         }
                     }
                 }
-                $consistencyState = @(Get-DMSnapshotConsistencyGroup -WebSession $session | Where-Object Name -EQ $consistencyGroupName)[0]
+                $consistencyState = @(Get-DMSnapshotConsistencyGroup -WebSession $session -Name $consistencyGroupName | Where-Object Name -EQ $consistencyGroupName)[0]
                 if ($consistencyState.'Running Status' -eq 'Unactivated') {
                     Invoke-MutationStep -Name 'Enable-DMSnapshotConsistencyGroup' -Action {
                         Assert-TestOwnedResource -Kind SnapshotConsistencyGroup -Identity $consistencyGroupName

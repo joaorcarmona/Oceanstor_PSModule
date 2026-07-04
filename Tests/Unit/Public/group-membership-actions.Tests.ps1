@@ -4,8 +4,8 @@ BeforeDiscovery {
 
         function Get-DMhost { param([pscustomobject]$WebSession, [string]$Name, [string]$Id, [string]$HostGroupId) }
         function Get-DMhostGroup { param([pscustomobject]$WebSession) }
-        function Get-DMlun { param([pscustomobject]$WebSession) }
-        function Get-DMlunGroup { param([pscustomobject]$WebSession) }
+        function Get-DMlun { param([pscustomobject]$WebSession, [string]$Name, [string]$Id) }
+        function Get-DMlunGroup { param([pscustomobject]$WebSession, [string]$Name, [string]$Id) }
         function Get-DMlunbyLunGroup { param([pscustomobject]$WebSession, [psobject]$LunGroup) }
         function Invoke-DeviceManager {
             param(
@@ -87,13 +87,26 @@ Describe 'Host group membership commands' {
 Describe 'LUN group membership commands' {
     BeforeEach {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
-        Mock Get-DMlun { @([pscustomobject]@{ Id = 'lun-01'; Name = 'database' }) }
-        Mock Get-DMlunGroup { @([pscustomobject]@{ Id = 'lg-01'; Name = 'production' }) }
+        Mock Get-DMlun {
+            $items = @([pscustomobject]@{ Id = 'lun-01'; Name = 'database' })
+            if ($Id) { return @($items | Where-Object Id -EQ $Id) }
+            if ($Name) { return @($items | Where-Object Name -EQ $Name) }
+            return $items
+        }
+        Mock Get-DMlunGroup {
+            $items = @([pscustomobject]@{ Id = 'lg-01'; Name = 'production' })
+            if ($Id) { return @($items | Where-Object Id -EQ $Id) }
+            if ($Name) { return @($items | Where-Object Name -EQ $Name) }
+            return $items
+        }
         Mock Get-DMlunbyLunGroup { @([pscustomobject]@{ Id = 'lun-01'; Name = 'database' }) }
         Mock Invoke-DeviceManager {
             $script:method = $Method
             $script:resource = $Resource
             $script:request = $BodyData
+            if ($Method -eq 'GET' -and $Resource -eq 'lungroup/lg-01') {
+                return [pscustomobject]@{ data = [pscustomobject]@{ ASSOCIATELUNIDLIST = '["lun-01"]' } }
+            }
             [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 } }
         }
     }
@@ -120,6 +133,10 @@ Describe 'LUN group membership commands' {
         $script:request.hostLunID | Should -Be 5
         $script:request.force | Should -BeTrue
         $script:request.vstoreId | Should -Be '7'
+        Should -Invoke Get-DMlun -Times 1 -Exactly -ParameterFilter { $Name -eq 'database' -and -not $Id }
+        Should -Invoke Get-DMlun -Times 0 -Exactly -ParameterFilter { -not $Name -and -not $Id }
+        Should -Invoke Get-DMlunGroup -Times 1 -Exactly -ParameterFilter { $Name -eq 'production' -and -not $Id }
+        Should -Invoke Get-DMlunGroup -Times 0 -Exactly -ParameterFilter { -not $Name -and -not $Id }
     }
 
     It 'rejects mutually exclusive host LUN allocation values' {
@@ -135,20 +152,25 @@ Describe 'LUN group membership commands' {
         $result.Code | Should -Be 0
         $script:method | Should -Be 'DELETE'
         $script:resource | Should -Be 'lungroup/associate?ID=lg-01&ASSOCIATEOBJTYPE=11&ASSOCIATEOBJID=lun-01&vstoreId=7'
+        Should -Invoke Get-DMlun -Times 1 -Exactly -ParameterFilter { $Name -eq 'database' -and -not $Id }
+        Should -Invoke Get-DMlun -Times 0 -Exactly -ParameterFilter { -not $Name -and -not $Id }
     }
 
     It 'honors WhatIf for association changes' {
         $null = Remove-DMLunFromLunGroup -WebSession $script:session -LunName 'database' -LunGroupName 'production' -WhatIf
 
-        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
+        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly -ParameterFilter { $Method -eq 'DELETE' }
     }
 
     It 'associates every LUN piped in, not just the last one' {
         Mock Get-DMlun {
-            @(
+            $items = @(
                 [pscustomobject]@{ Id = 'lun-01'; Name = 'lun-a' }
                 [pscustomobject]@{ Id = 'lun-02'; Name = 'lun-b' }
             )
+            if ($Id) { return @($items | Where-Object Id -EQ $Id) }
+            if ($Name) { return @($items | Where-Object Name -EQ $Name) }
+            return $items
         }
         $requests = [System.Collections.Generic.List[object]]::new()
         Mock Invoke-DeviceManager {
@@ -205,6 +227,9 @@ Describe 'LUN group membership commands' {
         }
         $requests = [System.Collections.Generic.List[object]]::new()
         Mock Invoke-DeviceManager {
+            if ($Method -eq 'GET' -and $Resource -eq 'lungroup/lg-01') {
+                return [pscustomobject]@{ data = [pscustomobject]@{ ASSOCIATELUNIDLIST = '["lun-01","lun-02"]' } }
+            }
             $requests.Add([pscustomobject]@{ Resource = $Resource })
             [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 } }
         }
@@ -218,6 +243,7 @@ Describe 'LUN group membership commands' {
         $requests.Count | Should -Be 2
         ($requests | Where-Object { $_.Resource -like '*ASSOCIATEOBJID=lun-01*' }).Count | Should -Be 1
         ($requests | Where-Object { $_.Resource -like '*ASSOCIATEOBJID=lun-02*' }).Count | Should -Be 1
+        Should -Invoke Get-DMlun -Times 0 -Exactly -ParameterFilter { -not $Name -and -not $Id }
     }
 }
 

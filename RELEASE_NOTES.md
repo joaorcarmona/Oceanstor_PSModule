@@ -32,6 +32,16 @@
   checks. Source LUN name paths now use filtered `Get-DMlun -Name` lookups, the
   integrity workflow creates snapshots with the known LUN ID, and
   `Get-DMLunSnapshot -Name` now narrows requests server-side.
+- Optimized LUN membership and protection-group association commands. LUN name
+  paths in `Remove-DMLunFromLunGroup`, `Add-DMLunToProtectionGroup`,
+  `Remove-DMLunFromProtectionGroup`, and `Get-DMProtectionGroup -LunName` now
+  use filtered LUN lookups, and LUN-group removal checks membership without
+  materializing the full LUN inventory.
+- Optimized integrity validation hot spots above two seconds by replacing broad
+  LUN, LUN-group, file-system, protection-group, and consistency-group readbacks
+  with filtered lookups where the workflow already knows the target name or ID.
+  `Get-DMlun -LunGroup`, `-LunGroupName`, and `-LunGroupId` now resolve group
+  member IDs directly instead of loading every LUN before filtering locally.
 
 ## Bug Fixes
 
