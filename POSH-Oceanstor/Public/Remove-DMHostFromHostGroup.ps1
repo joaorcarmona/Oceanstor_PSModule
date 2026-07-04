@@ -86,7 +86,7 @@ function Remove-DMHostFromHostGroup {
                 $script:CurrentOceanstorSession
             }
 
-            $matchingHosts = @(Get-DMhostbyName -WebSession $session -Name $HostName)
+            $matchingHosts = @(Get-DMhost -WebSession $session -Name $HostName)
             if ($matchingHosts.Count -eq 0) {
                 throw "Invalid HostName '$HostName'. No host with that name exists."
             }
@@ -105,7 +105,7 @@ function Remove-DMHostFromHostGroup {
             }
             $group = $matchingGroups[0]
 
-            $members = @(Get-DMhostbyHostGroup -WebSession $session -HostGroupId $group.Id)
+            $members = @(Get-DMhost -WebSession $session -HostGroupId $group.Id)
             if ($members.Id -notcontains $hostObject.Id) {
                 throw "Host '$HostName' is not a member of host group '$HostGroupName'."
             }

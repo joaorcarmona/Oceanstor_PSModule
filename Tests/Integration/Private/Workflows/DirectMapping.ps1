@@ -18,7 +18,7 @@ $script:DirectMappingMutationWorkflow = {
             }
 
             $mapHost = @(Invoke-MutationStep -Name 'New-DMHost:DirectMapping' -ExpectedType 'OceanStorHost' -Action {
-                if (@(Get-DMhostbyName -WebSession $session -Name $mapHostName).Count -gt 0) {
+                if (@(Get-DMhost -WebSession $session -Name $mapHostName).Count -gt 0) {
                     throw "A host named '$mapHostName' already exists; refusing to claim it as test-owned."
                 }
                 New-DMHost -WebSession $session -Name $mapHostName -OperatingSystem $configuration.Host.OperatingSystem `

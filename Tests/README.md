@@ -46,10 +46,10 @@ Use quieter output:
 Write a JUnit XML report, suitable for CI:
 
 ```powershell
-./Tests/Invoke-UnitTests.ps1 -Output Normal -ResultPath ./TestResults/Pester.xml
+./Tests/Invoke-UnitTests.ps1 -Output Normal -ResultPath ./Reports/Pester.xml
 ```
 
-The GitHub Actions workflow uses the JUnit form above.
+The GitHub Actions workflow uses the JUnit form above, writing into `Reports/`.
 
 ## Integration Methodology
 
@@ -153,26 +153,27 @@ workflows:
 
 ## Output Files
 
-The default live validation report is:
+The default live validation report is written to:
 
 ```text
-Tests/Integration/getter-integrity-last-result.json
+Reports/getter-integrity-last-result.json
+Reports/getter-integrity-last-result.md
 ```
 
 Mutation mode additionally writes:
 
 ```text
-Tests/Integration/mutation-trace-last-result.json
+Reports/mutation-trace-last-result.json
 ```
 
-Override either location when retaining multiple runs:
+Override any location when retaining multiple runs (the target directory is created if missing):
 
 ```powershell
 ./Tests/Integration/Invoke-GetterIntegrityValidation.ps1 `
     -Hostname 'IP_or_FQDN' `
     -RunMutatingTests `
-    -ReportPath './TestResults/lab-report.json' `
-    -MutationLogPath './TestResults/lab-mutation-trace.json'
+    -ReportPath './Reports/lab-report.json' `
+    -MutationLogPath './Reports/lab-mutation-trace.json'
 ```
 
 ## Status Meanings

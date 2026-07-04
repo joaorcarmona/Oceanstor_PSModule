@@ -126,7 +126,7 @@ function Add-DMmapLunGroupToHost {
                 else {
                     $script:CurrentOceanstorSession
                 }
-                $matchingItems = @(Get-DMhostbyName -WebSession $session -Name $_)
+                $matchingItems = @(Get-DMhost -WebSession $session -Name $_)
                 if ($matchingItems.Count -eq 1) {
                     return $true
                 }
@@ -194,7 +194,7 @@ function Add-DMmapLunGroupToHost {
 
             switch -Wildcard ($PSCmdlet.ParameterSetName) {
                 '*_HostByName' {
-                    $hostObject = @(Get-DMhostbyName -WebSession $session -Name $HostName)[0]
+                    $hostObject = @(Get-DMhost -WebSession $session -Name $HostName)[0]
                     if ($null -eq $hostObject) {
                         throw "Could not resolve 'HostName' - the object may have been removed since parameter validation."
                     }

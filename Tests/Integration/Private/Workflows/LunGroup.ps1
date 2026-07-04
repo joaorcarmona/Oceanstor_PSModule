@@ -113,7 +113,7 @@ $script:LunGroupMutationWorkflow = {
                     } | Out-Null
                     Add-MutationReadVerification -Name 'Add-DMLunToLunGroup:PipelineBatch:ReadBack' -Action {
                         $group = @(Get-DMlunGroup -WebSession $session | Where-Object Name -EQ $lunGroupName)[0]
-                        $members = @(Get-DMlunbyLunGroup -WebSession $session -LunGroup $group)
+                        $members = @(Get-DMlun -WebSession $session -LunGroup $group)
                         $missing = @($pipeLunsCreated | Where-Object { $members.Name -notcontains $_ })
                         if ($missing.Count -gt 0) {
                             throw "Add-DMLunToLunGroup pipeline batch did not associate: $($missing -join ', ')."

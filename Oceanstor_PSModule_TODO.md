@@ -15,6 +15,7 @@ Detailed audit findings live in `ANALYSIS.md`. Release-facing summaries live in 
 - [ ] Decide which NAS children need modification commands: dTrees, CIFS shares, NFS shares, and NFS clients currently support only their existing create/read/delete surface.
 - [ ] Decide whether initiator objects need action methods or should remain command-only objects.
 - [ ] Decide whether network objects (LIFs, VLANs, physical ports, bonds, and vStores) should remain read-only or gain supported mutation commands.
+- [ ] LUN `Size` and FileSystem `Size` output properties should indicate the unit they're expressed in (currently a bare number with no MB/GB label).
 
 ### Testing, CI/CD, & Supply Chain Security
 

@@ -78,7 +78,7 @@ function Add-DMmapLunToHost {
                 else {
                     $script:CurrentOceanstorSession
                 }
-                $matchingItems = @(Get-DMlunByName -WebSession $session -Name $_)
+                $matchingItems = @(Get-DMlun -WebSession $session -Name $_)
                 if ($matchingItems.Count -eq 1) {
                     return $true
                 }
@@ -127,7 +127,7 @@ function Add-DMmapLunToHost {
                 else {
                     $script:CurrentOceanstorSession
                 }
-                $matchingItems = @(Get-DMhostbyName -WebSession $session -Name $_)
+                $matchingItems = @(Get-DMhost -WebSession $session -Name $_)
                 if ($matchingItems.Count -eq 1) {
                     return $true
                 }
@@ -180,7 +180,7 @@ function Add-DMmapLunToHost {
 
             switch -Wildcard ($PSCmdlet.ParameterSetName) {
                 'LunByName_*' {
-                    $lun = @(Get-DMlunByName -WebSession $session -Name $LunName)[0]
+                    $lun = @(Get-DMlun -WebSession $session -Name $LunName)[0]
                     if ($null -eq $lun) {
                         throw "Could not resolve 'LunName' - the object may have been removed since parameter validation."
                     }
@@ -195,7 +195,7 @@ function Add-DMmapLunToHost {
 
             switch -Wildcard ($PSCmdlet.ParameterSetName) {
                 '*_HostByName' {
-                    $hostObject = @(Get-DMhostbyName -WebSession $session -Name $HostName)[0]
+                    $hostObject = @(Get-DMhost -WebSession $session -Name $HostName)[0]
                     if ($null -eq $hostObject) {
                         throw "Could not resolve 'HostName' - the object may have been removed since parameter validation."
                     }

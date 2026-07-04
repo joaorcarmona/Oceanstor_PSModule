@@ -68,13 +68,13 @@ jobs:
       - name: Run unit tests with code coverage
         shell: pwsh
         run: |
-          ./Tests/Invoke-UnitTests.ps1 -Output Normal -ResultPath ./TestResults/Pester.xml -CoveragePath ./TestResults/Coverage.xml
+          ./Tests/Invoke-UnitTests.ps1 -Output Normal -ResultPath ./Reports/Pester.xml -CoveragePath ./Reports/Coverage.xml
       - name: Upload Pester results
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
           name: pester-test-results-${{ matrix.os }}
           path: |
-            TestResults/Pester.xml
-            TestResults/Coverage.xml
+            Reports/Pester.xml
+            Reports/Coverage.xml
           if-no-files-found: error

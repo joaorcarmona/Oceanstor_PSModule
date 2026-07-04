@@ -92,7 +92,7 @@ function Add-DMHostToHostGroup {
                 $script:CurrentOceanstorSession
             }
 
-            $matchingHosts = @(Get-DMhostbyName -WebSession $session -Name $HostName)
+            $matchingHosts = @(Get-DMhost -WebSession $session -Name $HostName)
             if ($matchingHosts.Count -eq 0) {
                 throw "Invalid HostName '$HostName'. No host with that name exists."
             }

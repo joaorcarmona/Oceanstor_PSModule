@@ -7,11 +7,11 @@ param(
 
     [switch]$SkipCertificateCheck,
 
-    [string]$ReportPath = (Join-Path $PSScriptRoot 'getter-integrity-last-result.json'),
+    [string]$ReportPath = (Join-Path $PSScriptRoot '..\..\Reports\getter-integrity-last-result.json'),
 
-    [string]$MarkdownReportPath = (Join-Path $PSScriptRoot 'getter-integrity-last-result.md'),
+    [string]$MarkdownReportPath = (Join-Path $PSScriptRoot '..\..\Reports\getter-integrity-last-result.md'),
 
-    [string]$MutationLogPath = (Join-Path $PSScriptRoot 'mutation-trace-last-result.json'),
+    [string]$MutationLogPath = (Join-Path $PSScriptRoot '..\..\Reports\mutation-trace-last-result.json'),
 
     [string]$ConfigurationPath = (Join-Path $PSScriptRoot 'IntegrityValidationConfig.psd1'),
 
@@ -24,6 +24,14 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $runStartedAt = Get-Date
+
+foreach ($outputPath in @($ReportPath, $MarkdownReportPath, $MutationLogPath)) {
+    $outputDirectory = Split-Path -Path $outputPath -Parent
+    if ($outputDirectory -and -not (Test-Path -LiteralPath $outputDirectory)) {
+        $null = New-Item -Path $outputDirectory -ItemType Directory -Force
+    }
+}
+
 $configuration = Import-PowerShellDataFile -LiteralPath $ConfigurationPath
 $runId = Get-Date -Format 'yyyyMMddHHmmss'
 $moduleRoot = Join-Path (Split-Path -Parent $PSScriptRoot) '..\POSH-Oceanstor'

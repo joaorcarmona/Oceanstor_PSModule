@@ -16,7 +16,19 @@ function Invoke-MutationValidation {
         'Set-DMdnsServer',
         'Export-DeviceManager',
         'Export-DMInventory',
-        'Export-DMStorageToExcel'
+        'Export-DMStorageToExcel',
+        'Get-DMhostbyFilter',
+        'Get-DMhostbyHostGroup',
+        'Get-DMhostbyId',
+        'Get-DMhostbyName',
+        'Get-DMLunbyFilter',
+        'Get-DMlunbyLunGroup',
+        'Get-DMlunByWWN',
+        'Get-DMlunByName',
+        'Get-DMDiskByStoragePool',
+        'Get-DMcofferDisk',
+        'Get-DMDiskbyLocation',
+        'Get-DMfreeDisk'
     )
 
     if (-not $RunMutatingTests) {
@@ -38,7 +50,8 @@ function Invoke-MutationValidation {
             'Remove-DMLunGroupFromMappingView', 'Add-DMmapLunToHost', 'Remove-DMmapLunFromHost',
             'Add-DMmapLunGroupToHost', 'Remove-DMunmapLunGroupFromHost',
             'Add-DMmapLunGroupToHostGroup', 'Remove-DMunmapLunGroupFromHostGroup',
-            'New-DMProtectionGroup', 'Remove-DMProtectionGroup',
+            'New-DMProtectionGroup', 'Remove-DMProtectionGroup', 'Set-DMProtectionGroup', 'Rename-DMProtectionGroup',
+            'Add-DMLunToProtectionGroup', 'Remove-DMLunFromProtectionGroup',
             'New-DMSnapshotConsistencyGroup', 'New-DMSnapshotConsistencyGroupCopy',
             'Enable-DMSnapshotConsistencyGroup', 'Restart-DMSnapshotConsistencyGroup',
             'Restore-DMSnapshotConsistencyGroup', 'Remove-DMSnapshotConsistencyGroup',
@@ -71,6 +84,8 @@ function Invoke-MutationValidation {
         $lunGroupName = New-TestName -Suffix 'lungroup'
         $renamedLunGroupName = New-TestName -Suffix 'lungroup_renamed'
         $protectionGroupName = New-TestName -Suffix 'protect'
+        $renamedProtectionGroupName = New-TestName -Suffix 'protect_renamed'
+        $protectionLunName = New-TestName -Suffix 'protect_lun'
         $consistencyGroupName = New-TestName -Suffix 'cgsnap'
         $consistencyCopyName = New-TestName -Suffix 'cgcopy'
         $testHostName = New-TestName -Suffix 'host'

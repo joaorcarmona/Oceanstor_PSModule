@@ -69,7 +69,7 @@ function Remove-DMHost {
                 $script:CurrentOceanstorSession
             }
 
-            $matchingItems = @(Get-DMhostbyName -WebSession $session -Name $HostName)
+            $matchingItems = @(Get-DMhost -WebSession $session -Name $HostName)
             if ($matchingItems.Count -eq 0) {
                 throw "Invalid HostName '$HostName'. No host with that name exists."
             }

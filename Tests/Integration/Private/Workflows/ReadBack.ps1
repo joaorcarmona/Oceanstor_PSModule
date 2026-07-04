@@ -16,8 +16,8 @@ $script:MutationReadBackWorkflow = {
             } | Out-Null
         }
         if ($lunGroupContainsLun) {
-            Add-MutationReadVerification -Name 'Get-DMlunbyLunGroup:Association' -Action {
-                Get-DMlunbyLunGroup -WebSession $session -LunGroup $lunGroup[0] | Where-Object Name -EQ $lunName
+            Add-MutationReadVerification -Name 'Get-DMlun:LunGroupAssociation' -Action {
+                Get-DMlun -WebSession $session -LunGroup $lunGroup[0] | Where-Object Name -EQ $lunName
             } | Out-Null
         }
         if ($owned.Host.Contains($testHostName)) {
@@ -26,11 +26,11 @@ $script:MutationReadBackWorkflow = {
             } | Out-Null
         }
         if ($hostGroupContainsHost) {
-            Add-MutationReadVerification -Name 'Get-DMhostbyHostGroup:ById' -ExpectedType 'OceanStorHost' -Action {
-                Get-DMhostbyHostGroup -WebSession $session -HostGroupId $hostGroup[0].Id | Where-Object Name -EQ $testHostName
+            Add-MutationReadVerification -Name 'Get-DMhost:ByHostGroupId' -ExpectedType 'OceanStorHost' -Action {
+                Get-DMhost -WebSession $session -HostGroupId $hostGroup[0].Id | Where-Object Name -EQ $testHostName
             } | Out-Null
-            Add-MutationReadVerification -Name 'Get-DMhostbyHostGroup:ByName' -ExpectedType 'OceanStorHost' -Action {
-                Get-DMhostbyHostGroup -WebSession $session -HostGroupName $hostGroupName | Where-Object Name -EQ $testHostName
+            Add-MutationReadVerification -Name 'Get-DMhost:ByHostGroupName' -ExpectedType 'OceanStorHost' -Action {
+                Get-DMhost -WebSession $session -HostGroupName $hostGroupName | Where-Object Name -EQ $testHostName
             } | Out-Null
         }
         if ($owned.FileSystem.Contains($fileSystemName)) {

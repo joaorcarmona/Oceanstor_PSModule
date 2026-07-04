@@ -106,7 +106,7 @@ function Remove-DMLunFromLunGroup {
             }
             $group = $matchingGroups[0]
 
-            $members = @(Get-DMlunbyLunGroup -WebSession $session -LunGroup $group)
+            $members = @(Get-DMlun -WebSession $session -LunGroup $group)
             if ($members.Id -notcontains $lun.Id) {
                 throw "LUN '$LunName' is not a member of LUN group '$LunGroupName'."
             }

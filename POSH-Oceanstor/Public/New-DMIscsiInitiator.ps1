@@ -85,7 +85,7 @@ function New-DMIscsiInitiator {
                 else {
                     $script:CurrentOceanstorSession
                 }
-                $matchingItems = @(Get-DMhostbyName -WebSession $session -Name $candidate)
+                $matchingItems = @(Get-DMhost -WebSession $session -Name $candidate)
                 if ($matchingItems.Count -eq 1) {
                     return $true
                 }
@@ -148,7 +148,7 @@ function New-DMIscsiInitiator {
         $body.NAME = $Name
     }
     if ($HostName) {
-        $hostObject = @(Get-DMhostbyName -WebSession $session -Name $HostName)[0]
+        $hostObject = @(Get-DMhost -WebSession $session -Name $HostName)[0]
         if ($null -eq $hostObject) { throw "Could not resolve 'hostObject' — the object may have been removed since parameter validation." }
         $body.PARENTTYPE = 21
         $body.PARENTID = $hostObject.Id

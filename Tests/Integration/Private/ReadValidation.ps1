@@ -39,11 +39,11 @@ function Invoke-ReadValidation {
     Add-ValidationResult -Name 'Get-DMInterfaceModule' -ExpectedType 'OceanstorInterfaceModule' -Action {
         Get-DMInterfaceModule -WebSession $session
     } | Out-Null
-    Add-ValidationResult -Name 'Get-DMcofferDisk' -ExpectedType 'OceanStorDisks' -Action {
-        Get-DMcofferDisk -WebSession $session
+    Add-ValidationResult -Name 'Get-DMdisk:Coffer' -ExpectedType 'OceanStorDisks' -Action {
+        Get-DMdisk -WebSession $session -Coffer
     } | Out-Null
-    Add-ValidationResult -Name 'Get-DMfreeDisk' -ExpectedType 'OceanStorDisks' -Action {
-        Get-DMfreeDisk -WebSession $session
+    Add-ValidationResult -Name 'Get-DMdisk:Free' -ExpectedType 'OceanStorDisks' -Action {
+        Get-DMdisk -WebSession $session -Free
     } | Out-Null
     Add-ValidationResult -Name 'Get-DMdnsServer' -ExpectedType 'Hashtable' -Action {
         Get-DMdnsServer -WebSession $session
@@ -119,39 +119,42 @@ function Invoke-ReadValidation {
 
     if ($samples.Disks.Count -gt 0) {
         $disk = $samples.Disks[0]
-        Add-ValidationResult -Name 'Get-DMDiskbyLocation' -ExpectedType 'OceanStorDisks' -Action {
-            Get-DMDiskbyLocation -WebSession $session -Location $disk.location
+        Add-ValidationResult -Name 'Get-DMdisk:ByLocation' -ExpectedType 'OceanStorDisks' -Action {
+            Get-DMdisk -WebSession $session -Location $disk.location
         } | Out-Null
 
         if ($disk.poolId) {
-            Add-ValidationResult -Name 'Get-DMDiskByStoragePool:ById' -ExpectedType 'OceanStorDisks' -Action {
-                Get-DMDiskByStoragePool -WebSession $session -StoragePoolId $disk.poolId
+            Add-ValidationResult -Name 'Get-DMdisk:ByStoragePoolId' -ExpectedType 'OceanStorDisks' -Action {
+                Get-DMdisk -WebSession $session -StoragePoolId $disk.poolId
             } | Out-Null
         }
         if ($disk.poolName) {
-            Add-ValidationResult -Name 'Get-DMDiskByStoragePool:ByName' -ExpectedType 'OceanStorDisks' -Action {
-                Get-DMDiskByStoragePool -WebSession $session -StoragePoolName $disk.poolName
+            Add-ValidationResult -Name 'Get-DMdisk:ByStoragePoolName' -ExpectedType 'OceanStorDisks' -Action {
+                Get-DMdisk -WebSession $session -StoragePoolName $disk.poolName
             } | Out-Null
         }
     }
 
     if ($samples.Hosts.Count -gt 0) {
         $hostRecord = $samples.Hosts[0]
-        Add-ValidationResult -Name 'Get-DMhostbyId' -ExpectedType 'OceanStorHost' -Action {
-            Get-DMhostbyId -WebSession $session -HostId $hostRecord.id
+        Add-ValidationResult -Name 'Get-DMhost:ById' -ExpectedType 'OceanStorHost' -Action {
+            Get-DMhost -WebSession $session -Id $hostRecord.id
         } | Out-Null
-        Add-ValidationResult -Name 'Get-DMhostbyName' -ExpectedType 'OceanStorHost' -Action {
-            Get-DMhostbyName -WebSession $session -Name $hostRecord.name
+        Add-ValidationResult -Name 'Get-DMhost:ByName' -ExpectedType 'OceanStorHost' -Action {
+            Get-DMhost -WebSession $session -Name $hostRecord.name
+        } | Out-Null
+        Add-ValidationResult -Name 'Get-DMhost:ByFilter' -ExpectedType 'OceanStorHost' -Action {
+            Get-DMhost -WebSession $session -Filter Name -Value $hostRecord.name
         } | Out-Null
 
         if ($hostRecord.'Parent Id') {
-            Add-ValidationResult -Name 'Get-DMhostbyHostGroup:ById' -ExpectedType 'OceanStorHost' -Action {
-                Get-DMhostbyHostGroup -WebSession $session -HostGroupId $hostRecord.'Parent Id'
+            Add-ValidationResult -Name 'Get-DMhost:ByHostGroupId' -ExpectedType 'OceanStorHost' -Action {
+                Get-DMhost -WebSession $session -HostGroupId $hostRecord.'Parent Id'
             } | Out-Null
         }
         if ($hostRecord.'Parent Name') {
-            Add-ValidationResult -Name 'Get-DMhostbyHostGroup:ByName' -ExpectedType 'OceanStorHost' -Action {
-                Get-DMhostbyHostGroup -WebSession $session -HostGroupName $hostRecord.'Parent Name'
+            Add-ValidationResult -Name 'Get-DMhost:ByHostGroupName' -ExpectedType 'OceanStorHost' -Action {
+                Get-DMhost -WebSession $session -HostGroupName $hostRecord.'Parent Name'
             } | Out-Null
         }
         Add-ValidationResult -Name 'Get-DMHostLink:FC' -ExpectedType 'OceanStorHostLink' -Action {
@@ -167,14 +170,14 @@ function Invoke-ReadValidation {
 
     if ($samples.Luns.Count -gt 0) {
         $lun = $samples.Luns[0]
-        Add-ValidationResult -Name 'Get-DMlunByWWN' -Action {
-            Get-DMlunByWWN -WebSession $session -WWN $lun.WWN
+        Add-ValidationResult -Name 'Get-DMlun:ByWWN' -Action {
+            Get-DMlun -WebSession $session -WWN $lun.WWN
         } | Out-Null
-        Add-ValidationResult -Name 'Get-DMlunByName' -Action {
-            Get-DMlunByName -WebSession $session -Name $lun.Name
+        Add-ValidationResult -Name 'Get-DMlun:ByName' -Action {
+            Get-DMlun -WebSession $session -Name $lun.Name
         } | Out-Null
-        Add-ValidationResult -Name 'Get-DMLunbyFilter' -Action {
-            Get-DMLunbyFilter -WebSession $session -Filter Name -Keyword $lun.Name
+        Add-ValidationResult -Name 'Get-DMlun:ByFilter' -Action {
+            Get-DMlun -WebSession $session -Filter Name -Value $lun.Name
         } | Out-Null
     }
 
@@ -185,8 +188,8 @@ function Invoke-ReadValidation {
         } | Out-Null
     }
     if ($samples.LunGroups.Count -gt 0) {
-        Add-ValidationResult -Name 'Get-DMlunbyLunGroup' -Action {
-            Get-DMlunbyLunGroup -WebSession $session -LunGroup $samples.LunGroups[0]
+        Add-ValidationResult -Name 'Get-DMlun:ByLunGroup' -Action {
+            Get-DMlun -WebSession $session -LunGroup $samples.LunGroups[0]
         } | Out-Null
     }
 }
