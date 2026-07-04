@@ -54,6 +54,7 @@ $validationModule = New-Module -Name OceanstorLiveGetterValidation -ArgumentList
         'Assert-DMApiSuccess.ps1',
         'Assert-DMValidFilterProperty.ps1',
         'ConvertTo-DMCapacityBlock.ps1',
+        'ConvertTo-DMQuotaByte.ps1',
         'Get-DMFilterableProperty.ps1',
         'Get-DMApiErrorMessage.ps1',
         'Get-DMparsedElabel.ps1',
@@ -107,7 +108,7 @@ $cleanupActions = [System.Collections.Generic.List[object]]::new()
 $sessionDisconnected = $false
 $samples = @{}
 $owned = @{}
-foreach ($kind in @('Lun', 'LunSnapshot', 'LunGroup', 'ProtectionGroup', 'SnapshotConsistencyGroup', 'Host', 'HostGroup', 'FileSystem', 'FileSystemSnapshot', 'DTree', 'CifsShare', 'NfsShare', 'NfsClient', 'MappingView', 'PortGroup', 'FibreChannelInitiator', 'IscsiInitiator', 'NvmeInitiator')) {
+foreach ($kind in @('Lun', 'LunSnapshot', 'LunGroup', 'ProtectionGroup', 'SnapshotConsistencyGroup', 'Host', 'HostGroup', 'FileSystem', 'FileSystemSnapshot', 'DTree', 'CifsShare', 'NfsShare', 'NfsClient', 'Quota', 'MappingView', 'PortGroup', 'FibreChannelInitiator', 'IscsiInitiator', 'NvmeInitiator')) {
     $owned[$kind] = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 }
 

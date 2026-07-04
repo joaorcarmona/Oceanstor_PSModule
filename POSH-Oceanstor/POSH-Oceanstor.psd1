@@ -74,6 +74,7 @@ FormatsToProcess = @(
     "Format\OceanstorDtree.format.ps1xml"
     "Format\OceanstorNFSShare.format.ps1xml"
     "Format\OceanstorNFSclient.format.ps1xml"
+    "Format\OceanstorQuota.format.ps1xml"
 )
 
 # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
@@ -138,6 +139,7 @@ FunctionsToExport = @(
     'Get-DMPortGroup'
     'Get-DMPortSAS'
     'Get-DMProtectionGroup'
+    'Get-DMQuota'
     'Get-DMShare'
     'Get-DMSnapshotConsistencyGroup'
     'Get-DMstoragePool'
@@ -164,6 +166,7 @@ FunctionsToExport = @(
     'New-DMNvmeInitiator'
     'New-DMPortGroup'
     'New-DMProtectionGroup'
+    'New-DMQuota'
     'New-DMSnapshotConsistencyGroup'
     'New-DMSnapshotConsistencyGroupCopy'
     'Remove-DMCifsShare'
@@ -194,6 +197,7 @@ FunctionsToExport = @(
     'Remove-DMPortGroup'
     'Remove-DMPortGroupFromMappingView'
     'Remove-DMProtectionGroup'
+    'Remove-DMQuota'
     'Remove-DMSnapshotConsistencyGroup'
     'Remove-DMunmapLunGroupFromHost'
     'Remove-DMunmapLunGroupFromHostGroup'
@@ -210,14 +214,19 @@ FunctionsToExport = @(
     'Restore-DMFileSystemSnapshot'
     'Restore-DMLunSnapshot'
     'Restore-DMSnapshotConsistencyGroup'
+    'Set-DMCifsShare'
     'Set-DMdnsServer'
+    'Set-DMdTree'
     'Set-DMFileSystem'
     'Set-DMHost'
     'Set-DMHostGroup'
     'Set-DMLun'
     'Set-DMLunGroup'
+    'Set-DMnfsClient'
+    'Set-DMnfsShare'
     'Set-DMPortGroup'
     'Set-DMProtectionGroup'
+    'Set-DMQuota'
 )
 
 # Cmdlets to export from this module

@@ -108,10 +108,23 @@ $script:NasMutationWorkflow = {
                             Remove-DMDTree -WebSession $session -FileSystemName $fileSystemName -DTreeName $dTreeName -Confirm:$false
                         }
                     }
+
+                    Invoke-MutationStep -Name 'Set-DMdTree' -Action {
+                        Assert-TestOwnedResource -Kind DTree -Identity $dTreeName
+                        Set-DMdTree -WebSession $session -FileSystemName $fileSystemName -DTreeName $dTreeName `
+                            -QuotaSwitch enabled -Confirm:$false
+                    } | Out-Null
+                    Add-MutationReadVerification -Name 'Set-DMdTree:ReadBack' -Action {
+                        $updated = @((Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource "QUOTATREE?PARENTID=$($fileSystem[0].Id)").data | Where-Object NAME -EQ $dTreeName)
+                        if ($updated.Count -gt 0 -and -not [bool]$updated[0].QUOTASWITCH) {
+                            throw "Set-DMdTree quota switch mismatch: expected enabled, got '$($updated[0].QUOTASWITCH)'."
+                        }
+                        $updated
+                    } | Out-Null
                 }
             }
             elseif (-not $configuration.Nas.EnableDTree) {
-                Add-SkippedResult -Name @('New-DMdTree', 'Remove-DMDTree') -Status 'NotConfigured' -Reason 'Set Nas.EnableDTree = $true to run the dTree workflow.'
+                Add-SkippedResult -Name @('New-DMdTree', 'Set-DMdTree', 'Remove-DMDTree') -Status 'NotConfigured' -Reason 'Set Nas.EnableDTree = $true to run the dTree workflow.'
             }
 
             if ($owned.FileSystem.Contains($fileSystemName) -and $configuration.Nas.EnableNfs) {
@@ -129,6 +142,20 @@ $script:NasMutationWorkflow = {
                             Remove-DMNfsShare -WebSession $session -SharePath $nfsSharePath -Confirm:$false
                         }
                     }
+
+                    Invoke-MutationStep -Name 'Set-DMnfsShare' -Action {
+                        Assert-TestOwnedResource -Kind NfsShare -Identity $nfsSharePath
+                        Set-DMnfsShare -WebSession $session -SharePath $nfsSharePath `
+                            -Description "Integrity validation updated $runId" -Confirm:$false
+                    } | Out-Null
+                    Add-MutationReadVerification -Name 'Set-DMnfsShare:ReadBack' -ExpectedType 'OceanStorNFSShare' -Action {
+                        $updated = @(Get-DMShare -WebSession $session -ShareType NFS | Where-Object 'Share Path' -EQ $nfsSharePath)
+                        if ($updated.Count -gt 0 -and $updated[0].Description -ne "Integrity validation updated $runId") {
+                            throw "Set-DMnfsShare description mismatch: expected 'Integrity validation updated $runId', got '$($updated[0].Description)'."
+                        }
+                        $updated
+                    } | Out-Null
+
                     $nfsClient = @(Invoke-MutationStep -Name 'New-DMnfsClient' -Action {
                         Assert-TestOwnedResource -Kind NfsShare -Identity $nfsSharePath
                         if (@(Get-DMnfsFileClient -WebSession $session | Where-Object Name -EQ $configuration.Nas.NfsClientName).Count -gt 0) {
@@ -144,11 +171,24 @@ $script:NasMutationWorkflow = {
                                 Remove-DMNfsClient -WebSession $session -ClientName $configuration.Nas.NfsClientName -Confirm:$false
                             }
                         }
+
+                        Invoke-MutationStep -Name 'Set-DMnfsClient' -Action {
+                            Assert-TestOwnedResource -Kind NfsClient -Identity $configuration.Nas.NfsClientName
+                            Set-DMnfsClient -WebSession $session -ClientName $configuration.Nas.NfsClientName `
+                                -Access ReadOnly -Confirm:$false
+                        } | Out-Null
+                        Add-MutationReadVerification -Name 'Set-DMnfsClient:ReadBack' -ExpectedType 'OceanstorNFSclient' -Action {
+                            $updated = @(Get-DMnfsFileClient -WebSession $session | Where-Object Name -EQ $configuration.Nas.NfsClientName)
+                            if ($updated.Count -gt 0 -and $updated[0].'Access Permission' -ne 'read-only') {
+                                throw "Set-DMnfsClient access mismatch: expected 'read-only', got '$($updated[0].'Access Permission')'."
+                            }
+                            $updated
+                        } | Out-Null
                     }
                 }
             }
             elseif (-not $configuration.Nas.EnableNfs) {
-                Add-SkippedResult -Name @('New-DMnfsShare', 'New-DMnfsClient', 'Remove-DMNfsClient', 'Remove-DMNfsShare') `
+                Add-SkippedResult -Name @('New-DMnfsShare', 'Set-DMnfsShare', 'New-DMnfsClient', 'Set-DMnfsClient', 'Remove-DMNfsClient', 'Remove-DMNfsShare') `
                     -Status 'NotConfigured' -Reason 'Set Nas.EnableNfs = $true and provide Nas.NfsClientName to run NFS validation.'
             }
 
@@ -168,18 +208,31 @@ $script:NasMutationWorkflow = {
                             Remove-DMCifsShare -WebSession $session -ShareName $cifsShareName -Confirm:$false
                         }
                     }
+
+                    Invoke-MutationStep -Name 'Set-DMCifsShare' -Action {
+                        Assert-TestOwnedResource -Kind CifsShare -Identity $cifsShareName
+                        Set-DMCifsShare -WebSession $session -ShareName $cifsShareName `
+                            -Description "Integrity validation updated $runId" -Confirm:$false
+                    } | Out-Null
+                    Add-MutationReadVerification -Name 'Set-DMCifsShare:ReadBack' -ExpectedType 'OceanStorCIFSShare' -Action {
+                        $updated = @(Get-DMShare -WebSession $session -ShareType CIFS | Where-Object Name -EQ $cifsShareName)
+                        if ($updated.Count -gt 0 -and $updated[0].Description -ne "Integrity validation updated $runId") {
+                            throw "Set-DMCifsShare description mismatch: expected 'Integrity validation updated $runId', got '$($updated[0].Description)'."
+                        }
+                        $updated
+                    } | Out-Null
                 }
             }
             elseif (-not $configuration.Nas.EnableCifs) {
-                Add-SkippedResult -Name @('New-DMCifsShare', 'Remove-DMCifsShare') -Status 'NotConfigured' -Reason 'Set Nas.EnableCifs = $true to validate a CIFS share below the test-owned file system.'
+                Add-SkippedResult -Name @('New-DMCifsShare', 'Set-DMCifsShare', 'Remove-DMCifsShare') -Status 'NotConfigured' -Reason 'Set Nas.EnableCifs = $true to validate a CIFS share below the test-owned file system.'
             }
         }
         else {
             Add-SkippedResult -Name @(
-                'New-DMFileSystem', 'Set-DMFileSystem', 'Rename-DMFileSystem', 'New-DMdTree', 'Remove-DMDTree', 'New-DMFileSystemSnapshot',
-                'Restore-DMFileSystemSnapshot', 'Remove-DMFileSystemSnapshot', 'New-DMnfsShare',
-                'New-DMnfsClient', 'Remove-DMNfsClient', 'Remove-DMNfsShare', 'New-DMCifsShare',
-                'Remove-DMCifsShare', 'Remove-DMFileSystem'
+                'New-DMFileSystem', 'Set-DMFileSystem', 'Rename-DMFileSystem', 'New-DMdTree', 'Set-DMdTree', 'Remove-DMDTree', 'New-DMFileSystemSnapshot',
+                'Restore-DMFileSystemSnapshot', 'Remove-DMFileSystemSnapshot', 'New-DMnfsShare', 'Set-DMnfsShare',
+                'New-DMnfsClient', 'Set-DMnfsClient', 'Remove-DMNfsClient', 'Remove-DMNfsShare', 'New-DMCifsShare', 'Set-DMCifsShare',
+                'Remove-DMCifsShare', 'Remove-DMFileSystem', 'Get-DMQuota', 'New-DMQuota', 'Set-DMQuota', 'Remove-DMQuota'
             ) -Status 'NotConfigured' -Reason 'Set Nas.Enabled = $true and provide StoragePoolId to run the test-owned NAS workflow.'
         }
 

@@ -85,6 +85,11 @@
         # NFS client identity to grant on the export created by this test.
         # Example: '192.0.2.50' or 'validation.example.test'.
         NfsClientName = '192.0.2.50'
+
+        # Requires EnableDTree = $true. The quota is created on the test-owned
+        # dTree, then its space hard limit is raised by 10 GB and read back.
+        EnableQuota = $true
+        QuotaSpaceHardLimitGB = 10
     }
 
     Mapping = @{

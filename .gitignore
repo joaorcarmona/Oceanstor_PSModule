@@ -1,6 +1,6 @@
 PowerShellOceanstor.code-workspace
 OceanStor Dorado 6.1.6 REST Interface Reference.pdf
-OceanStor Dorado 6.1.6 REST Interface Reference.md
+
 Tests/Integration/mutation-trace.json
 pipeline-check.ps1
 pipeline-report.csv

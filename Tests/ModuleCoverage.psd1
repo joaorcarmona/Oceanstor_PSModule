@@ -38,6 +38,7 @@
         'OceanstorPortGroup'
         'OceanstorPortSAS'
         'OceanstorProtectionGroup'
+        'OceanstorQuota'
         'OceanstorSession'
         'OceanstorSnapshotConsistencyGroup'
         'OceanstorViewStorage'

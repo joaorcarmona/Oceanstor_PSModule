@@ -2,6 +2,7 @@
 . (Join-Path $PSScriptRoot 'Workflows\LunGroup.ps1')
 . (Join-Path $PSScriptRoot 'Workflows\Host.ps1')
 . (Join-Path $PSScriptRoot 'Workflows\Nas.ps1')
+. (Join-Path $PSScriptRoot 'Workflows\Quota.ps1')
 . (Join-Path $PSScriptRoot 'Workflows\Mapping.ps1')
 . (Join-Path $PSScriptRoot 'Workflows\DirectMapping.ps1')
 . (Join-Path $PSScriptRoot 'Workflows\Protection.ps1')
@@ -35,10 +36,11 @@ function Invoke-MutationValidation {
         Add-SkippedResult -Name @(
             'New-DMLun', 'New-DMLunSnapshot', 'New-DMLunSnapshotCopy', 'Enable-DMLunSnapshot',
             'Restart-DMLunSnapshot', 'Resize-DMLunSnapshot', 'Restore-DMLunSnapshot', 'Remove-DMLunSnapShot',
-            'Remove-DMLun', 'New-DMFileSystem', 'New-DMdTree', 'Remove-DMDTree',
+            'Remove-DMLun', 'New-DMFileSystem', 'New-DMdTree', 'Set-DMdTree', 'Remove-DMDTree',
             'New-DMFileSystemSnapshot', 'Restore-DMFileSystemSnapshot', 'Remove-DMFileSystemSnapshot',
-            'New-DMnfsShare', 'New-DMnfsClient', 'Remove-DMNfsClient', 'Remove-DMNfsShare',
-            'New-DMCifsShare', 'Remove-DMCifsShare', 'Remove-DMFileSystem', 'New-DMPortGroup', 'New-DMMappingView',
+            'New-DMnfsShare', 'Set-DMnfsShare', 'New-DMnfsClient', 'Set-DMnfsClient', 'Remove-DMNfsClient', 'Remove-DMNfsShare',
+            'New-DMCifsShare', 'Set-DMCifsShare', 'Remove-DMCifsShare', 'Remove-DMFileSystem',
+            'Get-DMQuota', 'New-DMQuota', 'Set-DMQuota', 'Remove-DMQuota', 'New-DMPortGroup', 'New-DMMappingView',
             'Add-DMPortGroupToMappingView', 'Remove-DMPortGroupFromMappingView',
             'Remove-DMMappingView', 'Remove-DMPortGroup', 'New-DMFiberChannelInitiator',
             'Remove-DMFiberChannelInitiator', 'New-DMIscsiInitiator', 'Remove-DMIscsiInitiator',
@@ -108,6 +110,7 @@ function Invoke-MutationValidation {
         . $script:LunGroupMutationWorkflow
         . $script:HostMutationWorkflow
         . $script:NasMutationWorkflow
+        . $script:QuotaMutationWorkflow
         . $script:MappingMutationWorkflow
         . $script:DirectMappingMutationWorkflow
         . $script:ProtectionMutationWorkflow
