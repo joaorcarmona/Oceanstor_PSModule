@@ -178,13 +178,14 @@ Describe 'Invoke-DeviceManager' {
         $script:DeviceManagerTraceAction = { param($entry) $script:traceRecords.Add($entry) }
 
         $null = Invoke-DeviceManager -WebSession $script:session -Method POST -Resource 'iscsi_initiator' `
-            -BodyData @{ ID = 'iqn.test'; CHAPPASSWORD = 'super-secret' }
+            -BodyData @{ ID = 'iqn.test'; CHAPPASSWORD = 'super-secret'; SNMP_COMMUNITY = 'public' }
 
         $script:traceRecords.Count | Should -Be 1
         $script:traceRecords[0].Step | Should -Be 'New-DMIscsiInitiator'
         $script:traceRecords[0].Method | Should -Be 'POST'
         $script:traceRecords[0].Resource | Should -Be 'iscsi_initiator'
         $script:traceRecords[0].Request.CHAPPASSWORD | Should -Be '[REDACTED]'
+        $script:traceRecords[0].Request.SNMP_COMMUNITY | Should -Be '[REDACTED]'
         $script:traceRecords[0].Response.data.ID | Should -Be 'lun-01'
     }
 }

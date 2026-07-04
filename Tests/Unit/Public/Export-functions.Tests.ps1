@@ -100,20 +100,35 @@ Describe 'Public export functions' {
 
     It 'exports all supported worksheets for a full version 6 storage report' {
         $storage = [pscustomobject]@{
-            system       = [pscustomobject]@{ version = 'V600R001' }
-            disks        = @('disk-01')
-            StoragePools = @('pool-01')
-            LunGroups    = @('lungroup-01')
-            luns         = @('lun-01')
-            hostgroups   = @('hostgroup-01')
-            hosts        = @('host-01')
-            vStores      = @('vstore-01')
+            system             = [pscustomobject]@{ version = 'V600R001' }
+            NtpServer          = [pscustomobject]@{ Enabled = $true }
+            NtpStatus          = [pscustomobject]@{ Status = 'Synchronized' }
+            SnmpConfig         = [pscustomobject]@{ Version = '3' }
+            SnmpSecurityPolicy = [pscustomobject]@{ Strategy = '1' }
+            SnmpTrapServers    = @([pscustomobject]@{ Address = '192.0.2.10' })
+            SnmpUsmUsers       = @([pscustomobject]@{ Name = 'usm01' })
+            SyslogNotification = [pscustomobject]@{ Enabled = $true }
+            LocalUsers         = @([pscustomobject]@{ Name = 'admin' })
+            Roles              = @([pscustomobject]@{ Name = 'Auditor' })
+            RolePermissions    = @([pscustomobject]@{ Name = 'Read' })
+            disks              = @('disk-01')
+            StoragePools       = @('pool-01')
+            LunGroups          = @('lungroup-01')
+            luns               = @('lun-01')
+            hostgroups         = @('hostgroup-01')
+            hosts              = @('host-01')
+            vStores            = @('vstore-01')
         }
 
         Export-DMStorageToExcel -OceanStor $storage -IncludeObject full -ReportFile 'configuration.xlsx'
 
-        Should -Invoke Export-Excel -Times 8 -Exactly
-        foreach ($expectedTable in @('System', 'Disks', 'StoragePools', 'LunGroups', 'Luns', 'HostGroups', 'Hosts', 'vStores')) {
+        Should -Invoke Export-Excel -Times 18 -Exactly
+        foreach ($expectedTable in @(
+            'System', 'NtpServer', 'NtpStatus', 'SnmpConfig', 'SnmpSecurityPolicy',
+            'SnmpTrapServers', 'SnmpUsmUsers', 'SyslogNotification', 'LocalUsers',
+            'Roles', 'RolePermissions', 'Disks', 'StoragePools', 'LunGroups',
+            'Luns', 'HostGroups', 'Hosts', 'vStores'
+        )) {
             Should -Invoke Export-Excel -Times 1 -Exactly -ParameterFilter {
                 $ReportFile -eq 'configuration.xlsx' -and $TableName -eq $expectedTable
             }
@@ -137,6 +152,33 @@ Describe 'Public export functions' {
         Should -Invoke New-DMObjectReport -Times 1 -Exactly -ParameterFilter {
             $ReportType -eq 'lunsv3' -and $Object[0] -eq 'lun-03'
         }
+    }
+
+    It 'exports only system configuration worksheets when requested' {
+        $storage = [pscustomobject]@{
+            system             = [pscustomobject]@{ version = 'V600R001' }
+            NtpServer          = [pscustomobject]@{ Enabled = $true }
+            NtpStatus          = [pscustomobject]@{ Status = 'Synchronized' }
+            SnmpConfig         = [pscustomobject]@{ Version = '3' }
+            SnmpSecurityPolicy = [pscustomobject]@{ Strategy = '1' }
+            SnmpTrapServers    = @([pscustomobject]@{ Address = '192.0.2.10' })
+            SnmpUsmUsers       = @([pscustomobject]@{ Name = 'usm01' })
+            SyslogNotification = [pscustomobject]@{ Enabled = $true }
+            LocalUsers         = @([pscustomobject]@{ Name = 'admin' })
+            Roles              = @([pscustomobject]@{ Name = 'Auditor' })
+            RolePermissions    = @([pscustomobject]@{ Name = 'Read' })
+        }
+
+        Export-DMStorageToExcel -OceanStor $storage -IncludeObject configuration -ReportFile 'configuration.xlsx'
+
+        Should -Invoke Export-Excel -Times 10 -Exactly
+        Should -Invoke Export-Excel -Times 1 -Exactly -ParameterFilter {
+            $TableName -eq 'NtpServer' -and $WorksheetName -eq 'NTP Server'
+        }
+        Should -Invoke Export-Excel -Times 1 -Exactly -ParameterFilter {
+            $TableName -eq 'LocalUsers' -and $WorksheetName -eq 'Local Users'
+        }
+        Should -Invoke New-DMObjectReport -Times 0 -Exactly
     }
 }
 }

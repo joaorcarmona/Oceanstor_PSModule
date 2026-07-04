@@ -53,6 +53,7 @@ $validationModule = New-Module -Name OceanstorLiveGetterValidation -ArgumentList
     foreach ($privateHelper in @(
         'Assert-DMApiSuccess.ps1',
         'Assert-DMValidFilterProperty.ps1',
+        'ConvertFrom-DMSensitiveValue.ps1',
         'ConvertTo-DMCapacityBlock.ps1',
         'ConvertTo-DMQuotaByte.ps1',
         'Get-DMFilterableProperty.ps1',
@@ -64,6 +65,7 @@ $validationModule = New-Module -Name OceanstorLiveGetterValidation -ArgumentList
         'New-DMNamedObjectUpdate.ps1',
         'Select-DMResponseData.ps1',
         'Set-DMHostInitiator.ps1',
+        'Test-DMNetworkAddress.ps1',
         'Test-WWNAddress.ps1',
         'Write-DMError.ps1'
     )) {

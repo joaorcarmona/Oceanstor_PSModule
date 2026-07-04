@@ -54,6 +54,36 @@ function Invoke-ReadValidation {
     Add-ValidationResult -Name 'Get-DMdnsServer' -ExpectedType 'Hashtable' -Action {
         Get-DMdnsServer -WebSession $session
     } | Out-Null
+    Add-ValidationResult -Name 'Get-DMNtpServer' -ExpectedType 'OceanStorNtpConfig' -Action {
+        Get-DMNtpServer -WebSession $session
+    } | Out-Null
+    Add-ValidationResult -Name 'Get-DMNtpStatus' -ExpectedType 'OceanStorNtpStatus' -Action {
+        Get-DMNtpStatus -WebSession $session
+    } | Out-Null
+    Add-ValidationResult -Name 'Get-DMSnmpConfig' -ExpectedType 'OceanStorSnmpConfig' -Action {
+        Get-DMSnmpConfig -WebSession $session
+    } | Out-Null
+    Add-ValidationResult -Name 'Get-DMSnmpSecurityPolicy' -ExpectedType 'OceanStorSnmpSecurityPolicy' -Action {
+        Get-DMSnmpSecurityPolicy -WebSession $session
+    } | Out-Null
+    Add-ValidationResult -Name 'Get-DMSnmpTrapServer' -ExpectedType 'OceanStorSnmpTrapServer' -Action {
+        Get-DMSnmpTrapServer -WebSession $session
+    } | Out-Null
+    Add-ValidationResult -Name 'Get-DMSnmpUsmUser' -ExpectedType 'OceanStorSnmpUsmUser' -Action {
+        Get-DMSnmpUsmUser -WebSession $session
+    } | Out-Null
+    Add-ValidationResult -Name 'Get-DMSyslogNotification' -ExpectedType 'OceanStorSyslogNotification' -Action {
+        Get-DMSyslogNotification -WebSession $session
+    } | Out-Null
+    Add-ValidationResult -Name 'Get-DMLocalUser' -ExpectedType 'OceanStorLocalUser' -Action {
+        Get-DMLocalUser -WebSession $session
+    } | Out-Null
+    Add-ValidationResult -Name 'Get-DMRole' -ExpectedType 'OceanStorRole' -Action {
+        Get-DMRole -WebSession $session
+    } | Out-Null
+    Add-ValidationResult -Name 'Get-DMRolePermission' -ExpectedType 'OceanStorRolePermission' -Action {
+        Get-DMRolePermission -WebSession $session -RoleOwnerGroup '1'
+    } | Out-Null
     $samples.FileSystems = Add-ValidationResult -Name 'Get-DMFileSystem' -ExpectedType 'OceanstorFileSystem' -Action {
         Get-DMFileSystem -WebSession $session
     }

@@ -14,7 +14,7 @@ function Export-DMStorageToExcel {
 	.PARAMETER ReportFile
 		File path where the Excel configuration report is written.
 	.PARAMETER IncludeObject
-		Choose the report sections to include ("luns","system","hostgroups","lungroups","disks","hosts","vstores","storagepools","full"). Multiple items are allowed.
+		Choose the report sections to include ("luns","system","configuration","hostgroups","lungroups","disks","hosts","vstores","storagepools","full"). Multiple items are allowed.
 
 	.INPUTS
 		System.String
@@ -51,7 +51,7 @@ function Export-DMStorageToExcel {
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 1, Mandatory = $true, ParameterSetName = "CurrentConnection")]
         [PSCustomObject]$OceanStor,
         [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $false, Position = 2, Mandatory = $true)]
-        [ValidateSet("luns", "system", "hostgroups", "lungroups", "disks", "hosts", "vstores", "storagepools", "full")]
+        [ValidateSet("luns", "system", "configuration", "hostgroups", "lungroups", "disks", "hosts", "vstores", "storagepools", "full")]
         [string[]]$IncludeObject,
         [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $false, Position = 3, Mandatory = $true)]
         [string]$ReportFile
@@ -77,6 +77,7 @@ function Export-DMStorageToExcel {
         $IncludeLunGroups = $true
         $IncludeHostGroups = $true
         $IncludevStore = $true
+        $IncludeConfiguration = $true
     }
     else {
         $reportObject = $IncludeObject | Get-Unique
@@ -90,6 +91,9 @@ function Export-DMStorageToExcel {
                 }
                 system {
                     $IncludeSystem = $true
+                }
+                configuration {
+                    $IncludeConfiguration = $true
                 }
                 hosts {
                     $IncludeHosts = $true
@@ -114,6 +118,28 @@ function Export-DMStorageToExcel {
     #1) Adding System Report
     if ($IncludeSystem -eq $true) {
         Export-Excel $ReportFile -AutoSize -TableName System -InputObject $storage.system -WorksheetName "Basic System"
+    }
+
+    #1.1) Adding system configuration reports
+    if ($IncludeConfiguration -eq $true) {
+        $configurationSections = @(
+            @{ TableName = 'NtpServer'; InputObject = $storage.NtpServer; WorksheetName = 'NTP Server' }
+            @{ TableName = 'NtpStatus'; InputObject = $storage.NtpStatus; WorksheetName = 'NTP Status' }
+            @{ TableName = 'SnmpConfig'; InputObject = $storage.SnmpConfig; WorksheetName = 'SNMP Config' }
+            @{ TableName = 'SnmpSecurityPolicy'; InputObject = $storage.SnmpSecurityPolicy; WorksheetName = 'SNMP Security' }
+            @{ TableName = 'SnmpTrapServers'; InputObject = $storage.SnmpTrapServers; WorksheetName = 'SNMP Trap Servers' }
+            @{ TableName = 'SnmpUsmUsers'; InputObject = $storage.SnmpUsmUsers; WorksheetName = 'SNMP USM Users' }
+            @{ TableName = 'SyslogNotification'; InputObject = $storage.SyslogNotification; WorksheetName = 'Syslog Notification' }
+            @{ TableName = 'LocalUsers'; InputObject = $storage.LocalUsers; WorksheetName = 'Local Users' }
+            @{ TableName = 'Roles'; InputObject = $storage.Roles; WorksheetName = 'Roles' }
+            @{ TableName = 'RolePermissions'; InputObject = $storage.RolePermissions; WorksheetName = 'Role Permissions' }
+        )
+
+        foreach ($section in $configurationSections) {
+            if ($null -ne $section.InputObject) {
+                Export-Excel $ReportFile -AutoSize -TableName $section.TableName -InputObject $section.InputObject -WorksheetName $section.WorksheetName
+            }
+        }
     }
 
     #2) adding Disks
