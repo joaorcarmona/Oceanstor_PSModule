@@ -47,14 +47,19 @@ Describe 'Public getter functions' {
         }
 
         It 'gets hosts' {
+            $script:initiatorResources = @()
             Mock Invoke-DeviceManager {
                 param($WebSession, $Method, $Resource)
+
+                if ($Resource -match 'initiator') {
+                    $script:initiatorResources += $Resource
+                }
 
                 switch -Wildcard ($Resource) {
                     'host' { [pscustomobject]@{ data = $script:hostRecords } }
                     'host?range=*' { [pscustomobject]@{ data = $script:hostRecords } }
-                    'fc_initiator?PARENTID=host-01*' { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'fc-01'; TYPE = 223; PARENTID = 'host-01' }) } }
-                    'iscsi_initiator?PARENTID=host-01*' { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'iscsi-01'; TYPE = 222; PARENTID = 'host-01' }) } }
+                    'fc_initiator?range=*' { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'fc-01'; TYPE = 223; PARENTID = 'host-01' }) } }
+                    'iscsi_initiator?range=*' { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'iscsi-01'; TYPE = 222; PARENTID = 'host-01' }) } }
                     default { [pscustomobject]@{ data = @() } }
                 }
             }
@@ -67,6 +72,8 @@ Describe 'Public getter functions' {
             $result[0].'Parent Id' | Should -Be 'group-01'
             $result[0].initiators.Id | Should -Be @('fc-01', 'iscsi-01')
             $result[1].initiators | Should -BeNullOrEmpty
+            @($script:initiatorResources | Where-Object { $_ -match '^fc_initiator\?range=' }).Count | Should -Be 1
+            @($script:initiatorResources | Where-Object { $_ -match '^iscsi_initiator\?range=' }).Count | Should -Be 1
         }
 
         It 'gets a host by Name, delegating to the filtered endpoint' {

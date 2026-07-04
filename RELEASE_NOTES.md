@@ -4,6 +4,16 @@
 
 # Unreleased
 
+## Performance Improvements
+
+- Optimized `Get-DMhost` host initiator enrichment. Host objects still expose
+  their `initiators` array, but `Set-DMHostInitiator` now bulk-loads all Fibre
+  Channel and iSCSI initiators once and groups them by host ID instead of making
+  two initiator lookups per host. On the validation array, retrieving 215 hosts
+  dropped from about 33 seconds to about 1 second.
+- Adjusted `Get-DMhost` parameter positions so the host name remains the
+  positional argument while `WebSession` binds by pipeline/property name.
+
 ## Output Improvements
 
 - Clarified LUN capacity output units by adding `Lun Size (GB)` and
