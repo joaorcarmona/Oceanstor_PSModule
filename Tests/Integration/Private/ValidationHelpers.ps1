@@ -191,18 +191,21 @@ function Register-CleanupAction {
         [Parameter(Mandatory)][string]$Name,
         [Parameter(Mandatory)]
         [Alias('Action')]
-        [scriptblock]$CleanupAction
+        [scriptblock]$CleanupAction,
+        [object[]]$ArgumentList = @()
     )
 
     $cleanupActions.Add([pscustomobject]@{
-        Name   = $Name
-        Action = $CleanupAction
+        Name      = $Name
+        Action    = $CleanupAction
+        Arguments = $ArgumentList
     })
 }
 
 function Invoke-RegisteredCleanup {
     for ($index = $cleanupActions.Count - 1; $index -ge 0; $index--) {
-        & $cleanupActions[$index].Action
+        $arguments = @($cleanupActions[$index].Arguments)
+        & $cleanupActions[$index].Action @arguments
     }
 }
 

@@ -83,16 +83,18 @@ $script:LunGroupMutationWorkflow = {
                         Register-TestOwnedResource -Kind Lun -Identity $pipeLunName
                         $capturedPipeLunName = $pipeLunName
                         $capturedPipeLunId = $created[0].Id
-                        Register-CleanupAction -Name "Remove-DMLun:$capturedPipeLunName" -Action ({
-                            Invoke-OwnedRemoval -Name "Remove-DMLun:$capturedPipeLunName" -Kind Lun -Identity $capturedPipeLunName -Action {
-                                if ($capturedPipeLunId) {
-                                    Remove-DMLun -WebSession $session -LunId $capturedPipeLunId -ImmediateDelete -Confirm:$false
+                        Register-CleanupAction -Name "Remove-DMLun:$capturedPipeLunName" -ArgumentList @($capturedPipeLunName, $capturedPipeLunId) -Action {
+                            param($cleanupPipeLunName, $cleanupPipeLunId)
+
+                            Invoke-OwnedRemoval -Name "Remove-DMLun:$cleanupPipeLunName" -Kind Lun -Identity $cleanupPipeLunName -Action {
+                                if ($cleanupPipeLunId) {
+                                    Remove-DMLun -WebSession $session -LunId $cleanupPipeLunId -ImmediateDelete -Confirm:$false
                                 }
                                 else {
-                                    Remove-DMLun -WebSession $session -LunName $capturedPipeLunName -ImmediateDelete -Confirm:$false
+                                    Remove-DMLun -WebSession $session -LunName $cleanupPipeLunName -ImmediateDelete -Confirm:$false
                                 }
                             }
-                        }.GetNewClosure())
+                        }
                         [void]$pipeLunsCreated.Add($pipeLunName)
                     }
                     [pscustomobject]@{ Created = $pipeLunsCreated.Count }
@@ -140,13 +142,15 @@ $script:LunGroupMutationWorkflow = {
                     # group"), so the other two are disassociated explicitly below before they're
                     # removed in the same step.
                     $cleanupMemberLunName = $pipeLunsCreated[2]
-                    Register-CleanupAction -Name "Remove-DMLunFromLunGroup:$cleanupMemberLunName" -Action ({
-                        Invoke-MutationStep -Name "Remove-DMLunFromLunGroup:$cleanupMemberLunName" -Action {
-                            Assert-TestOwnedResource -Kind Lun -Identity $cleanupMemberLunName
+                    Register-CleanupAction -Name "Remove-DMLunFromLunGroup:$cleanupMemberLunName" -ArgumentList @($cleanupMemberLunName) -Action {
+                        param($cleanupLunGroupMemberName)
+
+                        Invoke-MutationStep -Name "Remove-DMLunFromLunGroup:$cleanupLunGroupMemberName" -Action {
+                            Assert-TestOwnedResource -Kind Lun -Identity $cleanupLunGroupMemberName
                             Assert-TestOwnedResource -Kind LunGroup -Identity $lunGroupName
-                            Remove-DMLunFromLunGroup -WebSession $session -LunName $cleanupMemberLunName -LunGroupName $lunGroupName -Confirm:$false
+                            Remove-DMLunFromLunGroup -WebSession $session -LunName $cleanupLunGroupMemberName -LunGroupName $lunGroupName -Confirm:$false
                         } | Out-Null
-                    }.GetNewClosure())
+                    }
 
                     Invoke-MutationStep -Name 'Remove-DMLunFromLunGroup:PipelineBatch' -Action {
                         foreach ($n in $pipeLunsCreated[0, 1]) {
