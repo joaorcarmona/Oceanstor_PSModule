@@ -40,7 +40,7 @@ function Copy-DMTraceValue {
 	if ($Value -is [System.Collections.IDictionary]) {
 		$copy = [ordered]@{}
 		foreach ($key in $Value.Keys) {
-			if ([string]$key -match '(?i)(password|passwd|pwd|token|secret)') {
+			if ([string]$key -match '(?i)(password|passwd|pwd|token|secret|community)') {
 				$copy[$key] = '[REDACTED]'
 			}
 			else {
@@ -56,7 +56,7 @@ function Copy-DMTraceValue {
 
 	$copy = [ordered]@{}
 	foreach ($property in $Value.PSObject.Properties) {
-		if ($property.Name -match '(?i)(password|passwd|pwd|token|secret)') {
+		if ($property.Name -match '(?i)(password|passwd|pwd|token|secret|community)') {
 			$copy[$property.Name] = '[REDACTED]'
 		}
 		else {
