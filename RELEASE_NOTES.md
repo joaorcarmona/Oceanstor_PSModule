@@ -46,6 +46,11 @@
   the source LUN with a filtered lookup, and LUN snapshot action/copy commands
   use `Get-DMLunSnapshot -Name` instead of loading every snapshot before
   filtering by name.
+- Added a `-RunPipelineBatchCoverage` integration-runner switch for the
+  expensive multi-LUN pipeline regression workflow. The workflow now reports
+  `New-DMLun:PipelineBatch` as a real mutation step, uses filtered read-backs,
+  verifies LUN-group removal, and keeps ID-based cleanup for generated LUNs
+  when the array returns IDs.
 
 ## Bug Fixes
 

@@ -53,7 +53,8 @@
 
         # Expensive regression coverage for multi-LUN pipeline handling. This
         # creates three extra LUNs and can add several minutes on arrays where
-        # LUN create/remove operations are slow.
+        # LUN create/remove operations are slow. You can also enable this for a
+        # single run with Invoke-GetterIntegrityValidation.ps1 -RunPipelineBatchCoverage.
         EnablePipelineBatchCoverage = $false
     }
 

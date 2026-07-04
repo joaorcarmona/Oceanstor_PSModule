@@ -17,6 +17,8 @@ param(
 
     [switch]$RunMutatingTests,
 
+    [switch]$RunPipelineBatchCoverage,
+
     [switch]$NoProgress,
 
     [switch]$ShowTestExecution
@@ -33,6 +35,9 @@ foreach ($outputPath in @($ReportPath, $MarkdownReportPath, $MutationLogPath)) {
 }
 
 $configuration = Import-PowerShellDataFile -LiteralPath $ConfigurationPath
+if ($RunPipelineBatchCoverage) {
+    $configuration.LunGroup.EnablePipelineBatchCoverage = $true
+}
 $runId = Get-Date -Format 'yyyyMMddHHmmss'
 $moduleRoot = Join-Path (Split-Path -Parent $PSScriptRoot) '..\POSH-Oceanstor'
 $moduleRoot = (Resolve-Path -LiteralPath $moduleRoot).Path

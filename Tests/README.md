@@ -141,6 +141,24 @@ Run the full configured create, verify, and cleanup workflow:
     -ShowTestExecution
 ```
 
+Run the extra multi-LUN pipeline regression coverage for `New-DMLun`,
+`Set-DMLun`, `Add-DMLunToLunGroup`, `Remove-DMLunFromLunGroup`, and
+`Remove-DMLun`:
+
+```powershell
+./Tests/Integration/Invoke-GetterIntegrityValidation.ps1 `
+    -Hostname 'IP_or_FQDN' `
+    -RunMutatingTests `
+    -RunPipelineBatchCoverage `
+    -SkipCertificateCheck `
+    -ShowTestExecution
+```
+
+This creates three additional test-owned LUNs and can add noticeable runtime on
+arrays where LUN creation or removal is slow. The same coverage can be enabled
+in a custom configuration file with `LunGroup.EnablePipelineBatchCoverage =
+$true`.
+
 Use a separate configuration file when testing a different array or subset of
 workflows:
 

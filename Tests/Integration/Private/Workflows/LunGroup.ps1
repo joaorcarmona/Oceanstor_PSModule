@@ -69,25 +69,34 @@ $script:LunGroupMutationWorkflow = {
                 # without aborting the rest -- the exact regression this workflow exists to catch.
                 $pipeLunNames = @(1..3 | ForEach-Object { New-TestName -Suffix "lun_pipe$_" })
                 $pipeLunsCreated = [System.Collections.Generic.List[string]]::new()
-                foreach ($pipeLunName in $pipeLunNames) {
-                    $created = @(Invoke-MutationStep -Name "New-DMLun:$pipeLunName" -Action {
-                        if (@(Get-DMlun -WebSession $session | Where-Object Name -EQ $pipeLunName).Count -gt 0) {
+                Invoke-MutationStep -Name 'New-DMLun:PipelineBatch' -Action {
+                    foreach ($pipeLunName in $pipeLunNames) {
+                        if (@(Get-DMlun -WebSession $session -Name $pipeLunName | Where-Object Name -EQ $pipeLunName).Count -gt 0) {
                             throw "A LUN named '$pipeLunName' already exists; refusing to claim it as test-owned."
                         }
-                        New-DMLun -WebSession $session -LunName $pipeLunName -Capacity $configuration.Lun.CapacityMB `
-                            -StoragePoolID $configuration.StoragePoolId -AllocType $configuration.Lun.AllocationType `
-                            -Description "Integrity validation pipeline $runId"
-                    })
-                    if ($created.Count -gt 0 -and $created[0].Name -eq $pipeLunName) {
-                        Register-TestOwnedResource -Kind Lun -Identity $pipeLunName
-                        Register-CleanupAction -Name "Remove-DMLun:$pipeLunName" -Action {
-                            Invoke-OwnedRemoval -Name "Remove-DMLun:$pipeLunName" -Kind Lun -Identity $pipeLunName -Action {
-                                Remove-DMLun -WebSession $session -LunName $pipeLunName -ImmediateDelete -Confirm:$false
-                            }
+                        $created = @(New-DMLun -WebSession $session -LunName $pipeLunName -Capacity $configuration.Lun.CapacityMB `
+                                -StoragePoolID $configuration.StoragePoolId -AllocType $configuration.Lun.AllocationType `
+                                -Description "Integrity validation pipeline $runId")
+                        if ($created.Count -eq 0 -or $created[0].Name -ne $pipeLunName) {
+                            throw "New-DMLun did not return the expected pipeline LUN '$pipeLunName'."
                         }
+                        Register-TestOwnedResource -Kind Lun -Identity $pipeLunName
+                        $capturedPipeLunName = $pipeLunName
+                        $capturedPipeLunId = $created[0].Id
+                        Register-CleanupAction -Name "Remove-DMLun:$capturedPipeLunName" -Action ({
+                            Invoke-OwnedRemoval -Name "Remove-DMLun:$capturedPipeLunName" -Kind Lun -Identity $capturedPipeLunName -Action {
+                                if ($capturedPipeLunId) {
+                                    Remove-DMLun -WebSession $session -LunId $capturedPipeLunId -ImmediateDelete -Confirm:$false
+                                }
+                                else {
+                                    Remove-DMLun -WebSession $session -LunName $capturedPipeLunName -ImmediateDelete -Confirm:$false
+                                }
+                            }
+                        }.GetNewClosure())
                         [void]$pipeLunsCreated.Add($pipeLunName)
                     }
-                }
+                    [pscustomobject]@{ Created = $pipeLunsCreated.Count }
+                } | Out-Null
 
                 if ($pipeLunsCreated.Count -eq 3) {
                     Invoke-MutationStep -Name 'Set-DMLun:PipelineBatch' -Action {
@@ -96,9 +105,13 @@ $script:LunGroupMutationWorkflow = {
                             Set-DMLun -WebSession $session -Description "Integrity validation pipeline batch $runId" -Confirm:$false
                     } | Out-Null
                     Add-MutationReadVerification -Name 'Set-DMLun:PipelineBatch:ReadBack' -Action {
-                        $updated = @(Get-DMlun -WebSession $session | Where-Object {
-                                $pipeLunsCreated -contains $_.Name -and $_.Description -eq "Integrity validation pipeline batch $runId"
-                            })
+                        $updated = @(
+                            foreach ($n in $pipeLunsCreated) {
+                                Get-DMlun -WebSession $session -Name $n | Where-Object {
+                                    $_.Name -eq $n -and $_.Description -eq "Integrity validation pipeline batch $runId"
+                                }
+                            }
+                        )
                         if ($updated.Count -ne $pipeLunsCreated.Count) {
                             throw "Set-DMLun pipeline batch mismatch: expected $($pipeLunsCreated.Count) LUNs updated, found $($updated.Count) -- exactly the 'only the last piped item is processed' regression this checks for."
                         }
@@ -112,7 +125,7 @@ $script:LunGroupMutationWorkflow = {
                             Add-DMLunToLunGroup -WebSession $session -LunGroupName $lunGroupName -Confirm:$false
                     } | Out-Null
                     Add-MutationReadVerification -Name 'Add-DMLunToLunGroup:PipelineBatch:ReadBack' -Action {
-                        $group = @(Get-DMlunGroup -WebSession $session | Where-Object Name -EQ $lunGroupName)[0]
+                        $group = @(Get-DMlunGroup -WebSession $session -Name $lunGroupName | Where-Object Name -EQ $lunGroupName)[0]
                         $members = @(Get-DMlun -WebSession $session -LunGroup $group)
                         $missing = @($pipeLunsCreated | Where-Object { $members.Name -notcontains $_ })
                         if ($missing.Count -gt 0) {
@@ -126,13 +139,14 @@ $script:LunGroupMutationWorkflow = {
                     # still in a group fails with "The specified LUN already exists in the LUN
                     # group"), so the other two are disassociated explicitly below before they're
                     # removed in the same step.
-                    Register-CleanupAction -Name "Remove-DMLunFromLunGroup:$($pipeLunsCreated[2])" -Action {
-                        Invoke-MutationStep -Name "Remove-DMLunFromLunGroup:$($pipeLunsCreated[2])" -Action {
-                            Assert-TestOwnedResource -Kind Lun -Identity $pipeLunsCreated[2]
+                    $cleanupMemberLunName = $pipeLunsCreated[2]
+                    Register-CleanupAction -Name "Remove-DMLunFromLunGroup:$cleanupMemberLunName" -Action ({
+                        Invoke-MutationStep -Name "Remove-DMLunFromLunGroup:$cleanupMemberLunName" -Action {
+                            Assert-TestOwnedResource -Kind Lun -Identity $cleanupMemberLunName
                             Assert-TestOwnedResource -Kind LunGroup -Identity $lunGroupName
-                            Remove-DMLunFromLunGroup -WebSession $session -LunName $pipeLunsCreated[2] -LunGroupName $lunGroupName -Confirm:$false
+                            Remove-DMLunFromLunGroup -WebSession $session -LunName $cleanupMemberLunName -LunGroupName $lunGroupName -Confirm:$false
                         } | Out-Null
-                    }
+                    }.GetNewClosure())
 
                     Invoke-MutationStep -Name 'Remove-DMLunFromLunGroup:PipelineBatch' -Action {
                         foreach ($n in $pipeLunsCreated[0, 1]) {
@@ -140,6 +154,18 @@ $script:LunGroupMutationWorkflow = {
                             Assert-TestOwnedResource -Kind LunGroup -Identity $lunGroupName
                             Remove-DMLunFromLunGroup -WebSession $session -LunName $n -LunGroupName $lunGroupName -Confirm:$false
                         }
+                    } | Out-Null
+                    Add-MutationReadVerification -Name 'Remove-DMLunFromLunGroup:PipelineBatch:ReadBack' -Action {
+                        $group = @(Get-DMlunGroup -WebSession $session -Name $lunGroupName | Where-Object Name -EQ $lunGroupName)[0]
+                        $members = @(Get-DMlun -WebSession $session -LunGroup $group)
+                        $stillAssociated = @($pipeLunsCreated[0, 1] | Where-Object { $members.Name -contains $_ })
+                        if ($stillAssociated.Count -gt 0) {
+                            throw "Remove-DMLunFromLunGroup pipeline batch did not remove membership for: $($stillAssociated -join ', ')."
+                        }
+                        if ($members.Name -notcontains $pipeLunsCreated[2]) {
+                            throw "Expected '$($pipeLunsCreated[2])' to remain associated for cleanup verification, but it is no longer a LUN group member."
+                        }
+                        @($members | Where-Object { $pipeLunsCreated -contains $_.Name })
                     } | Out-Null
 
                     # Note: Remove-DMLun's "Invalid LunName" message lists the *valid* names, it
@@ -156,7 +182,11 @@ $script:LunGroupMutationWorkflow = {
                         if ($removeErrors.Count -eq 0) {
                             throw "Expected a non-terminating error for the deliberately invalid LUN name '$bogusLunName', but none was reported -- the pipeline may have stopped instead of continuing."
                         }
-                        $stillPresent = @(Get-DMlun -WebSession $session | Where-Object { $_.Name -in @($pipeLunsCreated[0], $pipeLunsCreated[1]) })
+                        $stillPresent = @(
+                            foreach ($n in $pipeLunsCreated[0, 1]) {
+                                Get-DMlun -WebSession $session -Name $n | Where-Object Name -EQ $n
+                            }
+                        )
                         if ($stillPresent.Count -gt 0) {
                             throw "Expected both real pipelined LUNs to be removed despite the invalid third item; still present: $($stillPresent.Name -join ', ')."
                         }
@@ -173,6 +203,14 @@ $script:LunGroupMutationWorkflow = {
                     # pipeLunsCreated[2] remains test-owned; its registered cleanup actions above
                     # (membership removal, then LUN removal) handle it at the end of the run.
                 }
+                else {
+                    Add-SkippedResult -Name @(
+                        'Set-DMLun:PipelineBatch',
+                        'Add-DMLunToLunGroup:PipelineBatch',
+                        'Remove-DMLunFromLunGroup:PipelineBatch',
+                        'Remove-DMLun:PipelineBatchContinueOnError'
+                    ) -Status 'Blocked' -Reason "New-DMLun:PipelineBatch created $($pipeLunsCreated.Count) of 3 required LUNs."
+                }
             }
             elseif ($owned.LunGroup.Contains($lunGroupName)) {
                 Add-SkippedResult -Name @(
@@ -181,7 +219,7 @@ $script:LunGroupMutationWorkflow = {
                     'Add-DMLunToLunGroup:PipelineBatch',
                     'Remove-DMLunFromLunGroup:PipelineBatch',
                     'Remove-DMLun:PipelineBatchContinueOnError'
-                ) -Status 'NotConfigured' -Reason 'Set LunGroup.EnablePipelineBatchCoverage = $true to run expensive multi-LUN pipeline regression coverage.'
+                ) -Status 'NotConfigured' -Reason 'Set LunGroup.EnablePipelineBatchCoverage = $true or call the runner with -RunPipelineBatchCoverage to run expensive multi-LUN pipeline regression coverage.'
             }
         }
         else {
