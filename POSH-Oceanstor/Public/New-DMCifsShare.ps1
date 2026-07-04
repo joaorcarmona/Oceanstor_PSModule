@@ -79,10 +79,10 @@ function New-DMCifsShare {
 
     [CmdletBinding(SupportsShouldProcess = $true)]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory = $true, Position = 1)]
+        [Parameter(Mandatory = $true, Position = 0)]
         [ValidateLength(1, 80)]
         [ValidateScript({
                 if ($_ -match '[/\\\[\]:|<>+;,?*=]') {
@@ -95,7 +95,7 @@ function New-DMCifsShare {
             })]
         [string]$ShareName,
 
-        [Parameter(Mandatory = $true, Position = 2)]
+        [Parameter(Mandatory = $true, Position = 1)]
         [ValidateScript({
                 $session = if ($WebSession) {
                     $WebSession
@@ -125,11 +125,11 @@ function New-DMCifsShare {
             })]
         [string]$FileSystemName,
 
-        [Parameter(Position = 3)]
+        [Parameter(Position = 2)]
         [ValidateLength(2, 1024)]
         [string]$SharePath,
 
-        [Parameter(Position = 4)]
+        [Parameter(Position = 3)]
         [ValidateLength(0, 255)]
         [string]$Description,
 

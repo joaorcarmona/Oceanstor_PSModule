@@ -39,10 +39,10 @@ function Remove-DMIscsiInitiator {
 
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
-        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory = $true, Position = 1, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Mandatory = $true, Position = 0, ValueFromPipelineByPropertyName = $true)]
         [Alias('Id')]
         [ValidateNotNullOrEmpty()]
         [ArgumentCompleter({

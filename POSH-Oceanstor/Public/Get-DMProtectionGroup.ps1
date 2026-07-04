@@ -72,10 +72,10 @@ function Get-DMProtectionGroup {
     [CmdletBinding(DefaultParameterSetName = 'ByName')]
     [OutputType([System.Collections.ArrayList])]
     param(
-        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
 
-        [Parameter(ParameterSetName = 'ByName', Position = 1)]
+        [Parameter(ParameterSetName = 'ByName', Position = 0)]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
                 $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {

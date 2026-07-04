@@ -61,13 +61,13 @@ function New-DMLunSnapshot {
 
     [CmdletBinding(SupportsShouldProcess = $true, DefaultParameterSetName = 'ByName')]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory = $false, Position = 1)]
+        [Parameter(Mandatory = $false, Position = 0)]
         [string]$SnapshotName,
 
-        [Parameter(Mandatory = $true, ParameterSetName = 'ByName', ValueFromPipelineByPropertyName = $true, Position = 2)]
+        [Parameter(Mandatory = $true, ParameterSetName = 'ByName', ValueFromPipelineByPropertyName = $true, Position = 1)]
         [Alias('Name')]
         [ValidateScript({
                 if ($WebSession) {
@@ -123,10 +123,10 @@ function New-DMLunSnapshot {
             })]
         [string]$SourceLunId,
 
-        [Parameter(Position = 3)]
+        [Parameter(Position = 2)]
         [string]$Description,
 
-        [Parameter(Position = 4)]
+        [Parameter(Position = 3)]
         [switch]$ReadOnly
     )
 

@@ -69,7 +69,7 @@ function Add-DMLunToProtectionGroup {
 
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium', DefaultParameterSetName = 'ProtectionGroupByName_LunByName')]
     param(
-        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
 
         [Parameter(Mandatory = $true, ParameterSetName = 'ProtectionGroupByName_LunByName')]

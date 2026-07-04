@@ -64,7 +64,7 @@ function Add-DMmapLunToHost {
 
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium', DefaultParameterSetName = 'LunByName_HostByName')]
     param(
-        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
 
         [Parameter(Mandatory = $true, ParameterSetName = 'LunByName_HostByName', ValueFromPipelineByPropertyName = $true)]

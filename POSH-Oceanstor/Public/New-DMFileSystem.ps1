@@ -98,11 +98,11 @@ function New-DMFileSystem {
 
     [CmdletBinding(SupportsShouldProcess = $true)]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Mandatory = $false)]
         [pscustomobject]$WebSession,
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 1, Mandatory = $true)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $true)]
         [string]$FileSystemName,
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 2, Mandatory = $true)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 1, Mandatory = $true)]
         [ValidateScript({
                 $session = if ($WebSession) {
                     $WebSession

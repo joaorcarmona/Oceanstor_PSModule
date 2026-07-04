@@ -43,10 +43,10 @@ function Rename-DMProtectionGroup {
 
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High', DefaultParameterSetName = 'ByName')]
     param(
-        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory, ParameterSetName = 'ByName', ValueFromPipelineByPropertyName = $true, Position = 1)]
+        [Parameter(Mandatory, ParameterSetName = 'ByName', ValueFromPipelineByPropertyName = $true, Position = 0)]
         [ValidateNotNullOrEmpty()]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
@@ -69,7 +69,7 @@ function Rename-DMProtectionGroup {
             })]
         [string]$Id,
 
-        [Parameter(Mandatory, Position = 2)]
+        [Parameter(Mandatory, Position = 1)]
         [ValidateLength(1, 255)][ValidatePattern('^[A-Za-z0-9_.-]+$')][string]$NewName,
         [string]$VstoreId
     )

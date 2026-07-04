@@ -67,10 +67,10 @@ function New-DMIscsiInitiator {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingPlainTextForPassword', 'ChapPassword')]
     [CmdletBinding(SupportsShouldProcess = $true)]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory = $true, Position = 1)]
+        [Parameter(Mandatory = $true, Position = 0)]
         [ValidatePattern('^[A-Za-z0-9][\x21-\x7e]{0,222}$')]
         [string]$Identifier,
 

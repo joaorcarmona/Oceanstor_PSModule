@@ -13,6 +13,11 @@
   dropped from about 33 seconds to about 1 second.
 - Adjusted `Get-DMhost` parameter positions so the host name remains the
   positional argument while `WebSession` binds by pipeline/property name.
+- Removed positional binding from public `WebSession` parameters across the
+  module and shifted user-facing positional arguments down accordingly, so calls
+  like `Get-DMhostGroup Name`, `Get-DMlunByName Name`, and
+  `New-DMFileSystem Name PoolId` bind to resource parameters instead of the
+  session parameter.
 
 ## Output Improvements
 

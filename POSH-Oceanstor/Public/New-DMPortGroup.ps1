@@ -33,15 +33,15 @@ function New-DMPortGroup {
     #>
     [CmdletBinding(SupportsShouldProcess = $true)]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory = $true, Position = 1)]
+        [Parameter(Mandatory = $true, Position = 0)]
         [ValidateLength(1, 255)]
         [ValidatePattern('^[A-Za-z0-9_.-]+$')]
         [string]$Name,
 
-        [Parameter(Position = 2)]
+        [Parameter(Position = 1)]
         [ValidateLength(0, 63)]
         [string]$Description
     )

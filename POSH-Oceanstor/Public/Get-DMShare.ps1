@@ -71,7 +71,7 @@ function Get-DMShare {
         [Parameter(Position = 0, Mandatory = $false)]
         [string]$Name,
 
-        [Parameter(Position = 1, Mandatory = $true)]
+        [Parameter(Position = 0, Mandatory = $true)]
         [ValidateSet("CIFS", "NFS")]
         [string]$shareType
     )

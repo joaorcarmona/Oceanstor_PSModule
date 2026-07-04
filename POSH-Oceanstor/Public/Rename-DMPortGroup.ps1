@@ -36,11 +36,11 @@ function Rename-DMPortGroup {
     #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
-        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
-        [Parameter(Mandatory, ValueFromPipelineByPropertyName = $true, Position = 1)]
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName = $true, Position = 0)]
         [Alias('Name')][ValidateNotNullOrEmpty()][string]$PortGroupName,
-        [Parameter(Mandatory, Position = 2)]
+        [Parameter(Mandatory, Position = 1)]
         [ValidateLength(1, 255)][ValidatePattern('^[A-Za-z0-9_.-]+$')][string]$NewName,
         [string]$VstoreId
     )

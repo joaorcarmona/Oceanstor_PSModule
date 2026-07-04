@@ -58,10 +58,10 @@ function New-DMFiberChannelInitiator {
 
     [CmdletBinding(SupportsShouldProcess = $true)]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory = $true, Position = 1)]
+        [Parameter(Mandatory = $true, Position = 0)]
         [ValidateScript({
                 if (Test-WWNAddress -WWN $_) {
                     return $true

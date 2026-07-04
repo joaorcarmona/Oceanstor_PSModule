@@ -39,19 +39,19 @@ function New-DMLunGroup {
     #>
     [CmdletBinding(SupportsShouldProcess = $true)]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory = $true, Position = 1)]
+        [Parameter(Mandatory = $true, Position = 0)]
         [ValidateLength(1, 255)]
         [ValidatePattern('^[A-Za-z0-9_.-]+$')]
         [string]$Name,
 
-        [Parameter(Position = 2)]
+        [Parameter(Position = 1)]
         [ValidateSet('Other', 'Oracle', 'Exchange', 'SQL Server', 'VMWare', 'Hyper-V')]
         [string]$ApplicationType = 'Other',
 
-        [Parameter(Position = 3)]
+        [Parameter(Position = 2)]
         [ValidateLength(0, 255)]
         [string]$Description,
 

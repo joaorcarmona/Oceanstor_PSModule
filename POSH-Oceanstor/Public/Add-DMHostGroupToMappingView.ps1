@@ -42,10 +42,10 @@ function Add-DMHostGroupToMappingView {
 
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param(
-        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory = $true, Position = 1, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Mandatory = $true, Position = 0, ValueFromPipelineByPropertyName = $true)]
         [Alias('Name')]
         [ValidateNotNullOrEmpty()]
         [ArgumentCompleter({
@@ -60,7 +60,7 @@ function Add-DMHostGroupToMappingView {
             })]
         [string]$HostGroupName,
 
-        [Parameter(Mandatory = $true, Position = 2)]
+        [Parameter(Mandatory = $true, Position = 1)]
         [ValidateNotNullOrEmpty()]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)

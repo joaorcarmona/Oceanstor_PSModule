@@ -41,10 +41,10 @@
     [CmdletBinding(DefaultParameterSetName = 'All')]
     [OutputType([System.Collections.ArrayList])]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Position = 1)]
+        [Parameter(Position = 0)]
         [string]$Name,
 
         [Parameter(Mandatory = $true, ParameterSetName = 'HostGroup')]

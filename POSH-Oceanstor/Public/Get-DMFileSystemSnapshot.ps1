@@ -40,10 +40,10 @@ function Get-DMFileSystemSnapshot {
     [CmdletBinding()]
     [OutputType([System.Collections.ArrayList])]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory = $true, Position = 1)]
+        [Parameter(Mandatory = $true, Position = 0)]
         [ValidateScript({
                 $session = if ($WebSession) {
                     $WebSession
@@ -73,7 +73,7 @@ function Get-DMFileSystemSnapshot {
             })]
         [string]$FileSystemName,
 
-        [Parameter(Position = 2)]
+        [Parameter(Position = 1)]
         [string]$SnapshotName
     )
 

@@ -63,11 +63,11 @@ function New-DMdTree {
 
     [CmdletBinding(SupportsShouldProcess = $true, DefaultParameterSetName = 'byId')]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Mandatory = $false)]
         [pscustomobject]$WebSession,
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 1, Mandatory = $true)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $true)]
         [string]$dTreeName,
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 2, Mandatory = $true, ParameterSetName = "byName")]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 1, Mandatory = $true, ParameterSetName = "byName")]
         [ValidateScript({
                 $session = if ($WebSession) {
                     $WebSession

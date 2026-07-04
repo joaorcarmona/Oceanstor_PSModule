@@ -62,7 +62,7 @@ function Remove-DMunmapLunGroupFromHostGroup {
 
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High', DefaultParameterSetName = 'LunGroupByName_HostGroupByName')]
     param(
-        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
 
         [Parameter(Mandatory = $true, ParameterSetName = 'LunGroupByName_HostGroupByName', ValueFromPipelineByPropertyName = $true)]

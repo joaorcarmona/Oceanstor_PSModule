@@ -71,7 +71,7 @@ Describe 'New-DMFileSystem' {
     }
 
     It 'accepts FileSystemName and StoragePoolID as positional arguments' {
-        $null = New-DMFileSystem $script:session 'documents' 0
+        $null = New-DMFileSystem 'documents' 0 -WebSession $script:session
 
         $script:fileSystemRequest.NAME | Should -Be 'documents'
         $script:fileSystemRequest.PARENTID | Should -Be 0

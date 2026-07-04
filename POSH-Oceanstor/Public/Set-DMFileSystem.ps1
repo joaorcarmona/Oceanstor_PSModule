@@ -55,10 +55,10 @@ function Set-DMFileSystem {
     #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
-        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory, ValueFromPipelineByPropertyName = $true, Position = 1)]
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName = $true, Position = 0)]
         [Alias('Name')]
         [ValidateNotNullOrEmpty()]
         [string]$FileSystemName,

@@ -94,14 +94,14 @@ function New-DMLun {
     [CmdletBinding(SupportsShouldProcess = $true)]
 
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Mandatory = $false)]
         [pscustomobject]$WebSession,
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 1, Mandatory = $true)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $true)]
         [string]$LunName,
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 2, Mandatory = $true)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 1, Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [object]$capacity,
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 3, Mandatory = $true)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 2, Mandatory = $true)]
         [ValidateScript({
                 # Validate that the StoragePoolID exists by checking against existing storage pools
                 if ($WebSession) {
@@ -134,37 +134,37 @@ function New-DMLun {
                 (Get-DMstoragePool -WebSession $session).Id | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$StoragePoolID,
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 4, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 3, Mandatory = $false)]
         [string]$description,
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 5, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 4, Mandatory = $false)]
         [ValidateSet(512, 4096)]
         [int]$sectorSize = 512,
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 6, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 5, Mandatory = $false)]
         [ValidateSet("Thin", "Thick")]
         [string]$allocType = "Thick",
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 7, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 6, Mandatory = $false)]
         [ValidateSet("Low", "Medium", "High")]
         [string]$IoPriority = "Low",
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 8, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 7, Mandatory = $false)]
         [bool]$enableCompression = $false,
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 9, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 8, Mandatory = $false)]
         [bool]$enableDeduplication = $false,
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 10, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 9, Mandatory = $false)]
         [bool]$enableSmartTier = $false,
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 11, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 10, Mandatory = $false)]
         [string]$workloadTypeId,
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 12, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 11, Mandatory = $false)]
         [bool]$EnableCache = $true,
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 13, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 12, Mandatory = $false)]
         [ValidateSet("WriteBack", "WriteThrough")]
         [string]$writeCachePolicy = "WriteBack",
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 14, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 13, Mandatory = $false)]
         [ValidateSet("ReadAhead", "NoReadAhead")]
         [string]$readCachePolicy = "ReadAhead",
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 15, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 14, Mandatory = $false)]
         [ValidateSet("Intelligent", "Fixed", "Disabled")]
         [string]$prefetchPolicy = "Intelligent",
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 16, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 15, Mandatory = $false)]
         [ValidateSet("Linear", "Mirror")]
         [string]$mirrorPolicy = "Linear"
     )

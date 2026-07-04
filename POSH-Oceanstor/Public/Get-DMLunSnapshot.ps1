@@ -59,10 +59,10 @@ function Get-DMLunSnapshot {
     [CmdletBinding(DefaultParameterSetName = 'ByName')]
     [OutputType([System.Collections.ArrayList])]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
 
-        [Parameter(ParameterSetName = 'ByName', Position = 1, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(ParameterSetName = 'ByName', Position = 0, ValueFromPipelineByPropertyName = $true)]
         [string]$Name,
 
         [Parameter(ParameterSetName = 'ById', Mandatory = $true)]

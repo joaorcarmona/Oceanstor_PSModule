@@ -63,7 +63,7 @@ function Add-DMmapLunGroupToHost {
 
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium', DefaultParameterSetName = 'LunGroupByName_HostByName')]
     param(
-        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
 
         [Parameter(Mandatory = $true, ParameterSetName = 'LunGroupByName_HostByName', ValueFromPipelineByPropertyName = $true)]

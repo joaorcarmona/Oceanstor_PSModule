@@ -62,16 +62,16 @@ function Get-DMHostInitiator {
     [Cmdletbinding(DefaultParameterSetName = "AllInitiators")]
     [OutputType([System.Collections.ArrayList])]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Mandatory = $false)]
         [pscustomobject]$WebSession,
-        [Parameter(Position = 1, Mandatory = $true)]
+        [Parameter(Position = 0, Mandatory = $true)]
         [ValidateSet("FibreChannel", "ISCSI")]
         [string]$InitiatorType,
-        [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $false, Position = 1, Mandatory = $false, ParameterSetName = "HostInitiators")]
+        [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false, ParameterSetName = "HostInitiators")]
         [string]$hostId,
-        [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $false, Position = 2, Mandatory = $false, ParameterSetName = "FreeInitiators")]
+        [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $false, Position = 1, Mandatory = $false, ParameterSetName = "FreeInitiators")]
         [switch]$FreeInitiators = $false,
-        [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $false, Position = 2, Mandatory = $false, ParameterSetName = "AllInitiators")]
+        [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $false, Position = 1, Mandatory = $false, ParameterSetName = "AllInitiators")]
         [switch]$All = $false
     )
 

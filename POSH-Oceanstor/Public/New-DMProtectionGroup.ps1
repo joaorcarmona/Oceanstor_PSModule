@@ -59,14 +59,14 @@ function New-DMProtectionGroup {
 
     [CmdletBinding(SupportsShouldProcess = $true, DefaultParameterSetName = 'ByLunGroupName')]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory = $true, Position = 1)]
+        [Parameter(Mandatory = $true, Position = 0)]
         [ValidateLength(1, 255)]
         [string]$Name,
 
-        [Parameter(ParameterSetName = 'ByLunGroupName', Position = 2)]
+        [Parameter(ParameterSetName = 'ByLunGroupName', Position = 1)]
         [ValidateScript({
                 $session = if ($WebSession) {
                     $WebSession
@@ -105,7 +105,7 @@ function New-DMProtectionGroup {
             })]
         [string]$LunGroupId,
 
-        [Parameter(Position = 3)]
+        [Parameter(Position = 2)]
         [ValidateScript({
                 $session = if ($WebSession) {
                     $WebSession
@@ -135,7 +135,7 @@ function New-DMProtectionGroup {
             })]
         [string]$Vstore,
 
-        [Parameter(Position = 4)]
+        [Parameter(Position = 3)]
         [ValidateLength(1, 255)]
         [string]$Description
     )

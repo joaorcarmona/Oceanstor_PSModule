@@ -49,10 +49,10 @@ function Get-DMhostGroup {
     [Cmdletbinding(DefaultParameterSetName = 'ByName')]
     [OutputType([System.Collections.ArrayList])]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Mandatory = $false)]
         [pscustomobject]$WebSession,
 
-        [Parameter(ParameterSetName = 'ByName', Position = 1, Mandatory = $false)]
+        [Parameter(ParameterSetName = 'ByName', Position = 0, Mandatory = $false)]
         [string]$Name,
 
         [Parameter(ParameterSetName = 'ById', Mandatory = $true)]

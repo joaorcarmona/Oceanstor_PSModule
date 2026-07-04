@@ -58,10 +58,10 @@ function New-DMLunSnapshotCopy {
 
     [CmdletBinding(SupportsShouldProcess = $true, DefaultParameterSetName = 'ByName')]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory = $true, ParameterSetName = 'ByName', ValueFromPipelineByPropertyName = $true, Position = 1)]
+        [Parameter(Mandatory = $true, ParameterSetName = 'ByName', ValueFromPipelineByPropertyName = $true, Position = 0)]
         [Alias('Name')]
         [ValidateScript({
                 if ($WebSession) {
@@ -117,13 +117,13 @@ function New-DMLunSnapshotCopy {
             })]
         [string]$SourceSnapShotId,
 
-        [Parameter(Position = 2)]
+        [Parameter(Position = 1)]
         [Alias('CopyName')]
         [ValidateLength(1, 255)]
         [ValidatePattern('^[A-Za-z0-9_.-]+$')]
         [string]$SnapshotCopyName,
 
-        [Parameter(Position = 3)]
+        [Parameter(Position = 2)]
         [ValidateLength(0, 255)]
         [string]$Description
     )

@@ -44,9 +44,9 @@ function Set-DMHost {
     #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
-        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
-        [Parameter(Mandatory, ValueFromPipelineByPropertyName = $true, Position = 1)]
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName = $true, Position = 0)]
         [Alias('Name')][ValidateNotNullOrEmpty()][string]$HostName,
         [ValidateLength(1, 255)][ValidatePattern('^[A-Za-z0-9_.-]+$')][string]$NewName,
         [AllowEmptyString()][ValidateLength(0, 255)][string]$Description,

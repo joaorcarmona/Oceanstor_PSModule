@@ -42,10 +42,10 @@ function Remove-DMLunGroupFromMappingView {
 
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
-        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory = $true, Position = 1, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Mandatory = $true, Position = 0, ValueFromPipelineByPropertyName = $true)]
         [Alias('Name')]
         [ValidateNotNullOrEmpty()]
         [ArgumentCompleter({
@@ -60,7 +60,7 @@ function Remove-DMLunGroupFromMappingView {
             })]
         [string]$LunGroupName,
 
-        [Parameter(Mandatory = $true, Position = 2)]
+        [Parameter(Mandatory = $true, Position = 1)]
         [ValidateNotNullOrEmpty()]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)

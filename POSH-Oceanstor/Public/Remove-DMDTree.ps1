@@ -43,10 +43,10 @@ function Remove-DMDTree {
 
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
-        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory = $true, Position = 1)]
+        [Parameter(Mandatory = $true, Position = 0)]
         [ValidateNotNullOrEmpty()]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
@@ -60,7 +60,7 @@ function Remove-DMDTree {
             })]
         [string]$FileSystemName,
 
-        [Parameter(Mandatory = $true, Position = 2, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Mandatory = $true, Position = 1, ValueFromPipelineByPropertyName = $true)]
         [Alias('Name')]
         [ValidateNotNullOrEmpty()]
         [ArgumentCompleter({

@@ -45,10 +45,10 @@ function Remove-DMSnapshotConsistencyGroup {
 
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
-        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory = $true, Position = 1, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Mandatory = $true, Position = 0, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
@@ -62,7 +62,7 @@ function Remove-DMSnapshotConsistencyGroup {
             })]
         [string]$Name,
 
-        [Parameter(Position = 2)]
+        [Parameter(Position = 1)]
         [switch]$DeleteDestinationLuns
     )
 

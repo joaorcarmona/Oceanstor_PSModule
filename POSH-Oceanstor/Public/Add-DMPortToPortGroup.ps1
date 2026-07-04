@@ -46,10 +46,10 @@ function Add-DMPortToPortGroup {
 
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param(
-        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory = $true, Position = 1)]
+        [Parameter(Mandatory = $true, Position = 0)]
         [ValidateNotNullOrEmpty()]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
@@ -63,11 +63,11 @@ function Add-DMPortToPortGroup {
             })]
         [string]$PortGroupName,
 
-        [Parameter(Mandatory = $true, Position = 2)]
+        [Parameter(Mandatory = $true, Position = 1)]
         [ValidateSet('FibreChannel', 'Ethernet', 'LogicalPort')]
         [string]$PortType,
 
-        [Parameter(Mandatory = $true, Position = 3, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Mandatory = $true, Position = 2, ValueFromPipelineByPropertyName = $true)]
         [Alias('Name')]
         [ValidateNotNullOrEmpty()]
         [ArgumentCompleter({

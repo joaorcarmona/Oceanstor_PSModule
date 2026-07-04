@@ -40,9 +40,9 @@ function Get-DMlunByWWN {
     [Cmdletbinding()]
     [OutputType([System.Object[]])]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Mandatory = $false)]
         [pscustomobject]$WebSession,
-        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 1, Mandatory = $true)]
+        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0, Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$WWN
     )

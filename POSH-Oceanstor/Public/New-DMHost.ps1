@@ -39,19 +39,19 @@ function New-DMHost {
     #>
     [CmdletBinding(SupportsShouldProcess = $true)]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory = $true, Position = 1)]
+        [Parameter(Mandatory = $true, Position = 0)]
         [ValidateLength(1, 255)]
         [ValidatePattern('^[A-Za-z0-9_.-]+$')]
         [string]$Name,
 
-        [Parameter(Position = 2)]
+        [Parameter(Position = 1)]
         [ValidateSet('Linux', 'Windows', 'Solaris', 'HP-UX', 'AIX', 'XenServer', 'Mac OS', 'VMware ESX', 'LINUX_VIS', 'Windows Server 2012', 'Oracle VM', 'OpenVMS', 'Oracle_VM_Server_for_x86', 'Oracle_VM_Server_for_SPARC')]
         [string]$OperatingSystem = 'Linux',
 
-        [Parameter(Position = 3)]
+        [Parameter(Position = 2)]
         [ValidateLength(0, 255)]
         [string]$Description,
 

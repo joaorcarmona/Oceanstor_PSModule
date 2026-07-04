@@ -46,14 +46,14 @@ function New-DMFileSystemSnapshot {
 
     [CmdletBinding(SupportsShouldProcess = $true)]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Position = 1)]
+        [Parameter(Position = 0)]
         [ValidatePattern('^[A-Za-z0-9_-]{1,255}$')]
         [string]$SnapshotName,
 
-        [Parameter(Mandatory = $true, Position = 2)]
+        [Parameter(Mandatory = $true, Position = 1)]
         [ValidateScript({
                 $session = if ($WebSession) {
                     $WebSession
@@ -83,11 +83,11 @@ function New-DMFileSystemSnapshot {
             })]
         [string]$FileSystemName,
 
-        [Parameter(Position = 3)]
+        [Parameter(Position = 2)]
         [ValidateLength(0, 1023)]
         [string]$Description,
 
-        [Parameter(Position = 4)]
+        [Parameter(Position = 3)]
         [ValidatePattern('^[A-Za-z0-9][A-Za-z0-9_.-]{0,31}$')]
         [string]$SnapTag
     )

@@ -42,7 +42,7 @@ function Get-DMNvmeInitiator {
 
     [CmdletBinding(DefaultParameterSetName = 'All')]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
 
         [Parameter(Mandatory = $true, ParameterSetName = 'Host')]

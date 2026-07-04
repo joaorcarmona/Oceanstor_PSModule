@@ -43,14 +43,14 @@ function New-DMSnapshotConsistencyGroup {
 
     [CmdletBinding(SupportsShouldProcess = $true)]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory = $true, Position = 1)]
+        [Parameter(Mandatory = $true, Position = 0)]
         [ValidatePattern('^[A-Za-z0-9_.-]{1,255}$')]
         [string]$Name,
 
-        [Parameter(Mandatory = $true, Position = 2)]
+        [Parameter(Mandatory = $true, Position = 1)]
         [ValidateScript({
                 $session = if ($WebSession) {
                     $WebSession
@@ -80,7 +80,7 @@ function New-DMSnapshotConsistencyGroup {
             })]
         [string]$ProtectionGroupName,
 
-        [Parameter(Position = 3)]
+        [Parameter(Position = 2)]
         [ValidateLength(1, 255)]
         [string]$Description
     )

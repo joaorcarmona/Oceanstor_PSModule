@@ -35,10 +35,10 @@ function Restore-DMSnapshotConsistencyGroup {
 
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory = $true, Position = 1)]
+        [Parameter(Mandatory = $true, Position = 0)]
         [ValidateScript({
                 $session = if ($WebSession) {
                     $WebSession
@@ -68,7 +68,7 @@ function Restore-DMSnapshotConsistencyGroup {
             })]
         [string]$Name,
 
-        [Parameter(Position = 2)]
+        [Parameter(Position = 1)]
         [ValidateSet('Low', 'Medium', 'High', 'Highest')]
         [string]$RestoreSpeed = 'Medium'
     )

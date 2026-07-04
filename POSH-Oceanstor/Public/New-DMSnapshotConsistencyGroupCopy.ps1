@@ -43,10 +43,10 @@ function New-DMSnapshotConsistencyGroupCopy {
 
     [CmdletBinding(SupportsShouldProcess = $true)]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory = $true, Position = 1)]
+        [Parameter(Mandatory = $true, Position = 0)]
         [ValidateScript({
                 $session = if ($WebSession) {
                     $WebSession
@@ -76,11 +76,11 @@ function New-DMSnapshotConsistencyGroupCopy {
             })]
         [string]$SourceName,
 
-        [Parameter(Position = 2)]
+        [Parameter(Position = 1)]
         [ValidatePattern('^[A-Za-z0-9_.-]{1,255}$')]
         [string]$Name,
 
-        [Parameter(Position = 3)]
+        [Parameter(Position = 2)]
         [ValidateLength(1, 255)]
         [string]$Description
     )

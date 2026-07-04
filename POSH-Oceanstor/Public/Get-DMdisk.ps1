@@ -86,7 +86,7 @@ function Get-DMdisk {
     [OutputType([System.Collections.ArrayList])]
     [OutputType([System.Object[]])]
     param(
-        [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0, Mandatory = $false)]
+        [Parameter(ValueFromPipelineByPropertyName = $true, Mandatory = $false)]
         [pscustomobject]$WebSession,
 
         [Parameter(Mandatory = $false)]

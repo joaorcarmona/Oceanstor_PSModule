@@ -39,7 +39,7 @@ function Get-DMIscsiInitiator {
     [CmdletBinding(DefaultParameterSetName = 'All')]
     [OutputType([System.Object[]])]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
 
         [Parameter(Mandatory = $true, ParameterSetName = 'Host')]

@@ -50,10 +50,10 @@ function Restore-DMLunSnapshot {
 
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High', DefaultParameterSetName = 'ByName')]
     param(
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory = $true, ParameterSetName = 'ByName', ValueFromPipelineByPropertyName = $true, Position = 1)]
+        [Parameter(Mandatory = $true, ParameterSetName = 'ByName', ValueFromPipelineByPropertyName = $true, Position = 0)]
         [Alias('Name')]
         [ValidateScript({
                 if ($WebSession) {
@@ -109,7 +109,7 @@ function Restore-DMLunSnapshot {
             })]
         [string]$SnapShotId,
 
-        [Parameter(Position = 2)]
+        [Parameter(Position = 1)]
         [ValidateSet('Low', 'Medium', 'High', 'Highest')]
         [string]$RollbackSpeed = 'Medium'
     )
