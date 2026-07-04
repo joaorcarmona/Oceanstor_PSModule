@@ -11,7 +11,7 @@ BeforeDiscovery {
         }
         function Set-DMLun {
             [CmdletBinding(SupportsShouldProcess = $true)]
-            param([pscustomobject]$WebSession, [string]$LunName, [string]$NewName)
+            param([pscustomobject]$WebSession, [string]$LunName, [string]$LunId, [string]$NewName)
         }
         function Set-DMFileSystem {
             [CmdletBinding(SupportsShouldProcess = $true)]
@@ -139,6 +139,7 @@ Describe 'Rename command delegation' {
         @{ Command = 'Rename-DMLunGroup';   SetCommand = 'Set-DMLunGroup';   Parameters = @{ LunGroupName = 'old'; NewName = 'new'; VstoreId = '7' } }
         @{ Command = 'Rename-DMPortGroup';  SetCommand = 'Set-DMPortGroup';  Parameters = @{ PortGroupName = 'old'; NewName = 'new'; VstoreId = '7' } }
         @{ Command = 'Rename-DMLun';        SetCommand = 'Set-DMLun';        Parameters = @{ LunName = 'old'; NewName = 'new' } }
+        @{ Command = 'Rename-DMLun';        SetCommand = 'Set-DMLun';        Parameters = @{ LunId = 'lun-01'; NewName = 'new' } }
         @{ Command = 'Rename-DMFileSystem'; SetCommand = 'Set-DMFileSystem'; Parameters = @{ FileSystemName = 'old'; NewName = 'new' } }
     ) {
         $result = & $Command -WebSession $script:session -Confirm:$false @Parameters
@@ -159,6 +160,12 @@ Describe 'Rename command delegation' {
 
         Should -Invoke Set-DMLun -Times 1 -Exactly -ParameterFilter { $LunName -eq 'item-a' -and $NewName -eq 'renamed' }
         Should -Invoke Set-DMLun -Times 1 -Exactly -ParameterFilter { $LunName -eq 'item-b' -and $NewName -eq 'renamed' }
+    }
+
+    It 'Rename-DMLun forwards LunId to Set-DMLun' {
+        $null = Rename-DMLun -WebSession $script:session -LunId 'lun-01' -NewName 'renamed' -Confirm:$false
+
+        Should -Invoke Set-DMLun -Times 1 -Exactly -ParameterFilter { $LunId -eq 'lun-01' -and $NewName -eq 'renamed' }
     }
 
     It 'Rename-DMLunGroup forwards every piped item, not just the last one' {

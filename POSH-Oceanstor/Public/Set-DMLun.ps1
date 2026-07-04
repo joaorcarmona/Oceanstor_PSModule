@@ -4,7 +4,7 @@ function Set-DMLun {
         Modifies a LUN on an OceanStor Dorado V6 API session.
 
     .DESCRIPTION
-        Resolves a LUN by name and modifies its properties. Rename and description changes use the LUN
+        Resolves a LUN by name or ID and modifies its properties. Rename and description changes use the LUN
         resource, while capacity expansion uses the dedicated lun/expand action. LUN reduction is not
         supported. This command rejects sessions whose version does not begin with V6.
 
@@ -22,6 +22,9 @@ function Set-DMLun {
 
     .PARAMETER LunName
         Existing LUN name to modify.
+
+    .PARAMETER LunId
+        Existing LUN ID to modify. Using LunId avoids a name lookup and is the fastest path.
 
     .PARAMETER NewName
         New LUN name.
@@ -66,10 +69,14 @@ function Set-DMLun {
         [Parameter(ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Mandatory, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(Mandatory, ParameterSetName = 'ByName', ValueFromPipelineByPropertyName = $true, Position = 0)]
         [Alias('Name')]
         [ValidateNotNullOrEmpty()]
         [string]$LunName,
+
+        [Parameter(Mandatory, ParameterSetName = 'ById')]
+        [ValidateNotNullOrEmpty()]
+        [string]$LunId,
 
         [ValidateNotNullOrEmpty()]
         [string]$NewName,
@@ -101,18 +108,30 @@ function Set-DMLun {
                 throw "Set-DMLun supports only OceanStor Dorado V6 API sessions. Connected version: $version."
             }
 
-            $luns = @(Get-DMlun -WebSession $session)
-            $matchingItems = @($luns | Where-Object Name -CEQ $LunName)
-            if ($matchingItems.Count -ne 1) {
-                if ($matchingItems.Count -gt 1) {
-                    throw "LunName '$LunName' is ambiguous."
+            if ($PSCmdlet.ParameterSetName -eq 'ById') {
+                $matchingItems = @(Get-DMlun -WebSession $session -Id $LunId)
+                if ($matchingItems.Count -ne 1) {
+                    throw "Invalid LunId '$LunId'."
                 }
-                throw "Invalid LunName '$LunName'. Valid values are: $($luns.Name -join ', ')"
             }
-            $lun = $matchingItems[0]
+            else {
+                $matchingItems = @(Get-DMlun -WebSession $session -Name $LunName | Where-Object Name -CEQ $LunName)
+                if ($matchingItems.Count -ne 1) {
+                    if ($matchingItems.Count -gt 1) {
+                        throw "LunName '$LunName' is ambiguous."
+                    }
+                    throw "Invalid LunName '$LunName'."
+                }
+            }
 
-            if ($PSBoundParameters.ContainsKey('NewName') -and $NewName -cne $LunName -and $luns.Name -contains $NewName) {
-                throw "A LUN named '$NewName' already exists."
+            $lun = $matchingItems[0]
+            $target = if ($LunName) { $LunName } else { $lun.Name }
+
+            if ($PSBoundParameters.ContainsKey('NewName') -and $NewName -cne $lun.Name) {
+                $existingNewName = @(Get-DMlun -WebSession $session -Name $NewName | Where-Object Name -CEQ $NewName)
+                if ($existingNewName.Count -gt 0) {
+                    throw "A LUN named '$NewName' already exists."
+                }
             }
 
             $propertyBody = @{ ID = $lun.Id }
@@ -152,7 +171,7 @@ function Set-DMLun {
             $actions = @()
             if ($hasPropertyChanges) { $actions += 'modify properties' }
             if ($hasCapacityChange) { $actions += "expand to $Capacity" }
-            if (-not $PSCmdlet.ShouldProcess($LunName, ($actions -join ' and '))) {
+            if (-not $PSCmdlet.ShouldProcess($target, ($actions -join ' and '))) {
                 return
             }
 

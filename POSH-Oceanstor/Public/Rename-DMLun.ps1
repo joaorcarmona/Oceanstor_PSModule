@@ -4,7 +4,7 @@ function Rename-DMLun {
         Renames an OceanStor Dorado V6 LUN through Set-DMLun.
 
     .DESCRIPTION
-        Renames an OceanStor LUN by resolving the current name and issuing a PUT with the new name.
+        Renames an OceanStor LUN by resolving the current name or ID and issuing a PUT with the new name.
         Validates that the new name does not conflict with an existing object.
 
         Accepts multiple LUNs from the pipeline by property name. Each LUN is forwarded to Set-DMLun
@@ -18,6 +18,9 @@ function Rename-DMLun {
 
     .PARAMETER LunName
         Current name of the LUN to rename. Accepts pipeline input by property name (a piped object's Name property).
+
+    .PARAMETER LunId
+        Current ID of the LUN to rename. Using LunId avoids a name lookup and is the fastest path.
 
     .PARAMETER NewName
         New name to assign to the LUN.
@@ -36,14 +39,20 @@ function Rename-DMLun {
     param(
         [Parameter(ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
-        [Parameter(Mandatory, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(Mandatory, ParameterSetName = 'ByName', ValueFromPipelineByPropertyName = $true, Position = 0)]
         [Alias('Name')][ValidateNotNullOrEmpty()][string]$LunName,
+        [Parameter(Mandatory, ParameterSetName = 'ById')]
+        [ValidateNotNullOrEmpty()][string]$LunId,
         [Parameter(Mandatory, Position = 1)]
         [ValidateLength(1, 255)][ValidatePattern('^[A-Za-z0-9_.-]+$')][string]$NewName
     )
 
     process {
-        if ($PSCmdlet.ShouldProcess($LunName, "Rename LUN to '$NewName'")) {
+        $target = if ($LunName) { $LunName } else { $LunId }
+        if ($PSCmdlet.ShouldProcess($target, "Rename LUN to '$NewName'")) {
+            if ($PSCmdlet.ParameterSetName -eq 'ById') {
+                return Set-DMLun -WebSession $WebSession -LunId $LunId -NewName $NewName -Confirm:$false
+            }
             return Set-DMLun -WebSession $WebSession -LunName $LunName -NewName $NewName -Confirm:$false
         }
     }

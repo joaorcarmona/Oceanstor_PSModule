@@ -22,6 +22,9 @@
   expensive multi-LUN pipeline batch regression workflow opt-in via
   `LunGroup.EnablePipelineBatchCoverage`. Integrity Markdown reports now include
   a `Slowest Checks` section to make runtime hot spots visible.
+- Optimized `Set-DMLun` and `Rename-DMLun` resolution paths. Both commands now
+  support `-LunId`, and `Set-DMLun` uses filtered `Get-DMlun -Name/-Id` lookups
+  instead of loading the full LUN inventory before every modification.
 
 ## Bug Fixes
 

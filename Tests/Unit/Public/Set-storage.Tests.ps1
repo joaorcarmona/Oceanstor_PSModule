@@ -3,7 +3,7 @@ BeforeDiscovery {
         param($testRoot)
 
         function Get-DMlun {
-            param([pscustomobject]$WebSession)
+            param([pscustomobject]$WebSession, [string]$Name, [string]$Id)
         }
 
         function Get-DMFileSystem {
@@ -40,7 +40,7 @@ Describe 'Set-DMLun' {
     BeforeEach {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
         Mock Get-DMlun {
-            @(
+            $items = @(
                 [pscustomobject]@{
                     Id = 'lun-01'; Name = 'database'; RealCapacity = 2097152
                     'Lun Size (GB)' = 1; 'Lun Size' = 1; 'Sector Size' = 512
@@ -50,6 +50,9 @@ Describe 'Set-DMLun' {
                     'Lun Size (GB)' = 2; 'Lun Size' = 2; 'Sector Size' = 512
                 }
             )
+            if ($Id) { return @($items | Where-Object Id -EQ $Id) }
+            if ($Name) { return @($items | Where-Object Name -Like $Name) }
+            $items
         }
         $script:requests = [System.Collections.Generic.List[object]]::new()
         Mock Invoke-DeviceManager {
@@ -71,6 +74,20 @@ Describe 'Set-DMLun' {
         $script:requests[0].Resource | Should -Be 'lun/lun-01'
         $script:requests[0].Body.ID | Should -Be 'lun-01'
         $script:requests[0].Body.NAME | Should -Be 'database-prod'
+        Should -Invoke Get-DMlun -Times 1 -Exactly -ParameterFilter { $Name -eq 'database' }
+        Should -Invoke Get-DMlun -Times 1 -Exactly -ParameterFilter { $Name -eq 'database-prod' }
+    }
+
+    It 'modifies a V6 LUN by ID without loading all LUNs by name' {
+        $result = Set-DMLun -WebSession $script:session -LunId 'lun-01' -Description 'by id' -Confirm:$false
+
+        $result.Code | Should -Be 0
+        $script:requests.Count | Should -Be 1
+        $script:requests[0].Resource | Should -Be 'lun/lun-01'
+        $script:requests[0].Body.ID | Should -Be 'lun-01'
+        $script:requests[0].Body.DESCRIPTION | Should -Be 'by id'
+        Should -Invoke Get-DMlun -Times 1 -Exactly -ParameterFilter { $Id -eq 'lun-01' }
+        Should -Invoke Get-DMlun -Times 0 -Exactly -ParameterFilter { -not $Name -and -not $Id }
     }
 
     It 'expands a V6 LUN through the dedicated action' {
@@ -183,6 +200,11 @@ Describe 'Set-DMLun' {
         $script:requests.Count | Should -Be 2
         ($script:requests | Where-Object Resource -EQ 'lun/lun-01').Body.DESCRIPTION | Should -Be 'batch update'
         ($script:requests | Where-Object Resource -EQ 'lun/lun-02').Body.DESCRIPTION | Should -Be 'batch update'
+    }
+
+    It 'rejects supplying both LunName and LunId' {
+        { Set-DMLun -WebSession $script:session -LunName 'database' -LunId 'lun-01' -Description 'bad' -Confirm:$false } |
+            Should -Throw '*parameter set*'
     }
 }
 
