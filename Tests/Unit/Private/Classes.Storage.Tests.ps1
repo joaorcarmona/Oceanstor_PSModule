@@ -335,7 +335,9 @@ Describe 'Storage and share model classes' {
         $result = New-Object -TypeName OceanstorLunv3 -ArgumentList @($source, $script:session)
 
         $result.Id | Should -Be 'lun-v3'
-        $result.'Lun Size' | Should -Be 1
+        $result.'Lun Size (GB)' | Should -Be 1
+        $result.'Lun Size' | Should -Be 1 -Because 'the old property name remains as a compatibility alias'
+        $result.'Lun Used Capacity (GB)' | Should -Be 0
         $result.'Health Status' | Should -Be 'Normal'
     }
 
@@ -345,7 +347,9 @@ Describe 'Storage and share model classes' {
         $result = New-Object -TypeName OceanstorLunv6 -ArgumentList @($source, $script:session)
 
         $result.Id | Should -Be 'lun-v6'
-        $result.'Lun Size' | Should -Be 1
+        $result.'Lun Size (GB)' | Should -Be 1
+        $result.'Lun Size' | Should -Be 1 -Because 'the old property name remains as a compatibility alias'
+        $result.'Lun Used Capacity (GB)' | Should -Be 0
         $result.Mapped | Should -Be 'yes'
     }
 

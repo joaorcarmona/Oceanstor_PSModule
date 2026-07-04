@@ -153,7 +153,7 @@ Describe 'Public getter functions' {
             $result.Name | Should -Be @('archive')
             $result[0].GetType().Name | Should -Be 'OceanstorLunv6'
             $result[0].PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
-                Should -Be @('Id', 'Name', 'Health Status', 'Lun Size', 'WWN')
+                Should -Be @('Id', 'Name', 'Health Status', 'Lun Size (GB)', 'WWN')
         }
 
         It 'returns no LUNs for an empty LUN group association list' {
@@ -361,7 +361,7 @@ Describe 'Public getter functions' {
             $result.Id | Should -Be 'lun-01'
             $script:filterResource | Should -BeLike 'lun?filter=NAME::finance*'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
-                Should -Be @('Id', 'Name', 'Health Status', 'Lun Size', 'WWN')
+                Should -Be @('Id', 'Name', 'Health Status', 'Lun Size (GB)', 'WWN')
             $result.'Allocation Type' | Should -Be 'Thin'
         }
 
@@ -425,7 +425,7 @@ Describe 'Public getter functions' {
             $result.Id | Should -Be 'lun-02'
             $script:wwnResource | Should -BeLike 'lun?filter=WWN::wwn-b*'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
-                Should -Be @('Id', 'Name', 'Health Status', 'Lun Size', 'WWN')
+                Should -Be @('Id', 'Name', 'Health Status', 'Lun Size (GB)', 'WWN')
             $result.'Allocation Type' | Should -Be 'Thin'
         }
 
@@ -458,7 +458,7 @@ Describe 'Public getter functions' {
             $result.Id | Should -Be 'lun-01'
             $script:nameResource | Should -BeLike 'lun?filter=NAME::finance*'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
-                Should -Be @('Id', 'Name', 'Health Status', 'Lun Size', 'WWN')
+                Should -Be @('Id', 'Name', 'Health Status', 'Lun Size (GB)', 'WWN')
             $result.'Allocation Type' | Should -Be 'Thin'
         }
 

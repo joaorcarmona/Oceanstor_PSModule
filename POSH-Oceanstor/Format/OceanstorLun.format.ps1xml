@@ -12,7 +12,7 @@
                     <TableColumnHeader><Label>Id</Label></TableColumnHeader>
                     <TableColumnHeader><Label>Name</Label></TableColumnHeader>
                     <TableColumnHeader><Label>Health Status</Label></TableColumnHeader>
-                    <TableColumnHeader><Label>Lun Size</Label></TableColumnHeader>
+                    <TableColumnHeader><Label>Lun Size (GB)</Label></TableColumnHeader>
                     <TableColumnHeader><Label>WWN</Label></TableColumnHeader>
                 </TableHeaders>
                 <TableRowEntries>
@@ -21,7 +21,7 @@
                             <TableColumnItem><PropertyName>Id</PropertyName></TableColumnItem>
                             <TableColumnItem><PropertyName>Name</PropertyName></TableColumnItem>
                             <TableColumnItem><PropertyName>Health Status</PropertyName></TableColumnItem>
-                            <TableColumnItem><PropertyName>Lun Size</PropertyName></TableColumnItem>
+                            <TableColumnItem><PropertyName>Lun Size (GB)</PropertyName></TableColumnItem>
                             <TableColumnItem><PropertyName>WWN</PropertyName></TableColumnItem>
                         </TableColumnItems>
                     </TableRowEntry>

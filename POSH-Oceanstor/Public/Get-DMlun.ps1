@@ -347,7 +347,7 @@ function Get-DMlun {
 
     $result = @($result)
 
-    $defaultDisplaySet = "Id", "Name", "Health Status", "Lun Size", "WWN"
+    $defaultDisplaySet = "Id", "Name", "Health Status", "Lun Size (GB)", "WWN"
 
     $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
         'DefaultDisplayPropertySet',

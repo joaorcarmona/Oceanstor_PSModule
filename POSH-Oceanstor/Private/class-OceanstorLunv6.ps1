@@ -12,7 +12,11 @@ class OceanstorLunv6{
 	[string]${Running Status}
 	[string]${Description}
 	[string]${Allocation Type}
+	[int64]${Lun Size (GB)}
+	# Original capacity field, kept for compatibility; replaced in displays by the unit-explicit field above.
 	[int64]${Lun Size}
+	[int64]${Lun Used Capacity (GB)}
+	# Original used-capacity field, kept for compatibility; replaced in displays by the unit-explicit field above.
 	[int64]${Lun Used Capacity}
 	[int64]${Sector Size}
 	[string]${is Mapped}
@@ -115,10 +119,12 @@ class OceanstorLunv6{
 
 		[int64]$lcapacity = $lunReceived.CAPACITY
 		$this.RealCapacity = $lcapacity
-		$this.{Lun Size} =  $lcapacity * $lSectorSize / 1GB
+		$this.{Lun Size (GB)} =  $lcapacity * $lSectorSize / 1GB
+		$this.{Lun Size} = $this.{Lun Size (GB)}
 
 		[int64]$lAllocatedCap = $lunReceived.ALLOCCAPACITY
-		$this.{Lun Used Capacity} = $lAllocatedCap * $lSectorSize / 1GB
+		$this.{Lun Used Capacity (GB)} = $lAllocatedCap * $lSectorSize / 1GB
+		$this.{Lun Used Capacity} = $this.{Lun Used Capacity (GB)}
 
 		switch ($LunReceived.EXPOSEDTOINITIATOR)
 		{

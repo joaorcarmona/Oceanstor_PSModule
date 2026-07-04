@@ -138,6 +138,9 @@ function Set-DMLun {
                 $currentCapacityBlocks = if ($null -ne $lun.PSObject.Properties['RealCapacity']) {
                     [long]$lun.RealCapacity
                 }
+                elseif ($null -ne $lun.PSObject.Properties['Lun Size (GB)']) {
+                    [long]([decimal]$lun.'Lun Size (GB)' * [decimal]1GB / [decimal]$lun.'Sector Size')
+                }
                 else {
                     [long]([decimal]$lun.'Lun Size' * [decimal]1GB / [decimal]$lun.'Sector Size')
                 }

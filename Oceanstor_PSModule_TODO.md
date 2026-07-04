@@ -15,7 +15,6 @@ Detailed audit findings live in `ANALYSIS.md`. Release-facing summaries live in 
 - [ ] Decide which NAS children need modification commands: dTrees, CIFS shares, NFS shares, and NFS clients currently support only their existing create/read/delete surface.
 - [ ] Decide whether initiator objects need action methods or should remain command-only objects.
 - [ ] Decide whether network objects (LIFs, VLANs, physical ports, bonds, and vStores) should remain read-only or gain supported mutation commands.
-- [ ] LUN `Size` and FileSystem `Size` output properties should indicate the unit they're expressed in (currently a bare number with no MB/GB label).
 
 ### Testing, CI/CD, & Supply Chain Security
 
@@ -71,6 +70,7 @@ Detailed audit findings live in `ANALYSIS.md`. Release-facing summaries live in 
 
 ### Consistency and Maintainability
 
+- [x] ~~LUN `Size` and FileSystem `Size` output properties should indicate the unit they're expressed in.~~ LUN objects now expose `Lun Size (GB)` and `Lun Used Capacity (GB)`, and the LUN default display, format view, and report templates use those explicit names. The existing `Lun Size` and `Lun Used Capacity` properties remain populated as compatibility aliases for older scripts. File-system capacity already used the explicit `Capacity (GB)` property and display name, so no file-system output rename was needed.
 - [x] ~~Enforce strict PascalCase/lowercase standards.~~ Keywords (`if`, `else`, `foreach`, `try`, `catch`) and logical constants (`$true`, `$false`) are lowercase across all `.psm1` and helper script files.
 - [x] ~~Expand unit coverage for public commands that had no direct tests.~~ `Disconnect-deviceManager`, `New-DMnfsShare`, `New-DMnfsClient`, and `Set-DMdnsServer` have dedicated tests. All 127 public commands are referenced in at least one unit test file.
 - [x] ~~Define a consistent minimum object-method surface, such as `Rename()`, `Delete()`, and relationship helpers, for mutable returned objects.~~ `Delete()` was added to all mutable classes that lacked it, including LUN, file system, host, group, mapping view, NAS share, and dTree classes. Each method is covered by the corresponding class tests.

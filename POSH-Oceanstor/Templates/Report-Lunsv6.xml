@@ -62,13 +62,13 @@
       <enabled>1</enabled>
     </property>
     <property>
-      <name>Lun Size</name>
+      <name>Lun Size (GB)</name>
       <order>11</order>
       <description>Configured Capacity</description>
       <enabled>1</enabled>
     </property>
     <property>
-      <name>Lun Used Capacity</name>
+      <name>Lun Used Capacity (GB)</name>
       <order>12</order>
       <description>Used Capacity</description>
       <enabled>1</enabled>

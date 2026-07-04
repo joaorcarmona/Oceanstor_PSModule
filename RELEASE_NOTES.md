@@ -2,6 +2,20 @@
 
 ---
 
+# Unreleased
+
+## Output Improvements
+
+- Clarified LUN capacity output units by adding `Lun Size (GB)` and
+  `Lun Used Capacity (GB)` properties to both v3 and v6 LUN model classes.
+  `Get-DMlun` default output, the LUN format view, and LUN report templates now
+  use the explicit `(GB)` property names. The previous `Lun Size` and
+  `Lun Used Capacity` properties remain populated as compatibility aliases.
+- Confirmed file-system capacity output already uses the explicit
+  `Capacity (GB)` property and default display name.
+
+---
+
 # v0.9.5
 
 Date: 2026-07-01

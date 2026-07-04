@@ -43,11 +43,11 @@ Describe 'Set-DMLun' {
             @(
                 [pscustomobject]@{
                     Id = 'lun-01'; Name = 'database'; RealCapacity = 2097152
-                    'Lun Size' = 1; 'Sector Size' = 512
+                    'Lun Size (GB)' = 1; 'Lun Size' = 1; 'Sector Size' = 512
                 },
                 [pscustomobject]@{
                     Id = 'lun-02'; Name = 'archive'; RealCapacity = 4194304
-                    'Lun Size' = 2; 'Sector Size' = 512
+                    'Lun Size (GB)' = 2; 'Lun Size' = 2; 'Sector Size' = 512
                 }
             )
         }
