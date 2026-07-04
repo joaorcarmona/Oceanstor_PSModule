@@ -45,9 +45,11 @@ $script:ProtectionMutationWorkflow = {
                         Get-DMProtectionGroup -WebSession $session | Where-Object Name -EQ $protectionGroupName
                     } | Out-Null
                 }
-                # $lunName is already a member of $lunGroupName, which this protection group is bound to
-                # at creation (New-DMProtectionGroup -LunGroupName above); the device rejects also associating
-                # it individually, so a separate, non-member LUN is created here to exercise that association.
+                # Add/Remove-DMLunToProtectionGroup are exercised below against a second, LUN-type
+                # protection group created with no backing LUN group. A dedicated standalone LUN is
+                # created here for that association: the device rejects adding an individual LUN to a
+                # LUN-group-backed protection group (error 1073807382), so the first protection group
+                # (bound to $lunGroupName) cannot be reused for it.
                 $protectionAssociationLun = @(Invoke-MutationStep -Name 'New-DMLun:ProtectionAssociation' -Action {
                     if (@(Get-DMlun -WebSession $session | Where-Object Name -EQ $protectionLunName).Count -gt 0) {
                         throw "A LUN named '$protectionLunName' already exists; refusing to claim it as test-owned."
@@ -64,18 +66,33 @@ $script:ProtectionMutationWorkflow = {
                         }
                     }
 
-                    $associateLunToProtectionGroup = @(Invoke-MutationStep -Name 'Add-DMLunToProtectionGroup' -Action {
-                        Assert-TestOwnedResource -Kind Lun -Identity $protectionLunName
-                        Assert-TestOwnedResource -Kind ProtectionGroup -Identity $protectionGroupName
-                        Add-DMLunToProtectionGroup -WebSession $session -Name $protectionGroupName -LunName $protectionLunName -Confirm:$false
+                    $lunProtectionGroup = @(Invoke-MutationStep -Name 'New-DMProtectionGroup:LunType' -ExpectedType 'OceanstorProtectionGroup' -Action {
+                        if (@(Get-DMProtectionGroup -WebSession $session | Where-Object Name -EQ $lunProtectionGroupName).Count -gt 0) {
+                            throw "A protection group named '$lunProtectionGroupName' already exists; refusing to claim it as test-owned."
+                        }
+                        New-DMProtectionGroup -WebSession $session -Name $lunProtectionGroupName -Description "Integrity validation run $runId"
                     })
-                    if ($associateLunToProtectionGroup.Count -gt 0) {
-                        Register-CleanupAction -Name 'Remove-DMLunFromProtectionGroup' -Action {
-                            Invoke-MutationStep -Name 'Remove-DMLunFromProtectionGroup' -Action {
-                                Assert-TestOwnedResource -Kind Lun -Identity $protectionLunName
-                                Assert-TestOwnedResource -Kind ProtectionGroup -Identity $protectionGroupName
-                                Remove-DMLunFromProtectionGroup -WebSession $session -Name $protectionGroupName -LunName $protectionLunName -Confirm:$false
-                            } | Out-Null
+                    if ($lunProtectionGroup.Count -gt 0 -and $lunProtectionGroup[0].Name -eq $lunProtectionGroupName) {
+                        Register-TestOwnedResource -Kind ProtectionGroup -Identity $lunProtectionGroupName
+                        Register-CleanupAction -Name 'Remove-DMProtectionGroup:LunType' -Action {
+                            Invoke-OwnedRemoval -Name 'Remove-DMProtectionGroup:LunType' -Kind ProtectionGroup -Identity $lunProtectionGroupName -Action {
+                                Remove-DMProtectionGroup -WebSession $session -Name $lunProtectionGroupName -Confirm:$false
+                            }
+                        }
+
+                        $associateLunToProtectionGroup = @(Invoke-MutationStep -Name 'Add-DMLunToProtectionGroup' -Action {
+                            Assert-TestOwnedResource -Kind Lun -Identity $protectionLunName
+                            Assert-TestOwnedResource -Kind ProtectionGroup -Identity $lunProtectionGroupName
+                            Add-DMLunToProtectionGroup -WebSession $session -Name $lunProtectionGroupName -LunName $protectionLunName -Confirm:$false
+                        })
+                        if ($associateLunToProtectionGroup.Count -gt 0) {
+                            Register-CleanupAction -Name 'Remove-DMLunFromProtectionGroup' -Action {
+                                Invoke-MutationStep -Name 'Remove-DMLunFromProtectionGroup' -Action {
+                                    Assert-TestOwnedResource -Kind Lun -Identity $protectionLunName
+                                    Assert-TestOwnedResource -Kind ProtectionGroup -Identity $lunProtectionGroupName
+                                    Remove-DMLunFromProtectionGroup -WebSession $session -Name $lunProtectionGroupName -LunName $protectionLunName -Confirm:$false
+                                } | Out-Null
+                            }
                         }
                     }
                 }

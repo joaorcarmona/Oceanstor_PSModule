@@ -39,6 +39,8 @@ function Rename-DMProtectionGroup {
     .EXAMPLE
         PS> Rename-DMProtectionGroup -Id 5 -NewName 'pg-new'
     #>
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High', DefaultParameterSetName = 'ByName')]
     param(
         [Parameter(ValueFromPipelineByPropertyName = $true, Position = 0)]

@@ -2,9 +2,8 @@ BeforeDiscovery {
     $script:groupMembershipModule = New-Module -Name GroupMembershipTestModule -ArgumentList $PSScriptRoot -ScriptBlock {
         param($testRoot)
 
-        function Get-DMhostbyName { param([pscustomobject]$WebSession, [string]$Name) }
+        function Get-DMhost { param([pscustomobject]$WebSession, [string]$Name, [string]$Id, [string]$HostGroupId) }
         function Get-DMhostGroup { param([pscustomobject]$WebSession) }
-        function Get-DMhostbyHostGroup { param([pscustomobject]$WebSession, [string]$HostGroupId) }
         function Get-DMlun { param([pscustomobject]$WebSession) }
         function Get-DMlunGroup { param([pscustomobject]$WebSession) }
         function Get-DMlunbyLunGroup { param([pscustomobject]$WebSession, [psobject]$LunGroup) }
@@ -38,9 +37,11 @@ InModuleScope GroupMembershipTestModule {
 Describe 'Host group membership commands' {
     BeforeEach {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
-        Mock Get-DMhostbyName { @([pscustomobject]@{ Id = 'host-01'; Name = 'server01' } | Where-Object Name -EQ $Name) }
+        Mock Get-DMhost {
+            if ($HostGroupId) { @([pscustomobject]@{ Id = 'host-01'; Name = 'server01' }) }
+            else { @([pscustomobject]@{ Id = 'host-01'; Name = 'server01' } | Where-Object Name -EQ $Name) }
+        }
         Mock Get-DMhostGroup { @([pscustomobject]@{ Id = 'hg-01'; Name = 'cluster01' }) }
-        Mock Get-DMhostbyHostGroup { @([pscustomobject]@{ Id = 'host-01'; Name = 'server01' }) }
         Mock Invoke-DeviceManager {
             $script:method = $Method
             $script:resource = $Resource
@@ -72,7 +73,7 @@ Describe 'Host group membership commands' {
     }
 
     It 'reports a non-terminating error when the host is not a group member' {
-        Mock Get-DMhostbyHostGroup { @() }
+        Mock Get-DMhost -ParameterFilter { $HostGroupId } { @() }
 
         $result = Remove-DMHostFromHostGroup -WebSession $script:session -HostName 'server01' -HostGroupName 'cluster01' -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable removeErrors
 

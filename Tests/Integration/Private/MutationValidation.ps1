@@ -85,6 +85,7 @@ function Invoke-MutationValidation {
         $renamedLunGroupName = New-TestName -Suffix 'lungroup_renamed'
         $protectionGroupName = New-TestName -Suffix 'protect'
         $renamedProtectionGroupName = New-TestName -Suffix 'protect_renamed'
+        $lunProtectionGroupName = New-TestName -Suffix 'protect_luntype'
         $protectionLunName = New-TestName -Suffix 'protect_lun'
         $consistencyGroupName = New-TestName -Suffix 'cgsnap'
         $consistencyCopyName = New-TestName -Suffix 'cgcopy'

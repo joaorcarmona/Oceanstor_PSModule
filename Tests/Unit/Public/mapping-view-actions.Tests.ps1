@@ -6,9 +6,7 @@ BeforeDiscovery {
         function Get-DMlunGroup { param([pscustomobject]$WebSession, [string]$Name, [string]$Id) }
         function Get-DMPortGroup { param([pscustomobject]$WebSession) }
         function Get-DMhost { param([pscustomobject]$WebSession, [string]$Name, [string]$Id) }
-        function Get-DMlun { param([pscustomobject]$WebSession, [string]$Id) }
-        function Get-DMhostbyName { param([pscustomobject]$WebSession, [string]$Name) }
-        function Get-DMlunByName { param([pscustomobject]$WebSession, [string]$Name) }
+        function Get-DMlun { param([pscustomobject]$WebSession, [string]$Name, [string]$Id) }
         function Invoke-DeviceManager {
             param(
                 [pscustomobject]$WebSession,
@@ -209,15 +207,16 @@ Describe 'Mapping view association commands' {
             return $hosts
         }
         Mock Get-DMlun {
-            param($WebSession, $Id)
+            param($WebSession, $Name, $Id)
             $luns = @([pscustomobject]@{ Id = 'lun-01'; Name = 'data-lun' })
             if ($Id) {
                 return @($luns | Where-Object Id -EQ $Id)
             }
+            if ($Name) {
+                return @($luns | Where-Object Name -EQ $Name)
+            }
             return $luns
         }
-        Mock Get-DMhostbyName { @([pscustomobject]@{ Id = 'host-01'; Name = 'esx01' } | Where-Object Name -EQ $Name) }
-        Mock Get-DMlunByName { @([pscustomobject]@{ Id = 'lun-01'; Name = 'data-lun' } | Where-Object Name -EQ $Name) }
         Mock Invoke-DeviceManager {
             $script:method = $Method
             $script:resource = $Resource
@@ -458,7 +457,8 @@ Describe 'Mapping view association commands' {
     }
 
     It 'maps every LUN piped into Add-DMmapLunToHost to the same host, not just the last one' {
-        Mock Get-DMlunByName {
+        Mock Get-DMlun {
+            param($WebSession, $Name, $Id)
             @([pscustomobject]@{ Id = 'lun-01'; Name = 'data-lun' }, [pscustomobject]@{ Id = 'lun-02'; Name = 'archive-lun' } | Where-Object Name -EQ $Name)
         }
         $requests = [System.Collections.Generic.List[object]]::new()

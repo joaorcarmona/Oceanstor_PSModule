@@ -2,7 +2,7 @@ BeforeDiscovery {
     $script:initiatorModule = New-Module -Name InitiatorActionsTestModule -ArgumentList $PSScriptRoot -ScriptBlock {
         param($testRoot)
 
-        function Get-DMhostbyName { param([pscustomobject]$WebSession, [string]$Name) }
+        function Get-DMhost { param([pscustomobject]$WebSession, [string]$Name) }
         function Get-DMHostInitiator {
             param(
                 [pscustomobject]$WebSession,
@@ -58,7 +58,7 @@ InModuleScope InitiatorActionsTestModule {
 Describe 'Initiator creation and query commands' {
     BeforeEach {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
-        Mock Get-DMhostbyName { @([pscustomobject]@{ Id = 'host-01'; Name = 'server01' } | Where-Object Name -EQ $Name) }
+        Mock Get-DMhost { @([pscustomobject]@{ Id = 'host-01'; Name = 'server01' } | Where-Object Name -EQ $Name) }
         Mock Invoke-DeviceManager {
             $script:method = $Method
             $script:resource = $Resource
@@ -147,7 +147,7 @@ Describe 'Initiator creation and query commands' {
 Describe 'Initiator removal commands' {
     BeforeEach {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
-        Mock Get-DMhostbyName { @([pscustomobject]@{ Id = 'host-01'; Name = 'server01' } | Where-Object Name -EQ $Name) }
+        Mock Get-DMhost { @([pscustomobject]@{ Id = 'host-01'; Name = 'server01' } | Where-Object Name -EQ $Name) }
         Mock Get-DMFiberChannelInitiator { @([pscustomobject]@{ Id = '10000090FA123456' }) }
         Mock Get-DMIscsiInitiator { @([pscustomobject]@{ Id = 'iqn.2026-05.example:server01' }) }
         Mock Get-DMNvmeInitiator { @([pscustomobject]@{ Id = 'nqn.2026-05.example:host01' }) }

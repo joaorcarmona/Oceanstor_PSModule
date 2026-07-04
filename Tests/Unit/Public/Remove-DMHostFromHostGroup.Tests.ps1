@@ -2,9 +2,8 @@ BeforeDiscovery {
     $script:testModule = New-Module -Name RemoveDMHostFromHostGroupTestModule -ArgumentList $PSScriptRoot -ScriptBlock {
         param($testRoot)
 
-        function Get-DMhostbyName       { param([pscustomobject]$WebSession, [string]$Name) }
+        function Get-DMhost             { param([pscustomobject]$WebSession, [string]$Name, [string]$Id, [string]$HostGroupId) }
         function Get-DMhostGroup        { param([pscustomobject]$WebSession) }
-        function Get-DMhostbyHostGroup { param([pscustomobject]$WebSession, [string]$HostGroupId) }
         function Invoke-DeviceManager {
             param([pscustomobject]$WebSession, [string]$Method, [string]$Resource, [hashtable]$BodyData)
         }
@@ -26,14 +25,12 @@ InModuleScope RemoveDMHostFromHostGroupTestModule {
 Describe 'Remove-DMHostFromHostGroup' {
     BeforeEach {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
-        Mock Get-DMhostbyName {
-            @([pscustomobject]@{ Id = 'host-01'; Name = 'web-host' } | Where-Object Name -EQ $Name)
+        Mock Get-DMhost {
+            if ($HostGroupId) { @([pscustomobject]@{ Id = 'host-01'; Name = 'web-host' }) }
+            else { @([pscustomobject]@{ Id = 'host-01'; Name = 'web-host' } | Where-Object Name -EQ $Name) }
         }
         Mock Get-DMhostGroup {
             @([pscustomobject]@{ Id = 'grp-01'; Name = 'prod-group' })
-        }
-        Mock Get-DMhostbyHostGroup {
-            @([pscustomobject]@{ Id = 'host-01'; Name = 'web-host' })
         }
         Mock Invoke-DeviceManager {
             [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 } }
@@ -50,10 +47,10 @@ Describe 'Remove-DMHostFromHostGroup' {
         }
     }
 
-    It 'calls Get-DMhostbyName only once per invocation (no redundant API round-trip)' {
+    It 'resolves the host by name only once per invocation (no redundant API round-trip)' {
         $null = Remove-DMHostFromHostGroup -WebSession $script:session -HostName 'web-host' -HostGroupName 'prod-group' -Confirm:$false
 
-        Should -Invoke Get-DMhostbyName -Times 1 -Exactly
+        Should -Invoke Get-DMhost -ParameterFilter { $Name } -Times 1 -Exactly
     }
 
     It 'calls Get-DMhostGroup only once per invocation (no redundant API round-trip)' {
@@ -69,7 +66,10 @@ Describe 'Remove-DMHostFromHostGroup' {
     }
 
     It 'reports a non-terminating error when the host is not a member of the host group' {
-        Mock Get-DMhostbyHostGroup { @() }
+        Mock Get-DMhost {
+            if ($HostGroupId) { @() }
+            else { @([pscustomobject]@{ Id = 'host-01'; Name = 'web-host' } | Where-Object Name -EQ $Name) }
+        }
 
         $result = Remove-DMHostFromHostGroup -WebSession $script:session -HostName 'web-host' -HostGroupName 'prod-group' -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable removeErrors
 
@@ -98,11 +98,9 @@ Describe 'Remove-DMHostFromHostGroup' {
     }
 
     It 'removes every host piped in, not just the last one' {
-        Mock Get-DMhostbyName {
-            @([pscustomobject]@{ Id = "id-$Name"; Name = $Name })
-        }
-        Mock Get-DMhostbyHostGroup {
-            @([pscustomobject]@{ Id = 'id-host-a'; Name = 'host-a' }, [pscustomobject]@{ Id = 'id-host-b'; Name = 'host-b' })
+        Mock Get-DMhost {
+            if ($HostGroupId) { @([pscustomobject]@{ Id = 'id-host-a'; Name = 'host-a' }, [pscustomobject]@{ Id = 'id-host-b'; Name = 'host-b' }) }
+            else { @([pscustomobject]@{ Id = "id-$Name"; Name = $Name }) }
         }
 
         $hosts = @([pscustomobject]@{ Name = 'host-a' }, [pscustomobject]@{ Name = 'host-b' })

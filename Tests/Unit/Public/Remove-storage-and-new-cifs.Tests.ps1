@@ -4,7 +4,7 @@ BeforeDiscovery {
 
         function Get-DMlun { param([pscustomobject]$WebSession) }
         function Get-DMlunGroup { param([pscustomobject]$WebSession) }
-        function Get-DMhostbyName { param([pscustomobject]$WebSession, [string]$Name) }
+        function Get-DMhost { param([pscustomobject]$WebSession, [string]$Name) }
         function Get-DMhostGroup { param([pscustomobject]$WebSession) }
         function Get-DMFileSystem { param([pscustomobject]$WebSession) }
         function Get-DMShare { param([pscustomobject]$WebSession, [string]$ShareType) }
@@ -50,7 +50,7 @@ Describe 'Storage and NAS removal commands' {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
         Mock Get-DMlun { @([pscustomobject]@{ Id = 'lun-01'; Name = 'database' }) }
         Mock Get-DMlunGroup { @([pscustomobject]@{ Id = 'lg-01'; Name = 'database-group' }) }
-        Mock Get-DMhostbyName { @([pscustomobject]@{ Id = 'host-01'; Name = 'esx01' } | Where-Object Name -EQ $Name) }
+        Mock Get-DMhost { @([pscustomobject]@{ Id = 'host-01'; Name = 'esx01' } | Where-Object Name -EQ $Name) }
         Mock Get-DMhostGroup { @([pscustomobject]@{ Id = 'hg-01'; Name = 'cluster' }) }
         Mock Get-DMFileSystem { @([pscustomobject]@{ Id = 'fs-01'; Name = 'documents' }) }
         Mock Get-DMShare {
@@ -118,7 +118,7 @@ Describe 'Storage and NAS removal commands' {
     }
 
     It 'removes every host piped in, not just the last one' {
-        Mock Get-DMhostbyName {
+        Mock Get-DMhost {
             @([pscustomobject]@{ Id = "host-$Name" ; Name = $Name })
         }
 
