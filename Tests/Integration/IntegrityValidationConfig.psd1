@@ -74,6 +74,13 @@
         Enabled = $true
     }
 
+    QoS = @{
+        # Requires Lun.Enabled and LunGroup.Enabled. The workflow creates a
+        # SmartQoS policy on the test-owned LUN, toggles it, associates it with
+        # the test-owned LUN group, and removes it during cleanup.
+        Enabled = $true
+    }
+
     Host = @{
         Enabled = $true
         OperatingSystem = 'Linux'

@@ -133,8 +133,15 @@ BeforeAll {
         $global:RemovalInvocation = [pscustomobject]@{ Type = 'CifsShare'; Name = $ShareName; WebSession = $WebSession }
         [pscustomobject]@{ Code = 0 }
     }
+    function global:Remove-DMQosPolicy {
+        [CmdletBinding(SupportsShouldProcess = $true)]
+        param([pscustomobject]$WebSession, [string]$Id)
+        $global:RemovalInvocation = [pscustomobject]@{ Type = 'QosPolicy'; Name = $Id; WebSession = $WebSession }
+        [pscustomobject]@{ Code = 0 }
+    }
 
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
+    . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorQosPolicy.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorCIFSShare.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorFileSystem.ps1"

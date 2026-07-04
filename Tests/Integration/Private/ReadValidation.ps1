@@ -20,6 +20,9 @@ function Invoke-ReadValidation {
     Add-ValidationResult -Name 'Get-DMProtectionGroup' -ExpectedType 'OceanstorProtectionGroup' -Action {
         Get-DMProtectionGroup -WebSession $session
     } | Out-Null
+    Add-ValidationResult -Name 'Get-DMQosPolicy' -ExpectedType 'OceanstorQosPolicy' -Action {
+        Get-DMQosPolicy -WebSession $session
+    } | Out-Null
     Add-ValidationResult -Name 'Get-DMSnapshotConsistencyGroup' -ExpectedType 'OceanstorSnapshotConsistencyGroup' -Action {
         Get-DMSnapshotConsistencyGroup -WebSession $session
     } | Out-Null

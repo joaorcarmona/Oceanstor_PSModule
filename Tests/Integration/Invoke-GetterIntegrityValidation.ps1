@@ -108,7 +108,7 @@ $cleanupActions = [System.Collections.Generic.List[object]]::new()
 $sessionDisconnected = $false
 $samples = @{}
 $owned = @{}
-foreach ($kind in @('Lun', 'LunSnapshot', 'HyperCDPSchedule', 'LunGroup', 'ProtectionGroup', 'SnapshotConsistencyGroup', 'Host', 'HostGroup', 'FileSystem', 'FileSystemSnapshot', 'DTree', 'CifsShare', 'NfsShare', 'NfsClient', 'Quota', 'MappingView', 'PortGroup', 'FibreChannelInitiator', 'IscsiInitiator', 'NvmeInitiator')) {
+foreach ($kind in @('Lun', 'LunSnapshot', 'HyperCDPSchedule', 'LunGroup', 'ProtectionGroup', 'SnapshotConsistencyGroup', 'QosPolicy', 'Host', 'HostGroup', 'FileSystem', 'FileSystemSnapshot', 'DTree', 'CifsShare', 'NfsShare', 'NfsClient', 'Quota', 'MappingView', 'PortGroup', 'FibreChannelInitiator', 'IscsiInitiator', 'NvmeInitiator')) {
     $owned[$kind] = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 }
 

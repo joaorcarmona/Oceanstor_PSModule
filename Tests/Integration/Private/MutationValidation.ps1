@@ -7,6 +7,7 @@
 . (Join-Path $PSScriptRoot 'Workflows\Mapping.ps1')
 . (Join-Path $PSScriptRoot 'Workflows\DirectMapping.ps1')
 . (Join-Path $PSScriptRoot 'Workflows\Protection.ps1')
+. (Join-Path $PSScriptRoot 'Workflows\QoS.ps1')
 . (Join-Path $PSScriptRoot 'Workflows\Initiators.ps1')
 . (Join-Path $PSScriptRoot 'Workflows\ReadBack.ps1')
 
@@ -60,6 +61,8 @@ function Invoke-MutationValidation {
             'Add-DMmapLunGroupToHostGroup', 'Remove-DMunmapLunGroupFromHostGroup',
             'New-DMProtectionGroup', 'Remove-DMProtectionGroup', 'Set-DMProtectionGroup', 'Rename-DMProtectionGroup',
             'Add-DMLunToProtectionGroup', 'Remove-DMLunFromProtectionGroup',
+            'New-DMQosPolicy', 'Set-DMQosPolicy', 'Disable-DMQosPolicy', 'Enable-DMQosPolicy',
+            'Add-DMQosAssociation', 'Remove-DMQosAssociation', 'Remove-DMQosPolicy',
             'New-DMSnapshotConsistencyGroup', 'New-DMSnapshotConsistencyGroupCopy',
             'Enable-DMSnapshotConsistencyGroup', 'Restart-DMSnapshotConsistencyGroup',
             'Restore-DMSnapshotConsistencyGroup', 'Remove-DMSnapshotConsistencyGroup',
@@ -95,6 +98,8 @@ function Invoke-MutationValidation {
         $renamedProtectionGroupName = New-TestName -Suffix 'protect_renamed'
         $lunProtectionGroupName = New-TestName -Suffix 'protect_luntype'
         $protectionLunName = New-TestName -Suffix 'protect_lun'
+        $qosPolicyName = New-TestName -Suffix 'qos'
+        $renamedQosPolicyName = New-TestName -Suffix 'qos_renamed'
         $consistencyGroupName = New-TestName -Suffix 'cgsnap'
         $consistencyCopyName = New-TestName -Suffix 'cgcopy'
         $testHostName = New-TestName -Suffix 'host'
@@ -122,6 +127,7 @@ function Invoke-MutationValidation {
         . $script:MappingMutationWorkflow
         . $script:DirectMappingMutationWorkflow
         . $script:ProtectionMutationWorkflow
+        . $script:QosMutationWorkflow
         . $script:InitiatorsMutationWorkflow
         . $script:MutationReadBackWorkflow
 

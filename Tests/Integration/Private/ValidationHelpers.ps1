@@ -230,6 +230,9 @@ function Test-MutatingConfiguration {
     if ($configuration.Protection.Enabled -and (-not $configuration.Lun.Enabled -or -not $configuration.LunGroup.Enabled)) {
         throw 'Lun.Enabled and LunGroup.Enabled must be true when Protection.Enabled is true so protection tests use only test-owned storage.'
     }
+    if ($configuration.QoS.Enabled -and (-not $configuration.Lun.Enabled -or -not $configuration.LunGroup.Enabled)) {
+        throw 'Lun.Enabled and LunGroup.Enabled must be true when QoS.Enabled is true so SmartQoS tests use only test-owned storage.'
+    }
     if ($configuration.HyperCDPSchedule.Enabled -and -not $configuration.Lun.Enabled) {
         throw 'Lun.Enabled must be true when HyperCDPSchedule.Enabled is true so schedule association tests use a test-owned LUN.'
     }
