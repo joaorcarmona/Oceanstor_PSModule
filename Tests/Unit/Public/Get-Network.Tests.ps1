@@ -126,6 +126,18 @@ Describe 'Public getter functions' {
                 Should -Be @('Id', 'Name', 'Vlan Tag Id', 'Port Type', 'Running Status')
             $result.Type | Should -Be 'VLAN'
         }
+
+        It 'gets failover groups' {
+            Mock Invoke-DeviceManager { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'fg-01'; NAME = 'fg01'; TYPE = 289; FAILOVERGROUPTYPE = 3; failoverGroupServiceType = 0 }) } }
+
+            $result = (Get-DMFailoverGroup -WebSession $script:session)[0]
+
+            $result.Id | Should -Be 'fg-01'
+            $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
+                Should -Be @('Id', 'Name', 'Failover Group Type', 'Description', 'Service Type')
+            $result.Type | Should -Be 'Failover Group'
+            $result.'Failover Group Type' | Should -Be 'Customized'
+        }
     }
 }
 }

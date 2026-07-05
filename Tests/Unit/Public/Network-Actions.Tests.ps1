@@ -26,10 +26,16 @@ BeforeDiscovery {
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Assert-DMApiSuccess.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Get-DMApiErrorMessage.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\New-DMRequestBody.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorFailoverGroup.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorLIF.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorPortBond.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorvlLan.ps1"
 
+        . "$testRoot\..\..\..\POSH-Oceanstor\Public\New-DMFailoverGroup.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Public\Set-DMFailoverGroup.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Public\Remove-DMFailoverGroup.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Public\Add-DMFailoverGroupMember.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Public\Remove-DMFailoverGroupMember.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\New-DMLif.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Set-DMLif.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Remove-DMLif.ps1"
@@ -140,6 +146,49 @@ InModuleScope NetworkActionsTestModule {
             $script:lastRequest.Resource | Should -Be 'lif'
             $script:lastRequest.BodyData.NAME | Should -Be 'lif01'
             $script:lastRequest.BodyData.vstoreId | Should -Be '0'
+        }
+
+        It 'creates failover groups' {
+            New-DMFailoverGroup -WebSession $script:session -Name 'fg01' -Description 'front-end' -FailoverGroupServiceType 0
+
+            $script:lastRequest.Method | Should -Be 'POST'
+            $script:lastRequest.Resource | Should -Be 'failovergroup'
+            $script:lastRequest.BodyData.NAME | Should -Be 'fg01'
+            $script:lastRequest.BodyData.DESCRIPTION | Should -Be 'front-end'
+            $script:lastRequest.BodyData.FAILOVERGROUPTYPE | Should -Be 3
+            $script:lastRequest.BodyData.failoverGroupServiceType | Should -Be 0
+        }
+
+        It 'modifies failover groups' {
+            Set-DMFailoverGroup -WebSession $script:session -Id 'fg-01' -Description 'updated' -Confirm:$false
+
+            $script:lastRequest.Method | Should -Be 'PUT'
+            $script:lastRequest.Resource | Should -Be 'failovergroup/fg-01'
+            $script:lastRequest.BodyData.DESCRIPTION | Should -Be 'updated'
+        }
+
+        It 'removes failover groups through the delete alias' {
+            Delete-DMFailoverGroup -WebSession $script:session -Id 'fg-01' -Confirm:$false
+
+            $script:lastRequest.Method | Should -Be 'DELETE'
+            $script:lastRequest.Resource | Should -Be 'failovergroup/fg-01'
+        }
+
+        It 'adds failover group members' {
+            Add-DMFailoverGroupMember -WebSession $script:session -Id 'fg-01' -AssociateObjectType 213 -AssociateObjectId 'eth-01'
+
+            $script:lastRequest.Method | Should -Be 'POST'
+            $script:lastRequest.Resource | Should -Be 'failovergroup/associate'
+            $script:lastRequest.BodyData.ID | Should -Be 'fg-01'
+            $script:lastRequest.BodyData.ASSOCIATEOBJTYPE | Should -Be 213
+            $script:lastRequest.BodyData.ASSOCIATEOBJID | Should -Be 'eth-01'
+        }
+
+        It 'removes failover group members through the delete alias' {
+            Delete-DMFailoverGroupMember -WebSession $script:session -Id 'fg-01' -AssociateObjectType 213 -AssociateObjectId 'eth-01' -Confirm:$false
+
+            $script:lastRequest.Method | Should -Be 'DELETE'
+            $script:lastRequest.Resource | Should -Be 'failovergroup/associate?ID=fg-01&ASSOCIATEOBJTYPE=213&ASSOCIATEOBJID=eth-01'
         }
     }
 }
