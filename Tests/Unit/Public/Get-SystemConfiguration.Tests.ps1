@@ -27,10 +27,14 @@ BeforeDiscovery {
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMLocalUser.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMRole.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMRolePermission.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMEquipmentStatus.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMTimeZone.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMutcTime.ps1"
 
         Export-ModuleMember -Function 'Get-DMNtpServer', 'Get-DMNtpStatus', 'Get-DMSnmpTrapServer',
             'Get-DMSnmpConfig', 'Get-DMSnmpSecurityPolicy', 'Get-DMSnmpUsmUser',
-            'Get-DMSyslogNotification', 'Get-DMLocalUser', 'Get-DMRole', 'Get-DMRolePermission'
+            'Get-DMSyslogNotification', 'Get-DMLocalUser', 'Get-DMRole', 'Get-DMRolePermission',
+            'Get-DMEquipmentStatus', 'Get-DMTimeZone', 'Get-DMutcTime'
     }
 
     Import-Module $script:systemConfigurationModule -Force
@@ -202,6 +206,68 @@ Describe 'System configuration getter functions' {
         $result[0].GetType().Name | Should -Be 'OceanStorRolePermission'
         $result[0].Name | Should -Be 'Read'
         $script:resource | Should -Be 'querying_permissions_available?roleOwnerGroup=1%202'
+    }
+
+    It 'gets equipment status' {
+        Mock Invoke-DeviceManager {
+            $script:method = $Method
+            $script:resource = $Resource
+            [pscustomobject]@{
+                error = [pscustomobject]@{ Code = 0 }
+                data = [pscustomobject]@{ status = '4'; description = 'Security mode is enabled' }
+            }
+        }
+
+        $result = Get-DMEquipmentStatus -WebSession $script:session
+
+        $result.Status | Should -Be 4
+        $result.StatusName | Should -Be 'SecurityMode'
+        $result.Description | Should -Be 'Security mode is enabled'
+        $script:method | Should -Be 'GET'
+        $script:resource | Should -Be 'server/status'
+    }
+
+    It 'gets equipment time zone' {
+        Mock Invoke-DeviceManager {
+            $script:method = $Method
+            $script:resource = $Resource
+            [pscustomobject]@{
+                error = [pscustomobject]@{ Code = 0 }
+                data = [pscustomobject]@{
+                    CMO_SYS_TIME_ZONE = '8'
+                    CMO_SYS_TIME_ZONE_NAME = 'Asia/Beijing'
+                    CMO_SYS_TIME_ZONE_NAME_STYLE = '0'
+                    CMO_SYS_TIME_ZONE_USE_DST = '1'
+                }
+            }
+        }
+
+        $result = Get-DMTimeZone -WebSession $script:session
+
+        $result.TimeZone | Should -Be '8'
+        $result.TimeZoneName | Should -Be 'Asia/Beijing'
+        $result.NameStyle | Should -Be '0'
+        $result.UsesDaylightTime | Should -BeTrue
+        $script:method | Should -Be 'GET'
+        $script:resource | Should -Be 'system_timezone'
+    }
+
+    It 'gets equipment UTC time' {
+        Mock Invoke-DeviceManager {
+            $script:method = $Method
+            $script:resource = $Resource
+            [pscustomobject]@{
+                error = [pscustomobject]@{ Code = 0 }
+                data = [pscustomobject]@{ CMO_SYS_UTC_TIME = '1478179247' }
+            }
+        }
+
+        $result = Get-DMutcTime -WebSession $script:session
+
+        $result.UtcTime | Should -Be 1478179247
+        $result.DateTimeUtc | Should -Be ([DateTimeOffset]::FromUnixTimeSeconds(1478179247).UtcDateTime)
+        $script:method | Should -Be 'GET'
+        $script:resource | Should -Be 'system_utc_time'
     }
 
     It 'gets paged SNMP trap server collections' {

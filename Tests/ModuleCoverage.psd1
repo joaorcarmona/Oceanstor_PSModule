@@ -19,6 +19,7 @@
         'OceanStorPortFc'
         'OceanStorStoragePool'
         'OceanStorSystem'
+        'OceanStorSystemConfiguration'
         'OceanStorViewHost'
         'OceanStorvStore'
         'OceanStorvlLan'

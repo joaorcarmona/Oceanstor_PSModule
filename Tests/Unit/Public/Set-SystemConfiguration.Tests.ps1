@@ -161,6 +161,24 @@ Describe 'System configuration mutation functions' {
         $script:resource | Should -Be 'syslog_removeip'
     }
 
+    It 'sets equipment time zone' {
+        $result = Set-DMTimeZone -WebSession $script:session -TimeZoneName 'Asia/Beijing' -Confirm:$false
+
+        $result.Code | Should -Be 0
+        $script:method | Should -Be 'PUT'
+        $script:resource | Should -Be 'system_timezone'
+        $script:body.CMO_SYS_TIME_ZONE_NAME | Should -Be 'Asia/Beijing'
+    }
+
+    It 'sets equipment UTC time' {
+        $result = Set-DMutcTime -WebSession $script:session -UtcTime 1478179247 -Confirm:$false
+
+        $result.Code | Should -Be 0
+        $script:method | Should -Be 'PUT'
+        $script:resource | Should -Be 'system_utc_time'
+        $script:body.CMO_SYS_UTC_TIME | Should -Be 1478179247
+    }
+
     It 'creates, modifies, and removes local users' {
         $null = New-DMLocalUser -WebSession $script:session -Name 'audit' -Password 'secret' -RoleId '1' -Confirm:$false
         $script:method | Should -Be 'POST'
