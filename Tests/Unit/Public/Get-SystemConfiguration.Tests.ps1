@@ -8,6 +8,7 @@ BeforeDiscovery {
                 [string]$Method,
                 [string]$Resource,
                 [hashtable]$BodyData,
+                [int]$TimeoutSec,
                 [switch]$ApiV2
             )
         }
@@ -139,6 +140,19 @@ Describe 'System configuration getter functions' {
         $script:resource | Should -Be 'syslog'
     }
 
+    It 'uses a bounded timeout for syslog notification settings' {
+        Mock Invoke-DeviceManager {
+            $script:resource = $Resource
+            $script:timeout = $TimeoutSec
+            [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 }; data = [pscustomobject]@{ CMO_SYSLOG_SERVER_IP = @('192.0.2.20') } }
+        }
+
+        $null = Get-DMSyslogNotification -WebSession $script:session
+
+        $script:resource | Should -Be 'syslog'
+        $script:timeout | Should -Be 30
+    }
+
     It 'gets a single SNMP trap server by encoded id' {
         Mock Invoke-DeviceManager {
             $script:resource = $Resource
@@ -180,6 +194,7 @@ Describe 'System configuration getter functions' {
 
     It 'gets a single role by encoded id' {
         Mock Invoke-DeviceManager {
+            $script:timeout = $TimeoutSec
             $script:resource = $Resource
             [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 }; data = [pscustomobject]@{ ID = 'role-01'; name = 'Auditor'; roleOwnerGroup = '1' } }
         }
@@ -189,11 +204,13 @@ Describe 'System configuration getter functions' {
         $result.GetType().Name | Should -Be 'OceanStorRole'
         $result.Name | Should -Be 'Auditor'
         $script:resource | Should -Be 'role/role%2F01'
+        $script:timeout | Should -Be 30
     }
 
     It 'gets role permissions for the requested owner group' {
         Mock Invoke-DeviceManager {
             $script:resource = $Resource
+            $script:timeout = $TimeoutSec
             [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 }; data = @([pscustomobject]@{ ID = 'perm-01'; name = 'Read' }) }
         }
 
@@ -202,6 +219,7 @@ Describe 'System configuration getter functions' {
         $result[0].GetType().Name | Should -Be 'OceanStorRolePermission'
         $result[0].Name | Should -Be 'Read'
         $script:resource | Should -Be 'querying_permissions_available?roleOwnerGroup=1%202'
+        $script:timeout | Should -Be 30
     }
 
     It 'gets paged SNMP trap server collections' {
@@ -239,15 +257,18 @@ Describe 'System configuration getter functions' {
         $script:resource | Should -BeLike 'user?range=*'
     }
 
-    It 'gets paged role collections' {
+    It 'gets role collections with a bounded unpaged request' {
         Mock Invoke-DeviceManager {
             $script:resource = $Resource
-            [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 }; data = @() }
+            $script:timeout = $TimeoutSec
+            [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 }; data = @([pscustomobject]@{ ID = 'role-01'; name = 'Auditor' }) }
         }
 
-        $null = Get-DMRole -WebSession $script:session
+        $result = @(Get-DMRole -WebSession $script:session)
 
-        $script:resource | Should -BeLike 'role?range=*'
+        $result[0].GetType().Name | Should -Be 'OceanStorRole'
+        $script:resource | Should -Be 'role'
+        $script:timeout | Should -Be 30
     }
 }
 }

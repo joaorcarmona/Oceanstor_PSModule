@@ -11,6 +11,8 @@ param(
 
     [string]$MarkdownReportPath = (Join-Path $PSScriptRoot '..\..\Reports\getter-integrity-last-result.md'),
 
+    [string]$RunLogPath = (Join-Path $PSScriptRoot '..\..\Reports\getter-integrity-run.log'),
+
     [string]$MutationLogPath = (Join-Path $PSScriptRoot '..\..\Reports\mutation-trace-last-result.json'),
 
     [string]$ConfigurationPath = (Join-Path $PSScriptRoot 'IntegrityValidationConfig.psd1'),
@@ -27,7 +29,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $runStartedAt = Get-Date
 
-foreach ($outputPath in @($ReportPath, $MarkdownReportPath, $MutationLogPath)) {
+foreach ($outputPath in @($ReportPath, $MarkdownReportPath, $RunLogPath, $MutationLogPath)) {
     $outputDirectory = Split-Path -Path $outputPath -Parent
     if ($outputDirectory -and -not (Test-Path -LiteralPath $outputDirectory)) {
         $null = New-Item -Path $outputDirectory -ItemType Directory -Force
@@ -105,6 +107,8 @@ $validationModule = New-Module -Name OceanstorLiveGetterValidation -ArgumentList
 Import-Module $validationModule -Force
 
 $checks = [System.Collections.Generic.List[object]]::new()
+$GetterIntegrityRunLogPath = $RunLogPath
+$GetterIntegrityRunLogEntries = [System.Collections.Generic.List[object]]::new()
 $mutationRequests = [System.Collections.Generic.List[object]]::new()
 $cleanupActions = [System.Collections.Generic.List[object]]::new()
 $sessionDisconnected = $false
@@ -120,16 +124,30 @@ foreach ($kind in @('Lun', 'LunSnapshot', 'HyperCDPSchedule', 'LunGroup', 'Prote
 . (Join-Path $PSScriptRoot 'Private\MutationValidation.ps1')
 . (Join-Path $PSScriptRoot 'Private\Reporting.ps1')
 
+Initialize-ValidationRunLog
+
 try {
     Write-ValidationProgress -Name 'Connect-deviceManager' -Category 'Session'
     $connectionStartedAt = Get-Date
-    if ($Credential) {
-        Write-Host "Connecting to $Hostname using the supplied -Credential. No credentials are read from or written to the configuration file."
-        $session = Connect-deviceManager -Hostname $Hostname -PassThru -Credential $Credential -SkipCertificateCheck:$SkipCertificateCheck
+    $connectionArguments = if ($Credential) {
+        '-Hostname $Hostname -PassThru -Credential $Credential -SkipCertificateCheck:$SkipCertificateCheck'
     }
     else {
-        Write-Host "A credential prompt will open for validation of $Hostname. No credentials are read from or written to the configuration file."
-        $session = Connect-deviceManager -Hostname $Hostname -PassThru -Secure -SkipCertificateCheck:$SkipCertificateCheck
+        '-Hostname $Hostname -PassThru -Secure -SkipCertificateCheck:$SkipCertificateCheck'
+    }
+    $connectionLogEntry = Start-ValidationCommandLogEntry -Name 'Connect-deviceManager' -StartedAt $connectionStartedAt -MainCommand 'Connect-deviceManager' -Arguments $connectionArguments
+    try {
+        if ($Credential) {
+            Write-Host "Connecting to $Hostname using the supplied -Credential. No credentials are read from or written to the configuration file."
+            $session = Connect-deviceManager -Hostname $Hostname -PassThru -Credential $Credential -SkipCertificateCheck:$SkipCertificateCheck
+        }
+        else {
+            Write-Host "A credential prompt will open for validation of $Hostname. No credentials are read from or written to the configuration file."
+            $session = Connect-deviceManager -Hostname $Hostname -PassThru -Secure -SkipCertificateCheck:$SkipCertificateCheck
+        }
+    }
+    finally {
+        Complete-ValidationCommandLogEntry -Entry $connectionLogEntry -EndedAt (Get-Date)
     }
     $connectionDurationMs = [math]::Round(((Get-Date) - $connectionStartedAt).TotalMilliseconds, 2)
     $checks.Add([pscustomobject]@{
@@ -150,7 +168,9 @@ try {
 }
 finally {
     if ($session -and -not $sessionDisconnected) {
-        try { Disconnect-deviceManager -WebSession $session } catch { Write-Verbose "Session cleanup failed: $_" }
+        $disconnectStartedAt = Get-Date
+        $disconnectLogEntry = Start-ValidationCommandLogEntry -Name 'Disconnect-deviceManager' -StartedAt $disconnectStartedAt -MainCommand 'Disconnect-deviceManager' -Arguments '-WebSession $session'
+        try { Disconnect-deviceManager -WebSession $session } catch { Write-Verbose "Session cleanup failed: $_" } finally { Complete-ValidationCommandLogEntry -Entry $disconnectLogEntry -EndedAt (Get-Date) }
     }
     if (-not $NoProgress) {
         Write-Progress -Id 1 -Activity "Validating OceanStor $Hostname" -Completed

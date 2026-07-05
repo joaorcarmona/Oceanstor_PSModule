@@ -22,6 +22,148 @@ function Write-ValidationProgress {
     }
 }
 
+function ConvertTo-ValidationRunLogField {
+    param([AllowNull()][object]$Value)
+
+    if ($null -eq $Value) {
+        return ''
+    }
+
+    return ([string]$Value -replace '\r?\n', ' ' -replace '\|', '/').Trim()
+}
+
+function Write-ValidationRunLog {
+    if ([string]::IsNullOrWhiteSpace($script:GetterIntegrityRunLogPath)) {
+        return
+    }
+
+    $lines = [System.Collections.Generic.List[string]]::new()
+    $lines.Add('date | main command | arguments | start time | end time |')
+
+    foreach ($entry in $script:GetterIntegrityRunLogEntries) {
+        $fields = @(
+            $entry.Date
+            $entry.MainCommand
+            $entry.Arguments
+            $entry.StartTime
+            $entry.EndTime
+        ) | ForEach-Object { ConvertTo-ValidationRunLogField $_ }
+
+        $lines.Add(('{0} | {1} | {2} | {3} | {4} |' -f $fields[0], $fields[1], $fields[2], $fields[3], $fields[4]))
+    }
+
+    $lines | Set-Content -LiteralPath $script:GetterIntegrityRunLogPath
+}
+
+function Initialize-ValidationRunLog {
+    if ([string]::IsNullOrWhiteSpace($script:GetterIntegrityRunLogPath)) {
+        return
+    }
+
+    $logDirectory = Split-Path -Path $script:GetterIntegrityRunLogPath -Parent
+    if ($logDirectory -and -not (Test-Path -LiteralPath $logDirectory)) {
+        $null = New-Item -Path $logDirectory -ItemType Directory -Force
+    }
+
+    if ($null -eq $script:GetterIntegrityRunLogEntries) {
+        $script:GetterIntegrityRunLogEntries = [System.Collections.Generic.List[object]]::new()
+    }
+
+    Write-ValidationRunLog
+}
+
+function Get-ValidationActionCommandLogMetadata {
+    param(
+        [string]$Name,
+        [scriptblock]$ValidationAction
+    )
+
+    $command = @($ValidationAction.Ast.FindAll({
+        param($node)
+        if ($node -isnot [System.Management.Automation.Language.CommandAst]) {
+            return $false
+        }
+
+        $commandName = $node.GetCommandName()
+        return $commandName -and $commandName -notin @(
+            'Set-DMValidationRequestTraceContext',
+            'Assert-TestOwnedResource',
+            'ForEach-Object',
+            'Where-Object',
+            'Out-Null',
+            'return'
+        )
+    }, $true))[0]
+
+    $mainCommand = if ($command) { $command.GetCommandName() } else { ($Name -replace '^Verify:', '' -split ':')[0] }
+    $arguments = if ($command -and $command.CommandElements.Count -gt 1) {
+        @($command.CommandElements | Select-Object -Skip 1 | ForEach-Object { $_.Extent.Text }) -join ' '
+    }
+    else {
+        $nameParts = @($Name -replace '^Verify:', '' -split ':')
+        if ($nameParts.Count -gt 1) { $nameParts[1..($nameParts.Count - 1)] -join ':' } else { '' }
+    }
+
+    [pscustomobject]@{
+        MainCommand = $mainCommand
+        Arguments   = $arguments
+    }
+}
+
+function Start-ValidationCommandLogEntry {
+    param(
+        [string]$Name,
+        [scriptblock]$ValidationAction,
+        [datetime]$StartedAt,
+        [string]$MainCommand,
+        [string]$Arguments
+    )
+
+    if ([string]::IsNullOrWhiteSpace($script:GetterIntegrityRunLogPath)) {
+        return $null
+    }
+
+    if ($null -eq $script:GetterIntegrityRunLogEntries) {
+        $script:GetterIntegrityRunLogEntries = [System.Collections.Generic.List[object]]::new()
+    }
+
+    $metadata = if ($MainCommand) {
+        [pscustomobject]@{
+            MainCommand = $MainCommand
+            Arguments   = $Arguments
+        }
+    }
+    else {
+        Get-ValidationActionCommandLogMetadata -Name $Name -ValidationAction $ValidationAction
+    }
+    $entry = [pscustomobject]@{
+        Date        = $StartedAt.ToString('yyyy-MM-dd')
+        MainCommand = $metadata.MainCommand
+        Arguments   = $metadata.Arguments
+        StartTime   = $StartedAt.ToString('HH:mm:ss.fff')
+        EndTime     = $null
+    }
+
+    $script:GetterIntegrityRunLogEntries.Add($entry)
+    Write-ValidationRunLog
+
+    return $entry
+}
+
+function Complete-ValidationCommandLogEntry {
+    param(
+        [AllowNull()][object]$Entry,
+        [datetime]$EndedAt
+    )
+
+    if ($null -eq $Entry -or [string]::IsNullOrWhiteSpace($script:GetterIntegrityRunLogPath)) {
+        return
+    }
+
+    $Entry.EndTime = $EndedAt.ToString('HH:mm:ss.fff')
+    Write-ValidationRunLog
+}
+
 function Add-ValidationResult {
     param(
         [string]$Name,
@@ -33,6 +175,7 @@ function Add-ValidationResult {
 
     Write-ValidationProgress -Name $Name -Category $Category
     $startedAt = Get-Date
+    $logEntry = Start-ValidationCommandLogEntry -Name $Name -ValidationAction $ValidationAction -StartedAt $startedAt
     try {
         $rows = @(& $ValidationAction)
         $types = @($rows | ForEach-Object { $_.GetType().Name } | Sort-Object -Unique)
@@ -51,6 +194,7 @@ function Add-ValidationResult {
             Error        = $null
         })
         Write-ValidationProgress -Name $Name -Category $Category -Status $status -DurationMs $durationMs
+        Complete-ValidationCommandLogEntry -Entry $logEntry -EndedAt (Get-Date)
 
         return $rows
     }
@@ -67,6 +211,7 @@ function Add-ValidationResult {
             Error        = $_.Exception.Message
         })
         Write-ValidationProgress -Name $Name -Category $Category -Status 'Failed' -DurationMs $durationMs
+        Complete-ValidationCommandLogEntry -Entry $logEntry -EndedAt (Get-Date)
 
         return @()
     }

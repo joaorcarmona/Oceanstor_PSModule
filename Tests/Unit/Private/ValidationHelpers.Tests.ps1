@@ -12,6 +12,8 @@ Describe 'ValidationHelpers ownership tracking' {
         $script:ShowTestExecution = $false
         $script:checks = [System.Collections.Generic.List[object]]::new()
         $script:cleanupActions = [System.Collections.Generic.List[object]]::new()
+        $script:GetterIntegrityRunLogPath = $null
+        $script:GetterIntegrityRunLogEntries = [System.Collections.Generic.List[object]]::new()
         $script:owned = @{
             Widget = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
         }
@@ -127,6 +129,45 @@ Describe 'ValidationHelpers ownership tracking' {
 
             $script:removedIdentity | Should -Be $renamedWidgetName
             $owned.Widget.Contains($renamedWidgetName) | Should -BeFalse
+        }
+    }
+
+    Context 'getter integrity run logging' {
+        BeforeEach {
+            $script:GetterIntegrityRunLogPath = Join-Path $TestDrive 'getter-integrity-run.log'
+            $script:GetterIntegrityRunLogEntries = [System.Collections.Generic.List[object]]::new()
+            Initialize-ValidationRunLog
+        }
+
+        It 'creates a realtime log row before the validation action finishes' {
+            $script:capturedLog = $null
+            $session = [pscustomobject]@{}
+
+            function Get-DMRolePermission {
+                param($WebSession, [string]$RoleOwnerGroup)
+
+                $script:capturedLog = Get-Content -LiteralPath $script:GetterIntegrityRunLogPath
+                'permission'
+            }
+
+            Add-ValidationResult -Name 'Get-DMRolePermission' -ExpectedType 'String' -Action {
+                Get-DMRolePermission -WebSession $session -RoleOwnerGroup '1'
+            } | Out-Null
+
+            $script:capturedLog[0] | Should -Be 'date | main command | arguments | start time | end time |'
+            $script:capturedLog[1] | Should -Match '^\\d{4}-\\d{2}-\\d{2} \\| Get-DMRolePermission \\| -WebSession \\$session -RoleOwnerGroup ''1'' \\| \\d{2}:\\d{2}:\\d{2}\\.\\d{3} \\|  \\|$'
+
+            $finalLog = Get-Content -LiteralPath $script:GetterIntegrityRunLogPath
+            $finalLog[1] | Should -Match '^\\d{4}-\\d{2}-\\d{2} \\| Get-DMRolePermission \\| -WebSession \\$session -RoleOwnerGroup ''1'' \\| \\d{2}:\\d{2}:\\d{2}\\.\\d{3} \\| \\d{2}:\\d{2}:\\d{2}\\.\\d{3} \\|$'
+        }
+
+        It 'falls back to the validation name when no command can be parsed from the action' {
+            Add-ValidationResult -Name 'Get-DMdisk:Coffer' -ExpectedType 'String' -Action {
+                & ([scriptblock]::Create("'disk'"))
+            } | Out-Null
+
+            $log = Get-Content -LiteralPath $script:GetterIntegrityRunLogPath
+            $log[1] | Should -Match '^\\d{4}-\\d{2}-\\d{2} \\| Get-DMdisk \\| Coffer \\|'
         }
     }
 }

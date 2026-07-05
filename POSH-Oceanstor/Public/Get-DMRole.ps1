@@ -10,7 +10,11 @@ function Get-DMRole {
         [pscustomobject]$WebSession,
 
         [Parameter(ParameterSetName = 'ById', Mandatory = $true)]
-        [string]$Id
+        [string]$Id,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 3600)]
+        [int]$TimeoutSec = 30
     )
 
     if ($WebSession) {
@@ -22,11 +26,12 @@ function Get-DMRole {
 
     if ($PSCmdlet.ParameterSetName -eq 'ById') {
         $encodedId = [uri]::EscapeDataString($Id)
-        $response = Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource "role/$encodedId" |
+        $response = Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource "role/$encodedId" -TimeoutSec $TimeoutSec |
             Select-DMResponseData
         return [OceanStorRole]::new($response, $session)
     }
 
-    $response = Invoke-DMPagedRequest -WebSession $session -Resource 'role'
+    $response = Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource 'role' -TimeoutSec $TimeoutSec |
+        Select-DMResponseData
     return @($response | ForEach-Object { [OceanStorRole]::new($_, $session) })
 }

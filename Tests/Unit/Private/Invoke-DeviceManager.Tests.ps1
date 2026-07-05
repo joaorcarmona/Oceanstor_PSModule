@@ -82,6 +82,14 @@ Describe 'Invoke-DeviceManager' {
         }
     }
 
+    It 'forwards TimeoutSec when supplied' {
+        $null = Invoke-DeviceManager -WebSession $script:session -Method GET -Resource 'syslog' -TimeoutSec 30
+
+        Should -Invoke Invoke-RestMethod -Times 1 -Exactly -ParameterFilter {
+            $TimeoutSec -eq 30
+        }
+    }
+
     It 'builds API v2 requests for protection group resources' {
         $null = Invoke-DeviceManager -WebSession $script:session -Method GET -Resource 'protectgroup' -ApiV2
 

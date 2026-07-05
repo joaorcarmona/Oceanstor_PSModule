@@ -155,6 +155,9 @@ function Invoke-DeviceManager{
 	[Parameter(ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,Mandatory=$false)]
 		[object]$BodyData,
 	[Parameter(Mandatory=$false)]
+		[ValidateRange(1, 3600)]
+		[int]$TimeoutSec,
+	[Parameter(Mandatory=$false)]
 		[switch]$ApiV2
 	)
 
@@ -183,6 +186,9 @@ function Invoke-DeviceManager{
 			Headers     = $session.Headers
 			WebSession  = $session.WebSession
 			ContentType = 'application/json'
+		}
+		if ($PSBoundParameters.ContainsKey('TimeoutSec')) {
+			$invokeParams.TimeoutSec = $TimeoutSec
 		}
 		if ($session.SkipCertificateCheck) {
 			$invokeParams.SkipCertificateCheck = $true

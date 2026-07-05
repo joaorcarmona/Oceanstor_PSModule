@@ -4,6 +4,7 @@ BeforeAll {
             [pscustomobject]$WebSession,
             [string]$Method,
             [string]$Resource,
+            [int]$TimeoutSec,
             [switch]$ApiV2
         )
     }
@@ -166,6 +167,18 @@ Describe 'Invoke-DMPagedRequest' {
         $script:capturedApiV2 | Should -BeTrue
     }
 
+    It 'forwards TimeoutSec to Invoke-DeviceManager on paged requests' {
+        $script:capturedTimeoutSec = $null
+        Mock Invoke-DeviceManager {
+            $script:capturedTimeoutSec = $TimeoutSec
+            [pscustomobject]@{ data = @() }
+        }
+
+        Invoke-DMPagedRequest -WebSession $script:session -Resource 'user' -TimeoutSec 12
+
+        $script:capturedTimeoutSec | Should -Be 12
+    }
+
     It 'forwards -ApiV2 to Invoke-DeviceManager on the unpaged fallback request' {
         $global:PagedCalls = [System.Collections.Generic.List[bool]]::new()
         Mock Invoke-DeviceManager {
@@ -182,5 +195,14 @@ Describe 'Invoke-DMPagedRequest' {
 
         $global:PagedCalls[0] | Should -BeTrue
         $global:PagedCalls[1] | Should -BeTrue
+    }
+
+    It 'stops when a ranged endpoint repeats the same full page' {
+        Mock Invoke-DeviceManager {
+            [pscustomobject]@{ data = 1..100 | ForEach-Object { [pscustomobject]@{ Id = "$_" } } }
+        }
+
+        { Invoke-DMPagedRequest -WebSession $script:session -Resource 'role' } |
+            Should -Throw '*identical full page*'
     }
 }

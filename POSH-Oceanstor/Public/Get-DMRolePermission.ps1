@@ -10,7 +10,10 @@ function Get-DMRolePermission {
         [pscustomobject]$WebSession,
 
         [Parameter(Mandatory = $true)]
-        [string]$RoleOwnerGroup
+        [string]$RoleOwnerGroup,
+
+        [ValidateRange(1, 3600)]
+        [int]$TimeoutSec = 30
     )
 
     if ($WebSession) {
@@ -21,7 +24,7 @@ function Get-DMRolePermission {
     }
 
     $encodedRoleOwnerGroup = [uri]::EscapeDataString($RoleOwnerGroup)
-    $response = Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource "querying_permissions_available?roleOwnerGroup=$encodedRoleOwnerGroup" |
+    $response = Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource "querying_permissions_available?roleOwnerGroup=$encodedRoleOwnerGroup" -TimeoutSec $TimeoutSec |
         Select-DMResponseData
     return @($response | ForEach-Object { [OceanStorRolePermission]::new($_, $session) })
 }

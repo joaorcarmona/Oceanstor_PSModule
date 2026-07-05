@@ -7,7 +7,10 @@ function Get-DMSyslogNotification {
     [OutputType([pscustomobject])]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Mandatory = $false)]
-        [pscustomobject]$WebSession
+        [pscustomobject]$WebSession,
+
+        [ValidateRange(1, 3600)]
+        [int]$TimeoutSec = 30
     )
 
     if ($WebSession) {
@@ -17,7 +20,7 @@ function Get-DMSyslogNotification {
         $session = $script:CurrentOceanstorSession
     }
 
-    $response = Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource 'syslog' |
+    $response = Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource 'syslog' -TimeoutSec $TimeoutSec |
         Select-DMResponseData
     return [OceanStorSyslogNotification]::new($response, $session)
 }
