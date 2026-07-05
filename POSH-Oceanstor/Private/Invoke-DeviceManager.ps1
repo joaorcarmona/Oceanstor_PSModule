@@ -195,7 +195,7 @@ function Invoke-DeviceManager{
 		}
 
 		if ($BodyData){
-			$JsonBody = ConvertTo-Json $BodyData
+			$JsonBody = ConvertTo-Json $BodyData -Depth 10
 			$invokeParams.Body = $JsonBody
 		}
 		$result = Invoke-RestMethod @invokeParams

@@ -32,6 +32,30 @@ BeforeDiscovery {
             )
         }
 
+        function Get-DMSystemPerformance {
+            param([pscustomobject]$WebSession)
+        }
+
+        function Get-DMControllerPerformance {
+            param([pscustomobject]$WebSession, [object[]]$InputObject)
+        }
+
+        function Get-DMStoragePoolPerformance {
+            param([pscustomobject]$WebSession, [object[]]$InputObject)
+        }
+
+        function Get-DMDiskPerformance {
+            param([pscustomobject]$WebSession, [object[]]$InputObject)
+        }
+
+        function Get-DMHostPerformance {
+            param([pscustomobject]$WebSession, [object[]]$InputObject)
+        }
+
+        function Get-DMLunPerformance {
+            param([pscustomobject]$WebSession, [object[]]$InputObject)
+        }
+
         Get-ChildItem -LiteralPath "$testRoot\..\..\..\POSH-Oceanstor\Public" -Filter 'Export-*.ps1' |
             ForEach-Object { . $_.FullName }
 
@@ -52,6 +76,12 @@ Describe 'Public export functions' {
         Mock New-DMObjectReport {
             [pscustomobject]@{ Source = $Object; ReportType = $ReportType }
         }
+        Mock Get-DMSystemPerformance {}
+        Mock Get-DMControllerPerformance {}
+        Mock Get-DMStoragePoolPerformance {}
+        Mock Get-DMDiskPerformance {}
+        Mock Get-DMHostPerformance {}
+        Mock Get-DMLunPerformance {}
     }
 
     It 'creates a storage export for the requested hostname' {
@@ -179,6 +209,111 @@ Describe 'Public export functions' {
             $TableName -eq 'LocalUsers' -and $WorksheetName -eq 'Local Users'
         }
         Should -Invoke New-DMObjectReport -Times 0 -Exactly
+    }
+
+    It 'exports one worksheet per performance section with joined object names' {
+        $storage = [pscustomobject]@{
+            system       = [pscustomobject]@{ version = 'V600R001' }
+            Session      = [pscustomobject]@{ Token = 'sess-01' }
+            Controllers  = @([pscustomobject]@{ Id = 'ctrl-01'; Name = 'ctrl0' })
+            StoragePools = @([pscustomobject]@{ Id = 'pool-01'; Name = 'pool0' })
+            disks        = @([pscustomobject]@{ Id = 'disk-01'; Name = 'disk0' })
+            hosts        = @([pscustomobject]@{ Id = 'host-01'; Name = 'host0' })
+            luns         = @([pscustomobject]@{ Id = 'lun-01'; Name = 'lun0' })
+        }
+        Mock Get-DMControllerPerformance { [pscustomobject]@{ ObjectId = 'ctrl-01'; IOPS = 100 } }
+        Mock Get-DMStoragePoolPerformance { [pscustomobject]@{ ObjectId = 'pool-01'; IOPS = 200 } }
+        Mock Get-DMDiskPerformance { [pscustomobject]@{ ObjectId = 'disk-01'; IOPS = 300 } }
+        Mock Get-DMHostPerformance { [pscustomobject]@{ ObjectId = 'host-01'; IOPS = 400 } }
+        Mock Get-DMLunPerformance { [pscustomobject]@{ ObjectId = 'lun-01'; IOPS = 500 } }
+
+        Export-DMStorageToExcel -OceanStor $storage -IncludeObject performance -ReportFile 'performance.xlsx'
+
+        Should -Invoke Export-Excel -Times 5 -Exactly
+        Should -Invoke Export-Excel -Times 1 -Exactly -ParameterFilter {
+            $TableName -eq 'ControllerPerformance' -and $WorksheetName -eq 'Controller Performance' -and $InputObject.ObjectName -eq 'ctrl0'
+        }
+        Should -Invoke Export-Excel -Times 1 -Exactly -ParameterFilter {
+            $TableName -eq 'StoragePoolPerformance' -and $WorksheetName -eq 'Storage Pool Performance' -and $InputObject.ObjectName -eq 'pool0'
+        }
+        Should -Invoke Export-Excel -Times 1 -Exactly -ParameterFilter {
+            $TableName -eq 'DiskPerformance' -and $WorksheetName -eq 'Disk Performance' -and $InputObject.ObjectName -eq 'disk0'
+        }
+        Should -Invoke Export-Excel -Times 1 -Exactly -ParameterFilter {
+            $TableName -eq 'HostPerformance' -and $WorksheetName -eq 'Host Performance' -and $InputObject.ObjectName -eq 'host0'
+        }
+        Should -Invoke Export-Excel -Times 1 -Exactly -ParameterFilter {
+            $TableName -eq 'LunPerformance' -and $WorksheetName -eq 'LUN Performance' -and $InputObject.ObjectName -eq 'lun0'
+        }
+    }
+
+    It 'does not query performance wrappers when -IncludeObject full is used' {
+        $storage = [pscustomobject]@{
+            system       = [pscustomobject]@{ version = 'V600R001' }
+            disks        = @('disk-01')
+            StoragePools = @('pool-01')
+            luns         = @('lun-01')
+            hosts        = @('host-01')
+            hostgroups   = @('hostgroup-01')
+            LunGroups    = @('lungroup-01')
+            vStores      = @('vstore-01')
+            Controllers  = @([pscustomobject]@{ Id = 'ctrl-01'; Name = 'ctrl0' })
+            Session      = [pscustomobject]@{ Token = 'sess-01' }
+        }
+
+        Export-DMStorageToExcel -OceanStor $storage -IncludeObject full -ReportFile 'full.xlsx'
+
+        Should -Invoke Get-DMSystemPerformance -Times 0 -Exactly
+        Should -Invoke Get-DMControllerPerformance -Times 0 -Exactly
+        Should -Invoke Get-DMStoragePoolPerformance -Times 0 -Exactly
+        Should -Invoke Get-DMDiskPerformance -Times 0 -Exactly
+        Should -Invoke Get-DMHostPerformance -Times 0 -Exactly
+        Should -Invoke Get-DMLunPerformance -Times 0 -Exactly
+        Should -Invoke Export-Excel -Times 0 -Exactly -ParameterFilter { $TableName -like '*Performance' }
+    }
+
+    It 'skips a capped performance section beyond the object cap but still exports uncapped and within-cap sections' {
+        $manyControllers = 1..501 | ForEach-Object { [pscustomobject]@{ Id = "ctrl-$_"; Name = "ctrl$_" } }
+        $manyDisks = 1..501 | ForEach-Object { [pscustomobject]@{ Id = "disk-$_"; Name = "disk$_" } }
+        $storage = [pscustomobject]@{
+            system      = [pscustomobject]@{ version = 'V600R001' }
+            Session     = [pscustomobject]@{ Token = 'sess-01' }
+            Controllers = $manyControllers
+            disks       = $manyDisks
+            hosts       = @([pscustomobject]@{ Id = 'host-01'; Name = 'host0' })
+        }
+        Mock Get-DMControllerPerformance { [pscustomobject]@{ ObjectId = 'ctrl-1'; IOPS = 1 } }
+        Mock Get-DMHostPerformance { [pscustomobject]@{ ObjectId = 'host-01'; IOPS = 1 } }
+
+        Export-DMStorageToExcel -OceanStor $storage -IncludeObject performance -ReportFile 'cap.xlsx' -WarningAction SilentlyContinue -WarningVariable capWarnings
+
+        Should -Invoke Get-DMDiskPerformance -Times 0 -Exactly
+        Should -Invoke Export-Excel -Times 0 -Exactly -ParameterFilter { $TableName -eq 'DiskPerformance' }
+        $capWarnings.Count | Should -BeGreaterThan 0
+        ($capWarnings -join ' ') | Should -Match 'DiskPerformance'
+
+        Should -Invoke Get-DMControllerPerformance
+        Should -Invoke Export-Excel -Times 1 -Exactly -ParameterFilter { $TableName -eq 'ControllerPerformance' }
+
+        Should -Invoke Get-DMHostPerformance -Times 1 -Exactly
+        Should -Invoke Export-Excel -Times 1 -Exactly -ParameterFilter { $TableName -eq 'HostPerformance' }
+    }
+
+    It 'exports system performance without requiring a name join' {
+        $storage = [pscustomobject]@{
+            Session = [pscustomobject]@{ Token = 'sess-01' }
+            system  = [pscustomobject]@{ version = 'V600R001'; sn = 'SN12345' }
+        }
+        Mock Get-DMSystemPerformance { [pscustomobject]@{ ObjectId = 'SN12345'; IOPS = 42 } }
+
+        { Export-DMStorageToExcel -OceanStor $storage -IncludeObject performance -ReportFile 'system.xlsx' } | Should -Not -Throw
+
+        Should -Invoke Get-DMSystemPerformance -Times 1 -Exactly
+        Should -Invoke Export-Excel -Times 1 -Exactly -ParameterFilter {
+            $TableName -eq 'SystemPerformance' -and $WorksheetName -eq 'System Performance' -and
+            $InputObject.ObjectId -eq 'SN12345' -and
+            ($InputObject.PSObject.Properties.Name -notcontains 'ObjectName')
+        }
     }
 }
 }

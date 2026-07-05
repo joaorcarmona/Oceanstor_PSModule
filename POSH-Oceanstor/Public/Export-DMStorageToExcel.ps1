@@ -1,3 +1,5 @@
+$script:DMPerformanceExcelObjectCap = 500
+
 function Export-DMStorageToExcel {
     <#
 	.SYNOPSIS
@@ -14,7 +16,7 @@ function Export-DMStorageToExcel {
 	.PARAMETER ReportFile
 		File path where the Excel configuration report is written.
 	.PARAMETER IncludeObject
-		Choose the report sections to include ("luns","system","configuration","hostgroups","lungroups","disks","hosts","vstores","storagepools","full"). Multiple items are allowed.
+		Choose the report sections to include ("luns","system","configuration","hostgroups","lungroups","disks","hosts","vstores","storagepools","performance","full"). Multiple items are allowed. "performance" is opt-in only (not implied by "full") and pulls one live realtime sample per object type (System, Controllers, StoragePools, Disks, Hosts, LUNs) using the storage object's cached session.
 
 	.INPUTS
 		System.String
@@ -51,7 +53,7 @@ function Export-DMStorageToExcel {
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 1, Mandatory = $true, ParameterSetName = "CurrentConnection")]
         [PSCustomObject]$OceanStor,
         [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $false, Position = 2, Mandatory = $true)]
-        [ValidateSet("luns", "system", "configuration", "hostgroups", "lungroups", "disks", "hosts", "vstores", "storagepools", "full")]
+        [ValidateSet("luns", "system", "configuration", "hostgroups", "lungroups", "disks", "hosts", "vstores", "storagepools", "performance", "full")]
         [string[]]$IncludeObject,
         [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $false, Position = 3, Mandatory = $true)]
         [string]$ReportFile
@@ -109,6 +111,9 @@ function Export-DMStorageToExcel {
                 }
                 storagepools {
                     $IncludeStoragePools = $true
+                }
+                performance {
+                    $IncludePerformance = $true
                 }
             }
         }
@@ -187,6 +192,45 @@ function Export-DMStorageToExcel {
     #8) Adding vStores
     if ($IncludevStore -eq $true) {
         Export-Excel $ReportFile -AutoSize -TableName vStores -InputObject $storage.vStores -WorksheetName "System vStores"
+    }
+
+    #9) Adding Performance samples (opt-in only, never part of full)
+    if ($IncludePerformance -eq $true) {
+        $session = $storage.Session
+
+        $systemPerf = Get-DMSystemPerformance -WebSession $session
+        if ($systemPerf) {
+            Export-Excel $ReportFile -AutoSize -TableName SystemPerformance -InputObject $systemPerf -WorksheetName "System Performance"
+        }
+
+        $perfSections = @(
+            @{ Source = $storage.Controllers; Wrapper = 'Get-DMControllerPerformance'; Table = 'ControllerPerformance'; Worksheet = 'Controller Performance'; Cap = $false }
+            @{ Source = $storage.StoragePools; Wrapper = 'Get-DMStoragePoolPerformance'; Table = 'StoragePoolPerformance'; Worksheet = 'Storage Pool Performance'; Cap = $false }
+            @{ Source = $storage.disks; Wrapper = 'Get-DMDiskPerformance'; Table = 'DiskPerformance'; Worksheet = 'Disk Performance'; Cap = $true }
+            @{ Source = $storage.hosts; Wrapper = 'Get-DMHostPerformance'; Table = 'HostPerformance'; Worksheet = 'Host Performance'; Cap = $true }
+            @{ Source = $storage.luns; Wrapper = 'Get-DMLunPerformance'; Table = 'LunPerformance'; Worksheet = 'LUN Performance'; Cap = $true }
+        )
+
+        foreach ($section in $perfSections) {
+            $objects = @($section.Source)
+            if ($objects.Count -eq 0) { continue }
+
+            if ($section.Cap -and $objects.Count -gt $script:DMPerformanceExcelObjectCap) {
+                Write-Warning "Skipping $($section.Table) performance: $($objects.Count) objects exceeds the $($script:DMPerformanceExcelObjectCap)-object cap. Use $($section.Wrapper) directly with a smaller selection if needed."
+                continue
+            }
+
+            $samples = $objects | & $section.Wrapper -WebSession $session
+            if (-not $samples) { continue }
+
+            $namesById = @{}
+            foreach ($obj in $objects) { $namesById[$obj.Id] = $obj.Name }
+            foreach ($sample in $samples) {
+                $sample | Add-Member -NotePropertyName ObjectName -NotePropertyValue $namesById[$sample.ObjectId] -Force
+            }
+
+            Export-Excel $ReportFile -AutoSize -TableName $section.Table -InputObject $samples -WorksheetName $section.Worksheet
+        }
     }
 
     #TODO Adding MappingView

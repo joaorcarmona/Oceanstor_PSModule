@@ -81,11 +81,14 @@ $storage = Connect-deviceManager -Hostname "10.0.0.1" -PassThru
 #export all storage data to excel
 Export-DMStorageToExcel -OceanStor $storage -ReportFile "c:\temp\MyStorage.xlsx" -IncludeObject full
 
-#export some properties to excel (can be chosen multiple from: "luns","system","configuration","hostgroups","lungroups","disks","hosts","vstores","storagepools")
+#export some properties to excel (can be chosen multiple from: "luns","system","configuration","hostgroups","lungroups","disks","hosts","vstores","storagepools","performance")
 Export-DMStorageToExcel -OceanStor $storage -ReportFile "c:\temp\MyStorage.xlsx" -IncludeObject luns, lungroups
 
 #export array configuration audit data such as NTP, SNMP, syslog, users, and roles
 Export-DMStorageToExcel -OceanStor $storage -ReportFile "c:\temp\MyStorage.xlsx" -IncludeObject configuration
+
+#export live performance samples for system/controllers/pools/disks/hosts/LUNs alongside the rest ("performance" is opt-in only, never implied by "full")
+Export-DMStorageToExcel -OceanStor $storage -ReportFile "c:\temp\MyStorage.xlsx" -IncludeObject full, performance
 ```
 
 #### Array System Configuration
@@ -98,6 +101,26 @@ Get-DMSyslogNotification -WebSession $storage
 Get-DMLocalUser -WebSession $storage
 Get-DMRole -WebSession $storage
 ```
+
+#### Performance Monitoring
+```powershell
+# Connect to a storage (PowerShell securely prompts for credentials).
+$storage = Connect-deviceManager -Hostname "10.0.0.1" -PassThru
+
+# Enable performance monitoring on the array, then poll current (real-time) samples.
+Enable-DMPerformanceMonitoring -WebSession $storage
+Get-DMPerformance -WebSession $storage -ObjectType LUN -ObjectId '1'
+
+# Friendly wrappers are also available per object type.
+Get-DMLunPerformance -WebSession $storage -ObjectId '1'
+Get-DMControllerPerformance -WebSession $storage
+
+# The performance_data endpoint only ever returns the current sample. For historical/ranged
+# queries, Get-DMPerformanceHistory drives the pms/report_task workflow (create, run, download,
+# parse) and cleans up after itself, returning OceanStor.PerformanceSample objects.
+Get-DMPerformanceHistory -WebSession $storage -ObjectType LUN -ObjectId '1' -StartTime (Get-Date).AddDays(-1) -EndTime (Get-Date)
+```
+The underlying report-task lifecycle (New-/Get-/Remove-DMPerformanceReportTask, Invoke-DMPerformanceReportTask, Save-DMPerformanceReportFile) is also exported directly for callers who need finer-grained control than Get-DMPerformanceHistory provides.
 
 #### Search one lun by WWN
 ```powershell
