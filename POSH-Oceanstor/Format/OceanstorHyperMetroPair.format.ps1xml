@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Configuration>
+    <ViewDefinitions>
+        <View>
+            <Name>OceanstorHyperMetroPairTable</Name>
+            <ViewSelectedBy><TypeName>OceanstorHyperMetroPair</TypeName></ViewSelectedBy>
+            <TableControl>
+                <TableHeaders>
+                    <TableColumnHeader><Label>Id</Label></TableColumnHeader>
+                    <TableColumnHeader><Label>Local Object Name</Label></TableColumnHeader>
+                    <TableColumnHeader><Label>Remote Object Name</Label></TableColumnHeader>
+                    <TableColumnHeader><Label>Domain Name</Label></TableColumnHeader>
+                    <TableColumnHeader><Label>Running Status</Label></TableColumnHeader>
+                    <TableColumnHeader><Label>Health Status</Label></TableColumnHeader>
+                    <TableColumnHeader><Label>Link Status</Label></TableColumnHeader>
+                    <TableColumnHeader><Label>Is Primary</Label></TableColumnHeader>
+                </TableHeaders>
+                <TableRowEntries>
+                    <TableRowEntry>
+                        <TableColumnItems>
+                            <TableColumnItem><PropertyName>Id</PropertyName></TableColumnItem>
+                            <TableColumnItem><PropertyName>Local Object Name</PropertyName></TableColumnItem>
+                            <TableColumnItem><PropertyName>Remote Object Name</PropertyName></TableColumnItem>
+                            <TableColumnItem><PropertyName>Domain Name</PropertyName></TableColumnItem>
+                            <TableColumnItem><PropertyName>Running Status</PropertyName></TableColumnItem>
+                            <TableColumnItem><PropertyName>Health Status</PropertyName></TableColumnItem>
+                            <TableColumnItem><PropertyName>Link Status</PropertyName></TableColumnItem>
+                            <TableColumnItem><PropertyName>Is Primary</PropertyName></TableColumnItem>
+                        </TableColumnItems>
+                    </TableRowEntry>
+                </TableRowEntries>
+            </TableControl>
+        </View>
+    </ViewDefinitions>
+</Configuration>

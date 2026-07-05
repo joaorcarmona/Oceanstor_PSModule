@@ -389,6 +389,37 @@ function Test-MutatingConfiguration {
             throw 'HyperCDPSchedule.FrequencySnapshotCount must be greater than zero.'
         }
     }
+    if ($configuration.Replication.Enabled) {
+        if (-not $configuration.Lun.Enabled) {
+            throw 'Lun.Enabled must be true when Replication.Enabled is true so the workflow uses a test-owned local LUN.'
+        }
+        if (-not $configuration.Replication.AllowDrMutation) {
+            throw 'Replication.AllowDrMutation must be true to acknowledge remote replication pair and group mutation against a lab DR target.'
+        }
+        if (-not $configuration.Replication.RemoteDeviceId -and -not $configuration.Replication.RemoteDeviceName) {
+            throw 'Replication.RemoteDeviceId or Replication.RemoteDeviceName is required when Replication.Enabled is true.'
+        }
+        if (-not $configuration.Replication.RemoteLunId -and -not $configuration.Replication.RemoteLunName) {
+            throw 'Replication.RemoteLunId or Replication.RemoteLunName is required when Replication.Enabled is true.'
+        }
+    }
+    if ($configuration.HyperMetro.Enabled) {
+        if (-not $configuration.Lun.Enabled) {
+            throw 'Lun.Enabled must be true when HyperMetro.Enabled is true so the workflow uses a test-owned local LUN.'
+        }
+        if (-not $configuration.HyperMetro.AllowDrMutation) {
+            throw 'HyperMetro.AllowDrMutation must be true to acknowledge HyperMetro pair and group mutation against a lab DR target.'
+        }
+        if (-not $configuration.HyperMetro.RemoteDeviceId -and -not $configuration.HyperMetro.RemoteDeviceName) {
+            throw 'HyperMetro.RemoteDeviceId or HyperMetro.RemoteDeviceName is required when HyperMetro.Enabled is true.'
+        }
+        if (-not $configuration.HyperMetro.RemoteLunId -and -not $configuration.HyperMetro.RemoteLunName) {
+            throw 'HyperMetro.RemoteLunId or HyperMetro.RemoteLunName is required when HyperMetro.Enabled is true.'
+        }
+        if (-not $configuration.HyperMetro.DomainId -and -not $configuration.HyperMetro.DomainName) {
+            throw 'HyperMetro.DomainId or HyperMetro.DomainName is required when HyperMetro.Enabled is true.'
+        }
+    }
 }
 
 function Wait-DMSnapshotConsistencyGroupReadyForRemoval {

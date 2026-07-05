@@ -4,6 +4,27 @@
 
 # Unreleased
 
+## New Features
+
+- Added SAN remote replication and HyperMetro command families for Dorado 6.1.6:
+  remote devices/LUNs, replication pairs, replication consistency groups,
+  HyperMetro domains, HyperMetro pairs, and HyperMetro consistency groups.
+  Domain lifecycle commands cover create, modify, delete, and quorum-server
+  association, while pair and group lifecycle commands cover create, modify,
+  delete, synchronize, split/suspend/start, switchover/priority-switch
+  operations, and group pair-association operations.
+- Added opt-in live integration workflow scaffolding for remote replication and
+  HyperMetro. The workflows are disabled by default and require explicit
+  lab-only remote device, remote LUN, domain, and DR mutation settings in
+  `Tests/Integration/IntegrityValidationConfig.psd1`; failover/priority-switch
+  steps have separate safety switches.
+- Added NAS/vStore DR wrappers for vStore pairs, file-system replication pair
+  creation and file-specific secondary-protection operations, and file-system
+  HyperMetro domain get/create/remove/start/join/split/switch operations. These
+  wrappers use distinct names such as `Get-DMVStorePair`,
+  `New-DMFileSystemReplicationPair`, and `Get-DMFileHyperMetroDomain` so SAN
+  LUN workflows and NAS/vStore workflows remain explicit.
+
 ## Performance Improvements
 
 - Added non-secure HyperCDP schedule management with
