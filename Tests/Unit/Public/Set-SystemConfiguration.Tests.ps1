@@ -57,6 +57,15 @@ Describe 'System configuration mutation functions' {
         $script:body.CMO_SYS_NTP_SYNC_PERIOD | Should -Be '7200'
     }
 
+    It 'sets LLDP working mode' {
+        $result = Set-DMLLDPWorkingMode -WebSession $script:session -WorkingMode Transmit -Confirm:$false
+
+        $result.Code | Should -Be 0
+        $script:method | Should -Be 'PUT'
+        $script:resource | Should -Be 'LLDP_WORKING_MODE'
+        $script:body.lldpWorkingMode | Should -Be '1'
+    }
+
     It 'tests an NTP server address' {
         $null = Test-DMNtpServer -WebSession $script:session -Address '10.0.0.1'
 
