@@ -21,6 +21,7 @@ InModuleScope SaveDMPerformanceReportFileTestModule {
         BeforeEach {
             $script:session = [pscustomobject]@{ hostname = 'array01' }
             $script:outPath = Join-Path $TestDrive 'report.zip'
+            Remove-Item -LiteralPath $script:outPath -ErrorAction SilentlyContinue
 
             Mock Save-DMDeviceManagerFile {
                 Set-Content -LiteralPath $OutFile -Value 'binary-content'

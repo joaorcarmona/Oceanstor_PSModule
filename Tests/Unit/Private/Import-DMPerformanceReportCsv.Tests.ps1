@@ -16,26 +16,28 @@ AfterAll {
 
 InModuleScope ImportDMPerformanceReportCsvTestModule {
     Describe 'Import-DMPerformanceReportCsv' {
+        BeforeAll {
+            function New-TestReportZip {
+                param(
+                    [hashtable[]]$Files
+                )
+
+                $sourceDir = Join-Path $script:workDir 'source'
+                [void](New-Item -ItemType Directory -Path $sourceDir -Force)
+
+                foreach ($file in $Files) {
+                    Set-Content -LiteralPath (Join-Path $sourceDir $file.Name) -Value $file.Content
+                }
+
+                $zipPath = Join-Path $script:workDir 'report.zip'
+                [System.IO.Compression.ZipFile]::CreateFromDirectory($sourceDir, $zipPath)
+                return $zipPath
+            }
+        }
+
         BeforeEach {
             $script:workDir = Join-Path $TestDrive ([guid]::NewGuid().ToString('N'))
             [void](New-Item -ItemType Directory -Path $script:workDir -Force)
-        }
-
-        function New-TestReportZip {
-            param(
-                [hashtable[]]$Files
-            )
-
-            $sourceDir = Join-Path $script:workDir 'source'
-            [void](New-Item -ItemType Directory -Path $sourceDir -Force)
-
-            foreach ($file in $Files) {
-                Set-Content -LiteralPath (Join-Path $sourceDir $file.Name) -Value $file.Content
-            }
-
-            $zipPath = Join-Path $script:workDir 'report.zip'
-            [System.IO.Compression.ZipFile]::CreateFromDirectory($sourceDir, $zipPath)
-            return $zipPath
         }
 
         It 'returns rows from a single CSV file inside the zip' {

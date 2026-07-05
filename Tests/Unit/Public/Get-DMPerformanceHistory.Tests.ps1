@@ -15,7 +15,7 @@ BeforeDiscovery {
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMPerformanceHistory.ps1"
 
         Export-ModuleMember -Function Get-DMPerformanceHistory, New-DMPerformanceReportTask, Invoke-DMPerformanceReportTask, `
-            Save-DMPerformanceReportFile, Import-DMPerformanceReportCsv, Remove-DMPerformanceReportTask, Invoke-DeviceManager, `
+            Save-DMPerformanceReportFile, Import-DMPerformanceReportCsv, Invoke-DeviceManager, `
             Get-DMPerformanceIndicatorMap, New-DMPerformanceSample
     }
 

@@ -44,7 +44,7 @@ InModuleScope GetDMPerformanceReportTaskTestModule {
             $result = @(Get-DMPerformanceReportTask -WebSession $script:session)
 
             $result.Count | Should -Be 2
-            $result[0] | Should -BeOfType [OceanstorPerformanceReportTask]
+            $result[0].GetType().Name | Should -Be 'OceanstorPerformanceReportTask'
             $result.Name | Should -Contain 'lun-history'
 
             Should -Invoke Invoke-DeviceManager -ParameterFilter {

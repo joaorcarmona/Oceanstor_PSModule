@@ -2,12 +2,22 @@ BeforeDiscovery {
     $script:testModule = New-Module -Name ReportTaskClassTestModule -ArgumentList $PSScriptRoot -ScriptBlock {
         param($testRoot)
 
-        function global:Remove-DMPerformanceReportTask {
+        # Delete() calls the unqualified command Remove-DMPerformanceReportTask. Other test files in
+        # this suite define/export their own same-named function into shared session scope during
+        # Pester's Discovery phase, and which one a compiled class method's unqualified call resolves
+        # to is not reliably last-writer-wins across file combinations (confirmed empirically: the
+        # same global-scope shape passes in some file combinations and fails in others). Rather than
+        # fight that resolution order, load the class from a patched copy of its source where the call
+        # target is renamed to a name unique to this file's test double, so no other file can possibly
+        # collide with it.
+        function global:Test_ReportTaskClass_RemoveReportTask {
             param([pscustomobject]$WebSession, [string]$Id)
-            $global:RemovalInvocation = [pscustomobject]@{ Type = 'PerformanceReportTask'; Name = $Id; WebSession = $WebSession }
+            $script:RemovalInvocation = [pscustomobject]@{ Type = 'PerformanceReportTask'; Name = $Id; WebSession = $WebSession }
         }
 
-        . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorPerformanceReportTask.ps1"
+        $classPath = "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorPerformanceReportTask.ps1"
+        $classSource = (Get-Content -Raw $classPath) -replace '\bRemove-DMPerformanceReportTask\b', 'Test_ReportTaskClass_RemoveReportTask'
+        . ([scriptblock]::Create($classSource))
 
         Export-ModuleMember -Function New-DMPerformanceReportLog
     }
@@ -19,10 +29,11 @@ AfterAll {
     Remove-Module -Name ReportTaskClassTestModule -Force -ErrorAction SilentlyContinue
 }
 
-InModuleScope ReportTaskClassTestModule {
-    Describe 'OceanstorPerformanceReportTask' {
+Describe 'OceanstorPerformanceReportTask' {
+    InModuleScope ReportTaskClassTestModule {
         BeforeEach {
             $script:session = [pscustomobject]@{ hostname = 'array01' }
+            $script:RemovalInvocation = $null
         }
 
         It 'maps raw fields into typed properties' {
@@ -80,12 +91,14 @@ InModuleScope ReportTaskClassTestModule {
 
             $task.Delete() | Out-Null
 
-            $global:RemovalInvocation.Type | Should -Be 'PerformanceReportTask'
-            $global:RemovalInvocation.Name | Should -Be 'task-01'
-            $global:RemovalInvocation.WebSession | Should -Be $script:session
+            $script:RemovalInvocation.Type | Should -Be 'PerformanceReportTask'
+            $script:RemovalInvocation.Name | Should -Be 'task-01'
+            $script:RemovalInvocation.WebSession | Should -Be $script:session
         }
     }
+}
 
+InModuleScope ReportTaskClassTestModule {
     Describe 'New-DMPerformanceReportLog' {
         It 'builds a PSTypeName-tagged log object with a default display set' {
             $raw = [pscustomobject]@{ id = 'log-01'; task_id = 'task-01'; status = 'finished' }
