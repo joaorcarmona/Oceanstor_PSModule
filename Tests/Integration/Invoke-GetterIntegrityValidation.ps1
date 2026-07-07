@@ -66,6 +66,7 @@ $validationModule = New-Module -Name OceanstorLiveGetterValidation -ArgumentList
         'Select-DMResponseData.ps1',
         'Set-DMHostInitiator.ps1',
         'Test-DMNetworkAddress.ps1',
+        'Test-IPv4Address.ps1',
         'Test-WWNAddress.ps1',
         'Write-DMError.ps1'
     )) {

@@ -216,6 +216,9 @@ Override any location when retaining multiple runs (the target directory is crea
 - `NotRequested`: mutation mode was not requested.
 - `NotConfigured`: the related workflow or required identity was not enabled.
 - `NotExecuted`: the command was unnecessary for the current array state.
+- `SkippedUnsafe`: the command mutates global, authentication, or alerting
+  settings and is deliberately never exercised without a dedicated safe
+  workflow.
 - `Blocked`: a prerequisite test-owned resource could not be created or found.
 - `Failed`: the command raised an error.
 - `UnexpectedType`: returned objects did not match the expected type.
@@ -225,6 +228,19 @@ After mutation validation, confirm:
 - `Failed` is `0`.
 - `Blocked` is `0`, unless a prerequisite is intentionally unavailable.
 - `RemainingTestOwnedResources` is empty.
+
+### System-management commands in mutating runs
+
+No mutation workflow currently covers the system-management mutators (local
+users, roles, SNMP, syslog, NTP/time). They are reported as `SkippedUnsafe`
+in every run — read-only and mutating alike — because global,
+authentication, and alerting mutations are not exercised by the integrity
+harness unless a dedicated safe workflow exists for them. They are never
+reported `Passed` and never hidden. `Set-DMdnsServer` is deliberately
+excluded from live validation because DNS is a global setting with no
+test-owned variant. Details and safety classification are in
+`docs/system-management/SAFETY-AND-LIVE-VALIDATION.md` and
+`docs/testing/INTEGRITY-TESTS.md`.
 
 ## Test Layout
 

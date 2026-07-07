@@ -51,11 +51,20 @@ function Invoke-ReadValidation {
     Add-ValidationResult -Name 'Get-DMdnsServer' -ExpectedType 'Hashtable' -Action {
         Get-DMdnsServer -WebSession $session
     } | Out-Null
+    Add-ValidationResult -Name 'Get-DMEquipmentStatus' -ExpectedType 'PSCustomObject' -Action {
+        Get-DMEquipmentStatus -WebSession $session
+    } | Out-Null
     Add-ValidationResult -Name 'Get-DMNtpServer' -ExpectedType 'OceanStorNtpConfig' -Action {
         Get-DMNtpServer -WebSession $session
     } | Out-Null
     Add-ValidationResult -Name 'Get-DMNtpStatus' -ExpectedType 'OceanStorNtpStatus' -Action {
         Get-DMNtpStatus -WebSession $session
+    } | Out-Null
+    Add-ValidationResult -Name 'Get-DMTimeZone' -ExpectedType 'PSCustomObject' -Action {
+        Get-DMTimeZone -WebSession $session
+    } | Out-Null
+    Add-ValidationResult -Name 'Get-DMutcTime' -ExpectedType 'PSCustomObject' -Action {
+        Get-DMutcTime -WebSession $session
     } | Out-Null
     Add-ValidationResult -Name 'Get-DMSnmpConfig' -ExpectedType 'OceanStorSnmpConfig' -Action {
         Get-DMSnmpConfig -WebSession $session
