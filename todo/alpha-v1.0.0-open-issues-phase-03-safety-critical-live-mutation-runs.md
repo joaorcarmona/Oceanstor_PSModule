@@ -3,6 +3,28 @@
 **Type:** Live-validation allowed (human-supervised, gated). **Release-blocking:** NO (evidence-gathering),
 but required to promote the mutation workflows from "implemented, not exercised" to "validated".
 
+## Status (2026-07-07)
+
+Supervised session run against lab `10.10.10.24`. Read-only baseline `Blocked=0`,
+post-run read-only `Blocked=0`, array returned to prior state, no leftover test objects,
+no credential leakage.
+
+- **SystemManagement (SNMP trap server, `AllowSnmpTrapServer` only) — DONE (exercised).**
+  `New`/`Remove` validated (create + captured-ID cleanup); `Set`/`Test` failed with
+  `API 50331651` → defect routed to `docs/system-management/TODO.md` High Priority #4
+  (owning domain: Phase 04). Recorded in the integrity report Phase 03 log.
+- **Failover-group — DEFERRED (own session).** One-gate-per-session discipline spent this
+  session's gate on SystemManagement. Recorded in `docs/network/TODO.md`.
+- **Replication/HyperMetro — DEFERRED.** Missing operator-supplied
+  `RemoteDeviceId`/`RemoteLunId`/`DomainId`. Recorded in `docs/replication-hypermetro/TODO.md`.
+- **`AllowSnmpUsmUser` / `AllowSyslogServer` / `AllowLocalUserLifecycle` — not run**
+  (separate supervised single-gate sessions; local-user lifecycle stays off pending an
+  explicit reviewed decision).
+
+Remaining active work: schedule the failover-group session, the Replication/HyperMetro
+session (needs lab IDs), and the remaining SystemManagement single-gate runs; fix defect
+`50331651` in the owning SystemManagement phase.
+
 ## Purpose
 
 Execute the already-implemented, config-gated mutation workflows against a lab array under

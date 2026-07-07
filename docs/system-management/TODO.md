@@ -54,7 +54,9 @@ alarms/events.
 > `todo/alpha-v1.0.0-post-merge-phase-04-system-management-mutation-workflow.md`;
 > item 2 (certificates) is scoped in
 > `todo/alpha-v1.0.0-post-merge-phase-05-certificate-management.md`. Item 1
-> implemented (live run pending) and the alarm ack/clear decision recorded on
+> implemented and its SNMP-trap surface exercised in a supervised live run
+> (Phase 03, 2026-07-07 — create/cleanup validated, update/test defect `50331651`
+> recorded as item 4); the alarm ack/clear decision recorded on
 > 2026-07-07; item 2 Stage A implemented on 2026-07-07
 > (`Get-DMCertificate`), Stage B deferred.
 
@@ -78,7 +80,7 @@ alarms/events.
 - See `RELEASE_NOTES.md` and `todo/release-readiness-go-no-go.md` for the
   recorded decision.
 
-### 1. SystemManagement mutation workflow — implemented (Phase 04), live run pending
+### 1. SystemManagement mutation workflow — implemented (Phase 04); SNMP-trap surface exercised live (Phase 03, 2026-07-07)
 
 - The dedicated `SystemManagement` integration workflow exists at
   `Tests/Integration/Private/Workflows/SystemManagement.ps1`, following the
@@ -95,8 +97,26 @@ alarms/events.
   - local role + local user lifecycle (`AllowLocalUserLifecycle`, default
     **off** — security-sensitive, enabling it is an explicit reviewed
     decision)
-- Remaining: the first live validation run is a separately scheduled,
-  human-supervised event — see the gated lab-run runbook in
+- **Live validation (Phase 03, 2026-07-07, lab `10.10.10.24`, human-supervised,
+  one gate only — `SystemManagement.Enabled` + `AllowSnmpTrapServer`; USM,
+  syslog, and local-user lifecycle stayed off):**
+  - Read-only baseline `Blocked=0, Failed=0`; post-run read-only `Blocked=0,
+    Failed=0` with `Get-DMSnmpTrapServer` back to its prior count and no leftover
+    test objects. No pre-existing SNMP/syslog/user/role object touched.
+  - `New-DMSnmpTrapServer` — **Passed** (test-owned object created, run-unique ID
+    captured immediately).
+  - `Set-DMSnmpTrapServer` (update) — **Failed**: `OceanStor API error 50331651:
+    The entered parameter is incorrect.`
+  - `Test-DMSnmpTrapServer` (send trap) — **Failed**: same `50331651` error.
+  - `Remove-DMSnmpTrapServer` — **Passed**: registered cleanup removed the object
+    by captured ID despite the mid-workflow failures (`finally`/LIFO cleanup
+    worked as designed).
+  - **Outcome: create + registered cleanup *Validated*; update/test-trap is a
+    defect (`50331651`) — tracked as High Priority #4 below and routed to the
+    owning SystemManagement domain (Phase 04 cmdlet/workflow), not Phase 03.**
+- Remaining live runs (still separately scheduled, human-supervised, one gate at a
+  time): `AllowSnmpUsmUser`, `AllowSyslogServer`, and — only under an explicit
+  reviewed decision — `AllowLocalUserLifecycle`. Runbook:
   `docs/testing/system-management-integrity-tests.md`.
 
 ### 2. Certificate management — Stage A done (Phase 05), Stage B deferred
@@ -121,6 +141,22 @@ alarms/events.
 - If Stage B is ever built: `SupportsShouldProcess`,
   `ConfirmImpact = 'High'`, permanently `SkippedUnsafe` in live validation.
 - Live tests must never replace or delete existing certificates.
+
+### 4. `Set-DMSnmpTrapServer` / `Test-DMSnmpTrapServer` reject update payload — API error 50331651 (found Phase 03, 2026-07-07)
+
+- Surfaced by the first supervised SNMP-trap live run (see High Priority #1). On
+  lab `10.10.10.24`, `New-DMSnmpTrapServer` and `Remove-DMSnmpTrapServer` succeed,
+  but `Set-DMSnmpTrapServer` (update) and `Test-DMSnmpTrapServer` (send test trap)
+  both fail with `OceanStor API error 50331651: The entered parameter is
+  incorrect.`
+- Likely an update/test request-body field mismatch against this array's REST
+  contract (create path works, update/test path does not). Investigate the
+  parameter set / body construction in the owning cmdlets against the 6.1.x SNMP
+  trap-server REST reference; confirm whether the array firmware version rejects a
+  specific field on `PUT`/test.
+- **Owning domain: SystemManagement (Phase 04 workflow/cmdlet).** Out of scope for
+  Phase 03 (evidence-gathering only). No workflow code changed here — recorded and
+  routed. Cleanup was unaffected: the created object was removed by captured ID.
 
 ## Medium Priority
 

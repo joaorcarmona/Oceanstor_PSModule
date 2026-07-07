@@ -56,6 +56,14 @@
 
 - Human-supervised, gated live run of the failover-group workflow, then
   record the run outcome here.
+  - **Status (Phase 03, 2026-07-07): Deferred — not run this session.** The
+    2026-07-07 supervised session used its single mutation gate for the
+    SystemManagement SNMP-trap surface (one-gate-per-session discipline), so
+    `Network.Enabled` + `AllowFailoverGroupLifecycle` stayed **off**. Workflow,
+    gate, and captured-ID cleanup are verified in place
+    (`Tests/Integration/Private/Workflows/FailoverGroup.ps1`); this needs its own
+    dedicated supervised session. Blocker: operator scheduling of a separate
+    single-gate run against a non-production lab.
 
 ## Medium Priority
 

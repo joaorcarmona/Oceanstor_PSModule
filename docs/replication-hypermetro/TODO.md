@@ -59,6 +59,12 @@
   [lab-pair mutation runbook](safety-and-live-validation.md#lab-pair-mutation-runbook).
   Discovering and populating those IDs unattended is explicitly out of scope
   (it risks touching pre-existing DR objects).
+  - **Status (Phase 03, 2026-07-07): Deferred — not run.** No operator-supplied
+    `RemoteDeviceId`/`RemoteLunId`/`DomainId` were provided, and the 2026-07-07
+    supervised session's single mutation gate was spent on the SystemManagement
+    SNMP-trap surface. `Replication.*` and `HyperMetro.*` gates stayed **off**.
+    Blocker unchanged: operator must supply the lab-pair IDs and review the config
+    before a dedicated single-gate supervised run.
 
 ## Medium Priority
 
