@@ -1,6 +1,6 @@
 function New-DMVStorePair {
     [CmdletBinding(SupportsShouldProcess = $true)]
-    [OutputType([OceanstorVStorePair])]
+    [OutputType('OceanstorVStorePair')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,

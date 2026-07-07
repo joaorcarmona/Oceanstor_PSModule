@@ -41,7 +41,7 @@ function Get-DMQosPolicy {
         Filename: Get-DMQosPolicy.ps1
     #>
     [CmdletBinding(DefaultParameterSetName = 'ByName')]
-    [OutputType([OceanstorQosPolicy])]
+    [OutputType('OceanstorQosPolicy')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Mandatory = $false)]
         [pscustomobject]$WebSession,

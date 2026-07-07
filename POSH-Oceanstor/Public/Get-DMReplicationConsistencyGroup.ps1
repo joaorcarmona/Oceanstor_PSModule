@@ -4,7 +4,7 @@ function Get-DMReplicationConsistencyGroup {
         Gets OceanStor remote replication consistency groups.
     #>
     [CmdletBinding(DefaultParameterSetName = 'ByName')]
-    [OutputType([OceanstorReplicationConsistencyGroup])]
+    [OutputType('OceanstorReplicationConsistencyGroup')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,

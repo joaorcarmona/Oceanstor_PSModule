@@ -140,6 +140,8 @@ remote replication or HyperMetro mutation checks, enable the matching
 `Replication` or `HyperMetro` section in
 `Tests/Integration/IntegrityValidationConfig.psd1`, provide lab-only remote
 device/LUN/domain identifiers, and set the explicit DR mutation acknowledgement.
+Full documentation for this area, including per-family topic pages and the DR
+safety model, lives in [docs/replication-hypermetro/](docs/replication-hypermetro/README.md).
 
 #### Search one lun by WWN
 ```powershell

@@ -4,7 +4,7 @@ function Get-DMHyperMetroDomain {
         Gets OceanStor SAN HyperMetro domains.
     #>
     [CmdletBinding(DefaultParameterSetName = 'ByName')]
-    [OutputType([OceanstorHyperMetroDomain])]
+    [OutputType('OceanstorHyperMetroDomain')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,

@@ -4,7 +4,7 @@ function New-DMHyperMetroDomain {
         Creates an OceanStor SAN HyperMetro domain.
     #>
     [CmdletBinding(SupportsShouldProcess = $true)]
-    [OutputType([OceanstorHyperMetroDomain])]
+    [OutputType('OceanstorHyperMetroDomain')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,

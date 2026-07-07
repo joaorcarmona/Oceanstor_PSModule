@@ -4,7 +4,7 @@ function Get-DMReplicationPair {
         Gets OceanStor remote replication pairs.
     #>
     [CmdletBinding(DefaultParameterSetName = 'ByName')]
-    [OutputType([OceanstorReplicationPair])]
+    [OutputType('OceanstorReplicationPair')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,

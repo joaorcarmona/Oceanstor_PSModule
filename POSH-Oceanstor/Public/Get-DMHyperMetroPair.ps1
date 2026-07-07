@@ -4,7 +4,7 @@ function Get-DMHyperMetroPair {
         Gets OceanStor HyperMetro pairs.
     #>
     [CmdletBinding(DefaultParameterSetName = 'ByName')]
-    [OutputType([OceanstorHyperMetroPair])]
+    [OutputType('OceanstorHyperMetroPair')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,

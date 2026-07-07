@@ -4,7 +4,7 @@ function Get-DMHyperMetroConsistencyGroup {
         Gets OceanStor HyperMetro consistency groups.
     #>
     [CmdletBinding(DefaultParameterSetName = 'ByName')]
-    [OutputType([OceanstorHyperMetroConsistencyGroup])]
+    [OutputType('OceanstorHyperMetroConsistencyGroup')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,

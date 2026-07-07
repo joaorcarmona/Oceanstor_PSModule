@@ -1,6 +1,6 @@
 function New-DMHyperMetroConsistencyGroup {
     [CmdletBinding(SupportsShouldProcess = $true, DefaultParameterSetName = 'ByDomainId')]
-    [OutputType([OceanstorHyperMetroConsistencyGroup])]
+    [OutputType('OceanstorHyperMetroConsistencyGroup')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,

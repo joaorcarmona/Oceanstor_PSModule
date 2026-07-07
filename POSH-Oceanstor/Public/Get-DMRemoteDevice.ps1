@@ -4,7 +4,7 @@ function Get-DMRemoteDevice {
         Gets OceanStor remote devices used by replication and HyperMetro.
     #>
     [CmdletBinding(DefaultParameterSetName = 'ByName')]
-    [OutputType([OceanstorRemoteDevice])]
+    [OutputType('OceanstorRemoteDevice')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,

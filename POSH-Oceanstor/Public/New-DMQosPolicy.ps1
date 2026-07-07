@@ -91,7 +91,7 @@ function New-DMQosPolicy {
         PS> New-DMQosPolicy -Name 'qos02' -MaxBandwidth 500 -LunName 'lun01', 'lun02' -ScheduleStartTime (Get-Date) -StartTime '00:00' -Duration 3600
     #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium', DefaultParameterSetName = 'NoAssociation')]
-    [OutputType([OceanstorQosPolicy])]
+    [OutputType('OceanstorQosPolicy')]
     param(
         [Parameter(ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,

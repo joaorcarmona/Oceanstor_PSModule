@@ -1,6 +1,6 @@
 function New-DMFileSystemReplicationPair {
     [CmdletBinding(SupportsShouldProcess = $true)]
-    [OutputType([OceanstorReplicationPair])]
+    [OutputType('OceanstorReplicationPair')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,

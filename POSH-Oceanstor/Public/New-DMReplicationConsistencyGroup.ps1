@@ -1,6 +1,6 @@
 function New-DMReplicationConsistencyGroup {
     [CmdletBinding(SupportsShouldProcess = $true)]
-    [OutputType([OceanstorReplicationConsistencyGroup])]
+    [OutputType('OceanstorReplicationConsistencyGroup')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,

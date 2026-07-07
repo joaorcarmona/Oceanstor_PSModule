@@ -1,6 +1,6 @@
 function Get-DMFileHyperMetroDomain {
     [CmdletBinding(DefaultParameterSetName = 'ByName')]
-    [OutputType([OceanstorFileHyperMetroDomain])]
+    [OutputType('OceanstorFileHyperMetroDomain')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,

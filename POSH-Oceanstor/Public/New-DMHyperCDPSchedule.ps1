@@ -2,7 +2,7 @@ function New-DMHyperCDPSchedule {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
 
     [CmdletBinding(SupportsShouldProcess = $true)]
-    [OutputType([OceanstorHyperCDPSchedule])]
+    [OutputType('OceanstorHyperCDPSchedule')]
     param(
         [Parameter(ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,

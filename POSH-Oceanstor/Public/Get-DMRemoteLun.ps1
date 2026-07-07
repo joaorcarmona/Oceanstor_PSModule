@@ -4,7 +4,7 @@ function Get-DMRemoteLun {
         Gets OceanStor remote LUNs visible through a remote device.
     #>
     [CmdletBinding(DefaultParameterSetName = 'ByRemoteDevice')]
-    [OutputType([OceanstorRemoteLun])]
+    [OutputType('OceanstorRemoteLun')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,

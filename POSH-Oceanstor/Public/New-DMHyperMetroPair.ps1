@@ -4,7 +4,7 @@ function New-DMHyperMetroPair {
         Creates an OceanStor SAN HyperMetro pair.
     #>
     [CmdletBinding(SupportsShouldProcess = $true, DefaultParameterSetName = 'ById')]
-    [OutputType([OceanstorHyperMetroPair])]
+    [OutputType('OceanstorHyperMetroPair')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,

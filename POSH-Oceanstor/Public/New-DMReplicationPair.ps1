@@ -4,7 +4,7 @@ function New-DMReplicationPair {
         Creates an OceanStor remote replication pair.
     #>
     [CmdletBinding(SupportsShouldProcess = $true, DefaultParameterSetName = 'ById')]
-    [OutputType([OceanstorReplicationPair])]
+    [OutputType('OceanstorReplicationPair')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,

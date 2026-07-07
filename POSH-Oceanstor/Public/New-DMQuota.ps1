@@ -55,7 +55,7 @@ function New-DMQuota {
         PS> New-DMQuota -FileSystemName 'fs01' -DtreeName 'project-a' -QuotaType User -AccountName 'jdoe' -AccountType Local -SpaceHardLimit 100GB
     #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
-    [OutputType([OceanstorQuota])]
+    [OutputType('OceanstorQuota')]
     param(
         [Parameter(ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,

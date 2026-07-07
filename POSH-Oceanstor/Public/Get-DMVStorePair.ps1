@@ -1,6 +1,6 @@
 function Get-DMVStorePair {
     [CmdletBinding(DefaultParameterSetName = 'ByFilter')]
-    [OutputType([OceanstorVStorePair])]
+    [OutputType('OceanstorVStorePair')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
