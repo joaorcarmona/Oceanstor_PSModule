@@ -15,6 +15,15 @@ The recommended order is:
 The detailed test inventory and dependency order are documented in
 `TestExecutionOrder.xml`.
 
+For a fuller walkthrough of every test domain, switch, and config gate, see
+[`docs/testing/`](../docs/testing/README.md):
+
+- [Unit tests](../docs/testing/UNIT-TESTS.md)
+- [Integrity tests](../docs/testing/INTEGRITY-TESTS.md)
+- [Performance integrity tests](../docs/testing/PERFORMANCE-INTEGRITY-TESTS.md)
+- [Test schema & organization](../docs/testing/TEST-SCHEMA-ORGANIZATION.md)
+- [Live validation safety](../docs/testing/LIVE-VALIDATION-SAFETY.md)
+
 ## Prerequisites
 
 - PowerShell 7 is recommended.
@@ -348,17 +357,36 @@ Override any location when retaining multiple runs (the target directory is crea
 - `Passed`: the command completed and returned the expected result shape.
 - `NoData`: the command completed successfully, but the array had no matching
   objects.
-- `NotRequested`: mutation mode was not requested.
-- `NotConfigured`: the related workflow or required identity was not enabled.
-- `NotExecuted`: the command was unnecessary for the current array state.
-- `Blocked`: a prerequisite test-owned resource could not be created or found.
+- `NotRequested`: the switch gating this check (mutation or performance) was
+  not passed to the runner.
+- `NotConfigured`: the switch was passed, but the related config flag
+  (`AllowMutatingTests`, `Performance.Enabled`, etc.) was not enabled.
+- `SkippedUnsafe`: the harness deliberately never exercises this action
+  regardless of switches (e.g. `Enable-`/`Disable-DMPerformanceMonitoring`).
+- `NotExecuted`: fallback label for a public command with no check
+  representation in a read-only run.
+- `Blocked`: fallback label for a public command with no check
+  representation in a mutating run. This is accurate for commands with a
+  genuine test-owned prerequisite that failed to materialize this run (e.g.
+  Quota/QoS families), but it is currently **also** applied to opt-in
+  commands (performance, history, capacity) that were simply never
+  requested, since the reporting fallback cannot yet tell the two cases
+  apart. If a `Blocked` performance/history/capacity command appears on a
+  run that did not pass the matching `-Include*` switch, treat it as
+  `NotRequested`, not as a real block — see
+  [Performance integrity tests](../docs/testing/PERFORMANCE-INTEGRITY-TESTS.md#why-performance-commands-may-appear-as-notrequested-or-previously-blocked)
+  and `../PERFORMANCE/INTEGRITY-BLOCKED-COMMANDS-PLAN.md` for the full
+  analysis and the proposed reporting fix (not yet implemented). Once that
+  fix lands, `Blocked` will be reserved for genuine prerequisite failures.
 - `Failed`: the command raised an error.
 - `UnexpectedType`: returned objects did not match the expected type.
 
 After mutation validation, confirm:
 
 - `Failed` is `0`.
-- `Blocked` is `0`, unless a prerequisite is intentionally unavailable.
+- `Blocked` is `0` for commands with a genuine test-owned prerequisite in
+  this run; for opt-in performance/history/capacity commands, confirm which
+  switches were actually passed before treating `Blocked` as a problem.
 - `RemainingTestOwnedResources` is empty.
 
 ## Test Layout
