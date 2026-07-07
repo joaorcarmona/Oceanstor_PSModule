@@ -8,6 +8,29 @@ Date: 2026-07-07
 Branch: `alpha-v1.0.0`
 Status: Prerelease — not yet tagged/published
 
+## Release Mechanics (read before tagging)
+
+- **Tag convention: use `v1.0.0`, not `v1.0.0-alpha1`.** `ModuleVersion` in the
+  manifest is `1.0.0`; prerelease status is conveyed only by
+  `PrivateData.PSData.Prerelease = 'alpha1'`, never by the git tag. The
+  `validate` job in `.github/workflows/release.yml` trims a leading `v`/`V`
+  from the tag and compares the result to `ModuleVersion` verbatim — a tag of
+  `v1.0.0-alpha1` fails that guard (`'1.0.0-alpha1' -ne '1.0.0'`). The guard is
+  left as-is (no prerelease-suffix normalization) for this alpha; releasers
+  must tag `v1.0.0`.
+- **Signing: deferred, alpha ships unsigned.** No signing certificate has been
+  sourced or approved. `vars.SIGNING_ENABLED` remains unset/off, so the `sign`
+  job re-uploads the package unsigned and logs a `::notice::`. This is an
+  accepted alpha limitation, not a defect — see Known Gaps below.
+- **Publish: dry-run only, verified.** The `publish` job's dry-run step
+  (`Publish-Module` against a disposable local `LocalDryRun` PSRepository,
+  registered and unregistered within the job) always runs and does not touch
+  the real PowerShell Gallery. The real-publish step is additionally gated on
+  `github.ref == 'refs/heads/master'` and `vars.PUBLISH_ENABLED == 'true'` plus
+  a present `PSGALLERY_API_KEY` secret; both remain unset/off for this alpha,
+  so only the disposable local dry-run path is exercised. No real Gallery
+  publish has occurred.
+
 ## Summary
 
 First alpha of the 1.0.0 line, gated by a release-readiness review (Phase 11) of the
