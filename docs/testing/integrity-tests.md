@@ -18,6 +18,20 @@ Performance/capacity checks are a separate opt-in layer — see
 - Produce a machine-readable JSON report and a human-readable Markdown
   summary after every run.
 
+## Storage Domain Coverage
+
+| Domain | Read-only validation | Mutating workflow |
+|---|---|---|
+| Block storage | `Get-DMlun`, `Get-DMstoragePool`, host/host-group getters, LUN groups, mapping views, initiators, protection groups | Test-owned LUN, LUN group, host, host group, mapping/direct mapping, initiator, protection, HyperCDP schedule workflows |
+| File storage | `Get-DMFileSystem`, `Get-DMShare` for NFS/CIFS, `Get-DMnfsFileClient`, file-system snapshots, quotas | Test-owned file system, dTree, NFS share/client, CIFS share, file-system snapshot, quota workflows |
+| QoS | `Get-DMQosPolicy` | Test-owned SmartQoS policy lifecycle, enable/disable, update, and LUN-group association |
+| Snapshots | `Get-DMLunSnapshot`, `Get-DMFileSystemSnapshot`, `Get-DMSnapshotConsistencyGroup`, `Get-DMHyperCDPSchedule` | Test-owned LUN snapshots, file-system snapshots, snapshot consistency groups, snapshot copies, and HyperCDP schedules |
+
+The mutation workflows require `-RunMutatingTests`,
+`AllowMutatingTests = $true`, and the relevant per-domain config gate. Quota
+and QoS checks can report `Blocked` when their test-owned prerequisites do not
+materialize; unsafe operations report `SkippedUnsafe`.
+
 ## Connection parameters
 
 | Parameter | Purpose |

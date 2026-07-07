@@ -59,6 +59,20 @@ independent and opt-in; nothing you don't ask for runs.
 | Capacity history | Capacity report-task validation | `-IncludeCapacityHistory` | Yes | Test-owned report tasks | `Performance.Enabled` + `AllowReportTaskCreation` |
 | Monitoring mutation | Sampling interval round-trip | `-IncludePerformance -AllowMonitoringMutation` | Yes | Yes, monitoring setting only | `Performance.Enabled` + `AllowMonitoringMutation` |
 
+## Storage Domain Coverage
+
+| Public docs | Read-only integrity | Mutating integrity | Main config gates |
+|---|---|---|---|
+| [Block storage](../block-storage/README.md) | LUNs, storage pools, hosts, host groups, LUN groups, mapping views, initiators, protection groups | Test-owned LUN, LUN group, host, host group, initiator, mapping, direct mapping, protection, HyperCDP schedule | `Lun`, `LunGroup`, `Host`, `Initiators`, `Mapping`, `Protection`, `HyperCDPSchedule` |
+| [File storage](../file-storage/README.md) | File systems, NFS/CIFS shares, NFS clients, file-system snapshots, quotas | Test-owned file system, dTree, NFS, CIFS, file-system snapshot, quota | `Nas` and `Nas.Enable*` flags |
+| [QoS](../qos/README.md) | SmartQoS policy inventory | Test-owned SmartQoS policy, enable/disable, update, LUN/LUN-group association | `QoS`, plus `Lun` and `LunGroup` |
+| [Snapshots](../snapshots/README.md) | LUN snapshots, file-system snapshots, snapshot consistency groups, HyperCDP schedules | Test-owned LUN snapshots, file-system snapshots, snapshot consistency groups, snapshot copies, HyperCDP schedules | `Lun`, `Nas.EnableFileSystemSnapshot`, `Protection`, `HyperCDPSchedule` |
+
+Destructive storage operations are skipped unless the workflow created the
+resource in the same run, registered it as test-owned, and can clean it up by
+captured identity. Do not treat `SkippedUnsafe` as a failure; it means the
+harness intentionally avoided an unsafe live action.
+
 ## Recommended offline validation
 
 ```powershell

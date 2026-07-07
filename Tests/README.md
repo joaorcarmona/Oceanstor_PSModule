@@ -24,6 +24,13 @@ For a fuller walkthrough of every test domain, switch, and config gate, see
 - [Test schema & organization](../docs/testing/test-schema-organization.md)
 - [Live validation safety](../docs/testing/live-validation-safety.md)
 
+Public storage-domain documentation is under:
+
+- [Block storage](../docs/block-storage/README.md)
+- [File storage](../docs/file-storage/README.md)
+- [QoS](../docs/qos/README.md)
+- [Snapshots](../docs/snapshots/README.md)
+
 ## Prerequisites
 
 - PowerShell 7 is recommended.
