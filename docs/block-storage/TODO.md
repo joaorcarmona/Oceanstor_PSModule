@@ -16,11 +16,15 @@
 - Phase 08: `Set-DMMappingView` / `Rename-DMMappingView` added (name/description
   labels only, `PUT /mappingview/{id}`; associations unchanged). The mapping
   workflow now includes a test-owned `Set-DMMappingView` description read-back.
-  Storage-pool Set/Rename was deferred (documented for Dorado 6.1.6 only,
-  high blast radius, per-generation behavior unconfirmed); initiator action
-  methods were rejected (immutable WWN/IQN identity, command-only for
-  `ShouldProcess` clarity). NAS-child modification (`Set-DMCifsShare`,
-  `Set-DMdTree`, `Set-DMnfsShare`, `Set-DMnfsClient`) already shipped.
+  Storage-pool **rename** shipped as `Rename-DMstoragePool` (NAME label only,
+  `PUT storagepool/{id}`, `ConfirmImpact='High'`), validated live as a reversible
+  round-trip (rename → read-back → rename to original → verify) on a pre-existing
+  pool. Storage-pool **Set** (description / threshold / container) and
+  create/delete/resize remain deferred (documented for Dorado 6.1.6 only, high
+  blast radius, per-generation behavior unconfirmed). Initiator action methods
+  were rejected (immutable WWN/IQN identity, command-only for `ShouldProcess`
+  clarity). NAS-child modification (`Set-DMCifsShare`, `Set-DMdTree`,
+  `Set-DMnfsShare`, `Set-DMnfsClient`) already shipped.
 
 ## High Priority
 

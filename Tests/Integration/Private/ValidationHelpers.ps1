@@ -377,6 +377,9 @@ function Test-MutatingConfiguration {
     if (-not $configuration.NamePrefix -or $configuration.NamePrefix -notmatch '^[A-Za-z0-9_.-]+$') {
         throw 'NamePrefix must contain only letters, numbers, underscores, periods, or hyphens.'
     }
+    if ($configuration.StoragePool -and $configuration.StoragePool.Enabled -and -not $configuration.StoragePool.PoolName) {
+        throw 'StoragePool.PoolName is required when StoragePool.Enabled is true; supply the exact name of a pre-existing pool you accept being renamed and restored.'
+    }
     if (($configuration.Lun.Enabled -or $configuration.Nas.Enabled) -and -not $configuration.StoragePoolId) {
         throw 'StoragePoolId is required when Lun.Enabled or Nas.Enabled is true.'
     }

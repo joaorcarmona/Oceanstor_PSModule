@@ -6,6 +6,7 @@
 . (Join-Path $PSScriptRoot 'Workflows\Quota.ps1')
 . (Join-Path $PSScriptRoot 'Workflows\Mapping.ps1')
 . (Join-Path $PSScriptRoot 'Workflows\DirectMapping.ps1')
+. (Join-Path $PSScriptRoot 'Workflows\StoragePool.ps1')
 . (Join-Path $PSScriptRoot 'Workflows\Protection.ps1')
 . (Join-Path $PSScriptRoot 'Workflows\QoS.ps1')
 . (Join-Path $PSScriptRoot 'Workflows\Replication.ps1')
@@ -107,6 +108,7 @@ function Invoke-MutationValidation {
             'Set-DMLun', 'Rename-DMLun', 'Set-DMFileSystem', 'Rename-DMFileSystem',
             'Set-DMHost', 'Rename-DMHost', 'Set-DMHostGroup', 'Rename-DMHostGroup',
             'Set-DMLunGroup', 'Rename-DMLunGroup', 'Set-DMPortGroup', 'Rename-DMPortGroup',
+            'Rename-DMstoragePool',
             'Get-DMRemoteDevice', 'Get-DMRemoteLun',
             'New-DMReplicationPair', 'Get-DMReplicationPair', 'Set-DMReplicationPair',
             'Sync-DMReplicationPair', 'Split-DMReplicationPair', 'Switch-DMReplicationPair',
@@ -187,6 +189,7 @@ function Invoke-MutationValidation {
         . $script:QuotaMutationWorkflow
         . $script:MappingMutationWorkflow
         . $script:DirectMappingMutationWorkflow
+        . $script:StoragePoolMutationWorkflow
         . $script:ProtectionMutationWorkflow
         . $script:QosMutationWorkflow
         . $script:ReplicationMutationWorkflow

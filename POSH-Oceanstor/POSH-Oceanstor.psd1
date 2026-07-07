@@ -321,6 +321,7 @@ FunctionsToExport = @(
     'Rename-DMMappingView'
     'Rename-DMPortGroup'
     'Rename-DMProtectionGroup'
+    'Rename-DMstoragePool'
     'Resize-DMLunSnapshot'
     'Reset-DMLocalUserPassword'
     'Restart-DMLunSnapshot'

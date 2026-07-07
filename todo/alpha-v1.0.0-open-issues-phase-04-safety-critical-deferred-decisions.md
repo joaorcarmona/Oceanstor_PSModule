@@ -25,10 +25,15 @@ implemented. Each carries high blast radius on shared/production storage or mana
   - `Export-DMCertificate` — deferred (path-addressed download, unquantified private-key risk).
   - `Remove-DMCertificate` — endpoint documented (`DELETE om_msg_op_delete_certificate_info`) but
     deferred pending an approved lab-safe procedure.
-- **Storage-pool Set/Rename — deferred/blocked:** `PUT storagepool/{id}` documented for **Dorado
-  6.1.6 only**; module targets multiple generations (V3 + V6 LUN classes ship side by side);
-  per-generation behavior cannot be confirmed without a lab array of each generation. High blast
-  radius (shared infrastructure).
+- **Storage-pool Rename — unblocked and shipped (2026-07-07); Set still deferred/blocked:** the
+  **rename** leg was unblocked by an operator-approved, fully reversible lab procedure (rename →
+  read-back → rename to original → verify) and implemented as `Rename-DMstoragePool` (NAME label
+  only). Because a rename touches no persistent pool state and is reversible, it is validated live
+  as a round-trip on a pre-existing pool. Storage-pool **Set** (description / threshold / container)
+  and pool create/delete/resize remain deferred/blocked: `PUT storagepool/{id}` documented for
+  **Dorado 6.1.6 only**; module targets multiple generations (V3 + V6 LUN classes ship side by
+  side); per-generation behavior cannot be confirmed without a lab array of each generation. High
+  blast radius (shared infrastructure).
 - **Alarm acknowledge — not planned (rejected):** 6.1.6 documents no acknowledge endpoint
   (`confirmTime` is read-only). **Alarm clear — future, blocked:** `DELETE alarm/currentalarm`
   is documented but destructive on real alarms, and the harness has no safe test-alarm generator.
@@ -50,8 +55,10 @@ implemented. Each carries high blast radius on shared/production storage or mana
 
 1. [x] Certificates: confirmed no new 6.1.6+ certificate-upload endpoint has appeared; Stage B stays
    deferred with the three per-cmdlet reasons intact.
-2. [x] Storage pool: confirmed the multi-generation constraint still holds; `NAME`/`DESCRIPTION`/
-   threshold-only scope recorded for any future accepted command.
+2. [x] Storage pool: the reversible **rename** leg was later unblocked (2026-07-07) and shipped as
+   `Rename-DMstoragePool` (NAME only, reversible round-trip test); **Set** (non-name pool state)
+   stays deferred under the multi-generation constraint, `DESCRIPTION`/threshold-only scope recorded
+   for any future accepted command.
 3. [x] Alarm clear: kept deferred until a reliable test-alarm generator exists; alarm acknowledge
    stays rejected.
 
@@ -67,11 +74,15 @@ Decision-only review complete. No item was unblocked; no code changed; no live v
   deferred (`DELETE om_msg_op_delete_certificate_info` documented, needs an approved lab-safe
   procedure). Single source of evidence: `.archived-commands/certificate-endpoint-research.md`; decision
   mirrored in `docs/system-management/TODO.md` (High Priority #2) and `docs/system-management/certificates.md`.
-- **Storage-pool Set/Rename — remains deferred/blocked (Phase 08 backlog).** `PUT storagepool/{id}`
-  is documented for Dorado 6.1.6 only; per-generation (V3/V6) behavior is unconfirmed and blast radius
-  is high. Any future accepted scope is limited to `NAME` / `DESCRIPTION` / explicitly-documented
-  threshold fields. Single source: `Oceanstor_PSModule_TODO.md` (Command Coverage Decisions);
-  mirrored in `docs/block-storage/TODO.md` and `docs/block-storage/storage-pools.md`.
+- **Storage-pool Rename — unblocked and shipped (2026-07-07); Set remains deferred/blocked.** The
+  reversible **rename** leg was accepted via an operator-approved lab procedure and implemented as
+  `Rename-DMstoragePool` (NAME label only, `ConfirmImpact='High'`), with a live reversible
+  round-trip test on a pre-existing pool (rename → read-back → rename to original → verify;
+  cleanup restores on abort). Storage-pool **Set** (description / threshold / container) and pool
+  create/delete/resize stay deferred/blocked — documented for Dorado 6.1.6 only, per-generation
+  (V3/V6) behavior unconfirmed, high blast radius. Single source: `Oceanstor_PSModule_TODO.md`
+  (Command Coverage Decisions); mirrored in `docs/block-storage/TODO.md` and
+  `docs/block-storage/storage-pools.md`.
 - **Alarm acknowledge — remains rejected / not planned.** No acknowledge endpoint documented;
   `confirmTime` is read-only. **Alarm clear — remains future / blocked** on a safe test-alarm
   generator (`DELETE alarm/currentalarm` is destructive on real alarms). Single source:
@@ -117,7 +128,8 @@ Select-String -Path '.\OceanStor Dorado 6.1.6 REST Interface Reference.md' -Patt
 ## Dependencies
 
 - Certificates: blocked on **vendor documentation**.
-- Storage pool: blocked on **per-generation lab confirmation**.
+- Storage pool: **rename** unblocked (reversible round-trip) and shipped; **Set** (non-name pool
+  state) still blocked on **per-generation lab confirmation**.
 - Alarm clear: blocked on a **safe test-alarm generator** (belongs to an alarm/event feature branch).
 
 ## Completion criteria

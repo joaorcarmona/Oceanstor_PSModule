@@ -153,6 +153,22 @@
         Enabled = $true
     }
 
+    StoragePool = @{
+        # Reversible rename round-trip on a PRE-EXISTING storage pool. This is the ONLY
+        # storage-pool mutation the module performs and the only workflow that touches an
+        # object it did not create: the module cannot create or delete pools, so safety
+        # comes from full reversibility. The workflow reads the current name, renames the
+        # named pool to a run-unique temporary name, reads it back, then renames it to its
+        # original name and verifies restoration. A cleanup action restores the original
+        # name if the run aborts mid-round-trip. No pool is created, deleted, resized, or
+        # threshold/description-modified. Disabled by default.
+        #
+        # PoolName must be the EXACT name of a pool you accept being renamed and then
+        # restored (never auto-picked). Leave blank to skip.
+        Enabled = $false
+        PoolName = ''
+    }
+
     Initiators = @{
         Enabled = $true
 
