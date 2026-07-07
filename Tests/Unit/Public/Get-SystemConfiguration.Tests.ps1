@@ -20,6 +20,7 @@ BeforeDiscovery {
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMNtpServer.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMNtpStatus.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMLLDPWorkingMode.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMSnmpTrapServer.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMSnmpConfig.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMSnmpSecurityPolicy.ps1"
@@ -33,7 +34,7 @@ BeforeDiscovery {
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMutcTime.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMdnsServer.ps1"
 
-        Export-ModuleMember -Function 'Get-DMNtpServer', 'Get-DMNtpStatus', 'Get-DMSnmpTrapServer',
+        Export-ModuleMember -Function 'Get-DMNtpServer', 'Get-DMNtpStatus', 'Get-DMLLDPWorkingMode', 'Get-DMSnmpTrapServer',
             'Get-DMSnmpConfig', 'Get-DMSnmpSecurityPolicy', 'Get-DMSnmpUsmUser',
             'Get-DMSyslogNotification', 'Get-DMLocalUser', 'Get-DMRole', 'Get-DMRolePermission',
             'Get-DMEquipmentStatus', 'Get-DMTimeZone', 'Get-DMutcTime', 'Get-DMdnsServer'
@@ -101,6 +102,25 @@ Describe 'System configuration getter functions' {
         $result.GetType().Name | Should -Be 'OceanStorNtpStatus'
         $result.'Connected Server' | Should -Be '10.0.0.1'
         $script:resource | Should -Be 'ntp_client_config/get_ntp_status'
+    }
+
+    It 'gets LLDP working mode' {
+        Mock Invoke-DeviceManager {
+            $script:method = $Method
+            $script:resource = $Resource
+            [pscustomobject]@{
+                error = [pscustomobject]@{ Code = 0 }
+                data = [pscustomobject]@{ lldpWorkingMode = '3' }
+            }
+        }
+
+        $result = Get-DMLLDPWorkingMode -WebSession $script:session
+
+        $result.WorkingMode | Should -Be 3
+        $result.WorkingModeName | Should -Be 'TransmitReceive'
+        $result.lldpWorkingMode | Should -Be '3'
+        $script:method | Should -Be 'GET'
+        $script:resource | Should -Be 'LLDP_WORKING_MODE'
     }
 
     It 'gets SNMP configuration' {

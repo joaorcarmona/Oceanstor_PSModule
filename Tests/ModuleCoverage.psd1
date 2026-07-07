@@ -8,6 +8,7 @@
         'OceanStorCIFSShare'
         'OceanStorController'
         'OceanStorDisks'
+        'OceanStorFailoverGroup'
         'OceanStorFileSystem'
         'OceanStorHost'
         'OceanStorHostGroup'

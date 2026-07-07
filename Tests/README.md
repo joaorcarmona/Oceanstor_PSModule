@@ -319,6 +319,20 @@ $cred = Import-Clixml -Path "$env:USERPROFILE\.oceanstor\dm-creds.xml"
 in whatever configuration file is passed — use a local/untracked copy rather
 than editing the committed defaults if this is not a dedicated test array.
 
+## Network Cmdlet Coverage
+
+Network getters (`Get-DMPortETH`, `Get-DMPortFc`, `Get-DMPortSAS`,
+`Get-DMInterfaceModule`, `Get-DMPortBond`, `Get-DMvLan`, `Get-DMLif`,
+`Get-DMFailoverGroup`, `Get-DMLLDPWorkingMode`) run as part of read-only
+validation.
+
+Network mutators (bond ports, VLANs, logical ports, failover groups, LLDP
+working mode) have **no live mutation workflow by design**: they can affect
+management access, data access, or failover behavior, so they are exercised by
+unit tests only and surface in the live report as skipped/not executed rather
+than passed. Do not add them to a workflow without following the test-owned
+rules in `docs/network/safety-and-live-validation.md`.
+
 ## Output Files
 
 The default live validation report is written to:

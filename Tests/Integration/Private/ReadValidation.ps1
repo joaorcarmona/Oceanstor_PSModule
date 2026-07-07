@@ -113,6 +113,12 @@ function Invoke-ReadValidation {
     Add-ValidationResult -Name 'Get-DMLif' -ExpectedType 'OceanStorLIF' -Action {
         Get-DMLif -WebSession $session
     } | Out-Null
+    Add-ValidationResult -Name 'Get-DMFailoverGroup' -ExpectedType 'OceanStorFailoverGroup' -Action {
+        Get-DMFailoverGroup -WebSession $session
+    } | Out-Null
+    Add-ValidationResult -Name 'Get-DMLLDPWorkingMode' -ExpectedType 'PSCustomObject' -Action {
+        Get-DMLLDPWorkingMode -WebSession $session
+    } | Out-Null
     $samples.LunGroups = Add-ValidationResult -Name 'Get-DMlunGroup' -ExpectedType 'OceanStorLunGroup' -Action {
         Get-DMlunGroup -WebSession $session
     }
