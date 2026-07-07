@@ -1,7 +1,7 @@
 # Integrity Tests — System Management Coverage
 
 Companion to `Tests/README.md` (runner usage, status meanings) and
-`docs/system-management/SAFETY-AND-LIVE-VALIDATION.md` (safety
+`docs/system-management/safety-and-live-validation.md` (safety
 classification). This page records how the live integrity harness treats the
 **system-management** domain as of branch `SystemManageGAP` (2026-07-07).
 

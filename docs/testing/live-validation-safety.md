@@ -40,7 +40,7 @@ creates real objects on the array (report tasks):
 
 This mirrors the same ownership discipline used for mutating integrity
 resources (LUNs, LUN groups, etc.) — see
-[Integrity tests — ownership model and cleanup](INTEGRITY-TESTS.md#ownership-model-and-cleanup).
+[Integrity tests — ownership model and cleanup](integrity-tests.md#ownership-model-and-cleanup).
 
 ## Monitoring mutation double gate
 
@@ -118,6 +118,6 @@ $cred = Import-Clixml -Path "$env:USERPROFILE\.oceanstor\dm-creds.xml"
 .\Tests\Integration\Invoke-GetterIntegrityValidation.ps1 -Hostname $storageIP -Credential $cred -SkipCertificateCheck -IncludePerformance -AllowMonitoringMutation
 ```
 
-See also [Performance integrity tests](PERFORMANCE-INTEGRITY-TESTS.md) and
-[Integrity tests](INTEGRITY-TESTS.md) for the full switch/config reference
+See also [Performance integrity tests](performance-integrity-tests.md) and
+[Integrity tests](integrity-tests.md) for the full switch/config reference
 for each stage.

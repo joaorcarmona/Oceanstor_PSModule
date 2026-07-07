@@ -6,7 +6,7 @@ correctness (object shapes, filtering) and, opt-in, test-owned mutation
 workflows (create/update/delete cycles the harness fully owns and cleans up).
 
 Performance/capacity checks are a separate opt-in layer — see
-[Performance integrity tests](PERFORMANCE-INTEGRITY-TESTS.md).
+[Performance integrity tests](performance-integrity-tests.md).
 
 ## Purpose
 
@@ -150,9 +150,7 @@ runs side by side:
 > public command with no matching check as `Blocked` on a mutating run (even
 > if the real reason is simply that an opt-in switch, such as a performance
 > switch, was never passed) or `NotExecuted` on a read-only run. See
-> [Performance integrity tests — why performance commands may appear as NotRequested](PERFORMANCE-INTEGRITY-TESTS.md#why-performance-commands-may-appear-as-notrequested-or-previously-blocked)
-> and
-> [`PERFORMANCE/INTEGRITY-BLOCKED-COMMANDS-PLAN.md`](../../PERFORMANCE/INTEGRITY-BLOCKED-COMMANDS-PLAN.md)
+> [Performance integrity tests — why performance commands may appear as NotRequested](performance-integrity-tests.md#why-performance-commands-may-appear-as-notrequested-or-previously-blocked)
 > for the full analysis and the proposed reporting-side fix. `Blocked` should
 > be trusted at face value only for commands with a genuine test-owned
 > prerequisite in this run (Quota, QoS families) — for opt-in domains like

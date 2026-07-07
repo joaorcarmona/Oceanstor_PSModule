@@ -56,7 +56,7 @@ Every check the runner performs resolves to exactly one status:
 - A performance cmdlet shows `Blocked` on a run invoked with
   `-RunMutatingTests` but no performance switch → this is the known coverage
   fallback described in
-  [Performance integrity tests](PERFORMANCE-INTEGRITY-TESTS.md#why-performance-commands-may-appear-as-notrequested-or-previously-blocked),
+  [Performance integrity tests](performance-integrity-tests.md#why-performance-commands-may-appear-as-notrequested-or-previously-blocked),
   not a genuine block. Treat it as `NotRequested`.
 - `Get-DMQosPolicy` (or another command with a real test-owned prerequisite)
   shows `Blocked` because `New-DMQosPolicy` returned `NoData` this run → this
@@ -75,5 +75,5 @@ Every check the runner performs resolves to exactly one status:
 | Mutation REST trace | `Reports/mutation-trace-last-result.json` | `-MutationLogPath` |
 | Performance export/scratch files | temp directory (`dm_integrity_perf_<runId>`) | `-PerformanceOutputPath` |
 
-See [Integrity tests](INTEGRITY-TESTS.md#custom-report-path) for override
+See [Integrity tests](integrity-tests.md#custom-report-path) for override
 examples.

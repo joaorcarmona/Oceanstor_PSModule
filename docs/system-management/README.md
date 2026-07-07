@@ -15,7 +15,7 @@ rather than storage objects (LUNs, file systems, hosts).
 | [DNS.md](DNS.md) | DNS server configuration | Yes |
 | [CERTIFICATES.md](CERTIFICATES.md) | Certificate management | **Not implemented / gap / planned** |
 | [ALARMS-AND-EVENTS.md](ALARMS-AND-EVENTS.md) | Alarm queries; system and equipment status | Partial (read-only) |
-| [SAFETY-AND-LIVE-VALIDATION.md](SAFETY-AND-LIVE-VALIDATION.md) | Safety classification and live-validation rules | — |
+| [safety-and-live-validation.md](safety-and-live-validation.md) | Safety classification and live-validation rules | — |
 | [TODO.md](TODO.md) | Roadmap and open gaps for this domain | — |
 
 ## Connecting
@@ -51,6 +51,6 @@ System-management mutators change **global array behavior** — monitoring,
 alerting, time sync, name resolution, and authentication. Unlike LUN or host
 mutations, a mistake here can silently break production alerting or lock out
 administrators. Read the
-[SAFETY-AND-LIVE-VALIDATION.md](SAFETY-AND-LIVE-VALIDATION.md) rules before
+[safety-and-live-validation.md](safety-and-live-validation.md) rules before
 running any `Set-`/`New-`/`Remove-` cmdlet in this domain against a shared
 array.

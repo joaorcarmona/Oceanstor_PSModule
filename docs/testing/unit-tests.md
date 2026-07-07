@@ -96,4 +96,4 @@ never open a connection to an array and never prompt for credentials.
 Always run the unit suite before a live integrity run. It catches regressions
 in parsing, filtering, and object-shape logic far faster (seconds, not
 minutes) and without touching a real array. See
-[Integrity tests](INTEGRITY-TESTS.md) for the live layer.
+[Integrity tests](integrity-tests.md) for the live layer.

@@ -288,8 +288,7 @@ domains, each independently gated, that can be enabled together in one run.
 ## Why performance commands may appear as `NotRequested` or previously `Blocked`
 
 A live run against a Dorado array on 2026-07-06 showed all 19 performance
-cmdlets as `Blocked`. Analysis
-(`PERFORMANCE/INTEGRITY-BLOCKED-COMMANDS-PLAN.md`) confirmed this was **not**
+cmdlets as `Blocked`. Analysis confirmed this was **not**
 a safety mechanism, REST-side rejection, or session failure:
 
 - The run was invoked with `-RunMutatingTests` but **no** performance switch.
@@ -332,9 +331,7 @@ To get an accurate status for performance commands:
    `Performance:TraceAudit:Realtime`) for the real result.
 
 A reporting-side fix to make this distinction visible per-cmdlet (rather than
-relying on this explanation) is proposed but not yet implemented — see
-Corrections C1/C2 in
-[`PERFORMANCE/INTEGRITY-BLOCKED-COMMANDS-PLAN.md`](../../PERFORMANCE/INTEGRITY-BLOCKED-COMMANDS-PLAN.md).
+relying on this explanation) is proposed but not yet implemented.
 Until that lands, treat `Blocked` entries for performance/history/capacity
 cmdlets as `NotRequested` whenever the corresponding switch was absent from
 the invocation.

@@ -73,7 +73,7 @@ Get-DMLocalUser -WebSession $storage -Id 'automation_ro' | Remove-DMLocalUser -W
 ## Safety Notes
 
 - These cmdlets are classified `AuthenticationOrAccessMutation`
-  (see [SAFETY-AND-LIVE-VALIDATION.md](SAFETY-AND-LIVE-VALIDATION.md)).
+  (see [safety-and-live-validation.md](safety-and-live-validation.md)).
 - **Never** modify, lock, or remove the built-in `admin` account or any
   pre-existing account in live validation.
 - Removing or re-roling a user can lock out other automation. Prefer creating

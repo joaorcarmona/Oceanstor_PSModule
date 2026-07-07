@@ -8,11 +8,11 @@ guides and gives you the fastest path to the right test command.
 | You want to... | Use |
 |---|---|
 | Validate logic offline, no array needed | [Unit tests](UNIT-TESTS.md) |
-| Confirm getters work against a real array, read-only | [Integrity tests](INTEGRITY-TESTS.md) (default mode) |
-| Exercise create/update/delete workflows the harness owns and cleans up | [Integrity tests](INTEGRITY-TESTS.md) (`-RunMutatingTests`) |
-| Validate realtime/Excel/history/capacity performance cmdlets | [Performance integrity tests](PERFORMANCE-INTEGRITY-TESTS.md) |
-| Understand the `Tests/` folder layout and status vocabulary | [Test schema & organization](TEST-SCHEMA-ORGANIZATION.md) |
-| Understand what is and isn't safe to run against a live array | [Live validation safety](LIVE-VALIDATION-SAFETY.md) |
+| Confirm getters work against a real array, read-only | [Integrity tests](integrity-tests.md) (default mode) |
+| Exercise create/update/delete workflows the harness owns and cleans up | [Integrity tests](integrity-tests.md) (`-RunMutatingTests`) |
+| Validate realtime/Excel/history/capacity performance cmdlets | [Performance integrity tests](performance-integrity-tests.md) |
+| Understand the `Tests/` folder layout and status vocabulary | [Test schema & organization](test-schema-organization.md) |
+| Understand what is and isn't safe to run against a live array | [Live validation safety](live-validation-safety.md) |
 
 ## Recommended command order
 
@@ -41,7 +41,7 @@ independent and opt-in; nothing you don't ask for runs.
   `Performance.*` flag in `IntegrityValidationConfig.psd1` must both be set.
   Without a switch, the performance section returns immediately and nothing
   it can do is attempted — see
-  [Why performance commands may appear as NotRequested](PERFORMANCE-INTEGRITY-TESTS.md#why-performance-commands-may-appear-as-notrequested-or-previously-blocked).
+  [Why performance commands may appear as NotRequested](performance-integrity-tests.md#why-performance-commands-may-appear-as-notrequested-or-previously-blocked).
 - **Monitoring mutation** (sampling-interval round-trip) is gated a second
   time on top of the performance gate and always restores the original value
   in a `finally` block.
@@ -98,8 +98,7 @@ single `Performance validation | NotConfigured` check and stops there.
 ## See also
 
 - [Unit tests](UNIT-TESTS.md)
-- [Integrity tests](INTEGRITY-TESTS.md)
-- [Performance integrity tests](PERFORMANCE-INTEGRITY-TESTS.md)
-- [Test schema & organization](TEST-SCHEMA-ORGANIZATION.md)
-- [Live validation safety](LIVE-VALIDATION-SAFETY.md)
-- [`PERFORMANCE/INTEGRITY-BLOCKED-COMMANDS-PLAN.md`](../../PERFORMANCE/INTEGRITY-BLOCKED-COMMANDS-PLAN.md) — root-cause analysis behind the `NotRequested`/`Blocked` distinction described here
+- [Integrity tests](integrity-tests.md)
+- [Performance integrity tests](performance-integrity-tests.md)
+- [Test schema & organization](test-schema-organization.md)
+- [Live validation safety](live-validation-safety.md)

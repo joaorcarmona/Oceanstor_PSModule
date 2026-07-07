@@ -18,11 +18,11 @@ The detailed test inventory and dependency order are documented in
 For a fuller walkthrough of every test domain, switch, and config gate, see
 [`docs/testing/`](../docs/testing/README.md):
 
-- [Unit tests](../docs/testing/UNIT-TESTS.md)
-- [Integrity tests](../docs/testing/INTEGRITY-TESTS.md)
-- [Performance integrity tests](../docs/testing/PERFORMANCE-INTEGRITY-TESTS.md)
-- [Test schema & organization](../docs/testing/TEST-SCHEMA-ORGANIZATION.md)
-- [Live validation safety](../docs/testing/LIVE-VALIDATION-SAFETY.md)
+- [Unit tests](../docs/testing/unit-tests.md)
+- [Integrity tests](../docs/testing/integrity-tests.md)
+- [Performance integrity tests](../docs/testing/performance-integrity-tests.md)
+- [Test schema & organization](../docs/testing/test-schema-organization.md)
+- [Live validation safety](../docs/testing/live-validation-safety.md)
 
 ## Prerequisites
 
@@ -376,9 +376,8 @@ Override any location when retaining multiple runs (the target directory is crea
   apart. If a `Blocked` performance/history/capacity command appears on a
   run that did not pass the matching `-Include*` switch, treat it as
   `NotRequested`, not as a real block — see
-  [Performance integrity tests](../docs/testing/PERFORMANCE-INTEGRITY-TESTS.md#why-performance-commands-may-appear-as-notrequested-or-previously-blocked)
-  and `../PERFORMANCE/INTEGRITY-BLOCKED-COMMANDS-PLAN.md` for the full
-  analysis and the proposed reporting fix (not yet implemented). Once that
+  [Performance integrity tests](../docs/testing/performance-integrity-tests.md#why-performance-commands-may-appear-as-notrequested-or-previously-blocked)
+  for the full analysis and the proposed reporting fix (not yet implemented). Once that
   fix lands, `Blocked` will be reserved for genuine prerequisite failures.
 - `Failed`: the command raised an error.
 - `UnexpectedType`: returned objects did not match the expected type.
@@ -401,8 +400,8 @@ harness unless a dedicated safe workflow exists for them. They are never
 reported `Passed` and never hidden. `Set-DMdnsServer` is deliberately
 excluded from live validation because DNS is a global setting with no
 test-owned variant. Details and safety classification are in
-`docs/system-management/SAFETY-AND-LIVE-VALIDATION.md` and
-`docs/testing/INTEGRITY-TESTS.md`.
+`docs/system-management/safety-and-live-validation.md` and
+`docs/testing/system-management-integrity-tests.md`.
 
 ## Test Layout
 
