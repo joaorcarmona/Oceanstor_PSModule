@@ -65,6 +65,7 @@ $validationModule = New-Module -Name OceanstorLiveGetterValidation -ArgumentList
         'Invoke-DeviceManager.ps1',
         'Invoke-DMPagedRequest.ps1',
         'New-DMNamedObjectUpdate.ps1',
+        'New-DMRequestBody.ps1',
         'Select-DMResponseData.ps1',
         'Set-DMHostInitiator.ps1',
         'Test-DMNetworkAddress.ps1',

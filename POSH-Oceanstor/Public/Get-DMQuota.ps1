@@ -37,7 +37,7 @@ function Get-DMQuota {
         PS> Get-DMQuota -FileSystemName 'fs01' -DtreeName 'project-a' -QuotaType Directory
     #>
     [CmdletBinding(DefaultParameterSetName = 'ByParent')]
-    [OutputType([OceanstorQuota])]
+    [OutputType('OceanstorQuota')]
     param(
         [Parameter(ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
