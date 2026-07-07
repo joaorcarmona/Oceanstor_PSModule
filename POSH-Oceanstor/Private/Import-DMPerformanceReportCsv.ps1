@@ -36,6 +36,10 @@ function Import-DMPerformanceReportCsv {
     [void](New-Item -ItemType Directory -Path $tempDir -Force)
 
     try {
+        # Windows PowerShell 5.1 does not load System.IO.Compression.FileSystem by default, so the
+        # [System.IO.Compression.ZipFile] type is not resolvable until the assembly is added. This is
+        # idempotent and a no-op where the assembly is already present (e.g. PowerShell 7+).
+        Add-Type -AssemblyName System.IO.Compression.FileSystem
         [System.IO.Compression.ZipFile]::ExtractToDirectory($ZipPath, $tempDir)
 
         $rows = [System.Collections.Generic.List[object]]::new()

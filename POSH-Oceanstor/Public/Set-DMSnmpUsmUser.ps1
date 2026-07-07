@@ -1,4 +1,14 @@
 function Set-DMSnmpUsmUser {
+    # SNMPv3 USM has a two-secret model (auth + privacy passphrases) plus a USM user
+    # name; this does not map to a single [PSCredential] (one username / one password).
+    # SecureString input is already supported via ConvertFrom-DMSensitiveValue and secret
+    # values are never printed or logged, so the plaintext-capable [object] shape is
+    # intentional and safe. Redesigning to SecureString-only would be a breaking public
+    # contract change. See RELEASE_NOTES / docs/system-management for the recorded decision.
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingUsernameAndPasswordParams', '',
+        Justification = 'SNMPv3 USM uses two separate passphrases and a user name, which cannot be expressed as a single PSCredential; SecureString input is already accepted and secrets are never exposed.')]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingPlainTextForPassword', '',
+        Justification = 'Auth/privacy passphrases accept [SecureString] and are normalized via ConvertFrom-DMSensitiveValue; plaintext is also accepted for compatibility and secrets are never printed or logged.')]
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]

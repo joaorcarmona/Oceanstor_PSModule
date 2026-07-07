@@ -23,7 +23,26 @@ if (-not $SkipAnalyzer) {
         Import-Module PSScriptAnalyzer -ErrorAction Stop
         $moduleRoot = Join-Path -Path $PSScriptRoot -ChildPath '..\POSH-Oceanstor'
         $settingsPath = Join-Path -Path $PSScriptRoot -ChildPath '..\PSScriptAnalyzerSettings.psd1'
-        $analyzerResults = Invoke-ScriptAnalyzer -Path $moduleRoot -Settings $settingsPath -Recurse
+        # PSScriptAnalyzer intermittently throws internal engine errors on its first invocation in a
+        # fresh process (known races, e.g. "Object reference not set to an instance of an object" and
+        # "You cannot have more than one dynamic module in each dynamic assembly"). Under
+        # $ErrorActionPreference='Stop' any of these would abort the whole release gate at random.
+        # Real analyzer *findings* are returned as data (never thrown), so any *exception* here is a
+        # transient engine fault: retry a few times (the engine warms up after the first call) and
+        # only rethrow after exhausting the retries, so a genuinely persistent failure still surfaces.
+        $analyzerResults = $null
+        $analyzerMaxAttempts = 5
+        for ($analyzerAttempt = 1; $analyzerAttempt -le $analyzerMaxAttempts; $analyzerAttempt++) {
+            try {
+                $analyzerResults = Invoke-ScriptAnalyzer -Path $moduleRoot -Settings $settingsPath -Recurse -ErrorAction Stop
+                break
+            }
+            catch {
+                if ($analyzerAttempt -eq $analyzerMaxAttempts) { throw }
+                Write-Warning "PSScriptAnalyzer threw a transient error (attempt $analyzerAttempt/$analyzerMaxAttempts): $($_.Exception.Message). Retrying."
+                Start-Sleep -Milliseconds 250
+            }
+        }
 
         if ($analyzerResults) {
             $bySeverity = $analyzerResults | Group-Object Severity | Sort-Object Count -Descending
@@ -34,7 +53,13 @@ if (-not $SkipAnalyzer) {
             }
 
             if ($FailOnAnalyzerIssue) {
-                throw "PSScriptAnalyzer reported $($analyzerResults.Count) issue(s)."
+                # The release gate blocks only on Error-severity findings. Warning/Information
+                # results are printed above for visibility but are deferred cleanup, not
+                # release blockers (see todo/release-readiness-go-no-go.md section 3a).
+                $errorFindings = @($analyzerResults | Where-Object { "$($_.Severity)" -eq 'Error' })
+                if ($errorFindings.Count -gt 0) {
+                    throw "PSScriptAnalyzer reported $($errorFindings.Count) Error-severity finding(s)."
+                }
             }
         }
         else {

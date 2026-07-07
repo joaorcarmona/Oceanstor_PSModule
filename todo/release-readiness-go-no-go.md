@@ -22,6 +22,16 @@ first time as part of release prep.
 Tagging/publishing now would ship a version whose own CI gate cannot pass — the
 `release.yml` `validate` job would go red on the first real release attempt.
 
+> **Phase 01 update (2026-07-07): gate criterion now GO.** The release-blocker
+> gate (Phase 01, `todo/alpha-v1.0.0-open-issues-phase-01-release-blockers-gate.md`)
+> was implemented. `./Tests/Invoke-UnitTests.ps1 -Output Normal` and the release
+> gate `-FailOnAnalyzerIssue -Output Normal` now both pass: **0 Error-severity
+> analyzer findings, 0 failing tests (1232/1232)**. The 2 SNMP USM Errors were
+> cleared with a justified `[SuppressMessageAttribute]` (see §3a); the 39 test
+> failures below were resolved by subsequent merges and re-verified green. The
+> remaining 93 Warning / 24 Information analyzer results are non-blocking and
+> deferred. The evidence below is retained as the original Phase 11 snapshot.
+
 ## 1. Version / prerelease metadata
 
 - `POSH-Oceanstor/POSH-Oceanstor.psd1`: `ModuleVersion = '1.0.0'`,

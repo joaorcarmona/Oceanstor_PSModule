@@ -58,19 +58,25 @@ alarms/events.
 > 2026-07-07; item 2 Stage A implemented on 2026-07-07
 > (`Get-DMCertificate`), Stage B deferred.
 
-### 3. SNMP USM user credential-parameter analyzer finding — release blocker, unowned
+### 3. SNMP USM user credential-parameter analyzer finding — RESOLVED (Phase 01, 2026-07-07)
 
 - Phase 11's release-gate run (2026-07-07) surfaced 2 PSScriptAnalyzer
   **Error**-severity `PSAvoidUsingUsernameAndPasswordParams` findings on
   `New-DMSnmpUsmUser.ps1` and `Set-DMSnmpUsmUser.ps1` (line 10 of each).
-  These block the release pipeline's hard analyzer gate
-  (`-FailOnAnalyzerIssue` in `.github/workflows/release.yml`). Not fixed by
-  Phase 11 (no production cmdlet code changes in scope) — needs a future
-  system-management pass to redesign the affected parameters (e.g.
-  `[PSCredential]`/`SecureString` instead of separate plaintext
-  username/password parameters) without breaking the documented SNMPv3 USM
-  user contract. See `todo/release-readiness-go-no-go.md` for the full
-  release-gate finding.
+- **Decision (Phase 01): justified suppression, not redesign.** SNMPv3 USM has a
+  two-secret model (separate auth + privacy passphrases) plus a USM user name,
+  which cannot be expressed as a single `[PSCredential]` (one username / one
+  password). `[SecureString]` input is already accepted on both cmdlets and
+  normalized via `ConvertFrom-DMSensitiveValue`, and secret values are never
+  printed or logged; the cmdlets also accept plaintext for compatibility (a
+  documented, tested contract). Forcing `SecureString`-only would be a breaking
+  public-parameter change for no additional protection. A narrow, documented
+  `[Diagnostics.CodeAnalysis.SuppressMessageAttribute]` for
+  `PSAvoidUsingUsernameAndPasswordParams` (and the co-located
+  `PSAvoidUsingPlainTextForPassword`) was added to both cmdlets with a
+  justification. The release gate now reports **0 Error-severity findings**.
+- See `RELEASE_NOTES.md` and `todo/release-readiness-go-no-go.md` for the
+  recorded decision.
 
 ### 1. SystemManagement mutation workflow — implemented (Phase 04), live run pending
 

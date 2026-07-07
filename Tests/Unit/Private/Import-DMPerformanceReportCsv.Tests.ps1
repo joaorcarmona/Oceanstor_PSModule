@@ -30,6 +30,8 @@ InModuleScope ImportDMPerformanceReportCsvTestModule {
                 }
 
                 $zipPath = Join-Path $script:workDir 'report.zip'
+                # Ensure the ZipFile type resolves on Windows PowerShell 5.1 (idempotent on PS 7+).
+                Add-Type -AssemblyName System.IO.Compression.FileSystem
                 [System.IO.Compression.ZipFile]::CreateFromDirectory($sourceDir, $zipPath)
                 return $zipPath
             }
