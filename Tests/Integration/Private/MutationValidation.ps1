@@ -34,6 +34,23 @@ function Invoke-MutationValidation {
         'Get-DMfreeDisk'
     )
 
+    # Global, authentication, and alerting system-management mutators. No safe
+    # test-owned mutation workflow exists for these yet, so every run skips them
+    # deliberately; without this explicit result the coverage fallback in
+    # Write-ValidationReport would mislabel them as Blocked during mutating runs.
+    $script:systemManagementMutators = @(
+        'Set-DMNtpServer', 'Test-DMNtpServer',
+        'New-DMSnmpTrapServer', 'Set-DMSnmpTrapServer', 'Remove-DMSnmpTrapServer', 'Test-DMSnmpTrapServer',
+        'Set-DMSnmpConfig', 'Set-DMSnmpSecurityPolicy', 'Set-DMSnmpCommunity',
+        'New-DMSnmpUsmUser', 'Set-DMSnmpUsmUser', 'Remove-DMSnmpUsmUser',
+        'Set-DMSyslogNotification', 'Add-DMSyslogServer', 'Remove-DMSyslogServer',
+        'New-DMLocalUser', 'Set-DMLocalUser', 'Remove-DMLocalUser',
+        'Lock-DMLocalUser', 'Unlock-DMLocalUser', 'Disable-DMLocalUserSession', 'Reset-DMLocalUserPassword',
+        'New-DMRole', 'Set-DMRole', 'Remove-DMRole',
+        'Set-DMTimeZone', 'Set-DMutcTime'
+    )
+    Add-SkippedResult -Name $script:systemManagementMutators -Status 'SkippedUnsafe' -Reason 'Global system-management mutations (users, roles, SNMP, syslog, NTP, time) are not exercised by the integrity harness unless a dedicated safe workflow exists for them.'
+
     if (-not $RunMutatingTests) {
         Add-SkippedResult -Name @(
             'New-DMLun', 'New-DMLunSnapshot', 'New-DMLunSnapshotCopy', 'Enable-DMLunSnapshot',
@@ -70,14 +87,6 @@ function Invoke-MutationValidation {
             'Set-DMLun', 'Rename-DMLun', 'Set-DMFileSystem', 'Rename-DMFileSystem',
             'Set-DMHost', 'Rename-DMHost', 'Set-DMHostGroup', 'Rename-DMHostGroup',
             'Set-DMLunGroup', 'Rename-DMLunGroup', 'Set-DMPortGroup', 'Rename-DMPortGroup',
-            'Set-DMNtpServer', 'Test-DMNtpServer', 'New-DMSnmpTrapServer', 'Set-DMSnmpTrapServer',
-            'Remove-DMSnmpTrapServer', 'Test-DMSnmpTrapServer', 'Set-DMSnmpConfig',
-            'Set-DMSnmpSecurityPolicy', 'Set-DMSnmpCommunity', 'New-DMSnmpUsmUser',
-            'Set-DMSnmpUsmUser', 'Remove-DMSnmpUsmUser', 'Set-DMSyslogNotification',
-            'Add-DMSyslogServer', 'Remove-DMSyslogServer', 'New-DMLocalUser', 'Set-DMLocalUser',
-            'Remove-DMLocalUser', 'Lock-DMLocalUser', 'Unlock-DMLocalUser',
-            'Disable-DMLocalUserSession', 'Reset-DMLocalUserPassword', 'New-DMRole',
-            'Set-DMRole', 'Remove-DMRole',
             'Disconnect-deviceManager'
         ) -Status 'NotRequested' -Reason 'Call the runner with -RunMutatingTests and enable the desired section in IntegrityValidationConfig.psd1.'
     }

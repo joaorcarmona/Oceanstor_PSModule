@@ -15,6 +15,7 @@ BeforeDiscovery {
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Get-DMApiErrorMessage.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Assert-DMApiSuccess.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Test-DMNetworkAddress.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\Test-IPv4Address.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\ConvertFrom-DMSensitiveValue.ps1"
 
         Get-ChildItem -LiteralPath "$testRoot\..\..\..\POSH-Oceanstor\Public" -Filter '*-DM*.ps1' |
@@ -161,6 +162,24 @@ Describe 'System configuration mutation functions' {
         $script:resource | Should -Be 'syslog_removeip'
     }
 
+    It 'sets equipment time zone' {
+        $result = Set-DMTimeZone -WebSession $script:session -TimeZoneName 'Asia/Beijing' -Confirm:$false
+
+        $result.Code | Should -Be 0
+        $script:method | Should -Be 'PUT'
+        $script:resource | Should -Be 'system_timezone'
+        $script:body.CMO_SYS_TIME_ZONE_NAME | Should -Be 'Asia/Beijing'
+    }
+
+    It 'sets equipment UTC time' {
+        $result = Set-DMutcTime -WebSession $script:session -UtcTime 1478179247 -Confirm:$false
+
+        $result.Code | Should -Be 0
+        $script:method | Should -Be 'PUT'
+        $script:resource | Should -Be 'system_utc_time'
+        $script:body.CMO_SYS_UTC_TIME | Should -Be 1478179247
+    }
+
     It 'creates, modifies, and removes local users' {
         $null = New-DMLocalUser -WebSession $script:session -Name 'audit' -Password 'secret' -RoleId '1' -Confirm:$false
         $script:method | Should -Be 'POST'
@@ -223,6 +242,28 @@ Describe 'System configuration mutation functions' {
         $script:method | Should -Be 'DELETE'
         $script:resource | Should -Be 'role'
         $script:body.ID | Should -Be 'role/01'
+    }
+
+    It 'sets DNS servers' {
+        $result = Set-DMdnsServer -WebSession $script:session -DNSserver '8.8.8.8', '1.1.1.1' -Confirm:$false
+
+        $result.Code | Should -Be 0
+        $script:method | Should -Be 'PUT'
+        $script:resource | Should -Be 'dns_server'
+        $script:body.ADDRESS | Should -Be @('8.8.8.8', '1.1.1.1')
+    }
+
+    It 'rejects DNS server addresses that are not valid IPv4 addresses' {
+        { Set-DMdnsServer -WebSession $script:session -DNSserver '8.8.8.8', 'not-an-ip' -Confirm:$false } |
+            Should -Throw "*'not-an-ip' is not a valid IPv4 address*"
+
+        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
+    }
+
+    It 'does not call the DNS API when WhatIf is used' {
+        $null = Set-DMdnsServer -WebSession $script:session -DNSserver '8.8.8.8' -WhatIf
+
+        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
     }
 
     It 'does not call mutating APIs when WhatIf is used' {

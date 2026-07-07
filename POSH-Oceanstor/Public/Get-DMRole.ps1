@@ -31,6 +31,11 @@ function Get-DMRole {
         return [OceanStorRole]::new($response, $session)
     }
 
+    # The live 'role' endpoint pads range-paged responses to the requested page size
+    # with copies of the first role instead of honoring the offset (role?range=[0-100]
+    # returns 100 copies of role ID 1), so Invoke-DMPagedRequest never sees a short
+    # page and loops forever. The role collection is small and the unpaged response
+    # is correct, so query it unpaged.
     $response = Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource 'role' -TimeoutSec $TimeoutSec |
         Select-DMResponseData
     return @($response | ForEach-Object { [OceanStorRole]::new($_, $session) })

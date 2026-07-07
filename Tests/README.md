@@ -362,7 +362,9 @@ Override any location when retaining multiple runs (the target directory is crea
 - `NotConfigured`: the switch was passed, but the related config flag
   (`AllowMutatingTests`, `Performance.Enabled`, etc.) was not enabled.
 - `SkippedUnsafe`: the harness deliberately never exercises this action
-  regardless of switches (e.g. `Enable-`/`Disable-DMPerformanceMonitoring`).
+  regardless of switches — e.g. `Enable-`/`Disable-DMPerformanceMonitoring`,
+  and system-management mutators that change global, authentication, or
+  alerting settings without a dedicated safe workflow.
 - `NotExecuted`: fallback label for a public command with no check
   representation in a read-only run.
 - `Blocked`: fallback label for a public command with no check
@@ -388,6 +390,19 @@ After mutation validation, confirm:
   this run; for opt-in performance/history/capacity commands, confirm which
   switches were actually passed before treating `Blocked` as a problem.
 - `RemainingTestOwnedResources` is empty.
+
+### System-management commands in mutating runs
+
+No mutation workflow currently covers the system-management mutators (local
+users, roles, SNMP, syslog, NTP/time). They are reported as `SkippedUnsafe`
+in every run — read-only and mutating alike — because global,
+authentication, and alerting mutations are not exercised by the integrity
+harness unless a dedicated safe workflow exists for them. They are never
+reported `Passed` and never hidden. `Set-DMdnsServer` is deliberately
+excluded from live validation because DNS is a global setting with no
+test-owned variant. Details and safety classification are in
+`docs/system-management/SAFETY-AND-LIVE-VALIDATION.md` and
+`docs/testing/INTEGRITY-TESTS.md`.
 
 ## Test Layout
 
