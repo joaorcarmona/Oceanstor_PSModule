@@ -221,13 +221,14 @@ function Add-SkippedResult {
     param(
         [string[]]$Name,
         [string]$Reason,
-        [string]$Status = 'SkippedUnsafe'
+        [string]$Status = 'SkippedUnsafe',
+        [string]$Category = 'Mutation'
     )
 
     foreach ($commandName in $Name) {
         $checks.Add([pscustomobject]@{
             Name         = $commandName
-            Category     = 'Mutation'
+            Category     = $Category
             Status       = $Status
             DurationMs   = $null
             Count        = 0
@@ -357,6 +358,19 @@ function Invoke-RegisteredCleanup {
 function New-TestName {
     param([Parameter(Mandatory)][string]$Suffix)
     return "$($configuration.NamePrefix)_${runId}_$Suffix"
+}
+
+function New-ReportTaskName {
+    # The pms/report_task API caps names at 31 characters on live arrays (the
+    # documented 32 is off by one: longer names are accepted in the request but
+    # the task is never created), so unlike New-TestName this omits the run
+    # timestamp; the per-run token embedded in the suffix keeps names unique.
+    param([Parameter(Mandatory)][string]$Suffix)
+    $name = "$($configuration.NamePrefix)_$Suffix"
+    if ($name.Length -gt 31) {
+        throw "Report task name '$name' exceeds the 31-character pms/report_task live API limit."
+    }
+    return $name
 }
 
 function Test-MutatingConfiguration {

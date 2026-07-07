@@ -37,7 +37,8 @@ function Get-DMQuota {
         PS> Get-DMQuota -FileSystemName 'fs01' -DtreeName 'project-a' -QuotaType Directory
     #>
     [CmdletBinding(DefaultParameterSetName = 'ByParent')]
-    [OutputType([OceanstorQuota])]
+    # String form: class type literals in attributes do not resolve inside module scope.
+    [OutputType('OceanstorQuota')]
     param(
         [Parameter(ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,

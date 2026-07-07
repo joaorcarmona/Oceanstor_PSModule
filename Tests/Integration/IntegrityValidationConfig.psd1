@@ -123,4 +123,35 @@
         IscsiIdentifier = 'iqn.2003-01.com.example'
         NvmeNqn = 'nqn.2014-08.org.nvmexpress:uuid:123e4567-e89b-12d3-a456-426614174000'
     }
+
+    Performance = @{
+        # Master acknowledgement for the opt-in performance/capacity integrity
+        # checks (Phases 1-5 of the performance implementation). The runner
+        # additionally requires one of -IncludePerformance,
+        # -IncludePerformanceHistory, -IncludeCapacityHistory or
+        # -IncludeExcelPerformance; without both gates nothing runs and
+        # existing validation output is unchanged.
+        Enabled = $false
+
+        # Acknowledges that -IncludePerformanceHistory / -IncludeCapacityHistory
+        # may create report tasks on the array. Report tasks are metadata (no
+        # storage objects are ever created); every created task is registered
+        # by captured ID and removed again during the same run unless the
+        # runner is called with -KeepCreatedReportTasks. Pre-existing report
+        # tasks are snapshotted first and are never touched.
+        AllowReportTaskCreation = $false
+
+        # Acknowledges the optional monitoring round-trip test, which changes
+        # the realtime sampling interval once and restores the captured
+        # original in a finally block. Also requires -AllowMonitoringMutation
+        # on the runner. Default runs never modify monitoring settings.
+        AllowMonitoringMutation = $false
+
+        # Lookback window (hours) for Get-DMPerformanceHistory checks. Keep
+        # this small; zero returned rows are reported as NoData, not failure.
+        HistoryLookbackHours = 2
+
+        # retention_number used for report tasks created by the checks.
+        ReportTaskRetentionNumber = 1
+    }
 }

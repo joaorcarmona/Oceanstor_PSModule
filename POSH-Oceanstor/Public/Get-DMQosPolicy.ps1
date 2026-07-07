@@ -41,7 +41,8 @@ function Get-DMQosPolicy {
         Filename: Get-DMQosPolicy.ps1
     #>
     [CmdletBinding(DefaultParameterSetName = 'ByName')]
-    [OutputType([OceanstorQosPolicy])]
+    # String form: class type literals in attributes do not resolve inside module scope.
+    [OutputType('OceanstorQosPolicy')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Mandatory = $false)]
         [pscustomobject]$WebSession,

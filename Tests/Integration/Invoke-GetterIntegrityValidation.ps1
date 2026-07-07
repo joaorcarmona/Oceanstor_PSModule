@@ -21,6 +21,26 @@ param(
 
     [switch]$RunPipelineBatchCoverage,
 
+    [switch]$IncludePerformance,
+
+    [switch]$IncludePerformanceHistory,
+
+    [switch]$IncludeCapacityHistory,
+
+    [switch]$IncludeExcelPerformance,
+
+    [switch]$AllowMonitoringMutation,
+
+    [switch]$KeepCreatedReportTasks,
+
+    [ValidateRange(1, 100)]
+    [int]$MaxObjectsPerType = 2,
+
+    [ValidateRange(1, 86400)]
+    [int]$PerformanceTimeoutSec = 300,
+
+    [string]$PerformanceOutputPath,
+
     [switch]$NoProgress,
 
     [switch]$ShowTestExecution
@@ -41,6 +61,9 @@ if ($RunPipelineBatchCoverage) {
     $configuration.LunGroup.EnablePipelineBatchCoverage = $true
 }
 $runId = Get-Date -Format 'yyyyMMddHHmmss'
+if (-not $PerformanceOutputPath) {
+    $PerformanceOutputPath = Join-Path ([System.IO.Path]::GetTempPath()) "dm_integrity_perf_$runId"
+}
 $moduleRoot = Join-Path (Split-Path -Parent $PSScriptRoot) '..\POSH-Oceanstor'
 $moduleRoot = (Resolve-Path -LiteralPath $moduleRoot).Path
 
@@ -58,13 +81,18 @@ $validationModule = New-Module -Name OceanstorLiveGetterValidation -ArgumentList
         'ConvertFrom-DMSensitiveValue.ps1',
         'ConvertTo-DMCapacityBlock.ps1',
         'ConvertTo-DMQuotaByte.ps1',
+        'DMPerformanceIndicatorMap.ps1',
         'Get-DMFilterableProperty.ps1',
         'Get-DMApiErrorMessage.ps1',
         'Get-DMparsedElabel.ps1',
         'Get-DMPortGroupCandidate.ps1',
+        'Import-DMPerformanceReportCsv.ps1',
+        'Import-ReportTemplates.ps1',
         'Invoke-DeviceManager.ps1',
         'Invoke-DMPagedRequest.ps1',
         'New-DMNamedObjectUpdate.ps1',
+        'New-DMObjectReport.ps1',
+        'Save-DMDeviceManagerFile.ps1',
         'Select-DMResponseData.ps1',
         'Set-DMHostInitiator.ps1',
         'Test-DMNetworkAddress.ps1',
@@ -114,14 +142,18 @@ $cleanupActions = [System.Collections.Generic.List[object]]::new()
 $sessionDisconnected = $false
 $samples = @{}
 $owned = @{}
-foreach ($kind in @('Lun', 'LunSnapshot', 'HyperCDPSchedule', 'LunGroup', 'ProtectionGroup', 'SnapshotConsistencyGroup', 'QosPolicy', 'Host', 'HostGroup', 'FileSystem', 'FileSystemSnapshot', 'DTree', 'CifsShare', 'NfsShare', 'NfsClient', 'Quota', 'MappingView', 'PortGroup', 'FibreChannelInitiator', 'IscsiInitiator', 'NvmeInitiator')) {
+foreach ($kind in @('Lun', 'LunSnapshot', 'HyperCDPSchedule', 'LunGroup', 'ProtectionGroup', 'SnapshotConsistencyGroup', 'QosPolicy', 'Host', 'HostGroup', 'FileSystem', 'FileSystemSnapshot', 'DTree', 'CifsShare', 'NfsShare', 'NfsClient', 'Quota', 'MappingView', 'PortGroup', 'FibreChannelInitiator', 'IscsiInitiator', 'NvmeInitiator', 'ReportTask', 'ReportLog')) {
     $owned[$kind] = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 }
+$performanceCleanupRegistry = [System.Collections.Generic.List[object]]::new()
+$performanceRequests = [System.Collections.Generic.List[object]]::new()
+$performanceArtifacts = [ordered]@{}
 
 
 . (Join-Path $PSScriptRoot 'Private\ValidationHelpers.ps1')
 . (Join-Path $PSScriptRoot 'Private\ReadValidation.ps1')
 . (Join-Path $PSScriptRoot 'Private\MutationValidation.ps1')
+. (Join-Path $PSScriptRoot 'Private\PerformanceValidation.ps1')
 . (Join-Path $PSScriptRoot 'Private\Reporting.ps1')
 
 Initialize-ValidationRunLog
@@ -163,10 +195,17 @@ try {
     Write-ValidationProgress -Name 'Connect-deviceManager' -Category 'Session' -Status 'Passed' -DurationMs $connectionDurationMs
 
     Invoke-ReadValidation
+    Invoke-PerformanceValidation
     Invoke-MutationValidation
     Write-ValidationReport
 }
 finally {
+    try {
+        Invoke-PerformanceCleanupBackstop
+    }
+    catch {
+        Write-Warning "Performance cleanup backstop failed: $_"
+    }
     if ($session -and -not $sessionDisconnected) {
         $disconnectStartedAt = Get-Date
         $disconnectLogEntry = Start-ValidationCommandLogEntry -Name 'Disconnect-deviceManager' -StartedAt $disconnectStartedAt -MainCommand 'Disconnect-deviceManager' -Arguments '-WebSession $session'

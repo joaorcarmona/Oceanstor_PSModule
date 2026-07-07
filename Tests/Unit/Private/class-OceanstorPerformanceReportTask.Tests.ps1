@@ -1,0 +1,119 @@
+BeforeDiscovery {
+    $script:testModule = New-Module -Name ReportTaskClassTestModule -ArgumentList $PSScriptRoot -ScriptBlock {
+        param($testRoot)
+
+        # Delete() calls the unqualified command Remove-DMPerformanceReportTask. Other test files in
+        # this suite define/export their own same-named function into shared session scope during
+        # Pester's Discovery phase, and which one a compiled class method's unqualified call resolves
+        # to is not reliably last-writer-wins across file combinations (confirmed empirically: the
+        # same global-scope shape passes in some file combinations and fails in others). Rather than
+        # fight that resolution order, load the class from a patched copy of its source where the call
+        # target is renamed to a name unique to this file's test double, so no other file can possibly
+        # collide with it.
+        function global:Test_ReportTaskClass_RemoveReportTask {
+            param([pscustomobject]$WebSession, [string]$Id)
+            $script:RemovalInvocation = [pscustomobject]@{ Type = 'PerformanceReportTask'; Name = $Id; WebSession = $WebSession }
+        }
+
+        $classPath = "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorPerformanceReportTask.ps1"
+        $classSource = (Get-Content -Raw $classPath) -replace '\bRemove-DMPerformanceReportTask\b', 'Test_ReportTaskClass_RemoveReportTask'
+        . ([scriptblock]::Create($classSource))
+
+        Export-ModuleMember -Function New-DMPerformanceReportLog
+    }
+
+    Import-Module $script:testModule -Force
+}
+
+AfterAll {
+    Remove-Module -Name ReportTaskClassTestModule -Force -ErrorAction SilentlyContinue
+}
+
+Describe 'OceanstorPerformanceReportTask' {
+    InModuleScope ReportTaskClassTestModule {
+        BeforeEach {
+            $script:session = [pscustomobject]@{ hostname = 'array01' }
+            $script:RemovalInvocation = $null
+        }
+
+        It 'maps raw fields into typed properties' {
+            $raw = [pscustomobject]@{
+                id               = 'task-01'
+                name             = 'lun-history'
+                language         = 'en'
+                retention_number = '5'
+                format           = 'CSV'
+                time_segment     = 'customer'
+                begin_time       = 1700000000
+                end_time         = 1700003600
+                content          = @(
+                    [pscustomobject]@{
+                        report_type  = 'performance'
+                        compute_mode = 'avg'
+                        object_type  = 11
+                        entities     = @(
+                            [pscustomobject]@{ id = '1'; name = 'lun1'; data = '{"ID":"1","NAME":"lun1"}' }
+                            [pscustomobject]@{ id = '2'; name = 'lun2'; data = '{"ID":"2","NAME":"lun2"}' }
+                        )
+                        indicators   = [pscustomobject]@{ basic = @('21', '22'); advance = @() }
+                    }
+                )
+            }
+
+            $task = [OceanstorPerformanceReportTask]::new($raw, $script:session)
+
+            $task.Id | Should -Be 'task-01'
+            $task.Name | Should -Be 'lun-history'
+            $task.Language | Should -Be 'en'
+            $task.Format | Should -Be 'CSV'
+            $task.Begin | Should -Be ([DateTimeOffset]::FromUnixTimeSeconds(1700000000).UtcDateTime)
+            $task.End | Should -Be ([DateTimeOffset]::FromUnixTimeSeconds(1700003600).UtcDateTime)
+            $task.Contents.Count | Should -Be 1
+            $task.Contents[0].ReportType | Should -Be 'performance'
+            $task.Contents[0].ObjectType | Should -Be 11
+            $task.Contents[0].ObjectIdList | Should -Be @('1', '2')
+            $task.Contents[0].IndicatorList | Should -Be @('21', '22')
+        }
+
+        It 'defaults Begin/End when begin_time/end_time are absent' {
+            $raw = [pscustomobject]@{
+                id       = 'task-02'
+                name     = 'lun-weekly'
+                content  = @()
+            }
+
+            $task = [OceanstorPerformanceReportTask]::new($raw, $script:session)
+
+            $task.Begin | Should -Be ([datetime]::MinValue)
+            $task.End | Should -Be ([datetime]::MinValue)
+        }
+
+        It 'Delete() forwards to Remove-DMPerformanceReportTask with its own Id/Session' {
+            $raw = [pscustomobject]@{ id = 'task-01'; name = 'lun-history'; content = @() }
+            $task = [OceanstorPerformanceReportTask]::new($raw, $script:session)
+
+            $task.Delete() | Out-Null
+
+            $script:RemovalInvocation.Type | Should -Be 'PerformanceReportTask'
+            $script:RemovalInvocation.Name | Should -Be 'task-01'
+            $script:RemovalInvocation.WebSession | Should -Be $script:session
+        }
+    }
+}
+
+InModuleScope ReportTaskClassTestModule {
+    Describe 'New-DMPerformanceReportLog' {
+        It 'builds a PSTypeName-tagged log object with a default display set' {
+            $raw = [pscustomobject]@{ id = 'log-01'; task_id = 'task-01'; status = 'finished' }
+
+            $log = New-DMPerformanceReportLog -Raw $raw -Session ([pscustomobject]@{ hostname = 'array01' })
+
+            $log.PSObject.TypeNames | Should -Contain 'OceanStor.PerformanceReportLog'
+            $log.LogId | Should -Be 'log-01'
+            $log.TaskId | Should -Be 'task-01'
+            $log.Status | Should -Be 'finished'
+            $log.Raw | Should -Be $raw
+            $log.Session.hostname | Should -Be 'array01'
+        }
+    }
+}

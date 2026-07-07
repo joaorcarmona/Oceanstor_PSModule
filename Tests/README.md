@@ -15,6 +15,15 @@ The recommended order is:
 The detailed test inventory and dependency order are documented in
 `TestExecutionOrder.xml`.
 
+For a fuller walkthrough of every test domain, switch, and config gate, see
+[`docs/testing/`](../docs/testing/README.md):
+
+- [Unit tests](../docs/testing/UNIT-TESTS.md)
+- [Integrity tests](../docs/testing/INTEGRITY-TESTS.md)
+- [Performance integrity tests](../docs/testing/PERFORMANCE-INTEGRITY-TESTS.md)
+- [Test schema & organization](../docs/testing/TEST-SCHEMA-ORGANIZATION.md)
+- [Live validation safety](../docs/testing/LIVE-VALIDATION-SAFETY.md)
+
 ## Prerequisites
 
 - PowerShell 7 is recommended.
@@ -183,6 +192,133 @@ workflows:
     -RunMutatingTests
 ```
 
+## Performance Integrity Validation
+
+The performance/capacity checks (Phases 1-5 of the performance implementation)
+are part of the same runner and are opt-in twice, mirroring mutation mode:
+
+1. The `Performance` section in `Integration/IntegrityValidationConfig.psd1`
+   must have `Enabled = $true` (plus `AllowReportTaskCreation = $true` for the
+   history/capacity phases).
+2. The runner must be called with one or more of the performance switches.
+
+Normal unit tests (`Invoke-Pester Tests/Unit`) and existing validation runs are
+unaffected: with no performance switch the runner behaves exactly as before.
+
+Read-only realtime checks (Phases 1-2 plus NAS/FileSystem realtime — only
+`Get-*` calls; a trace audit asserts no mutating REST call ran):
+
+```powershell
+./Tests/Integration/Invoke-GetterIntegrityValidation.ps1 `
+    -Hostname 'IP_or_FQDN' `
+    -SkipCertificateCheck `
+    -IncludePerformance
+```
+
+Excel performance-export checks (Phase 3 — array reads only; writes and then
+deletes local `.xlsx` files under `-PerformanceOutputPath`; requires the
+ImportExcel module):
+
+```powershell
+./Tests/Integration/Invoke-GetterIntegrityValidation.ps1 `
+    -Hostname 'IP_or_FQDN' `
+    -SkipCertificateCheck `
+    -IncludePerformance -IncludeExcelPerformance
+```
+
+Report-task/history and capacity checks (Phases 4-5). These create **report
+tasks only** — metadata, never storage objects. Every created task is named
+`<NamePrefix>_<runId>_p<token>_<case>`, its ID is captured from the create
+response, registered as test-owned, and deleted by that captured ID during the
+same run. Pre-existing report tasks are snapshotted first and are never
+touched; a baseline guard refuses to delete any pre-existing ID:
+
+```powershell
+./Tests/Integration/Invoke-GetterIntegrityValidation.ps1 `
+    -Hostname 'IP_or_FQDN' `
+    -SkipCertificateCheck `
+    -IncludePerformance -IncludePerformanceHistory -IncludeCapacityHistory
+```
+
+Additional performance switches:
+
+- `-KeepCreatedReportTasks`: leave test-created report tasks/logs in place for
+  debugging; their IDs and manual cleanup commands are printed and recorded.
+- `-MaxObjectsPerType <n>` (default 2): how many existing objects each wrapper
+  smoke check reads.
+- `-PerformanceTimeoutSec <n>` (default 300): report export poll timeout.
+- `-PerformanceOutputPath <dir>`: where downloaded zips/xlsx files go
+  (defaults to a run-scoped temp directory).
+- `-AllowMonitoringMutation`: opt-in monitoring round-trip (also requires
+  `Performance.AllowMonitoringMutation = $true` in the config). It captures the
+  original sampling interval, changes it once, verifies, and restores the
+  original in a `finally` block; a failed restore fails loudly and prints the
+  exact manual restore command. Default runs never modify monitoring settings.
+
+## Live-Confirmed Findings (2026-07-06, Dorado V600R005C27, 10.10.10.24)
+
+The performance/capacity integrity checks above were run live end to end
+(`-IncludePerformance -IncludeExcelPerformance -IncludePerformanceHistory
+-IncludeCapacityHistory`). These findings are confirmed against that array and
+are reflected in the current cmdlet implementations, not aspirational:
+
+- **Performance and capacity CSV exports are long-format**: one row per
+  object/metric/timestamp, with headers `Object Type, Object Instance,
+  Statistical Metric, Value, Time, Object Type ID, Object Instance ID,
+  Statistical Metric ID`.
+- **Confirmed capacity metric names**: `Total capacity(MB)`,
+  `Used capacity(MB)`, `Capacity usage(%)` (System and StoragePool), plus
+  `Mapped LUN capacity(MB)` (StoragePool only).
+- **`task_log` carries no status field.** A report is ready when a new
+  `log_id` entry appears for the task after `pms/report_task/export` is
+  triggered — `Invoke-DMPerformanceReportTask`'s poll-for-new-entry design is
+  confirmed correct on this firmware.
+- **Downloading a report requires both `task_id` and `log_id`**
+  (`Save-DMPerformanceReportFile -LogId ... -TaskId ...`); omitting `task_id`
+  returns a small JSON error body instead of a truncated zip.
+- **Report-task names are capped at 31 characters** on this array (the REST
+  reference documents 32); longer names are silently accepted but no task is
+  created.
+- **NAS/FileSystem realtime metrics** (`Get-DMFileSystemPerformance`):
+  `Ops`, `ReadOps`, `WriteOps`, `ReadBandwidthMBps`, `WriteBandwidthMBps`,
+  `AvgReadOpsResponseTimeUs`, `AvgWriteOpsResponseTimeUs` all returned without
+  error for the `FileSystem` object type. Every value was `0.0` on this run
+  because the lab array had no NAS I/O in flight during validation — indicator
+  applicability is confirmed, plausible nonzero values under load are not.
+- **Monitoring status observed live**: 5 s sampling interval, archive enabled,
+  60 s archive interval.
+- **Live cleanup result**: after the full staged run, `Get-DMPerformanceReportTask`
+  returned zero residual `dm_integrity_*`/history/capacity tasks, and all
+  locally-downloaded zips/xlsx files and their run-scoped temp directories were
+  removed.
+- **Remaining known limitations**: `-AllowMonitoringMutation` was not
+  exercised this run (opt-in, not requested); `task_log` field names on other
+  firmware versions are unverified beyond this array.
+
+Full detail and rationale for every fix are logged in
+`.archived-commands/PerformanceGAP.md`; the raw live artifact (CSV headers,
+monitoring status, NAS metric values, cleanup registry) is at
+`Reports/performance-integrity-artifacts.json`.
+
+Safe invocation example used for this validation:
+
+```powershell
+$storageIP = "10.10.10.24"
+$cred = Import-Clixml -Path "$env:USERPROFILE\.oceanstor\dm-creds.xml"
+
+./Tests/Integration/Invoke-GetterIntegrityValidation.ps1 `
+    -Hostname $storageIP `
+    -Credential $cred `
+    -SkipCertificateCheck `
+    -IncludePerformance -IncludeExcelPerformance `
+    -IncludePerformanceHistory -IncludeCapacityHistory `
+    -ConfigurationPath './Tests/Integration/IntegrityValidationConfig.psd1'
+```
+
+`Performance.Enabled` and `Performance.AllowReportTaskCreation` must be `$true`
+in whatever configuration file is passed — use a local/untracked copy rather
+than editing the committed defaults if this is not a dedicated test array.
+
 ## Output Files
 
 The default live validation report is written to:
@@ -196,6 +332,14 @@ Mutation mode additionally writes:
 
 ```text
 Reports/mutation-trace-last-result.json
+```
+
+Performance runs additionally write live-confirmation artifacts (actual report
+CSV headers, capacity CSV columns, NAS metric applicability, and the cleanup
+registry with per-object outcome) to:
+
+```text
+Reports/performance-integrity-artifacts.json
 ```
 
 Override any location when retaining multiple runs (the target directory is created if missing):
@@ -213,17 +357,36 @@ Override any location when retaining multiple runs (the target directory is crea
 - `Passed`: the command completed and returned the expected result shape.
 - `NoData`: the command completed successfully, but the array had no matching
   objects.
-- `NotRequested`: mutation mode was not requested.
-- `NotConfigured`: the related workflow or required identity was not enabled.
-- `NotExecuted`: the command was unnecessary for the current array state.
-- `Blocked`: a prerequisite test-owned resource could not be created or found.
+- `NotRequested`: the switch gating this check (mutation or performance) was
+  not passed to the runner.
+- `NotConfigured`: the switch was passed, but the related config flag
+  (`AllowMutatingTests`, `Performance.Enabled`, etc.) was not enabled.
+- `SkippedUnsafe`: the harness deliberately never exercises this action
+  regardless of switches (e.g. `Enable-`/`Disable-DMPerformanceMonitoring`).
+- `NotExecuted`: fallback label for a public command with no check
+  representation in a read-only run.
+- `Blocked`: fallback label for a public command with no check
+  representation in a mutating run. This is accurate for commands with a
+  genuine test-owned prerequisite that failed to materialize this run (e.g.
+  Quota/QoS families), but it is currently **also** applied to opt-in
+  commands (performance, history, capacity) that were simply never
+  requested, since the reporting fallback cannot yet tell the two cases
+  apart. If a `Blocked` performance/history/capacity command appears on a
+  run that did not pass the matching `-Include*` switch, treat it as
+  `NotRequested`, not as a real block — see
+  [Performance integrity tests](../docs/testing/PERFORMANCE-INTEGRITY-TESTS.md#why-performance-commands-may-appear-as-notrequested-or-previously-blocked)
+  and `../PERFORMANCE/INTEGRITY-BLOCKED-COMMANDS-PLAN.md` for the full
+  analysis and the proposed reporting fix (not yet implemented). Once that
+  fix lands, `Blocked` will be reserved for genuine prerequisite failures.
 - `Failed`: the command raised an error.
 - `UnexpectedType`: returned objects did not match the expected type.
 
 After mutation validation, confirm:
 
 - `Failed` is `0`.
-- `Blocked` is `0`, unless a prerequisite is intentionally unavailable.
+- `Blocked` is `0` for commands with a genuine test-owned prerequisite in
+  this run; for opt-in performance/history/capacity commands, confirm which
+  switches were actually passed before treating `Blocked` as a problem.
 - `RemainingTestOwnedResources` is empty.
 
 ## Test Layout
