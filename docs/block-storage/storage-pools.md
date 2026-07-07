@@ -41,6 +41,13 @@ sample data is available. Unit tests cover `Get-DMDiskByStoragePool` and
 ## Known Gaps
 
 - No storage pool create/update/delete cmdlets are implemented.
+- **`Set`/`Rename` deferred/blocked (high blast radius — shared infrastructure).**
+  `PUT storagepool/{id}` is documented for Dorado 6.1.6 only; per-generation
+  (V3/V6) behavior is unconfirmed. Any future accepted scope is limited to
+  `NAME` / `DESCRIPTION` / explicitly-documented threshold fields, with
+  `SupportsShouldProcess`, `ConfirmImpact='High'`, mock-only tests, and
+  permanent live-validation `SkippedUnsafe`. Authoritative decision:
+  `Oceanstor_PSModule_TODO.md` (Command Coverage Decisions).
 - Capacity planning examples are intentionally limited to inventory and
   performance reads.
 

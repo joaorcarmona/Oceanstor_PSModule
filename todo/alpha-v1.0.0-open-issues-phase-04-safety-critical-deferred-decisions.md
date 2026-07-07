@@ -48,12 +48,39 @@ implemented. Each carries high blast radius on shared/production storage or mana
 
 ## Implementation tasks (decision-tracking; no code unless unblocked)
 
-1. Certificates: confirm no new 6.1.6+ upload endpoint has appeared; keep Stage B deferred with the
-   three per-cmdlet reasons intact.
-2. Storage pool: confirm the multi-generation constraint still holds; keep the `NAME`/`DESCRIPTION`/
+1. [x] Certificates: confirmed no new 6.1.6+ certificate-upload endpoint has appeared; Stage B stays
+   deferred with the three per-cmdlet reasons intact.
+2. [x] Storage pool: confirmed the multi-generation constraint still holds; `NAME`/`DESCRIPTION`/
    threshold-only scope recorded for any future accepted command.
-3. Alarm clear: keep deferred until a reliable test-alarm generator exists; alarm acknowledge stays
-   rejected.
+3. [x] Alarm clear: kept deferred until a reliable test-alarm generator exists; alarm acknowledge
+   stays rejected.
+
+## Phase 04 review outcome (confirmed 2026-07-07)
+
+Decision-only review complete. No item was unblocked; no code changed; no live validation was run.
+
+- **Certificate Stage B — remains deferred/blocked.** `Import-DMCertificate` stays blocked on vendor
+  documentation: the only documented file-upload interface in REST reference §4.3.5 is CRL import
+  (`POST file/revokeCertificate?CMO_CERTIFICATE_TYPE=2`), **not** identity-certificate upload; the
+  activated file (`PUT certificate/active`) still has no documented upload step. `Export-DMCertificate`
+  stays deferred (path-addressed download, unquantified private-key risk). `Remove-DMCertificate` stays
+  deferred (`DELETE om_msg_op_delete_certificate_info` documented, needs an approved lab-safe
+  procedure). Single source of evidence: `.archived-commands/certificate-endpoint-research.md`; decision
+  mirrored in `docs/system-management/TODO.md` (High Priority #2) and `docs/system-management/certificates.md`.
+- **Storage-pool Set/Rename — remains deferred/blocked (Phase 08 backlog).** `PUT storagepool/{id}`
+  is documented for Dorado 6.1.6 only; per-generation (V3/V6) behavior is unconfirmed and blast radius
+  is high. Any future accepted scope is limited to `NAME` / `DESCRIPTION` / explicitly-documented
+  threshold fields. Single source: `Oceanstor_PSModule_TODO.md` (Command Coverage Decisions);
+  mirrored in `docs/block-storage/TODO.md` and `docs/block-storage/storage-pools.md`.
+- **Alarm acknowledge — remains rejected / not planned.** No acknowledge endpoint documented;
+  `confirmTime` is read-only. **Alarm clear — remains future / blocked** on a safe test-alarm
+  generator (`DELETE alarm/currentalarm` is destructive on real alarms). Single source:
+  `docs/system-management/TODO.md` (Medium Priority — alarm acknowledge/clear decision).
+
+Unblock criteria (unchanged) for any future accepted item: documented endpoint behavior (or approved
+lab-safe procedure / confirmed per-generation behavior), `SupportsShouldProcess`, `ConfirmImpact='High'`,
+mock-only unit tests + `-WhatIf` no-API-call tests, permanent live-validation `SkippedUnsafe`, and an
+explicit docs/release warning that pre-existing objects must never be touched.
 
 ## Files likely to inspect
 
@@ -95,8 +122,11 @@ Select-String -Path '.\OceanStor Dorado 6.1.6 REST Interface Reference.md' -Patt
 
 ## Completion criteria
 
-- Each of the three items has a current, single-sourced decision with an explicit unblock trigger.
-- No item was implemented while still blocked; alarm acknowledge remains rejected.
+- [x] Each of the three items has a current, single-sourced decision with an explicit unblock trigger.
+- [x] No item was implemented while still blocked; alarm acknowledge remains rejected.
+
+**Status: COMPLETE (2026-07-07).** All three decisions reconfirmed current and single-sourced; nothing
+unblocked; no production code changed; no live validation run.
 
 ## Risks / notes
 
