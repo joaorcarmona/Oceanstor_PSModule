@@ -19,7 +19,20 @@ Key parameters:
 - `Add-DMSyslogServer -Address <string> [-Property]`
 - `Remove-DMSyslogServer -Address <string> [-Property]`
 - `Set-DMSyslogNotification -Property <hashtable>` — passes REST fields such
-  as format and severity directly.
+  as format directly.
+- `Set-DMSyslogNotification -Severity <2|3|5|6>` — minimum alarm severity
+  that triggers syslog notification (`CMO_ALARM_SYSLOG_SEVERITY`).
+- `Set-DMSyslogNotification -Port <1-65535>` — syslog receiver port
+  (`SYSLOG_SERVER_PORT`).
+- `Set-DMSyslogNotification -Protocol <UDP|TCP|TCP+SSL>` — syslog transport
+  protocol (`SYSLOG_SERVER_CHANNEL_PROTOCOL`). Named parameters are merged
+  on top of `-Property`, taking precedence on overlapping keys.
+
+There is no "facility" field in the OceanStor Dorado 6.1.6 REST syslog
+resource (`syslog`), so no `-Facility` parameter is offered; `-Protocol`
+covers the closest available transport setting. `Add-DMSyslogServer`
+(`syslog_addip`) has no per-server severity/port/protocol fields — those
+settings are global, set only via `Set-DMSyslogNotification`.
 
 `Get-DMSyslogNotification` returns an `OceanStorSyslogNotification` typed
 object including the `Server Addresses` list.
@@ -40,6 +53,10 @@ $storage = Connect-deviceManager -Hostname $storageIP -Credential $cred -PassThr
 
 # Audit current syslog forwarding
 Get-DMSyslogNotification -WebSession $storage
+
+# Set minimum severity, receiver port, and transport protocol
+Set-DMSyslogNotification -WebSession $storage -Severity 5 -Port 514 -Protocol TCP -WhatIf
+Set-DMSyslogNotification -WebSession $storage -Severity 5 -Port 514 -Protocol TCP
 
 # Add a new collector (preview first)
 Add-DMSyslogServer -WebSession $storage -Address '192.0.2.20' -WhatIf
@@ -75,8 +92,8 @@ Remove-DMSyslogServer -WebSession $storage -Address '192.0.2.20'
 - No test-owned integration workflow for add/remove of a syslog address
   (`IntegrityTestGap`, second-priority after SNMP because removal is
   by-address rather than by-ID).
-- Severity/facility/port shaping is exposed only through the generic
-  `-Property` hashtable, not named parameters (`ImplementationImprovement`).
+- No true "facility" field exists in the REST syslog resource, so it cannot
+  be exposed as a named parameter (`UnsupportedFeatureGap`).
 
 ## Related Files
 

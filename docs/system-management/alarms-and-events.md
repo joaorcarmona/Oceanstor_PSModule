@@ -14,7 +14,7 @@ Alarm notification *transport* (SNMP traps, syslog) is documented in
 
 | Cmdlet | Action | REST resource | Mutating | ShouldProcess |
 |---|---|---|---|---:|
-| `Get-DMAlarm` | Query alarms filtered by status | `alarm/historyalarm?filter=alarmStatus::<status>` | No | — |
+| `Get-DMAlarm` | Query alarms filtered by status and/or time range | `alarm/historyalarm?filter=alarmStatus::<status>[ and startTime:[start,end]]` | No | — |
 | `Get-DMSystem` | Read overall system information | `system/` | No | — |
 | `Get-DMEquipmentStatus` | Read equipment/server status (e.g. security mode) | `server/status` | No | — |
 
@@ -22,6 +22,12 @@ Key parameters:
 
 - `Get-DMAlarm -AlarmStatus <status>` — e.g. `Unrecovered`; filters
   server-side on alarm status.
+- `Get-DMAlarm -StartTime <datetime> -EndTime <datetime>` — filters
+  server-side on a `startTime` range, converted to Unix epoch seconds.
+  Either bound may be omitted (defaults to epoch 0 / now respectively).
+- `Get-DMAlarm -Last <timespan>` — convenience filter equivalent to
+  `-StartTime (Get-Date) - <timespan> -EndTime (Get-Date)`. Cannot be
+  combined with `-StartTime`/`-EndTime`.
 
 `Get-DMAlarm` returns `OceanStorAlarm` objects; `Get-DMSystem` returns
 `OceanStorSystem`; `Get-DMEquipmentStatus` returns a status object with
@@ -49,6 +55,12 @@ Get-DMAlarm -WebSession $storage -AlarmStatus Unrecovered
 # Alarm evidence export (local file only)
 Get-DMAlarm -WebSession $storage -AlarmStatus Unrecovered |
     Export-Csv -Path .\unrecovered-alarms.csv -NoTypeInformation
+
+# Alarms generated in the last 24 hours
+Get-DMAlarm -WebSession $storage -Last (New-TimeSpan -Hours 24)
+
+# Alarms generated in an explicit date range
+Get-DMAlarm -WebSession $storage -StartTime (Get-Date).AddDays(-7) -EndTime (Get-Date)
 ```
 
 ## Safety Notes
@@ -74,8 +86,6 @@ Get-DMAlarm -WebSession $storage -AlarmStatus Unrecovered |
 - No alarm acknowledge/clear cmdlets (`UnsupportedFeatureGap`).
 - No event-log query cmdlet (`Get-DMEvent` does not exist)
   (`UnsupportedFeatureGap`).
-- No date/range filtering on `Get-DMAlarm`; only status filtering
-  (`ImplementationImprovement`).
 - `Get-DMEquipmentStatus` missing from read-only integrity validation
   (`IntegrityTestGap`).
 

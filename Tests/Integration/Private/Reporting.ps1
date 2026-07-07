@@ -117,6 +117,69 @@ function Write-ValidationMarkdownReport {
     $lines | Set-Content -LiteralPath $Path
 }
 
+# Public commands that belong to an opt-in validation domain. Coverage-fallback rows for
+# these commands must read NotRequested (not Blocked) when their runner switch was not
+# passed, even during a mutating run — RunMutatingTests alone never requests these domains.
+# Mode 'All' requires every listed switch to be set (used for the AllowMonitoringMutation
+# sub-gate, which also requires IncludePerformance); Mode 'Any' requires at least one.
+$script:OptInCommandDomains = @(
+    [pscustomobject]@{
+        Mode         = 'Any'
+        GateSwitches = @('IncludePerformance')
+        GateLabel    = '-IncludePerformance'
+        Commands     = @(
+            'Get-DMPerformance', 'Get-DMSystemPerformance', 'Get-DMStoragePoolPerformance',
+            'Get-DMPortPerformance', 'Get-DMLunPerformance', 'Get-DMFileSystemPerformance',
+            'Get-DMHostPerformance', 'Get-DMDiskPerformance', 'Get-DMControllerPerformance',
+            'Get-DMPerformanceMonitoring', 'Set-DMPerformanceMonitoring'
+        )
+    }
+    [pscustomobject]@{
+        Mode         = 'All'
+        GateSwitches = @('IncludePerformance', 'AllowMonitoringMutation')
+        GateLabel    = '-IncludePerformance and -AllowMonitoringMutation'
+        Commands     = @('Enable-DMPerformanceMonitoring', 'Disable-DMPerformanceMonitoring')
+    }
+    [pscustomobject]@{
+        Mode         = 'Any'
+        GateSwitches = @('IncludeExcelPerformance')
+        GateLabel    = '-IncludeExcelPerformance'
+        Commands     = @('Export-DMStorageToExcel')
+    }
+    [pscustomobject]@{
+        Mode         = 'Any'
+        GateSwitches = @('IncludePerformanceHistory')
+        GateLabel    = '-IncludePerformanceHistory'
+        Commands     = @(
+            'New-DMPerformanceReportTask', 'Get-DMPerformanceReportTask', 'Invoke-DMPerformanceReportTask',
+            'Save-DMPerformanceReportFile', 'Remove-DMPerformanceReportTask', 'Get-DMPerformanceHistory'
+        )
+    }
+    [pscustomobject]@{
+        Mode         = 'Any'
+        GateSwitches = @('IncludeCapacityHistory', 'IncludePerformance')
+        GateLabel    = '-IncludeCapacityHistory (or -IncludePerformance)'
+        Commands     = @('Get-DMCapacityHistory')
+    }
+)
+
+function Test-OptInDomainRequested {
+    <#
+    .SYNOPSIS
+        Evaluates whether an opt-in validation domain's runner switch(es) were passed.
+    #>
+    param([Parameter(Mandatory)][pscustomobject]$Domain)
+
+    $switchValues = @(
+        $Domain.GateSwitches |
+            ForEach-Object { [bool](Get-Variable -Name $_ -ValueOnly -ErrorAction SilentlyContinue) }
+    )
+    if ($Domain.Mode -eq 'All') {
+        return -not ($switchValues -contains $false)
+    }
+    return $switchValues -contains $true
+}
+
 function Write-ValidationReport {
     $representedCommands = @(
         $checks.Name |
@@ -128,7 +191,21 @@ function Write-ValidationReport {
             Select-Object -ExpandProperty BaseName |
             Where-Object { $representedCommands -notcontains $_ -and $excludedCommands -notcontains $_ }
     )
-    if ($unrepresentedCommands.Count -gt 0) {
+
+    $commandToDomain = @{}
+    foreach ($domain in $OptInCommandDomains) {
+        foreach ($commandName in $domain.Commands) {
+            $commandToDomain[$commandName] = $domain
+        }
+    }
+
+    foreach ($commandName in $unrepresentedCommands) {
+        $domain = $commandToDomain[$commandName]
+        if ($domain -and -not (Test-OptInDomainRequested -Domain $domain)) {
+            Add-SkippedResult -Name $commandName -Status 'NotRequested' `
+                -Reason "This command belongs to an opt-in validation domain; opt-in switch $($domain.GateLabel) was not passed for this run."
+            continue
+        }
         $unrepresentedStatus = if ($RunMutatingTests -and $configuration.AllowMutatingTests) { 'Blocked' } else { 'NotExecuted' }
         $unrepresentedReason = if ($unrepresentedStatus -eq 'Blocked') {
             'This command could not run because its test-owned prerequisite resource was not created successfully during this run.'
@@ -136,7 +213,7 @@ function Write-ValidationReport {
         else {
             'This command did not have the prerequisite live data or an enabled safe lifecycle during this run.'
         }
-        Add-SkippedResult -Name $unrepresentedCommands -Status $unrepresentedStatus -Reason $unrepresentedReason
+        Add-SkippedResult -Name $commandName -Status $unrepresentedStatus -Reason $unrepresentedReason
     }
 
     $remainingOwned = @(

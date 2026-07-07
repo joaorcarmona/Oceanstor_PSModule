@@ -164,6 +164,48 @@
         NvmeNqn = 'nqn.2014-08.org.nvmexpress:uuid:123e4567-e89b-12d3-a456-426614174000'
     }
 
+    SystemManagement = @{
+        # Master gate for the system-management mutation workflow. Disabled by
+        # default: -RunMutatingTests alone never runs any of these sections.
+        # Every sub-workflow creates only test-owned objects, captures their
+        # identity immediately, and removes them by captured ID (or exact
+        # recorded address) during the same run. Pre-existing SNMP, syslog,
+        # user, and role configuration is never modified, matched by name
+        # pattern, or cleaned.
+        Enabled = $false
+
+        # SNMP trap server create/update/test/remove using the address below.
+        # Supply an address you own that is NOT already configured as a trap
+        # target on the array (default: TEST-NET-1 documentation address).
+        # Test-DMSnmpTrapServer sends a single test trap to this address only.
+        AllowSnmpTrapServer = $false
+        SnmpTrapServerAddress = '192.0.2.200'
+        SnmpTrapServerPort = 16200
+
+        # SNMP USM user create/update/remove with a run-unique name and
+        # generated throwaway passwords (never persisted; the request trace
+        # redacts password fields). Protocol codes per the REST reference:
+        # auth '3' = HMAC-SHA, privacy '4' = AES. If the array security policy
+        # rejects the generated user, the run reports it and continues.
+        AllowSnmpUsmUser = $false
+        SnmpUsmAuthProtocol = '3'
+        SnmpUsmPrivacyProtocol = '4'
+
+        # Syslog server add/remove by the exact address below. Supply an
+        # address you own that is NOT already a configured syslog target.
+        AllowSyslogServer = $false
+        SyslogServerAddress = '192.0.2.201'
+
+        # SECURITY-SENSITIVE, keep disabled unless explicitly reviewed for the
+        # run: creates one test-owned role and one test-owned local user with a
+        # generated throwaway password, updates both, then removes the user
+        # before the role. Existing users/roles are never touched.
+        # LocalRoleOwnerGroup: '1' = system group, '2' = vStore group.
+        AllowLocalUserLifecycle = $false
+        LocalRoleOwnerGroup = '1'
+        LocalRoleSource = '1'
+    }
+
     Performance = @{
         # Master acknowledgement for the opt-in performance/capacity integrity
         # checks (Phases 1-5 of the performance implementation). The runner

@@ -417,6 +417,25 @@ function Test-MutatingConfiguration {
             throw 'Replication.RemoteLunId or Replication.RemoteLunName is required when Replication.Enabled is true.'
         }
     }
+    if ($configuration.SystemManagement -and $configuration.SystemManagement.Enabled) {
+        if ($configuration.SystemManagement.AllowSnmpTrapServer) {
+            if (-not $configuration.SystemManagement.SnmpTrapServerAddress) {
+                throw 'SystemManagement.SnmpTrapServerAddress is required when SystemManagement.AllowSnmpTrapServer is true; supply an unused address you own.'
+            }
+            if (-not $configuration.SystemManagement.SnmpTrapServerPort) {
+                throw 'SystemManagement.SnmpTrapServerPort is required when SystemManagement.AllowSnmpTrapServer is true.'
+            }
+        }
+        if ($configuration.SystemManagement.AllowSnmpUsmUser -and (-not $configuration.SystemManagement.SnmpUsmAuthProtocol -or -not $configuration.SystemManagement.SnmpUsmPrivacyProtocol)) {
+            throw 'SystemManagement.SnmpUsmAuthProtocol and SystemManagement.SnmpUsmPrivacyProtocol are required when SystemManagement.AllowSnmpUsmUser is true.'
+        }
+        if ($configuration.SystemManagement.AllowSyslogServer -and -not $configuration.SystemManagement.SyslogServerAddress) {
+            throw 'SystemManagement.SyslogServerAddress is required when SystemManagement.AllowSyslogServer is true; supply an unused address you own.'
+        }
+        if ($configuration.SystemManagement.AllowLocalUserLifecycle -and (-not $configuration.SystemManagement.LocalRoleOwnerGroup -or -not $configuration.SystemManagement.LocalRoleSource)) {
+            throw 'SystemManagement.LocalRoleOwnerGroup and SystemManagement.LocalRoleSource are required when SystemManagement.AllowLocalUserLifecycle is true.'
+        }
+    }
     if ($configuration.HyperMetro.Enabled) {
         if (-not $configuration.Lun.Enabled) {
             throw 'Lun.Enabled must be true when HyperMetro.Enabled is true so the workflow uses a test-owned local LUN.'

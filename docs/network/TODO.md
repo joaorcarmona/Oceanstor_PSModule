@@ -25,6 +25,12 @@
 
 ## High Priority
 
+> Deduplication note: all High and Medium Priority items below are scoped for
+> implementation in
+> `todo/alpha-v1.0.0-post-merge-phase-06-network-hardening-and-workflows.md`,
+> which re-verified each as still open against current code (2026-07-07).
+> Status: `open` for all bullets in this section.
+
 - Add `-WhatIf` regression tests for every network mutator asserting that no
   API call is made (currently none exist for this domain).
 - Add a failover-group member getter (`failovergroup/associate` GET) so
@@ -38,7 +44,8 @@
 - Server-side filters for `Get-DMLif` and `Get-DMvLan` (`-Name`/`-Id`), which
   currently return the full collection.
 - Allow `Set-DMLif` to address a LIF by `-Id` alone (today `-Name` is
-  mandatory).
+  mandatory). Verified still open: `Set-DMLif` still declares `-Name` as
+  `Mandatory = $true` with no `-Id`-only path.
 - Pipeline tests: `Get-DMPortBond | Remove-DMPortBond`,
   `Get-DMFailoverGroup | Set-DMFailoverGroup` property binding.
 - Expose bond member add/remove after creation if the REST API supports it.
@@ -67,6 +74,10 @@
   once a member getter exists.
 
 ## Future Feature Branches
+
+> Status: `open`, explicitly out of scope for
+> `todo/alpha-v1.0.0-post-merge-phase-06-network-hardening-and-workflows.md`
+> (no active phase targets these yet).
 
 - Routes and gateways (query/create/delete static routes) — not implemented.
 - iSCSI portal / CHAP configuration cmdlets.

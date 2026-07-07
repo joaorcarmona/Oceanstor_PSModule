@@ -17,6 +17,7 @@ BeforeDiscovery {
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Test-DMNetworkAddress.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Test-IPv4Address.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\ConvertFrom-DMSensitiveValue.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\New-DMRequestBody.ps1"
 
         Get-ChildItem -LiteralPath "$testRoot\..\..\..\POSH-Oceanstor\Public" -Filter '*-DM*.ps1' |
             Where-Object Name -match '^(Add|Disable|Lock|New|Remove|Reset|Set|Test|Unlock)-DM' |
@@ -171,6 +172,49 @@ Describe 'System configuration mutation functions' {
         $script:resource | Should -Be 'syslog_removeip'
     }
 
+    It 'sets syslog severity, port, and protocol using named parameters' {
+        $null = Set-DMSyslogNotification -WebSession $script:session -Severity 5 -Port 514 -Protocol 'TCP' -Confirm:$false
+
+        $script:method | Should -Be 'PUT'
+        $script:resource | Should -Be 'syslog'
+        $script:body.CMO_ALARM_SYSLOG_SEVERITY | Should -Be 5
+        $script:body.SYSLOG_SERVER_PORT | Should -Be 514
+        $script:body.SYSLOG_SERVER_CHANNEL_PROTOCOL | Should -Be 2
+    }
+
+    It 'only includes explicitly bound syslog named parameters in the request body' {
+        $null = Set-DMSyslogNotification -WebSession $script:session -Port 514 -Confirm:$false
+
+        $script:body.Keys | Should -Not -Contain 'CMO_ALARM_SYSLOG_SEVERITY'
+        $script:body.Keys | Should -Not -Contain 'SYSLOG_SERVER_CHANNEL_PROTOCOL'
+        $script:body.SYSLOG_SERVER_PORT | Should -Be 514
+    }
+
+    It 'merges named syslog parameters over -Property values' {
+        $null = Set-DMSyslogNotification -WebSession $script:session -Property @{ syslogFormat = '1' } -Severity 2 -Confirm:$false
+
+        $script:body.syslogFormat | Should -Be '1'
+        $script:body.CMO_ALARM_SYSLOG_SEVERITY | Should -Be 2
+    }
+
+    It 'rejects an out-of-range syslog severity value' {
+        { Set-DMSyslogNotification -WebSession $script:session -Severity 4 -Confirm:$false } | Should -Throw
+    }
+
+    It 'rejects an out-of-range syslog port value' {
+        { Set-DMSyslogNotification -WebSession $script:session -Port 70000 -Confirm:$false } | Should -Throw
+    }
+
+    It 'rejects an unsupported syslog protocol value' {
+        { Set-DMSyslogNotification -WebSession $script:session -Protocol 'SSL' -Confirm:$false } | Should -Throw
+    }
+
+    It 'does not call the syslog API when WhatIf is used' {
+        $null = Set-DMSyslogNotification -WebSession $script:session -Severity 5 -WhatIf
+
+        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
+    }
+
     It 'sets equipment time zone' {
         $result = Set-DMTimeZone -WebSession $script:session -TimeZoneName 'Asia/Beijing' -Confirm:$false
 
@@ -279,6 +323,50 @@ Describe 'System configuration mutation functions' {
         $null = Set-DMNtpServer -WebSession $script:session -Address '10.0.0.1' -WhatIf
 
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
+    }
+
+    It 'does not call the SNMP trap server APIs when WhatIf is used' {
+        $null = New-DMSnmpTrapServer -WebSession $script:session -Address '192.0.2.10' -Port 162 -WhatIf
+        $null = Set-DMSnmpTrapServer -WebSession $script:session -Id 'trap/01' -Port 1162 -WhatIf
+        $null = Remove-DMSnmpTrapServer -WebSession $script:session -Id 'trap/01' -WhatIf
+
+        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
+        $script:body | Should -BeNullOrEmpty
+    }
+
+    It 'does not call the SNMP USM user APIs when WhatIf is used' {
+        $null = New-DMSnmpUsmUser -WebSession $script:session -Name 'usm01' -AuthProtocol '3' -AuthPassword 'secret' -UserLevel 0 -WhatIf
+        $null = Set-DMSnmpUsmUser -WebSession $script:session -Name 'usm01' -UserLevel 1 -WhatIf
+        $null = Remove-DMSnmpUsmUser -WebSession $script:session -Id 'usm01' -WhatIf
+
+        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
+        $script:body | Should -BeNullOrEmpty
+    }
+
+    It 'does not call the syslog server APIs when WhatIf is used' {
+        $null = Add-DMSyslogServer -WebSession $script:session -Address '192.0.2.20' -WhatIf
+        $null = Remove-DMSyslogServer -WebSession $script:session -Address '192.0.2.20' -WhatIf
+
+        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
+        $script:body | Should -BeNullOrEmpty
+    }
+
+    It 'does not call the local user APIs when WhatIf is used' {
+        $null = New-DMLocalUser -WebSession $script:session -Name 'poshtest-user' -Password 'secret' -RoleId '1' -WhatIf
+        $null = Set-DMLocalUser -WebSession $script:session -Id 'poshtest-user' -Description 'updated' -WhatIf
+        $null = Remove-DMLocalUser -WebSession $script:session -Id 'poshtest-user' -WhatIf
+
+        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
+        $script:body | Should -BeNullOrEmpty
+    }
+
+    It 'does not call the role APIs when WhatIf is used' {
+        $null = New-DMRole -WebSession $script:session -Name 'poshtest-role' -RoleOwnerGroup '1' -RoleSource '1' -WhatIf
+        $null = Set-DMRole -WebSession $script:session -Id 'role/01' -Description 'updated' -WhatIf
+        $null = Remove-DMRole -WebSession $script:session -Id 'role/01' -WhatIf
+
+        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
+        $script:body | Should -BeNullOrEmpty
     }
 }
 }

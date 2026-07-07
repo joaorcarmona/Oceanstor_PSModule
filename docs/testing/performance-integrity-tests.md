@@ -297,9 +297,9 @@ a safety mechanism, REST-side rejection, or session failure:
   `Tests/Integration/Private/PerformanceValidation.ps1:17-22`).
 - The performance commands were never attempted — the run log contained zero
   performance REST calls.
-- The `Blocked` status came from the coverage/reporting fallback in
-  `Write-ValidationReport` (`Tests/Integration/Private/Reporting.ps1:126-140`):
-  every public cmdlet not represented by any executed check is stamped
+- At the time, the `Blocked` status came from the coverage/reporting fallback
+  in `Write-ValidationReport` (`Tests/Integration/Private/Reporting.ps1`):
+  every public cmdlet not represented by any executed check was stamped
   `Blocked` on a mutating run, with the message "this command could not run
   because its test-owned prerequisite resource was not created successfully
   during this run" — a message that is only actually true for genuinely
@@ -313,25 +313,25 @@ every realtime check passed, both trace audits passed (`POST
 performance_data` correctly accepted as a query-style read-only POST), and no
 report task was created.
 
-**If a report shows performance cmdlets as `Blocked` but the run was executed
-without `-IncludePerformance`, `-IncludePerformanceHistory`,
-`-IncludeCapacityHistory`, or `-IncludeExcelPerformance`, the performance
-cmdlets were not blocked by the array or REST API. They were not requested by
-the test invocation.**
+**This has since been fixed.** `Write-ValidationReport` now maps every
+performance, performance-history, capacity-history, Excel-performance, and
+monitoring-mutation cmdlet to the runner switch(es) that gate it
+(`-IncludePerformance`, `-IncludePerformanceHistory`,
+`-IncludeCapacityHistory`, `-IncludeExcelPerformance`,
+`-AllowMonitoringMutation`). When a cmdlet's domain switch was not passed, the
+coverage fallback reports `NotRequested` with a message naming the missing
+switch — never `Blocked`. `-RunMutatingTests` alone does not request any of
+these domains. `Blocked` from the coverage fallback now means the domain
+*was* requested but a real test-owned prerequisite failed or was unavailable.
 
 To get an accurate status for performance commands:
 
 1. Check which `-Include*` performance switches were actually passed to the
-   runner. None passed → performance is entirely `NotRequested`.
+   runner. None passed → performance cmdlets are reported `NotRequested`
+   directly, no manual cross-checking needed.
 2. If a switch was passed but `Performance.Enabled = $false` in config, the
    single `Performance validation | NotConfigured` check is the accurate
    status.
 3. If both the switch and `Performance.Enabled = $true` are set, look at the
    individual `PerformanceRead` checks (e.g. `Get-DMSystemPerformance`,
    `Performance:TraceAudit:Realtime`) for the real result.
-
-A reporting-side fix to make this distinction visible per-cmdlet (rather than
-relying on this explanation) is proposed but not yet implemented.
-Until that lands, treat `Blocked` entries for performance/history/capacity
-cmdlets as `NotRequested` whenever the corresponding switch was absent from
-the invocation.

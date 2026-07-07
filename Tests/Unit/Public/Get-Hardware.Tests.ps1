@@ -71,6 +71,37 @@ Describe 'Public getter functions' {
             $script:resource | Should -BeLike 'alarm/historyalarm?filter=alarmStatus::2*'
         }
 
+        It 'filters alarms by an explicit start and end time as a bracketed range' {
+            Mock Invoke-DeviceManager {
+                $script:resource = $Resource
+                [pscustomobject]@{ data = @() }
+            }
+
+            $start = [datetime]::new(2026, 1, 1, 0, 0, 0, [DateTimeKind]::Utc)
+            $end = [datetime]::new(2026, 1, 2, 0, 0, 0, [DateTimeKind]::Utc)
+            $startEpoch = [System.DateTimeOffset]::new($start).ToUnixTimeSeconds()
+            $endEpoch = [System.DateTimeOffset]::new($end).ToUnixTimeSeconds()
+
+            $null = Get-DMAlarm -WebSession $script:session -StartTime $start -EndTime $end
+
+            $script:resource | Should -Match ([regex]::Escape("alarm/historyalarm?filter=alarmStatus::1 and startTime:[$startEpoch,$endEpoch]"))
+        }
+
+        It 'filters alarms using a Last timespan relative to now' {
+            Mock Invoke-DeviceManager {
+                $script:resource = $Resource
+                [pscustomobject]@{ data = @() }
+            }
+
+            $null = Get-DMAlarm -WebSession $script:session -Last (New-TimeSpan -Hours 24)
+
+            $script:resource | Should -Match 'alarm/historyalarm\?filter=alarmStatus::1 and startTime:\[\d+,\d+\]'
+        }
+
+        It 'throws when -Last is combined with -StartTime or -EndTime' {
+            { Get-DMAlarm -WebSession $script:session -Last (New-TimeSpan -Hours 1) -StartTime (Get-Date) } | Should -Throw
+        }
+
         It 'gets battery backup units' {
             Mock Invoke-DeviceManager {
                 [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'bbu-01'; ELABEL = $script:eLabel; HEALTHSTATUS = 1; RUNNINGSTATUS = 1; TYPE = 210; VOLTAGE = 120; REMAINLIFEDAYS = 30 }) }

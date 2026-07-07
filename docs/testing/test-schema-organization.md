@@ -36,7 +36,8 @@ Every check the runner performs resolves to exactly one status:
 | `NotRequested` | The switch that gates this stage was not passed to the runner | `Add-SkippedResult` (per-stage dispatch checks) |
 | `NotConfigured` | The switch was passed, but the corresponding `Performance.*` or `AllowMutatingTests` config flag is not enabled | `Add-SkippedResult` |
 | `SkippedUnsafe` | The harness deliberately never exercises this action regardless of switches passed (e.g. `Enable-`/`Disable-DMPerformanceMonitoring`) | `Add-SkippedResult -Status 'SkippedUnsafe'` (default) |
-| `Blocked` | Fallback label for a public command with no check representation in this run, on a mutating run | `Write-ValidationReport` coverage fallback |
+| `Blocked` | Fallback label for a public command with no check representation in this run, on a mutating run — only for commands *outside* an opt-in domain, or whose domain switch *was* passed but a real prerequisite failed | `Write-ValidationReport` coverage fallback |
+| `NotRequested` (coverage fallback) | Fallback label for a public command with no check representation, whose opt-in domain switch (performance, performance history, capacity history, Excel performance, monitoring mutation) was not passed — reported regardless of `-RunMutatingTests` | `Write-ValidationReport` coverage fallback (`Test-OptInDomainRequested`) |
 | `NotExecuted` | Fallback label for a public command with no check representation in this run, on a read-only run | `Write-ValidationReport` coverage fallback |
 | `Failed` | The command raised an unexpected error | `Add-ValidationResult` |
 | `UnexpectedType` | The command returned, but the object type(s) did not match what was expected | `Add-ValidationResult` |

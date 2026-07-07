@@ -434,17 +434,16 @@ Override any location when retaining multiple runs (the target directory is crea
 - `NotExecuted`: fallback label for a public command with no check
   representation in a read-only run.
 - `Blocked`: fallback label for a public command with no check
-  representation in a mutating run. This is accurate for commands with a
-  genuine test-owned prerequisite that failed to materialize this run (e.g.
-  Quota/QoS families), but it is currently **also** applied to opt-in
-  commands (performance, history, capacity) that were simply never
-  requested, since the reporting fallback cannot yet tell the two cases
-  apart. If a `Blocked` performance/history/capacity command appears on a
-  run that did not pass the matching `-Include*` switch, treat it as
-  `NotRequested`, not as a real block — see
+  representation in a mutating run. The reporting fallback routes commands
+  by opt-in domain first: performance, performance-history, capacity-history,
+  Excel-performance, and monitoring-mutation commands are labeled
+  `NotRequested` (not `Blocked`) when their `-Include*`/`-AllowMonitoringMutation`
+  switch was not passed — `-RunMutatingTests` alone never requests those
+  domains. `Blocked` is reserved for commands whose domain *was* requested
+  (or that are outside any opt-in domain, e.g. Quota/QoS families) but a
+  genuine test-owned prerequisite failed to materialize this run. See
   [Performance integrity tests](../docs/testing/performance-integrity-tests.md#why-performance-commands-may-appear-as-notrequested-or-previously-blocked)
-  for the full analysis and the proposed reporting fix (not yet implemented). Once that
-  fix lands, `Blocked` will be reserved for genuine prerequisite failures.
+  for the full domain-to-switch mapping.
 - `Failed`: the command raised an error.
 - `UnexpectedType`: returned objects did not match the expected type.
 
@@ -452,8 +451,7 @@ After mutation validation, confirm:
 
 - `Failed` is `0`.
 - `Blocked` is `0` for commands with a genuine test-owned prerequisite in
-  this run; for opt-in performance/history/capacity commands, confirm which
-  switches were actually passed before treating `Blocked` as a problem.
+  this run.
 - `RemainingTestOwnedResources` is empty.
 
 ### System-management commands in mutating runs

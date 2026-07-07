@@ -11,6 +11,7 @@
 . (Join-Path $PSScriptRoot 'Workflows\Replication.ps1')
 . (Join-Path $PSScriptRoot 'Workflows\HyperMetro.ps1')
 . (Join-Path $PSScriptRoot 'Workflows\Initiators.ps1')
+. (Join-Path $PSScriptRoot 'Workflows\SystemManagement.ps1')
 . (Join-Path $PSScriptRoot 'Workflows\ReadBack.ps1')
 
 function Invoke-MutationValidation {
@@ -36,22 +37,23 @@ function Invoke-MutationValidation {
         'Get-DMfreeDisk'
     )
 
-    # Global, authentication, and alerting system-management mutators. No safe
-    # test-owned mutation workflow exists for these yet, so every run skips them
-    # deliberately; without this explicit result the coverage fallback in
-    # Write-ValidationReport would mislabel them as Blocked during mutating runs.
+    # Global and authentication system-management mutators with no test-owned
+    # variant (singleton settings, or actions against pre-existing users). Every
+    # run skips them deliberately; without this explicit result the coverage
+    # fallback in Write-ValidationReport would mislabel them as Blocked during
+    # mutating runs. Discrete, test-ownable system-management objects (SNMP trap
+    # servers, SNMP USM users, syslog servers, local roles/users) are covered by
+    # the config-gated SystemManagement workflow instead.
     $script:systemManagementMutators = @(
         'Set-DMNtpServer', 'Test-DMNtpServer',
-        'New-DMSnmpTrapServer', 'Set-DMSnmpTrapServer', 'Remove-DMSnmpTrapServer', 'Test-DMSnmpTrapServer',
         'Set-DMSnmpConfig', 'Set-DMSnmpSecurityPolicy', 'Set-DMSnmpCommunity',
-        'New-DMSnmpUsmUser', 'Set-DMSnmpUsmUser', 'Remove-DMSnmpUsmUser',
-        'Set-DMSyslogNotification', 'Add-DMSyslogServer', 'Remove-DMSyslogServer',
-        'New-DMLocalUser', 'Set-DMLocalUser', 'Remove-DMLocalUser',
+        'Set-DMSyslogNotification',
         'Lock-DMLocalUser', 'Unlock-DMLocalUser', 'Disable-DMLocalUserSession', 'Reset-DMLocalUserPassword',
-        'New-DMRole', 'Set-DMRole', 'Remove-DMRole',
         'Set-DMTimeZone', 'Set-DMutcTime'
     )
     Add-SkippedResult -Name $script:systemManagementMutators -Status 'SkippedUnsafe' -Reason 'Global system-management mutations (users, roles, SNMP, syslog, NTP, time) are not exercised by the integrity harness unless a dedicated safe workflow exists for them.'
+
+    $script:systemManagementWorkflowCommands = @($script:SystemManagementWorkflowCommandGates.Values | ForEach-Object { $_ })
 
     if (-not $RunMutatingTests) {
         Add-SkippedResult -Name @(
@@ -110,6 +112,7 @@ function Invoke-MutationValidation {
             'Switch-DMHyperMetroConsistencyGroup', 'Remove-DMHyperMetroConsistencyGroup',
             'Disconnect-deviceManager'
         ) -Status 'NotRequested' -Reason 'Call the runner with -RunMutatingTests and enable the desired section in IntegrityValidationConfig.psd1.'
+        Add-SkippedResult -Name $script:systemManagementWorkflowCommands -Status 'NotRequested' -Reason 'Call the runner with -RunMutatingTests and enable the SystemManagement gates in IntegrityValidationConfig.psd1 to run the test-owned system-management lifecycles.'
     }
     elseif (-not $configuration.AllowMutatingTests) {
         Add-SkippedResult -Name @('test-owned mutation workflows') -Status 'NotConfigured' -Reason 'Set AllowMutatingTests = $true in IntegrityValidationConfig.psd1 to acknowledge creation and cleanup of test resources.'
@@ -172,6 +175,7 @@ function Invoke-MutationValidation {
         . $script:ReplicationMutationWorkflow
         . $script:HyperMetroMutationWorkflow
         . $script:InitiatorsMutationWorkflow
+        . $script:SystemManagementMutationWorkflow
         . $script:MutationReadBackWorkflow
 
         Invoke-RegisteredCleanup

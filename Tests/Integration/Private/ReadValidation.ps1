@@ -51,7 +51,7 @@ function Invoke-ReadValidation {
     Add-ValidationResult -Name 'Get-DMdisk:Free' -ExpectedType 'OceanStorDisks' -Action {
         Get-DMdisk -WebSession $session -Free
     } | Out-Null
-    Add-ValidationResult -Name 'Get-DMdnsServer' -ExpectedType 'Hashtable' -Action {
+    Add-ValidationResult -Name 'Get-DMdnsServer' -ExpectedType 'OceanStorDnsServer' -Action {
         Get-DMdnsServer -WebSession $session
     } | Out-Null
     Add-ValidationResult -Name 'Get-DMEquipmentStatus' -ExpectedType 'PSCustomObject' -Action {

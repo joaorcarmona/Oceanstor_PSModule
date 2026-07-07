@@ -15,8 +15,11 @@ Key parameters:
 
 - `Set-DMdnsServer -DNSserver <string[]>` — replaces the DNS server list.
 
-`Get-DMdnsServer` returns a hashtable of the DNS configuration (older-style
-output; most newer getters in this domain return typed classes).
+`Get-DMdnsServer` returns `OceanStorDnsServer` objects, one per configured
+address, with `Address` and `Position` (1-based) properties. **Breaking
+change:** it previously returned a `System.Collections.Hashtable` keyed by
+`"DNS Server N"`; scripts indexing into that hashtable must switch to the
+typed properties instead (see `RELEASE_NOTES.md` at release time).
 
 ## Common Workflows
 
@@ -51,20 +54,18 @@ Set-DMdnsServer -WebSession $storage -DNSserver '192.0.2.53', '192.0.2.54' -What
 ## Integrity Test Coverage
 
 - Read-only: `Get-DMdnsServer` is validated by `ReadValidation.ps1`
-  (expected type `Hashtable`).
+  (expected type `OceanStorDnsServer`).
 - Mutating: `Set-DMdnsServer` is excluded from live validation by design —
   correct and intentional.
 - Unit tests: `Tests/Unit/Public/Get-SystemConfiguration.Tests.ps1` covers
-  `Get-DMdnsServer` (REST routing, hashtable output keyed by DNS server
-  position, JSON-encoded and array address payloads) and
+  `Get-DMdnsServer` (REST routing, typed `OceanStorDnsServer` output with
+  1-based position, JSON-encoded and array address payloads) and
   `Set-SystemConfiguration.Tests.ps1` covers `Set-DMdnsServer` (PUT body
   shape, IPv4 validation rejection, `-WhatIf` no-API-call guard).
 
 ## Known Gaps
 
 - No DNS domain / search-suffix management (only the server list).
-- Output is an untyped hashtable rather than an `OceanStor*` class
-  (`ImplementationImprovement` — consistency with the rest of the domain).
 
 ## Related Files
 

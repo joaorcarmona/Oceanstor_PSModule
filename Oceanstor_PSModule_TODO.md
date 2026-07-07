@@ -14,7 +14,9 @@ Detailed audit findings live in `ANALYSIS.md`. Release-facing summaries live in 
 - [ ] Decide whether storage pools need supported Set/Rename commands and object methods; confirm the Huawei API behavior for each supported device generation first.
 - [ ] Decide which NAS children need modification commands: dTrees, CIFS shares, NFS shares, and NFS clients currently support only their existing create/read/delete surface.
 - [ ] Decide whether initiator objects need action methods or should remain command-only objects.
-- [ ] Decide whether network objects (LIFs, VLANs, physical ports, bonds, and vStores) should remain read-only or gain supported mutation commands.
+- [x] ~~Decide whether network objects (LIFs, VLANs, physical ports, bonds, and vStores) should remain read-only or gain supported mutation commands.~~ **Resolved by code**: full mutation lifecycles shipped on the merged network branch (`New/Set/Remove-DMPortBond`, `New/Set/Remove-DMvLan`, `New/Set/Remove-DMLif`, `Get/New/Set/Remove-DMFailoverGroup`, `Add/Remove-DMFailoverGroupMember`). See `docs/network/` for the remaining hardening work (WhatIf coverage, server-side filters, failover-group member getter — tracked in `todo/alpha-v1.0.0-post-merge-phase-06-network-hardening-and-workflows.md`).
+
+> Deduplication note: the four remaining Command Coverage Decisions above (mapping views, storage pools, NAS children, initiators) are tracked and scoped for resolution in `todo/alpha-v1.0.0-post-merge-phase-08-block-file-nas-coverage-decisions.md` — classify as `needs-decision`, not re-planned here.
 
 ### Testing, CI/CD, & Supply Chain Security
 

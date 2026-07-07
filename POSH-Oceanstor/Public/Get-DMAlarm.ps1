@@ -12,6 +12,20 @@ function Get-DMAlarm {
 	.PARAMETER AlarmStatus
 		Optional alarm status filter. Valid values are Unrecovered, Cleared, and Recovered. If omitted, Unrecovered alarms are returned.
 
+	.PARAMETER StartTime
+		Optional. Only return alarms generated at or after this time. Converted to a Unix epoch second
+		and combined with -EndTime (defaulting to now) as a REST startTime:[start,end] range filter.
+		Cannot be combined with -Last.
+
+	.PARAMETER EndTime
+		Optional. Only return alarms generated at or before this time. Converted to a Unix epoch second
+		and combined with -StartTime (defaulting to epoch 0) as a REST startTime:[start,end] range filter.
+		Cannot be combined with -Last.
+
+	.PARAMETER Last
+		Optional convenience filter: return alarms generated within this timespan of now. Equivalent to
+		-StartTime (Get-Date) - Last -EndTime (Get-Date). Cannot be combined with -StartTime/-EndTime.
+
 	.INPUTS
 		System.Management.Automation.PSCustomObject
 
@@ -38,6 +52,13 @@ function Get-DMAlarm {
 
 		PS C:\> $disks = Get-DMAlarm
 
+	.EXAMPLE
+
+		PS C:\> Get-DMAlarm -AlarmStatus Unrecovered -Last (New-TimeSpan -Hours 24)
+
+	.EXAMPLE
+
+		PS C:\> Get-DMAlarm -StartTime (Get-Date).AddDays(-7) -EndTime (Get-Date)
 
 	.NOTES
 		Filename: Get-DMAlarm.ps1
@@ -51,8 +72,18 @@ function Get-DMAlarm {
         [pscustomobject]$WebSession,
         [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
         [ValidateSet('Unrecovered', 'Cleared', 'Recovered')]
-        [string]$AlarmStatus
+        [string]$AlarmStatus,
+        [Parameter(Mandatory = $false)]
+        [datetime]$StartTime,
+        [Parameter(Mandatory = $false)]
+        [datetime]$EndTime,
+        [Parameter(Mandatory = $false)]
+        [timespan]$Last
     )
+
+    if ($Last -and ($PSBoundParameters.ContainsKey('StartTime') -or $PSBoundParameters.ContainsKey('EndTime'))) {
+        throw '-Last cannot be combined with -StartTime or -EndTime.'
+    }
 
     if ($WebSession) {
         $session = $WebSession
@@ -85,7 +116,31 @@ function Get-DMAlarm {
         }
     }
 
-    $response = Invoke-DMPagedRequest -WebSession $session -Resource "alarm/historyalarm?filter=alarmStatus::$statusAlarm"
+    $filter = "alarmStatus::$statusAlarm"
+
+    $hasStartTime = $PSBoundParameters.ContainsKey('StartTime')
+    $hasEndTime = $PSBoundParameters.ContainsKey('EndTime')
+
+    if ($Last) {
+        $EndTime = Get-Date
+        $StartTime = $EndTime - $Last
+        $hasStartTime = $true
+        $hasEndTime = $true
+    }
+
+    if ($hasStartTime -or $hasEndTime) {
+        if (-not $hasEndTime) {
+            $EndTime = Get-Date
+        }
+        if (-not $hasStartTime) {
+            $StartTime = [System.DateTimeOffset]::FromUnixTimeSeconds(0).DateTime
+        }
+        $startEpoch = [System.DateTimeOffset]::new($StartTime.ToUniversalTime()).ToUnixTimeSeconds()
+        $endEpoch = [System.DateTimeOffset]::new($EndTime.ToUniversalTime()).ToUnixTimeSeconds()
+        $filter += " and startTime:[$startEpoch,$endEpoch]"
+    }
+
+    $response = Invoke-DMPagedRequest -WebSession $session -Resource "alarm/historyalarm?filter=$filter"
     $alarms = New-Object System.Collections.ArrayList
 
     foreach ($talarm in $response) {

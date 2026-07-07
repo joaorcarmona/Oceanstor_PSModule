@@ -23,6 +23,14 @@
 
 ## High Priority
 
+> Deduplication note: all High and Medium Priority items below are scoped for
+> implementation in
+> `todo/alpha-v1.0.0-post-merge-phase-07-replication-hypermetro-completion.md`,
+> which re-verified each as still open against current code (2026-07-07;
+> confirmed via grep that none of the listed DR getters are registered in
+> `Tests/Integration/Private/ReadValidation.ps1`). Status: `open` for all
+> bullets in this section.
+
 - Add the DR getters (`Get-DMRemoteDevice`, `Get-DMReplicationPair`,
   `Get-DMReplicationConsistencyGroup`, `Get-DMHyperMetroDomain`,
   `Get-DMHyperMetroPair`, `Get-DMHyperMetroConsistencyGroup`,

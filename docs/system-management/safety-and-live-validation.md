@@ -61,13 +61,38 @@ validation.
 
 - Read-only runs (`Invoke-GetterIntegrityValidation.ps1` without
   `-RunMutatingTests`) exercise the system-management getters registered in
-  `ReadValidation.ps1` and mark all mutators `NotRequested`.
+  `ReadValidation.ps1` and mark all mutators `NotRequested` or
+  `SkippedUnsafe`.
 - `Set-DMdnsServer` is permanently excluded via the harness
   `excludedCommands` list — the reference pattern for global-setting
   mutators.
-- **No system-management mutation workflow exists yet.** Known limitations
-  and follow-up items are summarized in each system-management topic page
-  and in `docs/testing/INTEGRITY-TESTS.md`.
+- The config-gated **`SystemManagement` workflow**
+  (`Tests/Integration/Private/Workflows/SystemManagement.ps1`) covers the
+  discrete, test-ownable objects. It is **disabled by default** and each
+  section has its own gate in `IntegrityValidationConfig.psd1`:
+
+  | Gate | Lifecycle | Default |
+  |---|---|---|
+  | `SystemManagement.Enabled` | Master gate — nothing runs without it | `$false` |
+  | `SystemManagement.AllowSnmpTrapServer` | SNMP trap server create → update → test → remove by captured ID | `$false` |
+  | `SystemManagement.AllowSnmpUsmUser` | SNMP USM user create → update → remove (run-unique name, generated throwaway passwords) | `$false` |
+  | `SystemManagement.AllowSyslogServer` | Syslog server add → remove by the exact recorded address | `$false` |
+  | `SystemManagement.AllowLocalUserLifecycle` | Local role + local user lifecycle (security-sensitive) | `$false` |
+
+  `-RunMutatingTests` alone never executes any of these sections; the
+  master gate **and** the relevant sub-gate must both be enabled. Every
+  sub-workflow refuses to run if its test address/name already exists on
+  the array (it never claims a pre-existing object as test-owned), registers
+  cleanup immediately after create, and removes only by captured ID or the
+  exact recorded address. A security-policy rejection of the generated USM
+  or local user is reported (failed create + `Blocked` dependents) and does
+  not abort the run; nothing is left behind in that case. Anything that
+  could not be cleaned up is listed under `RemainingTestOwnedResources` in
+  the validation report.
+- Global settings (NTP, DNS, time, SNMP config/security/community, syslog
+  notification settings) and actions against pre-existing users
+  (lock/unlock/password reset/session termination) remain permanently
+  `SkippedUnsafe` — no test-owned variant exists for them.
 
 ## Status vocabulary (integrity reports)
 
@@ -82,9 +107,13 @@ validation.
 | `NotExecuted` | Fell through — no workflow represented the command in this run |
 | `Failed` / `UnexpectedType` | Ran and failed / returned the wrong type |
 
-Interpretation note: system-management mutators (users, roles, SNMP,
-syslog, NTP, time) are reported as `SkippedUnsafe` in every run — the
-harness deliberately never exercises global system-management mutations
-unless a dedicated safe workflow exists for them. `Blocked` is reserved
-for commands whose test-owned prerequisite genuinely failed to create in
-the same mutating run.
+Interpretation note: *global* system-management mutators (NTP, time, SNMP
+config/security/community, syslog notification settings, lock/unlock/
+password-reset actions against existing users) are reported as
+`SkippedUnsafe` in every run — the harness deliberately never exercises
+them. The discrete lifecycles (SNMP trap server, SNMP USM user, syslog
+server, local role/user) are covered by the `SystemManagement` workflow and
+report `NotRequested` (read-only run) or `NotConfigured` (mutating run with
+the gate off) until their gates are explicitly enabled. `Blocked` is
+reserved for commands whose test-owned prerequisite genuinely failed to
+create in the same mutating run.

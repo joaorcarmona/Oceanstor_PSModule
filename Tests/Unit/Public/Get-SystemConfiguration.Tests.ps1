@@ -17,6 +17,7 @@ BeforeDiscovery {
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Select-DMResponseData.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Invoke-DMPagedRequest.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorSystemConfiguration.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorDnsServer.ps1"
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMNtpServer.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMNtpStatus.ps1"
@@ -309,7 +310,7 @@ Describe 'System configuration getter functions' {
         $script:resource | Should -Be 'system_utc_time'
     }
 
-    It 'gets DNS servers as a position-keyed hashtable from a JSON-encoded address string' {
+    It 'gets DNS servers as typed OceanStorDnsServer objects from a JSON-encoded address string' {
         Mock Invoke-DeviceManager {
             $script:method = $Method
             $script:resource = $Resource
@@ -319,12 +320,14 @@ Describe 'System configuration getter functions' {
             }
         }
 
-        $result = Get-DMdnsServer -WebSession $script:session
+        $result = @(Get-DMdnsServer -WebSession $script:session)
 
-        $result | Should -BeOfType [hashtable]
         $result.Count | Should -Be 2
-        $result['DNS Server 1'] | Should -Be '10.0.0.1'
-        $result['DNS Server 2'] | Should -Be '10.0.0.2'
+        $result[0].GetType().Name | Should -Be 'OceanStorDnsServer'
+        $result[0].Address | Should -Be '10.0.0.1'
+        $result[0].Position | Should -Be 1
+        $result[1].Address | Should -Be '10.0.0.2'
+        $result[1].Position | Should -Be 2
         $script:method | Should -Be 'GET'
         $script:resource | Should -Be 'dns_server'
     }
@@ -338,11 +341,13 @@ Describe 'System configuration getter functions' {
             }
         }
 
-        $result = Get-DMdnsServer -WebSession $script:session
+        $result = @(Get-DMdnsServer -WebSession $script:session)
 
         $result.Count | Should -Be 2
-        $result['DNS Server 1'] | Should -Be '10.0.0.1'
-        $result['DNS Server 2'] | Should -Be '10.0.0.3'
+        $result[0].Address | Should -Be '10.0.0.1'
+        $result[0].Position | Should -Be 1
+        $result[1].Address | Should -Be '10.0.0.3'
+        $result[1].Position | Should -Be 2
         $script:resource | Should -Be 'dns_server'
     }
 

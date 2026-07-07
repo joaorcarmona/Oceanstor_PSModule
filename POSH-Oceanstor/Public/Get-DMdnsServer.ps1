@@ -15,9 +15,11 @@ function Get-DMdnsServer {
         You can pipe an OceanStor session object to WebSession.
 
     .OUTPUTS
-		System.Collections.Hashtable
+		OceanStorDnsServer
 
-        Returns the configured DNS server addresses keyed by DNS server position.
+        Returns one OceanStorDnsServer object per configured address, with Address and Position
+        properties. Previously returned a System.Collections.Hashtable keyed by "DNS Server N";
+        scripts indexing into that hashtable will need to switch to the typed properties instead.
 
     .EXAMPLE
         PS C:\> Get-DMdnsServer -webSession $session
@@ -32,7 +34,7 @@ function Get-DMdnsServer {
 	.LINK
 	#>
     [Cmdletbinding()]
-    [OutputType([hashtable])]
+    [OutputType('OceanStorDnsServer')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Mandatory = $false)]
         [pscustomobject]$WebSession
@@ -57,11 +59,11 @@ function Get-DMdnsServer {
         @($addressData)
     }
 
-    $DnsServers = @{}
+    $DnsServers = New-Object System.Collections.ArrayList
     $i = 1
     foreach ($address in $addresses) {
         if ($address) {
-            $DnsServers.add("DNS Server $i", $address)
+            [void]$DnsServers.Add([OceanStorDnsServer]::new($address, $i))
             $i = $i + 1
         }
     }

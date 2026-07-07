@@ -38,19 +38,19 @@ Describe 'Public getter functions' {
         It 'gets DNS servers' {
             Mock Invoke-DeviceManager { [pscustomobject]@{ data = [pscustomobject]@{ ADDRESS = '["10.0.0.1","10.0.0.2"]' } } }
 
-            $result = Get-DMdnsServer -WebSession $script:session
+            $result = @(Get-DMdnsServer -WebSession $script:session)
 
-            $result['DNS Server 1'] | Should -Be '10.0.0.1'
-            $result['DNS Server 2'] | Should -Be '10.0.0.2'
+            $result[0].Address | Should -Be '10.0.0.1'
+            $result[1].Address | Should -Be '10.0.0.2'
         }
 
         It 'gets a single configured DNS server' {
             Mock Invoke-DeviceManager { [pscustomobject]@{ data = [pscustomobject]@{ ADDRESS = '["8.8.8.8"]' } } }
 
-            $result = Get-DMdnsServer -WebSession $script:session
+            $result = @(Get-DMdnsServer -WebSession $script:session)
 
             $result.Count | Should -Be 1
-            $result['DNS Server 1'] | Should -Be '8.8.8.8'
+            $result[0].Address | Should -Be '8.8.8.8'
         }
 
         It 'returns an empty table when no DNS servers are configured' {

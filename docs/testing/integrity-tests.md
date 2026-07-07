@@ -159,17 +159,18 @@ runs side by side:
 | `Failed` | The command raised an unexpected error. |
 | `UnexpectedType` | The command returned, but the object type(s) did not match what was expected. |
 
-> **Note on `Blocked` vs `NotRequested`:** as of this writing, the reporting
-> fallback in `Tests/Integration/Private/Reporting.ps1` labels *every*
-> public command with no matching check as `Blocked` on a mutating run (even
-> if the real reason is simply that an opt-in switch, such as a performance
-> switch, was never passed) or `NotExecuted` on a read-only run. See
+> **Note on `Blocked` vs `NotRequested`:** the reporting fallback in
+> `Tests/Integration/Private/Reporting.ps1` routes public commands with no
+> matching check by opt-in domain. Commands that belong to a gated domain
+> (performance, performance history, capacity history, Excel performance,
+> monitoring mutation) are labeled `NotRequested` when their runner switch
+> was not passed, even on a mutating run — `-RunMutatingTests` alone never
+> requests those domains. `Blocked` is reserved for commands whose domain
+> *was* requested but a genuine test-owned prerequisite in this run was
+> unavailable (e.g. `New-DMQosPolicy` returned `NoData`, so its dependent
+> setters cannot run). See
 > [Performance integrity tests — why performance commands may appear as NotRequested](performance-integrity-tests.md#why-performance-commands-may-appear-as-notrequested-or-previously-blocked)
-> for the full analysis and the proposed reporting-side fix. `Blocked` should
-> be trusted at face value only for commands with a genuine test-owned
-> prerequisite in this run (Quota, QoS families) — for opt-in domains like
-> performance, check which switches were actually passed before treating
-> `Blocked` as a real problem.
+> for the full domain-to-switch mapping.
 
 For a mutating run, confirm:
 
