@@ -84,6 +84,8 @@ Common wrapper parameters:
 
 `Get-DMPortPerformance -PortType` supports only `FC`, `ETH`, and `Bond`.
 
+Bond port support is implementation-backed, but live validation can only confirm it on arrays where `Get-DMPortBond` returns objects. Zero Bond ports should be reported as `NoData` in live checks.
+
 ## Indicator Map
 
 `Get-DMPerformanceIndicatorMap` defines friendly metrics.
@@ -106,7 +108,7 @@ Common wrapper parameters:
 | `AvgReadIOSizeKB` | 24 | `KB` | Block I/O size. |
 | `AvgWriteIOSizeKB` | 27 | `KB` | Block I/O size. |
 | `QueueLength` | 19 | `count` | Block default. |
-| `UsagePercent` | 18 | `%` | Object-dependent. |
+| `UsagePercent` | 18 | `%` | Object-dependent; realtime StoragePool samples may return `$null`. |
 | `ReadCacheHitPercent` | 93 | `%` | Object-dependent. |
 | `WriteCacheHitPercent` | 95 | `%` | Object-dependent. |
 | `CpuUsagePercent` | 68 | `%` | Object-dependent. |
@@ -220,7 +222,7 @@ Supported `TimeSegment` values are `OneHour`, `OneDay`, `OneWeek`, `OneMonth`, `
 
 `Customer` requires `StartTime` and `EndTime`. The implementation sends these as epoch milliseconds.
 
-`Name` is validated to a maximum of 31 characters. Live validation confirmed the explicit report-task lifecycle with a short task name and rejected an overlong generated validation name before task creation.
+`Name` is validated to a maximum of 31 characters. Live validation confirmed the explicit report-task lifecycle with a short task name and rejected an overlong generated validation name before task creation. Unit tests pin both the 31-character accepted boundary and the 32-character rejected boundary.
 
 ## Report-Task Body
 
@@ -292,11 +294,13 @@ Behavior:
 - `performance` is opt-in only
 - `full` does not imply `performance`
 - samples System, Controllers, StoragePools, Disks, Hosts, and LUNs
-- skips Disk/Host/LUN performance sections above 500 objects
+- skips Disk/Host performance sections above 500 objects
+- limits LUN performance to the first 25 inventory LUNs by default via `-PerformanceLunLimit`
+- supports `-PerformanceLunLimit 0` when the caller explicitly wants no LUN limit
 - joins `ObjectName` from source object IDs before writing worksheets
 - depends on `Export-Excel`
 
-Live validation confirmed that the workbook is still created when a large section is skipped. On an array with 1220 LUNs, the export skipped LUN performance because it exceeded the 500-object cap.
+The LUN limit is first-N from the already collected inventory, not true top-N by IOPS. True top-N would require sampling every LUN first, which is not a safe default for Excel export on large arrays.
 
 ## Tests
 
@@ -312,7 +316,7 @@ Unit tests cover:
 - report-task body construction
 - history/capacity cleanup
 - CSV import
-- Excel export opt-in/cap behavior
+- Excel export opt-in/cap/`PerformanceLunLimit` behavior
 
 Integration tests are opt-in and staged:
 

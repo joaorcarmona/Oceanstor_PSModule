@@ -1,4 +1,5 @@
 $script:DMPerformanceExcelObjectCap = 500
+$script:DMPerformanceExcelDefaultLunLimit = 25
 
 function Export-DMStorageToExcel {
     <#
@@ -17,6 +18,8 @@ function Export-DMStorageToExcel {
 		File path where the Excel configuration report is written.
 	.PARAMETER IncludeObject
 		Choose the report sections to include ("luns","system","configuration","hostgroups","lungroups","disks","hosts","vstores","storagepools","performance","full"). Multiple items are allowed. "performance" is opt-in only (not implied by "full") and pulls one live realtime sample per object type (System, Controllers, StoragePools, Disks, Hosts, LUNs) using the storage object's cached session.
+	.PARAMETER PerformanceLunLimit
+		Maximum number of LUNs to sample for the opt-in performance Excel section. Defaults to 25. The limit uses the first LUNs already present in the supplied storage inventory; use Get-DMLunPerformance directly for true top-busy LUN analysis. Set to 0 for no LUN limit.
 
 	.INPUTS
 		System.String
@@ -56,7 +59,10 @@ function Export-DMStorageToExcel {
         [ValidateSet("luns", "system", "configuration", "hostgroups", "lungroups", "disks", "hosts", "vstores", "storagepools", "performance", "full")]
         [string[]]$IncludeObject,
         [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $false, Position = 3, Mandatory = $true)]
-        [string]$ReportFile
+        [string]$ReportFile,
+        [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $false, Mandatory = $false)]
+        [ValidateRange(0, [int]::MaxValue)]
+        [int]$PerformanceLunLimit = $script:DMPerformanceExcelDefaultLunLimit
     )
 
     if ($hostname -ne "") {
@@ -215,7 +221,13 @@ function Export-DMStorageToExcel {
             $objects = @($section.Source)
             if ($objects.Count -eq 0) { continue }
 
-            if ($section.Cap -and $objects.Count -gt $script:DMPerformanceExcelObjectCap) {
+            if ($section.Table -eq 'LunPerformance') {
+                if ($PerformanceLunLimit -gt 0 -and $objects.Count -gt $PerformanceLunLimit) {
+                    Write-Warning "LUN performance export limited to first $PerformanceLunLimit of $($objects.Count) LUNs. Use -PerformanceLunLimit to increase the limit, set it to 0 for no LUN limit, or use Get-DMLunPerformance directly for selected LUNs."
+                    $objects = @($objects | Select-Object -First $PerformanceLunLimit)
+                }
+            }
+            elseif ($section.Cap -and $objects.Count -gt $script:DMPerformanceExcelObjectCap) {
                 Write-Warning "Skipping $($section.Table) performance: $($objects.Count) objects exceeds the $($script:DMPerformanceExcelObjectCap)-object cap. Use $($section.Wrapper) directly with a smaller selection if needed."
                 continue
             }

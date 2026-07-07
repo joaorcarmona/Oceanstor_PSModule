@@ -115,7 +115,11 @@ Get-DMstoragePool |
 
 Pool metrics help distinguish workload-local issues from backend pressure. If one LUN is slow and the pool is also slow, investigate pool, disk, and controller pressure. If the pool is healthy, check host paths and front-end ports.
 
-Live validation confirmed realtime pool IOPS, bandwidth, latency, and queue values. `UsagePercent` existed as a friendly metric but returned `$null` for the tested pool; use [HISTORY.md](HISTORY.md) capacity history for confirmed capacity fields.
+Live validation confirmed realtime pool IOPS, bandwidth, latency, and queue values. `UsagePercent` existed as a friendly metric but returned `$null` for the tested pool; use [HISTORY.md](HISTORY.md) capacity history for confirmed capacity fields:
+
+```powershell
+Get-DMCapacityHistory -ObjectType StoragePool -ObjectId "<pool-id>" -StartTime (Get-Date).AddDays(-1) -EndTime (Get-Date)
+```
 
 ## Disk Performance
 
@@ -175,7 +179,7 @@ Get-DMPortBond |
 
 FCoE and InfiniBand are not exposed as `Get-DMPortPerformance -PortType` values in the current implementation.
 
-Live validation confirmed FC and Ethernet port examples. `Bond` is supported by the cmdlet syntax, but the validation array had no Bond ports, so Bond examples are syntax-accurate but environment-dependent.
+Live validation confirmed FC and Ethernet port examples. `Bond` is supported by the cmdlet syntax, but the validation array had no Bond ports, so Bond examples are syntax-accurate but environment-dependent. Treat zero Bond ports as `NoData`, not as a module failure.
 
 ## Common SAN Flow
 

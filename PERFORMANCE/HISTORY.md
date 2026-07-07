@@ -98,6 +98,8 @@ Get-DMCapacityHistory -ObjectType System -ObjectId 1 -StartTime (Get-Date).AddDa
 
 Capacity CSV metric names are preserved from the array, for example `Total capacity(MB)`, `Used capacity(MB)`, and `Capacity usage(%)` when present.
 
+Use capacity history, not realtime `Get-DMStoragePoolPerformance -Metric UsagePercent`, when you need pool capacity usage or usage trend data. Realtime `UsagePercent` can be `$null` for `StoragePool` objects.
+
 ## Debugging With KeepReportTask
 
 Use `-KeepReportTask` only when you need to inspect raw report-task behavior:

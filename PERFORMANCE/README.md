@@ -112,7 +112,15 @@ Live validation confirmed that `$null` can be object-specific rather than a comm
 | Realtime | `performance_data` | Current checks, incident triage, short sample loops | Current sample only; depends on monitoring being enabled and current object support. |
 | Historical performance | `pms/report_task` performance report | Last hour/day trends, post-incident checks | Slower, report-task based, needs archived history. |
 | Capacity history | `pms/report_task` capacity report | Pool/system capacity trends | Only `System` and `StoragePool`; metric names come from CSV output. |
-| Excel export | `Export-DMStorageToExcel -IncludeObject performance` | Lightweight workbook reporting | Live samples only; opt-in; object caps for large sections. |
+| Excel export | `Export-DMStorageToExcel -IncludeObject performance` | Lightweight workbook reporting | Live samples only; opt-in; Disk/Host caps remain; LUN performance defaults to the first 25 inventory LUNs. |
+
+Excel LUN performance export is intentionally bounded:
+
+```powershell
+Export-DMStorageToExcel -OceanStor $storage -IncludeObject performance -PerformanceLunLimit 100 -ReportFile .\storage-performance.xlsx
+```
+
+The limit is first-N from the collected inventory, not true top-N by IOPS. Use `Get-DMLunPerformance` directly when you need a true top-busy LUN analysis.
 
 ## Safety Notes
 

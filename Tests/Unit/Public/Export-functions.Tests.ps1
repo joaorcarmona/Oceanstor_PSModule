@@ -299,6 +299,97 @@ Describe 'Public export functions' {
         Should -Invoke Export-Excel -Times 1 -Exactly -ParameterFilter { $TableName -eq 'HostPerformance' }
     }
 
+    It 'limits LUN performance export to the first 25 LUNs by default instead of skipping all LUN performance' {
+        $manyLuns = 1..501 | ForEach-Object { [pscustomobject]@{ Id = "lun-$_"; Name = "lun$_" } }
+        $storage = [pscustomobject]@{
+            system = [pscustomobject]@{ version = 'V600R001' }
+            Session = [pscustomobject]@{ Token = 'sess-01' }
+            luns = $manyLuns
+        }
+        $script:lunPerfCall = 0
+        Mock Get-DMLunPerformance {
+            $script:lunPerfCall++
+            [pscustomobject]@{ ObjectId = "lun-$script:lunPerfCall"; IOPS = 1 }
+        }
+
+        Export-DMStorageToExcel -OceanStor $storage -IncludeObject performance -ReportFile 'lun-limit.xlsx' -WarningAction SilentlyContinue -WarningVariable lunWarnings
+
+        Should -Invoke Get-DMLunPerformance -Times 25 -Exactly
+        Should -Invoke Export-Excel -Times 1 -Exactly -ParameterFilter {
+            $TableName -eq 'LunPerformance' -and @($InputObject).Count -eq 25 -and
+            @($InputObject)[0].ObjectId -eq 'lun-1' -and @($InputObject)[24].ObjectId -eq 'lun-25'
+        }
+        ($lunWarnings -join ' ') | Should -Match 'limited to first 25 of 501 LUNs'
+        ($lunWarnings -join ' ') | Should -Match 'PerformanceLunLimit'
+    }
+
+    It 'applies the default LUN performance export limit even below the legacy object cap' {
+        $manyLuns = 1..30 | ForEach-Object { [pscustomobject]@{ Id = "lun-$_"; Name = "lun$_" } }
+        $storage = [pscustomobject]@{
+            system = [pscustomobject]@{ version = 'V600R001' }
+            Session = [pscustomobject]@{ Token = 'sess-01' }
+            luns = $manyLuns
+        }
+        $script:lunPerfCall = 0
+        Mock Get-DMLunPerformance {
+            $script:lunPerfCall++
+            [pscustomobject]@{ ObjectId = "lun-$script:lunPerfCall"; IOPS = 1 }
+        }
+
+        Export-DMStorageToExcel -OceanStor $storage -IncludeObject performance -ReportFile 'lun-limit-small.xlsx' -WarningAction SilentlyContinue -WarningVariable lunWarnings
+
+        Should -Invoke Get-DMLunPerformance -Times 25 -Exactly
+        Should -Invoke Export-Excel -Times 1 -Exactly -ParameterFilter {
+            $TableName -eq 'LunPerformance' -and @($InputObject).Count -eq 25
+        }
+        ($lunWarnings -join ' ') | Should -Match 'limited to first 25 of 30 LUNs'
+    }
+
+    It 'uses the user supplied LUN performance export limit' {
+        $manyLuns = 1..501 | ForEach-Object { [pscustomobject]@{ Id = "lun-$_"; Name = "lun$_" } }
+        $storage = [pscustomobject]@{
+            system = [pscustomobject]@{ version = 'V600R001' }
+            Session = [pscustomobject]@{ Token = 'sess-01' }
+            luns = $manyLuns
+        }
+        $script:lunPerfCall = 0
+        Mock Get-DMLunPerformance {
+            $script:lunPerfCall++
+            [pscustomobject]@{ ObjectId = "lun-$script:lunPerfCall"; IOPS = 1 }
+        }
+
+        Export-DMStorageToExcel -OceanStor $storage -IncludeObject performance -ReportFile 'lun-limit-custom.xlsx' -PerformanceLunLimit 100 -WarningAction SilentlyContinue -WarningVariable lunWarnings
+
+        Should -Invoke Get-DMLunPerformance -Times 100 -Exactly
+        Should -Invoke Export-Excel -Times 1 -Exactly -ParameterFilter {
+            $TableName -eq 'LunPerformance' -and @($InputObject).Count -eq 100 -and
+            @($InputObject)[99].ObjectId -eq 'lun-100'
+        }
+        ($lunWarnings -join ' ') | Should -Match 'limited to first 100 of 501 LUNs'
+    }
+
+    It 'allows unlimited LUN performance export when PerformanceLunLimit is zero' {
+        $manyLuns = 1..501 | ForEach-Object { [pscustomobject]@{ Id = "lun-$_"; Name = "lun$_" } }
+        $storage = [pscustomobject]@{
+            system = [pscustomobject]@{ version = 'V600R001' }
+            Session = [pscustomobject]@{ Token = 'sess-01' }
+            luns = $manyLuns
+        }
+        $script:lunPerfCall = 0
+        Mock Get-DMLunPerformance {
+            $script:lunPerfCall++
+            [pscustomobject]@{ ObjectId = "lun-$script:lunPerfCall"; IOPS = 1 }
+        }
+
+        Export-DMStorageToExcel -OceanStor $storage -IncludeObject performance -ReportFile 'lun-limit-none.xlsx' -PerformanceLunLimit 0 -WarningAction SilentlyContinue -WarningVariable lunWarnings
+
+        Should -Invoke Get-DMLunPerformance -Times 501 -Exactly
+        Should -Invoke Export-Excel -Times 1 -Exactly -ParameterFilter {
+            $TableName -eq 'LunPerformance' -and @($InputObject).Count -eq 501
+        }
+        $lunWarnings | Should -BeNullOrEmpty
+    }
+
     It 'exports system performance without requiring a name join' {
         $storage = [pscustomobject]@{
             Session = [pscustomobject]@{ Token = 'sess-01' }

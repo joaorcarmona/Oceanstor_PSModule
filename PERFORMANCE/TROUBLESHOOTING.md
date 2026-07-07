@@ -109,6 +109,8 @@ Get-DMPortBond |
 
 Supported port types are `FC`, `ETH`, and `Bond`. No `FCoE` or `IB` `-PortType` is implemented.
 
+If `Get-DMPortBond` returns no objects, treat the Bond check as `NoData`; the Bond performance wrapper is still valid when Bond ports exist.
+
 ## 5. Busy Storage Pool
 
 Symptoms:
@@ -127,6 +129,12 @@ Get-DMstoragePool |
 ```
 
 If one pool is hotter than others, identify its busiest LUNs and check disk samples.
+
+If capacity usage is part of the question, prefer capacity history because realtime `StoragePool` `UsagePercent` can be `$null`:
+
+```powershell
+Get-DMCapacityHistory -ObjectType StoragePool -ObjectId "<pool-id>" -StartTime (Get-Date).AddDays(-1) -EndTime (Get-Date)
+```
 
 ## 6. Disk Hotspot
 
@@ -296,14 +304,24 @@ Checks:
 
 ```powershell
 Export-DMStorageToExcel -OceanStor $storage -ReportFile ".\storage-performance.xlsx" -IncludeObject performance
+Export-DMStorageToExcel -OceanStor $storage -ReportFile ".\storage-performance.xlsx" -IncludeObject performance -PerformanceLunLimit 100
 Export-DMStorageToExcel -OceanStor $storage -ReportFile ".\storage-full-with-performance.xlsx" -IncludeObject full,performance
 ```
 
 Interpretation:
 
 - `performance` is opt-in; `full` alone does not include it
-- Disk, Host, and LUN performance sections are skipped above the 500-object cap
+- Disk and Host performance sections are skipped above the 500-object cap
+- LUN performance defaults to the first 25 LUNs from the collected inventory; use `-PerformanceLunLimit` to increase it, or `-PerformanceLunLimit 0` for no LUN limit
 - `Export-Excel` must be available
 - the export uses live realtime samples, not history
 
-Live validation on an array with 1220 LUNs created the workbook and skipped LUN performance with the documented 500-object cap warning.
+The Excel LUN limit is first-N from inventory, not true top-N by IOPS. For true top-busy LUN analysis, use:
+
+```powershell
+Get-DMlun |
+    Select-Object -First 100 |
+    Get-DMLunPerformance -Metric TotalIOPS,BandwidthMBps,AvgLatencyMs |
+    Sort-Object TotalIOPS -Descending |
+    Select-Object -First 25 ObjectId,Timestamp,TotalIOPS,BandwidthMBps,AvgLatencyMs
+```

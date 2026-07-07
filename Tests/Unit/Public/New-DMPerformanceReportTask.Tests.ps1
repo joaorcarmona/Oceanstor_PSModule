@@ -70,6 +70,26 @@ InModuleScope NewDMPerformanceReportTaskTestModule {
             $result.Id | Should -Be 'task-01'
         }
 
+        It 'accepts a 31-character report task name' {
+            $name31 = 'a' * 31
+
+            { New-DMPerformanceReportTask -WebSession $script:session -Name $name31 -ObjectType LUN -ObjectId '1' -TimeSegment OneWeek -Confirm:$false } | Should -Not -Throw
+
+            Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter {
+                $Method -eq 'POST' -and
+                $Resource -eq 'pms/report_task' -and
+                $BodyData.name -eq $name31
+            }
+        }
+
+        It 'rejects a 32-character report task name' {
+            $name32 = 'a' * 32
+
+            { New-DMPerformanceReportTask -WebSession $script:session -Name $name32 -ObjectType LUN -ObjectId '1' -TimeSegment OneWeek -Confirm:$false } | Should -Throw
+
+            Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
+        }
+
         It 'uses NAS default metrics and object type 40 for FileSystem when -Metric is omitted' {
             New-DMPerformanceReportTask -WebSession $script:session -Name 'fs-history' -ObjectType FileSystem -ObjectId '1' -TimeSegment OneWeek -Confirm:$false | Out-Null
 
