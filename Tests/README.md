@@ -135,8 +135,9 @@ Before running, review:
 
 - `StoragePoolId`: existing pool used only as a placement target.
 - `NamePrefix`: prefix for generated test-owned resource names.
-- Enabled workflow sections: `Lun`, `LunGroup`, `Protection`, `Host`, `Nas`,
-  `Mapping`, and `Initiators`.
+- Enabled workflow sections: `Lun`, `LunGroup`, `Protection`, `QoS`, `Host`,
+  `Nas`, `Mapping`, `Initiators`, and the disabled-by-default
+  `HyperCDPSchedule`, `Replication`, and `HyperMetro` sections.
 - Initiator identities: supply only unused identities that may be created and
   deleted during the run.
 
@@ -181,6 +182,46 @@ HyperCDPSchedule = @{
 This workflow creates a disabled block HyperCDP schedule, associates the
 test-owned LUN, removes that association, toggles the schedule, and deletes it.
 It does not use protection groups or secure snapshots.
+
+## Replication and HyperMetro Workflows
+
+The `Replication` and `HyperMetro` sections are disabled by default because
+they create remote replication and HyperMetro objects and can change DR state.
+Enable them only against a lab array pair, with a remote device and remote LUN
+reserved for validation, and (for HyperMetro) an existing SAN domain:
+
+```powershell
+Replication = @{
+    Enabled = $true
+    AllowDrMutation = $true
+    AllowFailover = $false        # gates Switch-DMReplicationPair / group switchover
+    RemoteDeviceName = 'lab-remote-array'
+    RemoteLunName = 'dm_integrity_rlun'
+    RemoteServiceType = 'ReplicationSecondaryLun'
+}
+
+HyperMetro = @{
+    Enabled = $true
+    AllowDrMutation = $true
+    AllowPrioritySwitch = $false  # gates priority-switch commands
+    RemoteDeviceName = 'lab-remote-array'
+    RemoteLunName = 'dm_integrity_mlun'
+    RemoteServiceType = 'HyperMetroSecondaryLun'
+    DomainName = 'lab-metro-domain'
+}
+```
+
+Failover-like operations are opt-in separately: switchover commands run only
+when `Replication.AllowFailover` is `$true`, and HyperMetro priority switches
+run only when `HyperMetro.AllowPrioritySwitch` is `$true`. Otherwise they are
+reported as `SkippedUnsafe` — intentionally not counted as passed, because
+they change which site serves production-like data. The workflows only mutate
+pairs and groups created by the same run; they never create, modify, or delete
+HyperMetro domains or quorum associations, and never touch pre-existing DR
+objects. Do not enable these sections casually: even test-owned DR operations
+consume replication links and array resources shared with real DR traffic.
+See `docs/replication-hypermetro/safety-and-live-validation.md` for the full
+safety model.
 
 Use a separate configuration file when testing a different array or subset of
 workflows:
@@ -375,10 +416,14 @@ Override any location when retaining multiple runs (the target directory is crea
   not passed to the runner.
 - `NotConfigured`: the switch was passed, but the related config flag
   (`AllowMutatingTests`, `Performance.Enabled`, etc.) was not enabled.
-- `SkippedUnsafe`: the harness deliberately never exercises this action
-  regardless of switches — e.g. `Enable-`/`Disable-DMPerformanceMonitoring`,
-  and system-management mutators that change global, authentication, or
-  alerting settings without a dedicated safe workflow.
+- `SkippedUnsafe`: the harness deliberately did not exercise this action —
+  e.g. `Enable-`/`Disable-DMPerformanceMonitoring`, system-management
+  mutators that change global, authentication, or alerting settings without
+  a dedicated safe workflow, and DR commands that can change replication
+  direction, site priority, or data-serving behavior whose dedicated opt-in
+  flag (such as `Replication.AllowFailover` or
+  `HyperMetro.AllowPrioritySwitch`) was not set. Skipped is not passed: the
+  command was deliberately not exercised.
 - `NotExecuted`: fallback label for a public command with no check
   representation in a read-only run.
 - `Blocked`: fallback label for a public command with no check

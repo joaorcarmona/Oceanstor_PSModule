@@ -93,6 +93,7 @@ $validationModule = New-Module -Name OceanstorLiveGetterValidation -ArgumentList
         'New-DMNamedObjectUpdate.ps1',
         'New-DMObjectReport.ps1',
         'New-DMRequestBody.ps1',
+        'Resolve-DMDrPairHelper.ps1',
         'Save-DMDeviceManagerFile.ps1',
         'Select-DMResponseData.ps1',
         'Set-DMHostInitiator.ps1',
@@ -144,7 +145,7 @@ $cleanupActions = [System.Collections.Generic.List[object]]::new()
 $sessionDisconnected = $false
 $samples = @{}
 $owned = @{}
-foreach ($kind in @('Lun', 'LunSnapshot', 'HyperCDPSchedule', 'LunGroup', 'ProtectionGroup', 'SnapshotConsistencyGroup', 'QosPolicy', 'Host', 'HostGroup', 'FileSystem', 'FileSystemSnapshot', 'DTree', 'CifsShare', 'NfsShare', 'NfsClient', 'Quota', 'MappingView', 'PortGroup', 'FibreChannelInitiator', 'IscsiInitiator', 'NvmeInitiator', 'ReportTask', 'ReportLog')) {
+foreach ($kind in @('Lun', 'LunSnapshot', 'HyperCDPSchedule', 'LunGroup', 'ProtectionGroup', 'SnapshotConsistencyGroup', 'QosPolicy', 'Host', 'HostGroup', 'FileSystem', 'FileSystemSnapshot', 'DTree', 'CifsShare', 'NfsShare', 'NfsClient', 'Quota', 'MappingView', 'PortGroup', 'FibreChannelInitiator', 'IscsiInitiator', 'NvmeInitiator', 'ReportTask', 'ReportLog', 'ReplicationPair', 'ReplicationConsistencyGroup', 'HyperMetroPair', 'HyperMetroConsistencyGroup')) {
     $owned[$kind] = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 }
 $performanceCleanupRegistry = [System.Collections.Generic.List[object]]::new()

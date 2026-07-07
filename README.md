@@ -12,8 +12,8 @@ Current module version: 0.9.5
 
 The module includes commands for inventory, reporting, host and initiator
 management, storage-resource creation, mapping-view operations, snapshot
-management, and array system configuration such as NTP, SNMP, syslog, local
-users, and roles.
+management, remote replication and HyperMetro SAN workflows, and array system
+configuration such as NTP, SNMP, syslog, local users, and roles.
 
 ## How to Install
 
@@ -121,6 +121,50 @@ Get-DMControllerPerformance -WebSession $storage
 Get-DMPerformanceHistory -WebSession $storage -ObjectType LUN -ObjectId '1' -StartTime (Get-Date).AddDays(-1) -EndTime (Get-Date)
 ```
 The underlying report-task lifecycle (New-/Get-/Remove-DMPerformanceReportTask, Invoke-DMPerformanceReportTask, Save-DMPerformanceReportFile) is also exported directly for callers who need finer-grained control than Get-DMPerformanceHistory provides.
+
+#### Remote Replication and HyperMetro
+```powershell
+# Discover remote DR objects.
+Get-DMRemoteDevice -WebSession $storage
+Get-DMRemoteLun -WebSession $storage -RemoteDeviceId 'remote-array-id'
+
+# Remote replication pairs and consistency groups.
+$pair = New-DMReplicationPair -WebSession $storage -LocalLunId 'local-lun-id' `
+    -RemoteDeviceId 'remote-array-id' -RemoteLunId 'remote-lun-id' `
+    -ReplicationMode Async -SynchronizationType Manual
+Sync-DMReplicationPair -WebSession $storage -Id $pair.Id
+
+$group = New-DMReplicationConsistencyGroup -WebSession $storage -Name 'replication-cg' `
+    -RemoteDeviceId 'remote-array-id'
+Add-DMReplicationPairToConsistencyGroup -WebSession $storage -GroupId $group.Id -PairId $pair.Id
+
+# SAN HyperMetro domains can be created directly or bound to a quorum server.
+Get-DMHyperMetroDomain -WebSession $storage
+$domain = New-DMHyperMetroDomain -WebSession $storage -Name 'metro-domain' `
+    -RemoteDevices @(@{ devId = 'remote-array-id'; devESN = 'remote-array-sn'; devName = 'remote-array' })
+Add-DMQuorumServerToHyperMetroDomain -WebSession $storage -Id $domain.Id -QuorumServerId 'quorum-server-id'
+
+# HyperMetro pairs and consistency groups use a SAN HyperMetro domain.
+$metroPair = New-DMHyperMetroPair -WebSession $storage -DomainId 'domain-id' `
+    -LocalLunId 'local-lun-id' -RemoteLunId 'remote-lun-id' -FirstSync
+Sync-DMHyperMetroPair -WebSession $storage -Id $metroPair.Id
+
+# NAS/vStore DR uses distinct wrappers so it is not confused with SAN LUN flows.
+Get-DMVStorePair -WebSession $storage -ReplicationType RemoteReplication
+$vstorePair = New-DMVStorePair -WebSession $storage -LocalVStoreId '1' `
+    -RemoteVStoreId '1' -ReplicationType RemoteReplication -RemoteDeviceId '0'
+Sync-DMVStorePair -WebSession $storage -Id $vstorePair.Id
+
+Get-DMFileHyperMetroDomain -WebSession $storage
+```
+
+Live integration validation keeps DR workflows disabled by default. To exercise
+remote replication or HyperMetro mutation checks, enable the matching
+`Replication` or `HyperMetro` section in
+`Tests/Integration/IntegrityValidationConfig.psd1`, provide lab-only remote
+device/LUN/domain identifiers, and set the explicit DR mutation acknowledgement.
+Full documentation for this area, including per-family topic pages and the DR
+safety model, lives in [docs/replication-hypermetro/](docs/replication-hypermetro/README.md).
 
 #### Search one lun by WWN
 ```powershell

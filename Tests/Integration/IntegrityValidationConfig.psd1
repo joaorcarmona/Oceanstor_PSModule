@@ -81,6 +81,46 @@
         Enabled = $true
     }
 
+    Replication = @{
+        # Disabled by default because these checks create remote replication
+        # objects and can change DR state. Enable only on a lab pair and only
+        # with remote LUNs intended for this validation run.
+        Enabled = $false
+        AllowDrMutation = $false
+        AllowFailover = $false
+
+        # Supply either RemoteDeviceId or RemoteDeviceName.
+        RemoteDeviceId = ''
+        RemoteDeviceName = ''
+
+        # Supply either RemoteLunId or RemoteLunName. RemoteLunName is resolved
+        # through Get-DMRemoteLun using the selected remote device.
+        RemoteLunId = ''
+        RemoteLunName = ''
+        RemoteServiceType = 'ReplicationSecondaryLun'
+    }
+
+    HyperMetro = @{
+        # Disabled by default because these checks create HyperMetro objects
+        # and can suspend/start pairs. Enable only on a lab HyperMetro setup.
+        Enabled = $false
+        AllowDrMutation = $false
+        AllowPrioritySwitch = $false
+
+        # Supply either RemoteDeviceId or RemoteDeviceName.
+        RemoteDeviceId = ''
+        RemoteDeviceName = ''
+
+        # Supply either RemoteLunId or RemoteLunName.
+        RemoteLunId = ''
+        RemoteLunName = ''
+        RemoteServiceType = 'HyperMetroSecondaryLun'
+
+        # Supply either DomainId or DomainName for an existing SAN domain.
+        DomainId = ''
+        DomainName = ''
+    }
+
     Host = @{
         Enabled = $true
         OperatingSystem = 'Linux'

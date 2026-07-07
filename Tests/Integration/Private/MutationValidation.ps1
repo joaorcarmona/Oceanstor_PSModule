@@ -8,6 +8,8 @@
 . (Join-Path $PSScriptRoot 'Workflows\DirectMapping.ps1')
 . (Join-Path $PSScriptRoot 'Workflows\Protection.ps1')
 . (Join-Path $PSScriptRoot 'Workflows\QoS.ps1')
+. (Join-Path $PSScriptRoot 'Workflows\Replication.ps1')
+. (Join-Path $PSScriptRoot 'Workflows\HyperMetro.ps1')
 . (Join-Path $PSScriptRoot 'Workflows\Initiators.ps1')
 . (Join-Path $PSScriptRoot 'Workflows\ReadBack.ps1')
 
@@ -87,6 +89,25 @@ function Invoke-MutationValidation {
             'Set-DMLun', 'Rename-DMLun', 'Set-DMFileSystem', 'Rename-DMFileSystem',
             'Set-DMHost', 'Rename-DMHost', 'Set-DMHostGroup', 'Rename-DMHostGroup',
             'Set-DMLunGroup', 'Rename-DMLunGroup', 'Set-DMPortGroup', 'Rename-DMPortGroup',
+            'Get-DMRemoteDevice', 'Get-DMRemoteLun',
+            'New-DMReplicationPair', 'Get-DMReplicationPair', 'Set-DMReplicationPair',
+            'Sync-DMReplicationPair', 'Split-DMReplicationPair', 'Switch-DMReplicationPair',
+            'Enable-DMReplicationPairSecondaryProtection', 'Disable-DMReplicationPairSecondaryProtection',
+            'Remove-DMReplicationPair',
+            'New-DMReplicationConsistencyGroup', 'Get-DMReplicationConsistencyGroup',
+            'Set-DMReplicationConsistencyGroup', 'Add-DMReplicationPairToConsistencyGroup',
+            'Remove-DMReplicationPairFromConsistencyGroup', 'Sync-DMReplicationConsistencyGroup',
+            'Split-DMReplicationConsistencyGroup', 'Switch-DMReplicationConsistencyGroup',
+            'Remove-DMReplicationConsistencyGroup',
+            'Get-DMHyperMetroDomain', 'Get-DMHyperMetroPair', 'New-DMHyperMetroPair',
+            'Set-DMHyperMetroPair', 'Sync-DMHyperMetroPair', 'Suspend-DMHyperMetroPair',
+            'Start-DMHyperMetroPair', 'Switch-DMHyperMetroPairPriority',
+            'Remove-DMHyperMetroPair',
+            'New-DMHyperMetroConsistencyGroup', 'Get-DMHyperMetroConsistencyGroup',
+            'Set-DMHyperMetroConsistencyGroup', 'Add-DMHyperMetroPairToConsistencyGroup',
+            'Remove-DMHyperMetroPairFromConsistencyGroup', 'Sync-DMHyperMetroConsistencyGroup',
+            'Suspend-DMHyperMetroConsistencyGroup', 'Start-DMHyperMetroConsistencyGroup',
+            'Switch-DMHyperMetroConsistencyGroup', 'Remove-DMHyperMetroConsistencyGroup',
             'Disconnect-deviceManager'
         ) -Status 'NotRequested' -Reason 'Call the runner with -RunMutatingTests and enable the desired section in IntegrityValidationConfig.psd1.'
     }
@@ -119,6 +140,9 @@ function Invoke-MutationValidation {
         $renamedQosPolicyName = New-TestName -Suffix 'qos_renamed'
         $consistencyGroupName = New-TestName -Suffix 'cgsnap'
         $consistencyCopyName = New-TestName -Suffix 'cgcopy'
+        $replicationPairName = New-TestName -Suffix 'rpair'
+        $replicationGroupName = New-TestName -Suffix 'rcg'
+        $hyperMetroGroupName = New-TestName -Suffix 'hmcg'
         $testHostName = New-TestName -Suffix 'host'
         $renamedHostName = New-TestName -Suffix 'host_renamed'
         $hostGroupName = New-TestName -Suffix 'hostgroup'
@@ -145,6 +169,8 @@ function Invoke-MutationValidation {
         . $script:DirectMappingMutationWorkflow
         . $script:ProtectionMutationWorkflow
         . $script:QosMutationWorkflow
+        . $script:ReplicationMutationWorkflow
+        . $script:HyperMetroMutationWorkflow
         . $script:InitiatorsMutationWorkflow
         . $script:MutationReadBackWorkflow
 
