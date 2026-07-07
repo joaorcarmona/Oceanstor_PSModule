@@ -79,4 +79,6 @@ cleanup by captured ID in `finally`, users removed before their role.
    lifecycles; keep user/role and syslog sections default-off (IT-1) —
    **still open**.
 
-Full findings: `docs/system-management/VALIDATION-REPORT.md`.
+Implementation validation notes were used to produce the system-management
+TODO (`docs/system-management/TODO.md`). The validation report itself is not
+part of the public documentation set.

@@ -16,7 +16,7 @@ rather than storage objects (LUNs, file systems, hosts).
 | [CERTIFICATES.md](CERTIFICATES.md) | Certificate management | **Not implemented / gap / planned** |
 | [ALARMS-AND-EVENTS.md](ALARMS-AND-EVENTS.md) | Alarm queries; system and equipment status | Partial (read-only) |
 | [SAFETY-AND-LIVE-VALIDATION.md](SAFETY-AND-LIVE-VALIDATION.md) | Safety classification and live-validation rules | — |
-| [VALIDATION-REPORT.md](VALIDATION-REPORT.md) | Analysis and live-validation report (2026-07-07) | — |
+| [TODO.md](TODO.md) | Roadmap and open gaps for this domain | — |
 
 ## Connecting
 
