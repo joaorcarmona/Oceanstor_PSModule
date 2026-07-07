@@ -9,13 +9,12 @@ The organization follows common enterprise storage practice: block workload anal
 
 ## Documentation Map
 
-- [Block/SAN performance](BLOCK.md)
-- [NAS/FileSystem performance](NAS.md)
-- [Array and controller performance](ARRAY.md)
-- [Historical performance and capacity](HISTORY.md)
-- [Troubleshooting cookbook](TROUBLESHOOTING.md)
-- [Implementation guide](IMPLEMENTATION.md)
-- [Live validation gap analysis](VALIDATION-GAP-ANALYSIS.md)
+- [Block/SAN performance](block.md)
+- [NAS/FileSystem performance](nas.md)
+- [Array and controller performance](array.md)
+- [Historical performance and capacity](history.md)
+- [Troubleshooting cookbook](troubleshooting.md)
+- [Implementation guide](implementation.md)
 
 ## Quick Start
 
@@ -133,14 +132,14 @@ The limit is first-N from the collected inventory, not true top-N by IOPS. Use `
 
 ## Where To Go Next
 
-Start with [Block/SAN performance](BLOCK.md) for LUN, pool, disk, host, and port analysis.
+Start with [Block/SAN performance](block.md) for LUN, pool, disk, host, and port analysis.
 
-Use [NAS/FileSystem performance](NAS.md) for FileSystem OPS, bandwidth, and response time.
+Use [NAS/FileSystem performance](nas.md) for FileSystem OPS, bandwidth, and response time.
 
-Use [Array and controller performance](ARRAY.md) for system workload, controller balance, CPU, queue, and monitoring status.
+Use [Array and controller performance](array.md) for system workload, controller balance, CPU, queue, and monitoring status.
 
-Use [Historical performance and capacity](HISTORY.md) when realtime samples are not enough.
+Use [Historical performance and capacity](history.md) when realtime samples are not enough.
 
-Use [Troubleshooting cookbook](TROUBLESHOOTING.md) during incidents.
+Use [Troubleshooting cookbook](troubleshooting.md) during incidents.
 
-Use [Implementation guide](IMPLEMENTATION.md) when changing or extending the module.
+Use [Implementation guide](implementation.md) when changing or extending the module.
