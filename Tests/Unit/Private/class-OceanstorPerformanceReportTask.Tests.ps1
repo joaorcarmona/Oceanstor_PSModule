@@ -48,11 +48,14 @@ Describe 'OceanstorPerformanceReportTask' {
                 end_time         = 1700003600
                 content          = @(
                     [pscustomobject]@{
-                        report_type    = 'performance'
-                        compute_mode   = 'avg'
-                        object_type    = 'LUN'
-                        object_id_list = @('1', '2')
-                        indicator_list = @('21', '22')
+                        report_type  = 'performance'
+                        compute_mode = 'avg'
+                        object_type  = 11
+                        entities     = @(
+                            [pscustomobject]@{ id = '1'; name = 'lun1'; data = '{"ID":"1","NAME":"lun1"}' }
+                            [pscustomobject]@{ id = '2'; name = 'lun2'; data = '{"ID":"2","NAME":"lun2"}' }
+                        )
+                        indicators   = [pscustomobject]@{ basic = @('21', '22'); advance = @() }
                     }
                 )
             }
@@ -67,7 +70,7 @@ Describe 'OceanstorPerformanceReportTask' {
             $task.End | Should -Be ([DateTimeOffset]::FromUnixTimeSeconds(1700003600).UtcDateTime)
             $task.Contents.Count | Should -Be 1
             $task.Contents[0].ReportType | Should -Be 'performance'
-            $task.Contents[0].ObjectType | Should -Be 'LUN'
+            $task.Contents[0].ObjectType | Should -Be 11
             $task.Contents[0].ObjectIdList | Should -Be @('1', '2')
             $task.Contents[0].IndicatorList | Should -Be @('21', '22')
         }

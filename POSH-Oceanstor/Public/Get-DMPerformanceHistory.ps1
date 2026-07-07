@@ -74,7 +74,7 @@ function Get-DMPerformanceHistory {
         [pscustomobject]$WebSession,
 
         [Parameter(Mandatory = $true, Position = 0)]
-        [ValidateSet('LUN', 'Controller', 'StoragePool', 'Disk', 'Host', 'System', 'FCPort', 'EthernetPort')]
+        [ValidateSet('LUN', 'FileSystem', 'Controller', 'StoragePool', 'Disk', 'Host', 'System', 'FCPort', 'EthernetPort')]
         [string]$ObjectType,
 
         [Parameter(Mandatory = $true, Position = 1, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
@@ -112,7 +112,11 @@ function Get-DMPerformanceHistory {
 
     begin {
         $session = if ($WebSession) { $WebSession } else { $script:CurrentOceanstorSession }
-        $metricNames = @(if ($PSBoundParameters.ContainsKey('Metric') -and $Metric) { $Metric } else { $script:DMDefaultPerformanceMetrics })
+        $metricNames = @(
+            if ($PSBoundParameters.ContainsKey('Metric') -and $Metric) { $Metric }
+            elseif ($ObjectType -eq 'FileSystem') { $script:DMDefaultNasPerformanceMetrics }
+            else { $script:DMDefaultPerformanceMetrics }
+        )
         $collectedIds = [System.Collections.Generic.List[string]]::new()
     }
 
@@ -128,7 +132,10 @@ function Get-DMPerformanceHistory {
             return $samples
         }
 
-        $taskName = "DMPerfHistory_$([guid]::NewGuid().ToString('N'))"
+        # 14-char prefix + 17 guid chars = 31, the real pms/report_task name cap
+        # (the documented 32 is off by one on live arrays: a 32-character name is
+        # acknowledged with success but the task is never created).
+        $taskName = "DMPerfHistory_$([guid]::NewGuid().ToString('N').Substring(0, 17))"
         $tempZip = Join-Path ([System.IO.Path]::GetTempPath()) "$taskName.zip"
         $task = $null
         $log = $null
@@ -148,11 +155,54 @@ function Get-DMPerformanceHistory {
                 throw 'Get-DMPerformanceHistory: report task did not produce an export log.'
             }
 
-            Save-DMPerformanceReportFile -WebSession $session -LogId $log.LogId -Path $tempZip -Force | Out-Null
+            Save-DMPerformanceReportFile -WebSession $session -LogId $log.LogId -TaskId $task.Id -Path $tempZip -Force | Out-Null
 
             $rows = Import-DMPerformanceReportCsv -ZipPath $tempZip
             $metricCount = $metricNames.Count
 
+            # Live arrays export long-format CSVs -- one row per object/metric/timestamp
+            # with headers 'Object Type,Object Instance,Statistical Metric,Value,Time,
+            # Object Type ID,Object Instance ID,Statistical Metric ID' (confirmed on
+            # Dorado V600R005C27). Pivot those rows into one sample per object/timestamp.
+            $firstRow = $rows | Select-Object -First 1
+            $firstRowProps = if ($firstRow) { @($firstRow.PSObject.Properties.Name) } else { @() }
+            if (($firstRowProps -contains 'Statistical Metric ID') -and ($firstRowProps -contains 'Value')) {
+                $indicatorMap = Get-DMPerformanceIndicatorMap
+                $indicatorIdToMetric = @{}
+                foreach ($metricName in $metricNames) {
+                    $indicatorIdToMetric["$($indicatorMap[$metricName].Id)"] = $metricName
+                }
+
+                foreach ($group in ($rows | Group-Object -Property 'Object Instance ID', 'Time')) {
+                    $groupRows = @($group.Group)
+                    $firstOfGroup = $groupRows[0]
+
+                    # Times arrive as '2026-07-06 20:24:10 DST'; drop the trailing zone token.
+                    $timestamp = [datetime]::MinValue
+                    $rawTime = "$($firstOfGroup.Time)" -replace '\s+[A-Z]{2,5}$', ''
+                    $parsed = [datetime]::MinValue
+                    if ([datetime]::TryParse($rawTime, [ref]$parsed)) { $timestamp = $parsed }
+
+                    $metrics = [ordered]@{}
+                    foreach ($metricName in $metricNames) { $metrics[$metricName] = $null }
+                    foreach ($entry in $groupRows) {
+                        $entryMetricName = $indicatorIdToMetric["$($entry.'Statistical Metric ID')"]
+                        if ($entryMetricName) {
+                            $rawValue = $entry.Value
+                            $metrics[$entryMetricName] = if ($null -ne $rawValue -and "$rawValue" -ne '') { [double]$rawValue } else { $null }
+                        }
+                    }
+
+                    $sample = New-DMPerformanceSample -ObjectType $ObjectType -ObjectId $firstOfGroup.'Object Instance ID' -Timestamp $timestamp `
+                        -Metrics $metrics -Session $session
+                    [void]$samples.Add($sample)
+                }
+
+                return $samples
+            }
+
+            # Wide-format fallback (one column per metric), kept for firmware whose
+            # exports differ from the long format observed live.
             foreach ($row in $rows) {
                 $propNames = @($row.PSObject.Properties.Name | Where-Object { $_ -ne 'SourceFile' })
                 if ($propNames.Count -lt $metricCount) {

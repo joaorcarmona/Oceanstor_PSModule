@@ -36,7 +36,8 @@ function Get-DMPerformanceReportTask {
         Filename: Get-DMPerformanceReportTask.ps1
     #>
     [CmdletBinding(DefaultParameterSetName = 'ByName')]
-    [OutputType([OceanstorPerformanceReportTask])]
+    # String form: class type literals in attributes do not resolve inside module scope.
+    [OutputType('OceanstorPerformanceReportTask')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Mandatory = $false)]
         [pscustomobject]$WebSession,

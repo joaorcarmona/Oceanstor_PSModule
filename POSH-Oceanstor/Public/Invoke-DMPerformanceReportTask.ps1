@@ -7,11 +7,10 @@ function Invoke-DMPerformanceReportTask {
         Triggers report generation via pms/report_task/export (GET, v2 API), then polls
         pms/report_task/task_log (GET, v2 API) until a new log entry for the task appears.
 
-        The exact task_log status field name/values used to signal "ready" have not been
-        confirmed against a live array (see PerformanceGAP.md Phase 4 notes). To avoid guessing
-        at status semantics, this cmdlet instead snapshots the existing log IDs for the task
-        before triggering the export, then treats the first newly-appeared log entry as ready.
-        This is a defensive design choice, not a confirmed behavior -- adjust once verified live.
+        task_log entries carry no status field on this array's firmware (Dorado V600R005C27,
+        confirmed live 2026-07-06, see PerformanceGAP.md). This cmdlet snapshots the existing
+        log IDs for the task before triggering the export, then treats the first newly-appeared
+        log entry as ready -- confirmed correct against a live array, not a defensive guess.
 
     .PARAMETER WebSession
         Optional parameter to define the session to be use on the REST call. If not defined, the module's cached $script:CurrentOceanstorSession session will be used
@@ -85,7 +84,7 @@ function Invoke-DMPerformanceReportTask {
             $existingLogIds = @(
                 Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource "pms/report_task/task_log?task_id=$($task.Id)" -ApiV2 |
                     Select-DMResponseData |
-                    ForEach-Object { $_.id }
+                    ForEach-Object { if ($_.log_id) { $_.log_id } else { $_.id } }
             )
 
             $response = Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource "pms/report_task/export?task_id=$($task.Id)" -ApiV2
@@ -94,7 +93,7 @@ function Invoke-DMPerformanceReportTask {
             $deadline = (Get-Date).AddSeconds($TimeoutSec)
             do {
                 $currentLogs = @(Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource "pms/report_task/task_log?task_id=$($task.Id)" -ApiV2 | Select-DMResponseData)
-                $newLog = $currentLogs | Where-Object { $_.id -notin $existingLogIds } | Select-Object -First 1
+                $newLog = $currentLogs | Where-Object { $(if ($_.log_id) { $_.log_id } else { $_.id }) -notin $existingLogIds } | Select-Object -First 1
 
                 if ($newLog) {
                     return New-DMPerformanceReportLog -Raw $newLog -Session $session

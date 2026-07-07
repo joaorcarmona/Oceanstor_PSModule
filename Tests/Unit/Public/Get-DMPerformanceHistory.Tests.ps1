@@ -96,6 +96,17 @@ InModuleScope GetDMPerformanceHistoryTestModule {
             }
         }
 
+        It 'defaults to the NAS metric set for FileSystem when -Metric is omitted' {
+            Get-DMPerformanceHistory -WebSession $script:session -ObjectType FileSystem -ObjectId '1' -StartTime (Get-Date).AddDays(-1) -EndTime (Get-Date) | Out-Null
+
+            Should -Invoke New-DMPerformanceReportTask -Times 1 -Exactly -ParameterFilter {
+                $ObjectType -eq 'FileSystem' -and
+                (@($Metric)).Count -eq $script:DMDefaultNasPerformanceMetrics.Count -and
+                (@($Metric) -contains 'Ops') -and
+                (@($Metric) -contains 'AvgReadOpsResponseTimeUs')
+            }
+        }
+
         It 'accumulates piped ObjectId values before creating a single report task' {
             '1', '2', '3' | Get-DMPerformanceHistory -WebSession $script:session -ObjectType LUN -Metric TotalIOPS -StartTime (Get-Date).AddDays(-1) -EndTime (Get-Date) | Out-Null
 

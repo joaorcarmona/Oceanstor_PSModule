@@ -22,22 +22,34 @@ class OceanstorPerformanceReportTask {
         $this.Format = $Raw.format
         $this.{Time Segment} = $Raw.time_segment
 
-        $this.Begin = if ($Raw.begin_time) { [DateTimeOffset]::FromUnixTimeSeconds([long]$Raw.begin_time).UtcDateTime } else { [datetime]::MinValue }
-        $this.End = if ($Raw.end_time) { [DateTimeOffset]::FromUnixTimeSeconds([long]$Raw.end_time).UtcDateTime } else { [datetime]::MinValue }
+        # Live arrays report begin_time/end_time in epoch milliseconds (13 digits),
+        # while the documented seconds form must remain accepted for compatibility.
+        $this.Begin = [OceanstorPerformanceReportTask]::ConvertFromEpoch($Raw.begin_time)
+        $this.End = [OceanstorPerformanceReportTask]::ConvertFromEpoch($Raw.end_time)
 
         $this.Contents = @($Raw.content | ForEach-Object {
                 [pscustomobject]@{
                     ReportType    = $_.report_type
                     ComputeMode   = $_.compute_mode
                     ObjectType    = $_.object_type
-                    ObjectIdList  = @($_.object_id_list)
-                    IndicatorList = @($_.indicator_list)
+                    ObjectIdList  = @($_.entities | ForEach-Object { $_.id })
+                    IndicatorList = @($_.indicators.basic)
                 }
             })
     }
 
     [psobject] Delete() {
         return Remove-DMPerformanceReportTask -WebSession $this.Session -Id $this.Id -Confirm:$false
+    }
+
+    static hidden [datetime] ConvertFromEpoch([object]$Value) {
+        if (-not $Value) { return [datetime]::MinValue }
+        $epoch = [long]$Value
+        # 253402300799 is 9999-12-31 in seconds; anything larger is milliseconds.
+        if ($epoch -gt 253402300799) {
+            return [DateTimeOffset]::FromUnixTimeMilliseconds($epoch).UtcDateTime
+        }
+        return [DateTimeOffset]::FromUnixTimeSeconds($epoch).UtcDateTime
     }
 }
 
@@ -75,11 +87,16 @@ function New-DMPerformanceReportLog {
         [pscustomobject]$Session
     )
 
+    # Live task_log entries (Dorado V600R005C27) carry log_id/file_name/file_size/
+    # generate_time and no status field -- an entry only appears once its export
+    # file is ready. id/status are kept as fallbacks for differing firmware.
     $log = [pscustomobject]@{
         PSTypeName = 'OceanStor.PerformanceReportLog'
-        LogId      = $Raw.id
+        LogId      = if ($Raw.log_id) { $Raw.log_id } else { $Raw.id }
         TaskId     = $Raw.task_id
         Status     = $Raw.status
+        FileName   = $Raw.file_name
+        FileSize   = $Raw.file_size
         Raw        = $Raw
         Session    = $Session
     }

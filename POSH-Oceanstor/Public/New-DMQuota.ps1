@@ -55,7 +55,8 @@ function New-DMQuota {
         PS> New-DMQuota -FileSystemName 'fs01' -DtreeName 'project-a' -QuotaType User -AccountName 'jdoe' -AccountType Local -SpaceHardLimit 100GB
     #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
-    [OutputType([OceanstorQuota])]
+    # String form: class type literals in attributes do not resolve inside module scope.
+    [OutputType('OceanstorQuota')]
     param(
         [Parameter(ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,

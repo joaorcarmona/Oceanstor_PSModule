@@ -42,8 +42,11 @@ function New-DMPerformanceSample {
     $metricNames = [System.Collections.Generic.List[string]]::new()
     foreach ($key in $Metrics.Keys) {
         $value = $Metrics[$key]
-        if ($null -ne $value -and [double]$value -eq -1) {
-            $value = $null
+        if ($null -ne $value) {
+            $parsed = 0.0
+            if ([double]::TryParse("$value", [System.Globalization.NumberStyles]::Float, [System.Globalization.CultureInfo]::InvariantCulture, [ref]$parsed) -and $parsed -eq -1) {
+                $value = $null
+            }
         }
         $sample[$key] = $value
         $metricNames.Add($key)

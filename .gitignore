@@ -11,8 +11,10 @@ Reports/
 .codebase-memory/
 .github/instructions/*
 .github/copilot-instructions.md
-.claude/*
+.claude/
 AGENTS.md
 .archived-commands/
-.temp/*
+.temp/
+scripts/
+.codex/
 

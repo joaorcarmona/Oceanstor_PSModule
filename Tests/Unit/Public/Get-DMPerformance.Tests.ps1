@@ -72,6 +72,42 @@ InModuleScope GetDMPerformanceTestModule {
             $result[0].QueueLength | Should -Be 5
         }
 
+        It 'resolves FileSystem to object_type 40 and uses the NAS default metric set when -Metric is omitted' {
+            Mock Invoke-DeviceManager {
+                [pscustomobject]@{
+                    data = @(
+                        [pscustomobject]@{
+                            object_id        = 'FS1'
+                            timestamp        = 1700000000
+                            indicators       = @('182', '232', '233', '23', '26', '524', '525')
+                            indicator_values = @('100', '40', '60', '500', '200', '2500', '3500')
+                        }
+                    )
+                }
+            }
+
+            $result = Get-DMPerformance -WebSession $script:session -ObjectType FileSystem -ObjectId 'FS1'
+
+            Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter {
+                $BodyData.object_type -eq 40 -and
+                (@($BodyData.indicators)).Count -eq $script:DMDefaultNasPerformanceMetrics.Count -and
+                (@($BodyData.indicators) -contains 182) -and
+                (@($BodyData.indicators) -contains 524) -and
+                (@($BodyData.indicators) -contains 525)
+            }
+
+            $result[0].Ops | Should -Be 100
+            $result[0].AvgReadOpsResponseTimeUs | Should -Be 2500
+            $result[0].AvgWriteOpsResponseTimeUs | Should -Be 3500
+        }
+
+        It 'keeps every NAS default metric resolvable through the indicator map' {
+            $map = Get-DMPerformanceIndicatorMap
+            foreach ($name in $script:DMDefaultNasPerformanceMetrics) {
+                $map.Contains($name) | Should -BeTrue -Because "NAS default metric '$name' must exist in the indicator map"
+            }
+        }
+
         It 'resolves friendly metric names to indicator IDs positionally into sample properties' {
             Mock Invoke-DeviceManager {
                 [pscustomobject]@{

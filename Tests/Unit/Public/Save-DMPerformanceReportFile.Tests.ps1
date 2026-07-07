@@ -29,28 +29,28 @@ InModuleScope SaveDMPerformanceReportFileTestModule {
             }
         }
 
-        It 'downloads via Save-DMDeviceManagerFile using the log_id resource' {
-            Save-DMPerformanceReportFile -WebSession $script:session -LogId 'log-01' -Path $script:outPath | Out-Null
+        It 'downloads via Save-DMDeviceManagerFile using the log_id and task_id resource' {
+            Save-DMPerformanceReportFile -WebSession $script:session -LogId 'log-01' -TaskId 'task-01' -Path $script:outPath | Out-Null
 
             Should -Invoke Save-DMDeviceManagerFile -Times 1 -Exactly -ParameterFilter {
-                $Resource -eq 'pms/report_task/file?log_id=log-01' -and
+                $Resource -eq 'pms/report_task/file?log_id=log-01&task_id=task-01' -and
                 $OutFile -eq $script:outPath -and
                 $ApiV2 -eq $true
             }
         }
 
-        It 'accepts LogId via pipeline property name' {
-            [pscustomobject]@{ LogId = 'log-02' } | Save-DMPerformanceReportFile -WebSession $script:session -Path $script:outPath | Out-Null
+        It 'accepts LogId and TaskId via pipeline property name' {
+            [pscustomobject]@{ LogId = 'log-02'; TaskId = 'task-02' } | Save-DMPerformanceReportFile -WebSession $script:session -Path $script:outPath | Out-Null
 
             Should -Invoke Save-DMDeviceManagerFile -Times 1 -Exactly -ParameterFilter {
-                $Resource -eq 'pms/report_task/file?log_id=log-02'
+                $Resource -eq 'pms/report_task/file?log_id=log-02&task_id=task-02'
             }
         }
 
         It 'throws when the destination already exists without -Force' {
             Set-Content -LiteralPath $script:outPath -Value 'existing'
 
-            { Save-DMPerformanceReportFile -WebSession $script:session -LogId 'log-01' -Path $script:outPath -ErrorAction Stop } | Should -Throw '*already exists*'
+            { Save-DMPerformanceReportFile -WebSession $script:session -LogId 'log-01' -TaskId 'task-01' -Path $script:outPath -ErrorAction Stop } | Should -Throw '*already exists*'
 
             Should -Invoke Save-DMDeviceManagerFile -Times 0 -Exactly
         }
@@ -58,7 +58,7 @@ InModuleScope SaveDMPerformanceReportFileTestModule {
         It 'overwrites the destination when -Force is specified' {
             Set-Content -LiteralPath $script:outPath -Value 'existing'
 
-            Save-DMPerformanceReportFile -WebSession $script:session -LogId 'log-01' -Path $script:outPath -Force | Out-Null
+            Save-DMPerformanceReportFile -WebSession $script:session -LogId 'log-01' -TaskId 'task-01' -Path $script:outPath -Force | Out-Null
 
             Should -Invoke Save-DMDeviceManagerFile -Times 1 -Exactly
         }

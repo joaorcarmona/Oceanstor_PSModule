@@ -63,19 +63,48 @@ InModuleScope DMPerformanceIndicatorMapTestModule {
             $second = Get-DMPerformanceIndicatorMap
             $second['TotalIOPS'].Id | Should -Be $script:map['TotalIOPS'].Id
         }
+
+        It 'resolves NAS friendly names to documented file-system indicator IDs' {
+            $script:map['Ops'].Id | Should -Be 182
+            $script:map['ReadOps'].Id | Should -Be 232
+            $script:map['WriteOps'].Id | Should -Be 233
+            $script:map['AvgIOSizeKB'].Id | Should -Be 228
+            $script:map['AvgReadOpsResponseTimeUs'].Id | Should -Be 524
+            $script:map['AvgWriteOpsResponseTimeUs'].Id | Should -Be 525
+            $script:map['NasServiceTimeUs'].Id | Should -Be 523
+            $script:map['ReadBandwidthKBps'].Id | Should -Be 123
+            $script:map['WriteBandwidthKBps'].Id | Should -Be 124
+        }
+
+        It 'keeps NAS response-time metrics in raw microseconds without a SourceUnit conversion' {
+            foreach ($name in @('AvgReadOpsResponseTimeUs', 'AvgWriteOpsResponseTimeUs', 'NasServiceTimeUs')) {
+                $script:map[$name].Unit | Should -Be 'us'
+                $script:map[$name].ContainsKey('SourceUnit') | Should -BeFalse
+            }
+        }
     }
 
     Describe 'Get-DMPerformanceReportObjectTypeMap' {
-        It 'maps every object type the module models for report tasks' {
+        It 'maps every object type the module models for report tasks to its Name and Enum' {
             $map = Get-DMPerformanceReportObjectTypeMap
-            $map['LUN'] | Should -Be 'LUN'
-            $map['Controller'] | Should -Be 'CONTROLLER'
-            $map['StoragePool'] | Should -Be 'STORAGEPOOL'
-            $map['Disk'] | Should -Be 'DISK'
-            $map['Host'] | Should -Be 'HOST'
-            $map['System'] | Should -Be 'SYSTEM'
-            $map['FCPort'] | Should -Be 'FC_PORT'
-            $map['EthernetPort'] | Should -Be 'ETH_PORT'
+            $map['LUN'].Name | Should -Be 'LUN'
+            $map['LUN'].Enum | Should -Be 11
+            $map['Controller'].Name | Should -Be 'Controller'
+            $map['Controller'].Enum | Should -Be 207
+            $map['StoragePool'].Name | Should -Be 'StoragePool'
+            $map['StoragePool'].Enum | Should -Be 216
+            $map['Disk'].Name | Should -Be 'Disk'
+            $map['Disk'].Enum | Should -Be 10
+            $map['Host'].Name | Should -Be 'Host'
+            $map['Host'].Enum | Should -Be 21
+            $map['System'].Name | Should -Be 'System'
+            $map['System'].Enum | Should -Be 201
+            $map['FCPort'].Name | Should -Be 'FC_PORT'
+            $map['FCPort'].Enum | Should -Be 212
+            $map['EthernetPort'].Name | Should -Be 'ETH_PORT'
+            $map['EthernetPort'].Enum | Should -Be 213
+            $map['FileSystem'].Name | Should -Be 'FileSystem'
+            $map['FileSystem'].Enum | Should -Be 40
         }
     }
 

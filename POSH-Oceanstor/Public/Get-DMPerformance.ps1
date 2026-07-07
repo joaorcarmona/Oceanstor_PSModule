@@ -1,6 +1,7 @@
 $script:DMPerformanceObjectTypeMap = [ordered]@{
     Disk         = 10
     LUN          = 11
+    FileSystem   = 40
     EthernetPort = 213
     BondPort     = 235
     FCPort       = 212
@@ -15,6 +16,12 @@ $script:DMDefaultPerformanceMetrics = @(
     'BandwidthMBps', 'ReadBandwidthMBps', 'WriteBandwidthMBps',
     'AvgLatencyMs', 'ReadLatencyMs', 'WriteLatencyMs',
     'QueueLength'
+)
+
+$script:DMDefaultNasPerformanceMetrics = @(
+    'Ops', 'ReadOps', 'WriteOps',
+    'ReadBandwidthMBps', 'WriteBandwidthMBps',
+    'AvgReadOpsResponseTimeUs', 'AvgWriteOpsResponseTimeUs'
 )
 
 function Get-DMPerformance {
@@ -37,7 +44,8 @@ function Get-DMPerformance {
 
     .PARAMETER Metric
         One or more friendly metric names (see Get-DMPerformanceIndicatorMap). Defaults to a
-        common IOPS/bandwidth/latency/queue-length set when omitted.
+        common IOPS/bandwidth/latency/queue-length set when omitted, or to a NAS
+        OPS/bandwidth/response-time set when ObjectType is FileSystem.
 
     .INPUTS
         System.String
@@ -61,7 +69,7 @@ function Get-DMPerformance {
         [pscustomobject]$WebSession,
 
         [Parameter(Mandatory = $true, Position = 0)]
-        [ValidateSet('LUN', 'Controller', 'StoragePool', 'Disk', 'EthernetPort', 'BondPort', 'FCPort', 'Host', 'System')]
+        [ValidateSet('LUN', 'FileSystem', 'Controller', 'StoragePool', 'Disk', 'EthernetPort', 'BondPort', 'FCPort', 'Host', 'System')]
         [string]$ObjectType,
 
         [Parameter(Mandatory = $true, Position = 1, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
@@ -87,7 +95,11 @@ function Get-DMPerformance {
     begin {
         $session = if ($WebSession) { $WebSession } else { $script:CurrentOceanstorSession }
         $indicatorMap = Get-DMPerformanceIndicatorMap
-        $metricNames = @(if ($PSBoundParameters.ContainsKey('Metric') -and $Metric) { $Metric } else { $script:DMDefaultPerformanceMetrics })
+        $metricNames = @(
+            if ($PSBoundParameters.ContainsKey('Metric') -and $Metric) { $Metric }
+            elseif ($ObjectType -eq 'FileSystem') { $script:DMDefaultNasPerformanceMetrics }
+            else { $script:DMDefaultPerformanceMetrics }
+        )
         $indicatorIds = @($metricNames | ForEach-Object { $indicatorMap[$_].Id })
         $objectTypeId = $script:DMPerformanceObjectTypeMap[$ObjectType]
         $collectedIds = [System.Collections.Generic.List[string]]::new()

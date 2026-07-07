@@ -2,7 +2,8 @@ function New-DMHyperCDPSchedule {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
 
     [CmdletBinding(SupportsShouldProcess = $true)]
-    [OutputType([OceanstorHyperCDPSchedule])]
+    # String form: class type literals in attributes do not resolve inside module scope.
+    [OutputType('OceanstorHyperCDPSchedule')]
     param(
         [Parameter(ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,

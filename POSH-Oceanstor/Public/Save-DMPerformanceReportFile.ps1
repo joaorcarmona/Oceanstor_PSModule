@@ -14,6 +14,12 @@ function Save-DMPerformanceReportFile {
         ID of the export log entry to download. Accepts the object returned by
         Invoke-DMPerformanceReportTask via pipeline property name (LogId).
 
+    .PARAMETER TaskId
+        ID of the report task the log belongs to. Both task_id and log_id are mandatory
+        on the live pms/report_task/file interface (omitting task_id returns error 65540).
+        Accepts the object returned by Invoke-DMPerformanceReportTask via pipeline
+        property name (TaskId).
+
     .PARAMETER Path
         Local file path to save the download to.
 
@@ -27,7 +33,7 @@ function Save-DMPerformanceReportFile {
         System.IO.FileInfo
 
     .EXAMPLE
-        PS> Save-DMPerformanceReportFile -LogId '10' -Path 'C:\temp\report.zip'
+        PS> Save-DMPerformanceReportFile -LogId '10' -TaskId '1' -Path 'C:\temp\report.zip'
 
     .EXAMPLE
         PS> Invoke-DMPerformanceReportTask -Name 'lun-history' | Save-DMPerformanceReportFile -Path 'C:\temp\report.zip'
@@ -45,6 +51,10 @@ function Save-DMPerformanceReportFile {
         [ValidateNotNullOrEmpty()]
         [string]$LogId,
 
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$TaskId,
+
         [Parameter(Mandatory = $true)]
         [string]$Path,
 
@@ -59,7 +69,7 @@ function Save-DMPerformanceReportFile {
 
             $session = if ($WebSession) { $WebSession } else { $script:CurrentOceanstorSession }
 
-            return Save-DMDeviceManagerFile -WebSession $session -Resource "pms/report_task/file?log_id=$LogId" -OutFile $Path -ApiV2
+            return Save-DMDeviceManagerFile -WebSession $session -Resource "pms/report_task/file?log_id=$LogId&task_id=$TaskId" -OutFile $Path -ApiV2
         }
         catch {
             $PSCmdlet.WriteError($_)
