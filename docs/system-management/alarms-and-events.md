@@ -8,7 +8,7 @@
 
 Querying array alarms, overall system information, and equipment status.
 Alarm notification *transport* (SNMP traps, syslog) is documented in
-[SNMP.md](SNMP.md) and [SYSLOG.md](SYSLOG.md).
+[snmp.md](snmp.md) and [syslog.md](syslog.md).
 
 ## Cmdlets
 

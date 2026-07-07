@@ -7,10 +7,11 @@ guides and gives you the fastest path to the right test command.
 
 | You want to... | Use |
 |---|---|
-| Validate logic offline, no array needed | [Unit tests](UNIT-TESTS.md) |
+| Validate logic offline, no array needed | [Unit tests](unit-tests.md) |
 | Confirm getters work against a real array, read-only | [Integrity tests](integrity-tests.md) (default mode) |
 | Exercise create/update/delete workflows the harness owns and cleans up | [Integrity tests](integrity-tests.md) (`-RunMutatingTests`) |
 | Validate realtime/Excel/history/capacity performance cmdlets | [Performance integrity tests](performance-integrity-tests.md) |
+| Exercise system-management test-owned mutation workflows | [System-management integrity tests](system-management-integrity-tests.md) |
 | Understand the `Tests/` folder layout and status vocabulary | [Test schema & organization](test-schema-organization.md) |
 | Understand what is and isn't safe to run against a live array | [Live validation safety](live-validation-safety.md) |
 
@@ -111,8 +112,9 @@ single `Performance validation | NotConfigured` check and stops there.
 
 ## See also
 
-- [Unit tests](UNIT-TESTS.md)
+- [Unit tests](unit-tests.md)
 - [Integrity tests](integrity-tests.md)
 - [Performance integrity tests](performance-integrity-tests.md)
+- [System-management integrity tests](system-management-integrity-tests.md)
 - [Test schema & organization](test-schema-organization.md)
 - [Live validation safety](live-validation-safety.md)

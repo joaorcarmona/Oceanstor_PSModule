@@ -16,6 +16,7 @@ BeforeDiscovery {
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Assert-DMApiSuccess.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Remove-DMLun.ps1"
+        . "$testRoot\..\Support\DMResponseFixtures.ps1"
 
         Export-ModuleMember -Function Remove-DMLun
     }
@@ -42,7 +43,7 @@ Describe 'Remove-DMLun' {
             return $items
         }
         Mock Invoke-DeviceManager {
-            [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 } }
+            New-DMFixtureSuccessResponse
         }
     }
 

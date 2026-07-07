@@ -78,14 +78,18 @@ Remove-DMPortBond -WebSession $storage -Id $bond.Id
   (expected type `OceanStorPortBond`).
 - `New/Set/Remove-DMPortBond` have unit tests in
   `Tests/Unit/Public/Network-Actions.Tests.ps1` (mocked transport; asserts
-  method, resource, and body mapping). No live mutation workflow exists —
-  intentional.
+  method, resource, and body mapping), including no-API-call-under-`-WhatIf`
+  regression cases and a `Get-DMPortBond | Remove-DMPortBond` pipeline test.
+  No live mutation workflow exists — intentional.
 
 ## Known Gaps
 
-- No `-WhatIf` regression test asserting the API is not called (unit-test gap,
-  tracked in [TODO.md](TODO.md)).
-- Bond member add/remove after creation is not exposed.
+- Bond member add/remove after creation is **not implemented**: the Dorado
+  6.1.6 REST reference documents the bond port modify interface
+  (`PUT bond_port/{id}`) with `NAME`, `MTU`, IPv4/IPv6 address fields and
+  `MSGRETURNTYPE`/`USEDTYPE` only — no `PORTIDLIST` or member operation.
+  Changing membership requires delete + recreate. Deferred until Huawei
+  documents a member endpoint (verified 2026-07-07).
 
 ## Related Files
 

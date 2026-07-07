@@ -1,0 +1,229 @@
+# This workflow uses actions not certified by GitHub, provided by
+# third-party governed by separate terms of service, privacy policy, and
+# support documentation.
+#
+# All third-party actions are pinned to a commit SHA (not a floating tag)
+# so the release pipeline cannot silently pick up upstream changes.
+#
+# Trigger: GitHub Release publication only (release: types: [published]).
+# No live storage array access, no signing certificate, and no real
+# PowerShell Gallery publish are performed unless the repository owner
+# explicitly enables them via repository variables (see the sign/publish
+# jobs below).
+
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate manifest, version tag, lint, and tests
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Test module manifest
+        shell: pwsh
+        run: |
+          $manifest = Test-ModuleManifest -Path ./POSH-Oceanstor/POSH-Oceanstor.psd1
+          Write-Host "Manifest OK: $($manifest.Name) $($manifest.Version)"
+
+      - name: Verify release tag matches ModuleVersion
+        shell: pwsh
+        run: |
+          $tag = '${{ github.event.release.tag_name }}'
+          $tagVersion = $tag.TrimStart('v', 'V')
+          $manifest = Import-PowerShellDataFile -Path ./POSH-Oceanstor/POSH-Oceanstor.psd1
+          $manifestVersion = $manifest.ModuleVersion
+
+          Write-Host "Release tag: $tag (parsed version: $tagVersion)"
+          Write-Host "Manifest ModuleVersion: $manifestVersion"
+
+          if ($tagVersion -ne $manifestVersion) {
+              throw "Release tag '$tag' does not match POSH-Oceanstor.psd1 ModuleVersion '$manifestVersion'. Fix the manifest or the tag before releasing."
+          }
+
+          Write-Host 'Tag and manifest version agree.'
+
+      - name: Install Pester 5.7.1
+        shell: pwsh
+        run: |
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module Pester -RequiredVersion 5.7.1 -Force -Scope CurrentUser -SkipPublisherCheck
+
+      - name: Install PSScriptAnalyzer
+        shell: pwsh
+        run: Install-Module PSScriptAnalyzer -Force -Scope CurrentUser -SkipPublisherCheck
+
+      - name: Run ScriptAnalyzer + full unit test suite (fails on any analyzer issue or test failure)
+        shell: pwsh
+        run: |
+          ./Tests/Invoke-UnitTests.ps1 -FailOnAnalyzerIssue -Output Normal -ResultPath ./Reports/Pester.xml
+
+      - name: Upload test results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: release-validate-pester-results
+          path: Reports/Pester.xml
+          if-no-files-found: error
+
+  package:
+    name: Stage module package
+    needs: validate
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Stage module contents only
+        shell: pwsh
+        run: |
+          $stagingRoot = Join-Path $env:RUNNER_TEMP 'package'
+          $stagingModule = Join-Path $stagingRoot 'POSH-Oceanstor'
+          New-Item -ItemType Directory -Path $stagingModule -Force | Out-Null
+
+          # Only the module folder is published. Tests, docs, TODO notes,
+          # archived commands, coverage/test reports, and .git metadata are
+          # intentionally excluded from the Gallery package.
+          Copy-Item -Path ./POSH-Oceanstor/* -Destination $stagingModule -Recurse -Force
+
+          Write-Host "Staged module contents at $stagingModule"
+          Get-ChildItem -Path $stagingModule -Recurse -Name | Sort-Object
+
+      - name: Validate staged manifest
+        shell: pwsh
+        run: |
+          $stagingModule = Join-Path $env:RUNNER_TEMP 'package\POSH-Oceanstor'
+          $manifest = Test-ModuleManifest -Path (Join-Path $stagingModule 'POSH-Oceanstor.psd1')
+          Write-Host "Staged manifest OK: $($manifest.Name) $($manifest.Version)"
+
+      - name: Upload staged package artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: posh-oceanstor-package
+          path: ${{ runner.temp }}/package/POSH-Oceanstor
+          if-no-files-found: error
+
+  sign:
+    name: Sign package (skippable)
+    needs: package
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Download staged package artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: posh-oceanstor-package
+          path: package/POSH-Oceanstor
+
+      - name: Signing status
+        shell: pwsh
+        run: |
+          if ('${{ vars.SIGNING_ENABLED }}' -ne 'true') {
+              Write-Host '::notice::Signing skipped - no signing certificate configured (vars.SIGNING_ENABLED is not "true"). Package will be re-uploaded unsigned.'
+          }
+          else {
+              Write-Host 'Signing enabled - certificate will be loaded from repository secrets.'
+          }
+
+      - name: Sign package scripts and manifest
+        if: ${{ vars.SIGNING_ENABLED == 'true' }}
+        shell: pwsh
+        env:
+          SIGNING_CERT_BASE64: ${{ secrets.SIGNING_CERT_BASE64 }}
+          SIGNING_CERT_PASSWORD: ${{ secrets.SIGNING_CERT_PASSWORD }}
+        run: |
+          if ([string]::IsNullOrEmpty($env:SIGNING_CERT_BASE64) -or [string]::IsNullOrEmpty($env:SIGNING_CERT_PASSWORD)) {
+              throw 'SIGNING_ENABLED is true but SIGNING_CERT_BASE64/SIGNING_CERT_PASSWORD secrets are not set.'
+          }
+
+          $certBytes = [Convert]::FromBase64String($env:SIGNING_CERT_BASE64)
+          $certPath = Join-Path $env:RUNNER_TEMP 'signing.pfx'
+          [IO.File]::WriteAllBytes($certPath, $certBytes)
+
+          $securePassword = ConvertTo-SecureString -String $env:SIGNING_CERT_PASSWORD -AsPlainText -Force
+          $cert = Get-PfxCertificate -FilePath $certPath -Password $securePassword
+
+          $filesToSign = Get-ChildItem -Path package/POSH-Oceanstor -Recurse -Include *.ps1, *.psm1, *.psd1
+          foreach ($file in $filesToSign) {
+              $result = Set-AuthenticodeSignature -FilePath $file.FullName -Certificate $cert -TimestampServer 'http://timestamp.digicert.com'
+              if ($result.Status -ne 'Valid') {
+                  throw "Signing failed for $($file.FullName): $($result.StatusMessage)"
+              }
+          }
+
+          Remove-Item -Path $certPath -Force
+
+          Write-Host "Signed $($filesToSign.Count) file(s)."
+
+      - name: Upload package artifact (signed or unsigned)
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: posh-oceanstor-package
+          path: package/POSH-Oceanstor
+          overwrite: true
+          if-no-files-found: error
+
+  publish:
+    name: Publish to PowerShell Gallery (gated)
+    needs: sign
+    if: ${{ github.ref == 'refs/heads/master' }}
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Download package artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: posh-oceanstor-package
+          path: package/POSH-Oceanstor
+
+      - name: Dry-run publish against a disposable local repository
+        shell: pwsh
+        run: |
+          $localRepoPath = Join-Path $env:RUNNER_TEMP 'local-psrepo'
+          New-Item -ItemType Directory -Path $localRepoPath -Force | Out-Null
+
+          Register-PSRepository -Name LocalDryRun -SourceLocation $localRepoPath -PublishLocation $localRepoPath -InstallationPolicy Trusted
+
+          try {
+              Publish-Module -Path ./package/POSH-Oceanstor -Repository LocalDryRun
+              Write-Host 'Dry-run publish to local disposable repository succeeded - package is publishable.'
+          }
+          finally {
+              Unregister-PSRepository -Name LocalDryRun
+          }
+
+      - name: Publish status
+        shell: pwsh
+        run: |
+          if ('${{ vars.PUBLISH_ENABLED }}' -ne 'true') {
+              Write-Host '::notice::Real Gallery publish skipped (vars.PUBLISH_ENABLED is not "true"). Dry-run above confirms the package would publish cleanly.'
+          }
+          else {
+              Write-Host 'PUBLISH_ENABLED is true - publishing to the real PowerShell Gallery.'
+          }
+
+      - name: Publish to PowerShell Gallery
+        if: ${{ vars.PUBLISH_ENABLED == 'true' }}
+        shell: pwsh
+        env:
+          PSGALLERY_API_KEY: ${{ secrets.PSGALLERY_API_KEY }}
+        run: |
+          if ([string]::IsNullOrEmpty($env:PSGALLERY_API_KEY)) {
+              throw 'PUBLISH_ENABLED is true but secrets.PSGALLERY_API_KEY is not set.'
+          }
+
+          Publish-Module -Path ./package/POSH-Oceanstor -NuGetApiKey $env:PSGALLERY_API_KEY -Repository PSGallery
+
+          Write-Host 'Published to the PowerShell Gallery.'

@@ -13,6 +13,14 @@
 - Existing integrity workflows already cover test-owned LUN, host, mapping,
   initiator, LUN-group, protection, QoS dependency, and HyperCDP schedule
   scenarios when configured.
+- Phase 08: `Set-DMMappingView` / `Rename-DMMappingView` added (name/description
+  labels only, `PUT /mappingview/{id}`; associations unchanged). The mapping
+  workflow now includes a test-owned `Set-DMMappingView` description read-back.
+  Storage-pool Set/Rename was deferred (documented for Dorado 6.1.6 only,
+  high blast radius, per-generation behavior unconfirmed); initiator action
+  methods were rejected (immutable WWN/IQN identity, command-only for
+  `ShouldProcess` clarity). NAS-child modification (`Set-DMCifsShare`,
+  `Set-DMdTree`, `Set-DMnfsShare`, `Set-DMnfsClient`) already shipped.
 
 ## High Priority
 

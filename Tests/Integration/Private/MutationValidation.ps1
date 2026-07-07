@@ -12,6 +12,7 @@
 . (Join-Path $PSScriptRoot 'Workflows\HyperMetro.ps1')
 . (Join-Path $PSScriptRoot 'Workflows\Initiators.ps1')
 . (Join-Path $PSScriptRoot 'Workflows\SystemManagement.ps1')
+. (Join-Path $PSScriptRoot 'Workflows\FailoverGroup.ps1')
 . (Join-Path $PSScriptRoot 'Workflows\ReadBack.ps1')
 
 function Invoke-MutationValidation {
@@ -54,6 +55,21 @@ function Invoke-MutationValidation {
     Add-SkippedResult -Name $script:systemManagementMutators -Status 'SkippedUnsafe' -Reason 'Global system-management mutations (users, roles, SNMP, syslog, NTP, time) are not exercised by the integrity harness unless a dedicated safe workflow exists for them.'
 
     $script:systemManagementWorkflowCommands = @($script:SystemManagementWorkflowCommandGates.Values | ForEach-Object { $_ })
+
+    # Network mutators with no safe test-owned workflow. Creating, modifying or
+    # removing bond ports, VLANs or LIFs touches live physical ports, and the
+    # LLDP working mode is a global setting; none of these are exercised by the
+    # harness. The failover-group lifecycle (a pure metadata object) is covered
+    # by the config-gated FailoverGroup workflow instead.
+    $script:networkUnsafeMutators = @(
+        'New-DMPortBond', 'Set-DMPortBond', 'Remove-DMPortBond',
+        'New-DMvLan', 'Set-DMvLan', 'Remove-DMvLan',
+        'New-DMLif', 'Set-DMLif', 'Remove-DMLif',
+        'Set-DMLLDPWorkingMode'
+    )
+    Add-SkippedResult -Name $script:networkUnsafeMutators -Status 'SkippedUnsafe' -Reason 'Network mutations against ports, VLANs, LIFs, or the global LLDP working mode risk severing management or data access and are not exercised by the integrity harness (see docs/network/safety-and-live-validation.md).'
+
+    $script:failoverGroupWorkflowCommands = @($script:FailoverGroupWorkflowCommandGates.Values | ForEach-Object { $_ })
 
     if (-not $RunMutatingTests) {
         Add-SkippedResult -Name @(
@@ -113,6 +129,7 @@ function Invoke-MutationValidation {
             'Disconnect-deviceManager'
         ) -Status 'NotRequested' -Reason 'Call the runner with -RunMutatingTests and enable the desired section in IntegrityValidationConfig.psd1.'
         Add-SkippedResult -Name $script:systemManagementWorkflowCommands -Status 'NotRequested' -Reason 'Call the runner with -RunMutatingTests and enable the SystemManagement gates in IntegrityValidationConfig.psd1 to run the test-owned system-management lifecycles.'
+        Add-SkippedResult -Name $script:failoverGroupWorkflowCommands -Status 'NotRequested' -Reason 'Call the runner with -RunMutatingTests and enable the Network gates in IntegrityValidationConfig.psd1 to run the test-owned failover-group lifecycle.'
     }
     elseif (-not $configuration.AllowMutatingTests) {
         Add-SkippedResult -Name @('test-owned mutation workflows') -Status 'NotConfigured' -Reason 'Set AllowMutatingTests = $true in IntegrityValidationConfig.psd1 to acknowledge creation and cleanup of test resources.'
@@ -176,6 +193,7 @@ function Invoke-MutationValidation {
         . $script:HyperMetroMutationWorkflow
         . $script:InitiatorsMutationWorkflow
         . $script:SystemManagementMutationWorkflow
+        . $script:FailoverGroupMutationWorkflow
         . $script:MutationReadBackWorkflow
 
         Invoke-RegisteredCleanup

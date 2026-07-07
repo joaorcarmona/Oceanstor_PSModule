@@ -2,10 +2,28 @@
 
 ---
 
-# Unreleased
+# v1.0.0-alpha1
+
+Date: 2026-07-07
+Branch: `alpha-v1.0.0`
+Status: Prerelease — not yet tagged/published
+
+## Summary
+
+First alpha of the 1.0.0 line, gated by a release-readiness review (Phase 11) of the
+post-merge work on `alpha-v1.0.0`. This section covers everything confirmed shipped in the
+working tree as of this review; unshipped or partially-shipped items are listed under
+Known gaps below rather than claimed here.
 
 ## New Features
 
+- Added `Set-DMMappingView` and `Rename-DMMappingView` for editing a mapping
+  view's name and description (REST `PUT /mappingview/{id}`). Only the
+  `NAME`/`DESCRIPTION` labels change; host-group, LUN-group, and port-group
+  associations are never touched (use `Add-`/`Remove-DM*ToMappingView` for
+  those). Both are `SupportsShouldProcess` with `ConfirmImpact = 'High'` because
+  a mapping view is an access-path object. The live mapping workflow gained a
+  test-owned `Set-DMMappingView` description read-back.
 - Added SAN remote replication and HyperMetro command families for Dorado 6.1.6:
   remote devices/LUNs, replication pairs, replication consistency groups,
   HyperMetro domains, HyperMetro pairs, and HyperMetro consistency groups.
@@ -24,6 +42,14 @@
   wrappers use distinct names such as `Get-DMVStorePair`,
   `New-DMFileSystemReplicationPair`, and `Get-DMFileHyperMetroDomain` so SAN
   LUN workflows and NAS/vStore workflows remain explicit.
+- Added `Get-DMCertificate` for reading array certificate objects.
+- Added `Get-DMQuorumServer` for reading HyperMetro quorum server configuration.
+- Added `Get-DMFailoverGroupMember` (alias `Get-DMFailoverGroupMembers`) for
+  reading the member list of a network failover group.
+- `Get-DMAlarm` now supports `-StartTime`/`-EndTime` and a `-Last` timespan
+  filter for narrowing alarm queries by date range, converting to Unix-epoch
+  bounds for the underlying request. `-Last` and an explicit
+  `-StartTime`/`-EndTime` pair are mutually exclusive.
 
 ## Performance Improvements
 
@@ -96,6 +122,61 @@
   `Lun Used Capacity` properties remain populated as compatibility aliases.
 - Confirmed file-system capacity output already uses the explicit
   `Capacity (GB)` property and default display name.
+
+## Breaking Changes
+
+- `Get-DMdnsServer` now returns typed `OceanStorDnsServer` objects instead of
+  a raw hashtable/string. Scripts that indexed the previous output as a
+  hashtable or parsed it as a string must switch to property access
+  (e.g. `$result.Address`) against the new type.
+
+## Testing / Validation
+
+- Added a `SystemManagement` mutation workflow
+  (`Tests/Integration/Private/Workflows/SystemManagement.ps1`) to the live
+  integrity harness.
+- Added a `DMResponseFixtures` mock-response fixture library
+  (`Tests/Unit/Support/DMResponseFixtures.ps1` + tests) and an
+  `Assert-DMWhatIfSafe` unit-test helper for asserting mutators don't call
+  through when `-WhatIf` is set.
+- The live integrity report correctly labels opt-in mutation checks as
+  `NotRequested` when `-RunMutatingTests` is not passed, per the harness
+  semantics established for the report format.
+- Unit test suite result (2026-07-07 release-gate run, analyzer enabled): **39
+  failed, 1193 passed** (1232 total). PSScriptAnalyzer: 119 issues (93
+  Warning, 24 Information, **2 Error** — `PSAvoidUsingUsernameAndPasswordParams`
+  on `New-DMSnmpUsmUser.ps1` and `Set-DMSnmpUsmUser.ps1`). This gate did
+  **not** pass cleanly; see the go/no-go note (`todo/release-readiness-go-no-go.md`)
+  for the full failure list and routing back to owning phases. No production
+  code or tests were modified to force a pass.
+
+## Safety
+
+- `Set-DMLLDPWorkingMode` and related network-topology mutators
+  (`Set-DMLif`, failover-group/vLAN mutators) now declare
+  `ConfirmImpact = 'High'` in addition to `SupportsShouldProcess`.
+- Added `.github/workflows/release.yml`, a release pipeline that packages the
+  module, gates Authenticode signing behind `SIGNING_ENABLED` (off by
+  default), and gates PowerShell Gallery publish behind `PUBLISH_ENABLED` +
+  a configured API key secret, with an unconfigured-publish path that fails
+  loudly instead of publishing silently.
+- **This package is unsigned.** The signing-certificate decision referenced
+  above is still open; this prerelease ships without Authenticode signing.
+
+## Known Gaps / Carried Forward
+
+- Signing-certificate acquisition/decision is still open — tracked for a
+  future cycle before a signed release can ship.
+- Network- and system-management-domain mutators considered unsafe for
+  unattended live validation remain intentionally excluded from the
+  integrity harness (`SkippedUnsafe`), not exercised end-to-end by the
+  automated report.
+- NAS/vStore DR workflows (file-system HyperMetro, vStore pair failover)
+  need a dual-array lab to validate live; not exercised in this cycle's
+  report.
+- Failover/switchover operations (HyperMetro pair switchover, DR failover)
+  need dedicated, explicitly-gated per-operation validation before they can
+  be considered release-verified; currently opt-in and unexercised.
 
 ---
 

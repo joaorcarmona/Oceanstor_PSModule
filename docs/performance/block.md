@@ -1,6 +1,6 @@
 # Block/SAN Performance Guide
 
-Navigation: [README](README.md) | [Array](ARRAY.md) | [History](HISTORY.md) | [Troubleshooting](TROUBLESHOOTING.md) | [Implementation](IMPLEMENTATION.md)
+Navigation: [README](README.md) | [Array](array.md) | [History](history.md) | [Troubleshooting](troubleshooting.md) | [Implementation](implementation.md)
 
 This guide covers LUN, storage pool, disk, host, and front-end port performance. It is written for the workflow most SAN administrators use during triage: start with the affected workload, compare backend pool/disk behavior, then check controller and port pressure.
 
@@ -115,7 +115,7 @@ Get-DMstoragePool |
 
 Pool metrics help distinguish workload-local issues from backend pressure. If one LUN is slow and the pool is also slow, investigate pool, disk, and controller pressure. If the pool is healthy, check host paths and front-end ports.
 
-Live validation confirmed realtime pool IOPS, bandwidth, latency, and queue values. `UsagePercent` existed as a friendly metric but returned `$null` for the tested pool; use [HISTORY.md](HISTORY.md) capacity history for confirmed capacity fields:
+Live validation confirmed realtime pool IOPS, bandwidth, latency, and queue values. `UsagePercent` existed as a friendly metric but returned `$null` for the tested pool; use [history.md](history.md) capacity history for confirmed capacity fields:
 
 ```powershell
 Get-DMCapacityHistory -ObjectType StoragePool -ObjectId "<pool-id>" -StartTime (Get-Date).AddDays(-1) -EndTime (Get-Date)
@@ -187,6 +187,6 @@ Live validation confirmed FC and Ethernet port examples. `Bond` is supported by 
 2. Compare sibling LUNs or the LUN group selection.
 3. Check the storage pool for shared backend pressure.
 4. Check disk hotspots.
-5. Check controller balance and CPU in [ARRAY.md](ARRAY.md).
+5. Check controller balance and CPU in [array.md](array.md).
 6. Check front-end port bandwidth and imbalance.
-7. Use [HISTORY.md](HISTORY.md) if the issue is intermittent or already passed.
+7. Use [history.md](history.md) if the issue is intermittent or already passed.

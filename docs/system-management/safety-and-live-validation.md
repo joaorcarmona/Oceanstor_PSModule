@@ -14,7 +14,7 @@ validation.
 | `GlobalSettingMutation` | Rewrites a singleton global setting (DNS, NTP, time, syslog settings, SNMP config) | Do not run live without a dedicated lab-safe rollback plan |
 | `AuthenticationOrAccessMutation` | Changes users, roles, passwords, sessions | Do not run live unless explicitly isolated and reversible |
 | `AlertingOrMonitoringMutation` | Changes where/how alerts are delivered | Do not run live unless a test-owned target can be added/removed without touching production alerting |
-| `CertificateMutation` | Imports/replaces/deletes certificates | Do not run live unless explicitly lab-safe (not implemented today) |
+| `CertificateMutation` | Imports/replaces/deletes certificates | Permanently `SkippedUnsafe` — never run live (no mutating cmdlets exist today; the rule stands even if they are built, because certificate changes can sever HTTPS management access) |
 | `UnknownSystemMutation` | Effect not fully understood | Do not run live |
 | `LocalFileOnly` | Writes only local files | Safe if the files are cleaned up |
 
@@ -26,11 +26,12 @@ validation.
 | `Get-DMLocalUser`, `Get-DMRole`, `Get-DMRolePermission` | ReadOnlySystemManagement |
 | `Get-DMSnmpConfig`, `Get-DMSnmpSecurityPolicy`, `Get-DMSnmpTrapServer`, `Get-DMSnmpUsmUser` | ReadOnlySystemManagement |
 | `Get-DMSyslogNotification`, `Get-DMNtpServer`, `Get-DMNtpStatus`, `Get-DMTimeZone`, `Get-DMutcTime`, `Get-DMdnsServer` | ReadOnlySystemManagement |
+| `Get-DMCertificate` | ReadOnlySystemManagement (registered in `ReadValidation.ps1`; the response schema contains no private-key material) |
 | `Test-DMNtpServer` | ReadOnlySystemManagement (connectivity probe; PUT verb but no config change) |
 | `Test-DMSnmpTrapServer` | AlertingOrMonitoringMutation (sends a real trap; point only at targets you own) |
 | `New/Set/Remove-DMSnmpTrapServer` | TestOwnedObjectMutation (discrete object, ID-addressed) |
 | `New/Set/Remove-DMSnmpUsmUser` | TestOwnedObjectMutation (discrete object, ID-addressed) |
-| `Add/Remove-DMSyslogServer` | TestOwnedObjectMutation, **by address not ID** — extra care; see [SYSLOG.md](SYSLOG.md) |
+| `Add/Remove-DMSyslogServer` | TestOwnedObjectMutation, **by address not ID** — extra care; see [syslog.md](syslog.md) |
 | `Set-DMSyslogNotification` | GlobalSettingMutation + AlertingOrMonitoringMutation |
 | `Set-DMSnmpConfig`, `Set-DMSnmpSecurityPolicy`, `Set-DMSnmpCommunity` | GlobalSettingMutation + AlertingOrMonitoringMutation |
 | `Set-DMNtpServer`, `Set-DMTimeZone`, `Set-DMutcTime` | GlobalSettingMutation |

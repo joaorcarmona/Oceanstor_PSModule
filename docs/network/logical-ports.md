@@ -11,7 +11,7 @@ access** and, for management-role LIFs, **management access**.
 
 | Cmdlet | REST resource | Method | Mutating | ShouldProcess |
 |---|---|---|---|---|
-| `Get-DMLif` | `lif` | GET | No | — |
+| `Get-DMLif` | `lif`, `lif/{id}` | GET | No | — |
 | `New-DMLif` | `lif` | POST | Yes | Yes |
 | `Set-DMLif` | `lif` | PUT | Yes | Yes (`ConfirmImpact = 'High'`) |
 | `Remove-DMLif` | `lif` | DELETE | Yes | Yes (`ConfirmImpact = 'High'`) |
@@ -35,10 +35,19 @@ Key parameters of `New-DMLif`:
 - Multi-vStore / DNS-zone options: `-VstoreId`, `-DdnsStatus`, `-DnsZoneName`,
   `-ListenDnsQueryEnabled`, `-IsPrivate`, `-HomeSiteWwn`.
 
-`Set-DMLif` identifies the LIF by `-Name` (mandatory; pipeline-bindable via the
-`LIF Name` property of `Get-DMLif` output) and optionally `-Id`; it can retarget
+`Get-DMLif` narrows server-side: `-Name` sends the documented `filter=NAME`
+query (exact `::` match, fuzzy `:` for simple leading/trailing `*` wildcards)
+and always re-checks the full pattern client-side; `-Id` uses the documented
+`lif/{id}` single-object query.
+
+`Set-DMLif` identifies the LIF by `-Name`, by `-Id`, or both (pipeline-bindable
+via the `Id` and `LIF Name` properties of `Get-DMLif` output); it can retarget
 the home port (`-HomePortType`/`-HomePortId`/`-HomePortName`), change addresses,
-failover behavior, and DNS-zone settings. `Remove-DMLif` deletes by `-Name`
+failover behavior, and DNS-zone settings. The REST modify interface documents
+`NAME` as a mandatory body field, so `-Id` alone first resolves the current
+name through the documented `lif/{id}` query (a read) and then sends the
+mutation with both keys — under `-WhatIf` neither call is made. Supplying
+neither `-Id` nor `-Name` is an error. `Remove-DMLif` deletes by `-Name`
 (with optional `-Id` and `-VstoreId`).
 
 `New-DMLif` returns an `OceanStorLIF` object on success.
@@ -93,14 +102,15 @@ Remove-DMLif -WebSession $storage -Name 'lif01'
   `OceanStorLIF`).
 - `New/Set/Remove-DMLif` have unit tests in
   `Tests/Unit/Public/Network-Actions.Tests.ps1` (mocked transport, body
-  mapping including IPv6 and vStore fields). No live mutation workflow —
-  intentional.
+  mapping including IPv6 and vStore fields), plus no-API-call-under-`-WhatIf`
+  regression cases and `-Id`/`-Name` addressing tests for `Set-DMLif`. No live
+  mutation workflow — intentional; the harness reports these mutators
+  `SkippedUnsafe`.
 
 ## Known Gaps
 
-- `Get-DMLif` supports no server-side `-Name`/`-Id` filter (returns all LIFs).
-- No `-WhatIf` regression test asserting the API is not called.
-- `Set-DMLif` requires `-Name` even when `-Id` is supplied.
+- The `lif` batch query also documents `IPV4ADDR`, `IPV6ADDR` and `HOMEPORTID`
+  filter fields; only `NAME` is exposed as a parameter today.
 
 ## Related Files
 

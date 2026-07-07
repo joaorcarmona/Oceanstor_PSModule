@@ -9,10 +9,20 @@ alarms/events.
 1. Human-supervised gated lab run of the new `SystemManagement` mutation
    workflow (implementation landed in Phase 04; see the runbook in
    `docs/testing/system-management-integrity-tests.md`).
-2. Certificate management research and implementation (Phase 05).
+2. Certificate management Stage B (mutation surface) — deferred; see
+   High Priority item 2 for the per-cmdlet reasons. Stage A (read-only
+   inventory) shipped in Phase 05.
 3. Remaining system-management parity gaps (LDAP/AD, alerting, alarms).
 
 ## Recently Completed
+
+- Phase 05 Stage A: certificate REST research
+  (`.archived-commands/certificate-endpoint-research.md`) and read-only
+  inventory getter `Get-DMCertificate` with typed `OceanStorCertificate`
+  output, unit tests, and read-validation registration. Stage B (mutation)
+  deferred: import is blocked on vendor documentation (no documented
+  certificate upload interface), export/remove deferred pending an approved
+  lab-safe procedure; certificate mutation stays permanently `SkippedUnsafe`.
 
 - Phase 04: config-gated `SystemManagement` integration workflow
   (`Tests/Integration/Private/Workflows/SystemManagement.ps1`) covering
@@ -43,10 +53,24 @@ alarms/events.
 > ack/clear decision) is scoped in
 > `todo/alpha-v1.0.0-post-merge-phase-04-system-management-mutation-workflow.md`;
 > item 2 (certificates) is scoped in
-> `todo/alpha-v1.0.0-post-merge-phase-05-certificate-management.md` (verified:
-> no `*Certificate*` file exists under `POSH-Oceanstor/Public/` — status
-> `open`). Item 1 implemented (live run pending) and the alarm ack/clear
-> decision recorded on 2026-07-07; item 2 still open.
+> `todo/alpha-v1.0.0-post-merge-phase-05-certificate-management.md`. Item 1
+> implemented (live run pending) and the alarm ack/clear decision recorded on
+> 2026-07-07; item 2 Stage A implemented on 2026-07-07
+> (`Get-DMCertificate`), Stage B deferred.
+
+### 3. SNMP USM user credential-parameter analyzer finding — release blocker, unowned
+
+- Phase 11's release-gate run (2026-07-07) surfaced 2 PSScriptAnalyzer
+  **Error**-severity `PSAvoidUsingUsernameAndPasswordParams` findings on
+  `New-DMSnmpUsmUser.ps1` and `Set-DMSnmpUsmUser.ps1` (line 10 of each).
+  These block the release pipeline's hard analyzer gate
+  (`-FailOnAnalyzerIssue` in `.github/workflows/release.yml`). Not fixed by
+  Phase 11 (no production cmdlet code changes in scope) — needs a future
+  system-management pass to redesign the affected parameters (e.g.
+  `[PSCredential]`/`SecureString` instead of separate plaintext
+  username/password parameters) without breaking the documented SNMPv3 USM
+  user contract. See `todo/release-readiness-go-no-go.md` for the full
+  release-gate finding.
 
 ### 1. SystemManagement mutation workflow — implemented (Phase 04), live run pending
 
@@ -69,16 +93,27 @@ alarms/events.
   human-supervised event — see the gated lab-run runbook in
   `docs/testing/system-management-integrity-tests.md`.
 
-### 2. Certificate management
+### 2. Certificate management — Stage A done (Phase 05), Stage B deferred
 
-- Research the OceanStor Dorado 6.1.6 REST certificate endpoints.
-- Identify a safe, read-only certificate inventory first.
-- Implement cmdlets only after the REST schema is confirmed:
-  - `Get-DMCertificate`
-  - `Import-DMCertificate`
-  - `Export-DMCertificate`
-  - `Remove-DMCertificate`
-  - possibly management certificate replacement, if a safe workflow exists
+- Done (2026-07-07): REST endpoint research recorded in
+  `.archived-commands/certificate-endpoint-research.md` (source: REST
+  Interface Reference section 4.3.5); `Get-DMCertificate` read-only
+  inventory implemented against the documented `GET certificate` endpoint
+  (4.3.5.3.1) with typed `OceanStorCertificate` output, unit tests, and
+  read-validation registration.
+- Deferred (Stage B mutation surface):
+  - `Import-DMCertificate` — **blocked on vendor documentation**: the 6.1.6
+    reference documents activation of an already-uploaded certificate file
+    (`PUT certificate/active`) but not the certificate upload step itself.
+  - `Export-DMCertificate` — deferred: the download endpoint
+    (`GET file/certificate?path=...`) is path-addressed with unspecified
+    path semantics and an unquantified private-key retrieval risk.
+  - `Remove-DMCertificate` — endpoint documented
+    (`DELETE om_msg_op_delete_certificate_info`) but deferred pending an
+    approved human-run lab-safe procedure (see the memo's lab-only
+    replacement procedure).
+- If Stage B is ever built: `SupportsShouldProcess`,
+  `ConfirmImpact = 'High'`, permanently `SkippedUnsafe` in live validation.
 - Live tests must never replace or delete existing certificates.
 
 ## Medium Priority

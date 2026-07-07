@@ -67,6 +67,16 @@ Write a JUnit XML report, suitable for CI:
 
 The GitHub Actions workflow uses the JUnit form above, writing into `Reports/`.
 
+### Response fixtures
+
+`Tests/Unit/Support/DMResponseFixtures.ps1` provides sanitized, reusable OceanStor
+v6 REST-response builders (success/error/paged/empty/session-expired envelopes,
+sample LUN/Host/FileSystem/network/replication objects, and filter/range
+resource-string helpers) so new or touched test files don't have to hand-roll
+mock response shapes. See
+[Response fixtures](../docs/testing/unit-tests.md#response-fixtures) for the
+full inventory, sanitization rule, and pilot-migration examples.
+
 ## Integration Methodology
 
 The live integration runner is:
@@ -303,7 +313,7 @@ Additional performance switches:
   original in a `finally` block; a failed restore fails loudly and prints the
   exact manual restore command. Default runs never modify monitoring settings.
 
-## Live-Confirmed Findings (2026-07-06, Dorado V600R005C27, 10.10.10.24)
+## Live-Confirmed Findings (2026-07-06, Dorado V600R005C27, lab array)
 
 The performance/capacity integrity checks above were run live end to end
 (`-IncludePerformance -IncludeExcelPerformance -IncludePerformanceHistory
@@ -351,7 +361,7 @@ monitoring status, NAS metric values, cleanup registry) is at
 Safe invocation example used for this validation:
 
 ```powershell
-$storageIP = "10.10.10.24"
+$storageIP = "StorageIP"
 $cred = Import-Clixml -Path "$env:USERPROFILE\.oceanstor\dm-creds.xml"
 
 ./Tests/Integration/Invoke-GetterIntegrityValidation.ps1 `

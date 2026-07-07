@@ -1,6 +1,6 @@
 # NAS/FileSystem Performance Guide
 
-Navigation: [README](README.md) | [Array](ARRAY.md) | [History](HISTORY.md) | [Troubleshooting](TROUBLESHOOTING.md) | [Implementation](IMPLEMENTATION.md)
+Navigation: [README](README.md) | [Array](array.md) | [History](history.md) | [Troubleshooting](troubleshooting.md) | [Implementation](implementation.md)
 
 This guide covers `Get-DMFileSystemPerformance`, the `FileSystem` object type, and NAS-style metrics. NAS analysis is separated from block analysis because operation rate, response time, protocol behavior, and client mix often matter more than LUN-style IOPS alone.
 
@@ -105,4 +105,4 @@ Use `SampleCount` and `IntervalSeconds` for a short live watch. Keep the object 
 - the file system exists but has no relevant activity in the sample window
 - performance monitoring is disabled or stale
 
-Check [ARRAY.md](ARRAY.md) for monitoring status and [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for null-metric triage.
+Check [array.md](array.md) for monitoring status and [troubleshooting.md](troubleshooting.md) for null-metric triage.

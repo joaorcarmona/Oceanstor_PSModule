@@ -3,7 +3,7 @@ function Set-DMLLDPWorkingMode {
     .SYNOPSIS
         Changes the OceanStor LLDP working mode.
     #>
-    [CmdletBinding(SupportsShouldProcess = $true)]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,

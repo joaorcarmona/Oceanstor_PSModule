@@ -1,6 +1,6 @@
 # Array and Controller Performance Guide
 
-Navigation: [README](README.md) | [Block](BLOCK.md) | [NAS](NAS.md) | [History](HISTORY.md) | [Troubleshooting](TROUBLESHOOTING.md) | [Implementation](IMPLEMENTATION.md)
+Navigation: [README](README.md) | [Block](block.md) | [NAS](nas.md) | [History](history.md) | [Troubleshooting](troubleshooting.md) | [Implementation](implementation.md)
 
 Array and controller checks answer a different question than LUN or FileSystem checks: is the problem local to one workload, or is the array/controller layer under pressure?
 
@@ -76,7 +76,7 @@ Compare controllers for:
 - one controller with higher CPU
 - one controller with higher latency or queue
 
-An imbalance can point to host pathing, ownership/preference behavior, workload placement, or front-end port distribution. Confirm with [BLOCK.md](BLOCK.md) port and host checks.
+An imbalance can point to host pathing, ownership/preference behavior, workload placement, or front-end port distribution. Confirm with [block.md](block.md) port and host checks.
 
 ## Local vs Global Problem
 
@@ -88,7 +88,7 @@ Use array and controller metrics to decide where to drill next:
 | Many LUNs slow, controller CPU/latency high | Check controller balance, port pressure, and global workload. |
 | FileSystems slow, system bandwidth/CPU high | Check NAS operation mix and backend pool. |
 | Realtime samples stale or empty | Check `Get-DMPerformanceMonitoring`. |
-| History unavailable | Check `ArchiveEnabled` and [HISTORY.md](HISTORY.md). |
+| History unavailable | Check `ArchiveEnabled` and [history.md](history.md). |
 
 ## Short Array Observation
 

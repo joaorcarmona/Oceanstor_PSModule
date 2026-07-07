@@ -13,12 +13,18 @@ device and remote resource IDs that the create cmdlets need.
 |---|---|---|
 | `Get-DMRemoteDevice` | `remote_device` | Read-only |
 | `Get-DMRemoteLun` | `remote_lun` | Read-only |
+| `Get-DMQuorumServer` | `QuorumServer` | Read-only |
 
 `Get-DMRemoteDevice` supports `-Name` (client-side wildcard) and `-Id` (exact
 lookup). `Get-DMRemoteLun` filters by `-RemoteDeviceId`, `-Name`, `-Id`,
 `-RemoteServiceType` (`ReplicationSecondaryLun`, `HyperMetroSecondaryLun`,
 `ReplicationStandbySecondaryLun`), and `-ArrayType` (`ReplicationDevice`,
 `HeterogeneousDevice`, `UnknownDevice`, `CloudReplicationDevice`).
+
+`Get-DMQuorumServer` lists quorum servers (`-Name` wildcard, `-Id` exact) so a
+`-QuorumServerId` for `Add-DMQuorumServerToHyperMetroDomain` can be resolved
+without the DeviceManager UI. Running status is translated (`27` = `Online`,
+`28` = `Offline`); it tolerates an array with no quorum servers configured.
 
 ## Common Workflows
 

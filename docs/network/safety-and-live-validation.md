@@ -93,13 +93,65 @@ finally {
 ## Relationship to the integrity harness
 
 `Tests/Integration/Invoke-GetterIntegrityValidation.ps1` runs the read-only
-network getters as part of read validation. Network mutators are **not**
-represented in any mutation workflow; the report surfaces them as skipped/not
-executed rather than passed — an intentionally skipped unsafe mutator is not
-a validated one. Statuses:
+network getters (including `Get-DMFailoverGroupMember`) as part of read
+validation. On the mutation side there is exactly one network workflow,
+disabled by default:
+
+- **Failover-group lifecycle**
+  (`Tests/Integration/Private/Workflows/FailoverGroup.ps1`): requires
+  `-RunMutatingTests` **and** `AllowMutatingTests = $true` **and**
+  `Network.Enabled = $true` **and**
+  `Network.AllowFailoverGroupLifecycle = $true` in
+  `IntegrityValidationConfig.psd1`. `-RunMutatingTests` alone never runs it.
+  It creates one run-unique customized failover group, captures its ID from
+  an immediate read-back, registers cleanup before any further step, modifies
+  the description, verifies `Get-DMFailoverGroupMember` reports zero members,
+  and removes the group by the captured ID. It never touches pre-existing
+  groups, LIFs, VLANs, bonds, ports, routes, or management addressing, and a
+  name collision aborts the step loudly.
+- **Member add/remove inside that workflow is skipped by design**: per the
+  REST reference, failover-group members are Ethernet ports (213), bond ports
+  (235) or VLANs (280) — not LIFs — and the harness owns no such object. The
+  step stays `SkippedUnsafe` until a test-owned VLAN workflow (below) exists.
+
+All other network mutators (`New/Set/Remove-DMPortBond`, `New/Set/Remove-DMvLan`,
+`New/Set/Remove-DMLif`, `Set-DMLLDPWorkingMode`) are reported `SkippedUnsafe`
+on every run; an intentionally skipped unsafe mutator is not a validated one.
+Statuses:
 
 - `SkippedUnsafe` — recognized as unsafe to run against a live array.
-- `NotConfigured` — mutation testing not acknowledged in
-  `IntegrityValidationConfig.psd1` (`AllowMutatingTests`).
+- `NotConfigured` — the relevant gate(s) in
+  `IntegrityValidationConfig.psd1` (`AllowMutatingTests`, `Network.Enabled`,
+  `Network.AllowFailoverGroupLifecycle`) are off.
 - `NotRequested` — runner invoked without `-RunMutatingTests`.
 - `Blocked` / `NotExecuted` — command has no workflow representation.
+
+## VLAN live workflow: idle-port guard design (not enabled)
+
+A future VLAN live workflow (create/delete a tagged child interface on a
+verified-idle port) stays **disabled** until the following guard exists and is
+itself tested. Design:
+
+1. **Idle-port detection.** A candidate Ethernet port qualifies as idle only
+   if *all* of the following hold, gathered read-only in the same run:
+   - it hosts no LIF (`Get-DMLif` home/current port references), no VLAN
+     (`Get-DMvLan -Name`/`Port Id` inspection), and no bond membership
+     (`Get-DMPortBond` `Ethernet Ports`);
+   - it is not a member of any failover group
+     (`Get-DMFailoverGroupMember` across all groups);
+   - it is not a management port and carries no IP address
+     (`Get-DMPortETH` role/address fields);
+   - its running status is Link Down, **or** the operator has explicitly
+     listed the port ID in a dedicated config key (for example
+     `Network.VlanCandidatePortIds`) — never auto-picked when link is up.
+2. **Refusal behavior.** If any check fails, the workflow refuses the port and
+   reports `SkippedUnsafe` with the failing check; it never falls back to
+   another port on its own.
+3. **Evidence required before enabling.** The guard's checks must have unit
+   tests, a dry run against a lab array showing correct classification of
+   busy vs. idle ports, and a human-reviewed run log — only then may a
+   `Network.AllowVlanLifecycle` gate be introduced.
+4. **Why it stays disabled.** Creating a tagged child on a port that carries
+   traffic can disturb frames on the parent; misclassifying one busy port as
+   idle is enough to sever data access. The guard must be provably refusing
+   non-idle ports before the workflow may exist.

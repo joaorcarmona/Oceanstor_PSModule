@@ -2,6 +2,12 @@ function Set-DMLif {
     <#
     .SYNOPSIS
         Modifies an OceanStor logical interface port.
+
+    .DESCRIPTION
+        The target can be addressed by -Name, by -Id, or both. The REST modify
+        interface documents NAME as a mandatory body field, so when only -Id is
+        supplied the current name is resolved first through the documented
+        lif/${id} query and sent alongside the ID.
     #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
@@ -11,7 +17,7 @@ function Set-DMLif {
         [Parameter(ValueFromPipelineByPropertyName = $true)]
         [string]$Id,
 
-        [Parameter(Mandatory = $true, Position = 0, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Position = 0, ValueFromPipelineByPropertyName = $true)]
         [Alias('LIF Name')]
         [ValidateLength(1, 255)]
         [ValidatePattern('^[A-Za-z0-9_.-]+$')]
@@ -49,6 +55,9 @@ function Set-DMLif {
 
     process {
         try {
+            if (-not $PSBoundParameters.ContainsKey('Id') -and -not $PSBoundParameters.ContainsKey('Name')) {
+                throw 'Specify -Id or -Name to identify the logical interface to modify.'
+            }
             $session = if ($WebSession) { $WebSession } else { $script:CurrentOceanstorSession }
             $body = ConvertTo-DMRequestBody -BoundParameters $PSBoundParameters -Map @{
                 Id                    = 'ID'
@@ -77,7 +86,17 @@ function Set-DMLif {
                 RemoveFromDnsZone     = 'removeFromDnsZone'
             }
 
-            if ($PSCmdlet.ShouldProcess($Name, 'Modify logical interface')) {
+            $target = if ($Name) { $Name } else { $Id }
+            if ($PSCmdlet.ShouldProcess($target, 'Modify logical interface')) {
+                if ($Id -and -not $Name) {
+                    # The documented lif PUT requires NAME in the body; resolve the
+                    # current name from the ID with the documented lif/${id} query.
+                    $current = Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource "lif/$([uri]::EscapeDataString($Id))" | Select-DMResponseData
+                    if (-not $current -or -not $current.NAME) {
+                        throw "No logical interface with ID '$Id' could be resolved to a name; the modify request was not sent."
+                    }
+                    $body['NAME'] = [string]$current.NAME
+                }
                 $response = Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'lif' -BodyData $body
                 $response = $response | Assert-DMApiSuccess
                 return $response.error

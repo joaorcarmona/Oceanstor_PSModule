@@ -10,7 +10,7 @@ mode. This is a single **global** network setting, not a per-port object.
 | Cmdlet | REST resource | Method | Mutating | ShouldProcess |
 |---|---|---|---|---|
 | `Get-DMLLDPWorkingMode` | `LLDP_WORKING_MODE` | GET | No | — |
-| `Set-DMLLDPWorkingMode` | `LLDP_WORKING_MODE` | PUT | Yes | Yes |
+| `Set-DMLLDPWorkingMode` | `LLDP_WORKING_MODE` | PUT | Yes | Yes (`ConfirmImpact = 'High'`) |
 
 - `Get-DMLLDPWorkingMode` returns a `pscustomobject` with `WorkingMode` (0–3),
   `WorkingModeName` (`Disabled` / `Transmit` / `Receive` /

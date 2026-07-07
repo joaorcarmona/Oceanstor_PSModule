@@ -8,13 +8,13 @@ rather than storage objects (LUNs, file systems, hosts).
 
 | Document | Domain | Implemented? |
 |---|---|---|
-| [LOCAL-USERS-AND-ROLES.md](LOCAL-USERS-AND-ROLES.md) | Local users, roles, role permissions | Yes |
-| [SNMP.md](SNMP.md) | SNMP protocol config, security policy, community, trap servers, USM users | Yes |
-| [NTP.md](NTP.md) | NTP servers, NTP status, time zone, UTC time | Yes |
-| [SYSLOG.md](SYSLOG.md) | Syslog notification settings and syslog servers | Yes |
-| [DNS.md](DNS.md) | DNS server configuration | Yes |
-| [CERTIFICATES.md](CERTIFICATES.md) | Certificate management | **Not implemented / gap / planned** |
-| [ALARMS-AND-EVENTS.md](ALARMS-AND-EVENTS.md) | Alarm queries; system and equipment status | Partial (read-only) |
+| [local-users-and-roles.md](local-users-and-roles.md) | Local users, roles, role permissions | Yes |
+| [snmp.md](snmp.md) | SNMP protocol config, security policy, community, trap servers, USM users | Yes |
+| [ntp.md](ntp.md) | NTP servers, NTP status, time zone, UTC time | Yes |
+| [syslog.md](syslog.md) | Syslog notification settings and syslog servers | Yes |
+| [dns.md](dns.md) | DNS server configuration | Yes |
+| [certificates.md](certificates.md) | Certificate management | Partial (read-only inventory: `Get-DMCertificate`; mutation not implemented) |
+| [alarms-and-events.md](alarms-and-events.md) | Alarm queries; system and equipment status | Partial (read-only) |
 | [safety-and-live-validation.md](safety-and-live-validation.md) | Safety classification and live-validation rules | — |
 | [TODO.md](TODO.md) | Roadmap and open gaps for this domain | — |
 

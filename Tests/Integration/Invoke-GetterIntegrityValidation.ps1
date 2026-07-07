@@ -145,7 +145,7 @@ $cleanupActions = [System.Collections.Generic.List[object]]::new()
 $sessionDisconnected = $false
 $samples = @{}
 $owned = @{}
-foreach ($kind in @('Lun', 'LunSnapshot', 'HyperCDPSchedule', 'LunGroup', 'ProtectionGroup', 'SnapshotConsistencyGroup', 'QosPolicy', 'Host', 'HostGroup', 'FileSystem', 'FileSystemSnapshot', 'DTree', 'CifsShare', 'NfsShare', 'NfsClient', 'Quota', 'MappingView', 'PortGroup', 'FibreChannelInitiator', 'IscsiInitiator', 'NvmeInitiator', 'ReportTask', 'ReportLog', 'ReplicationPair', 'ReplicationConsistencyGroup', 'HyperMetroPair', 'HyperMetroConsistencyGroup', 'SnmpTrapServer', 'SnmpUsmUser', 'SyslogServer', 'LocalUser', 'Role')) {
+foreach ($kind in @('Lun', 'LunSnapshot', 'HyperCDPSchedule', 'LunGroup', 'ProtectionGroup', 'SnapshotConsistencyGroup', 'QosPolicy', 'Host', 'HostGroup', 'FileSystem', 'FileSystemSnapshot', 'DTree', 'CifsShare', 'NfsShare', 'NfsClient', 'Quota', 'MappingView', 'PortGroup', 'FibreChannelInitiator', 'IscsiInitiator', 'NvmeInitiator', 'ReportTask', 'ReportLog', 'ReplicationPair', 'ReplicationConsistencyGroup', 'HyperMetroPair', 'HyperMetroConsistencyGroup', 'SnmpTrapServer', 'SnmpUsmUser', 'SyslogServer', 'LocalUser', 'Role', 'FailoverGroup')) {
     $owned[$kind] = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 }
 $performanceCleanupRegistry = [System.Collections.Generic.List[object]]::new()

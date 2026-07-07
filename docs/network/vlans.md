@@ -11,7 +11,7 @@ access.
 
 | Cmdlet | REST resource | Method | Mutating | ShouldProcess |
 |---|---|---|---|---|
-| `Get-DMvLan` | `vlan` | GET | No | — |
+| `Get-DMvLan` | `vlan`, `vlan/{id}` | GET | No | — |
 | `New-DMvLan` | `vlan` | POST | Yes | Yes |
 | `Set-DMvLan` | `vlan/{id}` | PUT | Yes | Yes (`ConfirmImpact = 'High'`) |
 | `Remove-DMvLan` | `vlan/{id}` | DELETE | Yes | Yes (`ConfirmImpact = 'High'`) |
@@ -72,16 +72,23 @@ Remove-DMvLan -WebSession $storage -Id $vlan.Id
 ## Integrity Test Coverage
 
 - `Get-DMvLan` is registered in the live read-validation phase (expected type
-  `OceanStorvLan`).
+  `OceanStorvLan`). It narrows server-side: `-Name` sends the documented
+  `filter=NAME` query (exact `::`, fuzzy `:` for simple leading/trailing `*`
+  wildcards, always re-checked client-side) and `-Id` uses the documented
+  `vlan/{id}` single-object query.
 - `New/Set/Remove-DMvLan` have unit tests in
-  `Tests/Unit/Public/Network-Actions.Tests.ps1`. No live mutation workflow
-  exists — intentional.
+  `Tests/Unit/Public/Network-Actions.Tests.ps1`, including
+  no-API-call-under-`-WhatIf` regression cases. No live mutation workflow
+  exists — intentional until the idle-port guard described in
+  [safety-and-live-validation.md](safety-and-live-validation.md) is
+  implemented and itself tested.
 
 ## Known Gaps
 
-- No `-WhatIf` regression test asserting the API is not called.
 - `Set-DMvLan` exposes only MTU; name/description changes are not supported by
   the API for VLAN ports.
+- The `vlan` batch query also documents `TAG` and `fatherDrvType` filter
+  fields; only `NAME` is exposed as a parameter today.
 
 ## Related Files
 

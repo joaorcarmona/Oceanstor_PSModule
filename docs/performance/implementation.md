@@ -1,6 +1,6 @@
 # Performance Implementation Guide
 
-Navigation: [README](README.md) | [Block](BLOCK.md) | [NAS](NAS.md) | [Array](ARRAY.md) | [History](HISTORY.md) | [Troubleshooting](TROUBLESHOOTING.md)
+Navigation: [README](README.md) | [Block](block.md) | [NAS](nas.md) | [Array](array.md) | [History](history.md) | [Troubleshooting](troubleshooting.md)
 
 This guide is for maintainers and contributors. It preserves the implementation detail that used to live in `README.ME` while the operational examples now live in focused guides.
 

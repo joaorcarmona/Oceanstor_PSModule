@@ -36,6 +36,11 @@ function Invoke-ReadValidation {
     Add-ValidationResult -Name 'Get-DMbbu' -ExpectedType 'OceanStorBBU' -Action {
         Get-DMbbu -WebSession $session
     } | Out-Null
+    Add-ValidationResult -Name 'Get-DMCertificate' -ExpectedType 'OceanStorCertificate' -Action {
+        # Read-only inventory (GET certificate). Empty/absent slots are expected
+        # and surface as NoData or Status 'Absent' rows — both are fine.
+        Get-DMCertificate -WebSession $session
+    } | Out-Null
     Add-ValidationResult -Name 'Get-DMController' -ExpectedType 'OceanStorController' -Action {
         Get-DMController -WebSession $session
     } | Out-Null
@@ -113,9 +118,14 @@ function Invoke-ReadValidation {
     Add-ValidationResult -Name 'Get-DMLif' -ExpectedType 'OceanStorLIF' -Action {
         Get-DMLif -WebSession $session
     } | Out-Null
-    Add-ValidationResult -Name 'Get-DMFailoverGroup' -ExpectedType 'OceanStorFailoverGroup' -Action {
+    $samples.FailoverGroups = Add-ValidationResult -Name 'Get-DMFailoverGroup' -ExpectedType 'OceanStorFailoverGroup' -Action {
         Get-DMFailoverGroup -WebSession $session
-    } | Out-Null
+    }
+    if ($samples.FailoverGroups.Count -gt 0) {
+        Add-ValidationResult -Name 'Get-DMFailoverGroupMember' -ExpectedType 'OceanStorFailoverGroupMember' -Action {
+            Get-DMFailoverGroupMember -WebSession $session -Id $samples.FailoverGroups[0].Id
+        } | Out-Null
+    }
     Add-ValidationResult -Name 'Get-DMLLDPWorkingMode' -ExpectedType 'PSCustomObject' -Action {
         Get-DMLLDPWorkingMode -WebSession $session
     } | Out-Null
@@ -167,6 +177,56 @@ function Invoke-ReadValidation {
     Add-ValidationResult -Name 'Get-DMNvmeInitiator' -ExpectedType 'OceanstorHostinitiatorNVMe' -Action {
         Get-DMNvmeInitiator -WebSession $session
     } | Out-Null
+
+    # Replication / HyperMetro read-only getters. All are safe against arrays
+    # with no DR configured: each tolerates an empty result and is reported as
+    # NoData rather than a failure. None mutate DR state.
+    $samples.RemoteDevices = Add-ValidationResult -Name 'Get-DMRemoteDevice' -ExpectedType 'OceanstorRemoteDevice' -Action {
+        Get-DMRemoteDevice -WebSession $session
+    }
+    Add-ValidationResult -Name 'Get-DMReplicationPair' -ExpectedType 'OceanstorReplicationPair' -Action {
+        Get-DMReplicationPair -WebSession $session
+    } | Out-Null
+    Add-ValidationResult -Name 'Get-DMReplicationConsistencyGroup' -ExpectedType 'OceanstorReplicationConsistencyGroup' -Action {
+        Get-DMReplicationConsistencyGroup -WebSession $session
+    } | Out-Null
+    Add-ValidationResult -Name 'Get-DMHyperMetroDomain' -ExpectedType 'OceanstorHyperMetroDomain' -Action {
+        Get-DMHyperMetroDomain -WebSession $session
+    } | Out-Null
+    Add-ValidationResult -Name 'Get-DMHyperMetroPair' -ExpectedType 'OceanstorHyperMetroPair' -Action {
+        Get-DMHyperMetroPair -WebSession $session
+    } | Out-Null
+    Add-ValidationResult -Name 'Get-DMHyperMetroConsistencyGroup' -ExpectedType 'OceanstorHyperMetroConsistencyGroup' -Action {
+        Get-DMHyperMetroConsistencyGroup -WebSession $session
+    } | Out-Null
+    Add-ValidationResult -Name 'Get-DMVStorePair' -ExpectedType 'OceanstorVStorePair' -Action {
+        Get-DMVStorePair -WebSession $session
+    } | Out-Null
+    Add-ValidationResult -Name 'Get-DMFileHyperMetroDomain' -ExpectedType 'OceanstorFileHyperMetroDomain' -Action {
+        Get-DMFileHyperMetroDomain -WebSession $session
+    } | Out-Null
+    Add-ValidationResult -Name 'Get-DMQuorumServer' -ExpectedType 'OceanStorQuorumServer' -Action {
+        Get-DMQuorumServer -WebSession $session
+    } | Out-Null
+
+    # Get-DMRemoteLun is guarded: the REST collection requires a remote device
+    # id, so it can only run when a replication-type remote device exists. On
+    # arrays without remote devices (or without a replication device) it is
+    # reported NotConfigured, never a failure.
+    $replicationRemoteDevice = @($samples.RemoteDevices |
+        Where-Object { $_.'Array Type Code' -eq '1' -or $_.'Array Type' -eq 'Replication Device' })[0]
+    if ($replicationRemoteDevice) {
+        $remoteDeviceId = $replicationRemoteDevice.Id
+        Add-ValidationResult -Name 'Get-DMRemoteLun' -ExpectedType 'OceanstorRemoteLun' -Action {
+            Get-DMRemoteLun -WebSession $session -RemoteDeviceId $remoteDeviceId
+        } | Out-Null
+    }
+    elseif ($samples.RemoteDevices.Count -gt 0) {
+        Add-SkippedResult -Name 'Get-DMRemoteLun' -Reason 'Remote devices exist but none are replication-type; remote LUN enumeration requires a replication device.' -Status 'NotConfigured' -Category 'Read'
+    }
+    else {
+        Add-SkippedResult -Name 'Get-DMRemoteLun' -Reason 'No remote devices are configured on this array; remote LUN enumeration skipped.' -Status 'NotConfigured' -Category 'Read'
+    }
 
     if ($samples.Disks.Count -gt 0) {
         $disk = $samples.Disks[0]

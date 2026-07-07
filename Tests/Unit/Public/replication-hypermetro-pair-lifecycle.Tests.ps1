@@ -186,4 +186,45 @@ Describe 'HyperMetro pair lifecycle commands' {
         $script:resource | Should -Be 'HyperMetroPair/hmp-01?ISLOCALDELETE=true&ISREFRESHWWN=false'
     }
 }
+
+Describe 'DR lifecycle pipeline input binds Id by property name' {
+    BeforeEach {
+        $script:session = [pscustomobject]@{ version = 'V600R001' }
+        Mock Invoke-DeviceManager {
+            $script:method = $Method
+            $script:resource = $Resource
+            $script:request = $BodyData
+            if ($Method -eq 'GET') {
+                if ($Resource -like 'REPLICATIONPAIR*') {
+                    return [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 }; data = @([pscustomobject]@{ ID = 'rp-77'; LOCALRESNAME = 'l'; REMOTERESNAME = 'r' }) }
+                }
+                return [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 }; data = @([pscustomobject]@{ ID = 'hmp-77'; LOCALOBJNAME = 'l'; REMOTEOBJNAME = 'r' }) }
+            }
+            return [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 }; data = [pscustomobject]@{ ID = 'ignored' } }
+        }
+    }
+
+    It 'flows Get-DMReplicationPair Id into <Command>' -ForEach @(
+        @{ Command = 'Sync-DMReplicationPair'; Resource = 'REPLICATIONPAIR/sync' }
+        @{ Command = 'Split-DMReplicationPair'; Resource = 'REPLICATIONPAIR/split' }
+        @{ Command = 'Switch-DMReplicationPair'; Resource = 'REPLICATIONPAIR/switch' }
+    ) {
+        Get-DMReplicationPair -WebSession $script:session | & $Command -WebSession $script:session -Confirm:$false
+
+        $script:method | Should -Be 'PUT'
+        $script:resource | Should -Be $Resource
+        $script:request.ID | Should -Be 'rp-77'
+    }
+
+    It 'flows Get-DMHyperMetroPair Id into <Command>' -ForEach @(
+        @{ Command = 'Sync-DMHyperMetroPair'; Resource = 'HyperMetroPair/synchronize_hcpair' }
+        @{ Command = 'Suspend-DMHyperMetroPair'; Resource = 'HyperMetroPair/disable_hcpair' }
+    ) {
+        Get-DMHyperMetroPair -WebSession $script:session | & $Command -WebSession $script:session -Confirm:$false
+
+        $script:method | Should -Be 'PUT'
+        $script:resource | Should -Be $Resource
+        $script:request.ID | Should -Be 'hmp-77'
+    }
+}
 }

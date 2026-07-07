@@ -19,7 +19,7 @@ ports, bond ports, VLANs, logical interfaces (LIFs), failover groups, and LLDP.
 | [bond-ports.md](bond-ports.md) | Bond ports (link aggregation) | `Get-DMPortBond`, `New-DMPortBond`, `Set-DMPortBond`, `Remove-DMPortBond` | Yes — unsafe by default |
 | [vlans.md](vlans.md) | VLAN ports | `Get-DMvLan`, `New-DMvLan`, `Set-DMvLan`, `Remove-DMvLan` | Yes — test-owned only |
 | [logical-ports.md](logical-ports.md) | Logical interface ports (LIFs) | `Get-DMLif`, `New-DMLif`, `Set-DMLif`, `Remove-DMLif` | Yes — test-owned only |
-| [failover-groups.md](failover-groups.md) | Failover groups and port membership | `Get-DMFailoverGroup`, `New-DMFailoverGroup`, `Set-DMFailoverGroup`, `Remove-DMFailoverGroup`, `Add-DMFailoverGroupMember`, `Remove-DMFailoverGroupMember` | Yes — test-owned only |
+| [failover-groups.md](failover-groups.md) | Failover groups and port membership | `Get-DMFailoverGroup`, `Get-DMFailoverGroupMember`, `New-DMFailoverGroup`, `Set-DMFailoverGroup`, `Remove-DMFailoverGroup`, `Add-DMFailoverGroupMember`, `Remove-DMFailoverGroupMember` | Yes — test-owned only |
 | [lldp.md](lldp.md) | LLDP working mode (global) | `Get-DMLLDPWorkingMode`, `Set-DMLLDPWorkingMode` | Yes — global setting, unsafe by default |
 | [safety-and-live-validation.md](safety-and-live-validation.md) | Safety classification and live-validation rules | — | — |
 | [TODO.md](TODO.md) | Roadmap and open gaps for this domain | — | — |

@@ -1,6 +1,6 @@
 # Performance Troubleshooting Cookbook
 
-Navigation: [README](README.md) | [Block](BLOCK.md) | [NAS](NAS.md) | [Array](ARRAY.md) | [History](HISTORY.md) | [Implementation](IMPLEMENTATION.md)
+Navigation: [README](README.md) | [Block](block.md) | [NAS](nas.md) | [Array](array.md) | [History](history.md) | [Implementation](implementation.md)
 
 This cookbook is written for operational triage. The examples are read-only unless a report-task cleanup command is explicitly shown.
 

@@ -206,6 +206,24 @@
         LocalRoleSource = '1'
     }
 
+    Network = @{
+        # Master gate for the network mutation workflows. Disabled by default:
+        # -RunMutatingTests alone never runs any network mutation. Network
+        # changes are safety-sensitive -- a wrong mutation can sever management
+        # or data access -- so every network workflow additionally requires its
+        # own Allow* gate below.
+        Enabled = $false
+
+        # Test-owned failover-group lifecycle: create a run-unique customized
+        # failover group, modify its description, verify the member getter
+        # reports zero members, then remove it by the captured ID. Failover
+        # groups are pure metadata objects; no port, VLAN, LIF, bond, route or
+        # management address is touched. Member add/remove stays skipped until
+        # a test-owned eligible member type exists (see
+        # docs/network/safety-and-live-validation.md).
+        AllowFailoverGroupLifecycle = $false
+    }
+
     Performance = @{
         # Master acknowledgement for the opt-in performance/capacity integrity
         # checks (Phases 1-5 of the performance implementation). The runner

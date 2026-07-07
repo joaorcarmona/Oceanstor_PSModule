@@ -6,6 +6,7 @@ BeforeDiscovery {
         function Get-DMhostGroup { param([pscustomobject]$WebSession) }
         function Get-DMlunGroup { param([pscustomobject]$WebSession) }
         function Get-DMPortGroup { param([pscustomobject]$WebSession, [string]$VstoreId) }
+        function Get-DMMappingView { param([pscustomobject]$WebSession, [string]$VstoreId) }
         function Invoke-DeviceManager {
             param([pscustomobject]$WebSession, [string]$Method, [string]$Resource, [hashtable]$BodyData)
         }
@@ -17,6 +18,10 @@ BeforeDiscovery {
             [CmdletBinding(SupportsShouldProcess = $true)]
             param([pscustomobject]$WebSession, [string]$FileSystemName, [string]$NewName)
         }
+        function Set-DMMappingView {
+            [CmdletBinding(SupportsShouldProcess = $true)]
+            param([pscustomobject]$WebSession, [string]$MappingViewName, [string]$NewName, [string]$VstoreId)
+        }
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\New-DMNamedObjectUpdate.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Assert-DMApiSuccess.ps1"
@@ -24,9 +29,11 @@ BeforeDiscovery {
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Set-DMHostGroup.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Set-DMLunGroup.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Set-DMPortGroup.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Public\Set-DMMappingView.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Rename-DMHost.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Rename-DMHostGroup.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Rename-DMLunGroup.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Public\Rename-DMMappingView.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Rename-DMPortGroup.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Rename-DMLun.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Rename-DMFileSystem.ps1"
@@ -55,6 +62,7 @@ Describe 'Named object Set commands' {
         Mock Get-DMhostGroup { @([pscustomobject]@{ Id = 'hg-01'; Name = 'hostgroup-old' }, [pscustomobject]@{ Id = 'hg-02'; Name = 'taken' }) }
         Mock Get-DMlunGroup { @([pscustomobject]@{ Id = 'lg-01'; Name = 'lungroup-old' }, [pscustomobject]@{ Id = 'lg-02'; Name = 'taken' }) }
         Mock Get-DMPortGroup { @([pscustomobject]@{ Id = 'pg-01'; Name = 'portgroup-old' }, [pscustomobject]@{ Id = 'pg-02'; Name = 'taken' }) }
+        Mock Get-DMMappingView { @([pscustomobject]@{ Id = 'mv-01'; Name = 'mappingview-old' }, [pscustomobject]@{ Id = 'mv-02'; Name = 'taken' }) }
         Mock Invoke-DeviceManager {
             $script:request = [pscustomobject]@{ Method = $Method; Resource = $Resource; Body = $BodyData }
             [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 } }
@@ -66,6 +74,7 @@ Describe 'Named object Set commands' {
         @{ Command = 'Set-DMHostGroup'; Identity = @{ HostGroupName = 'hostgroup-old' }; Resource = 'hostgroup/hg-01?vstoreId=7'; Id = 'hg-01' }
         @{ Command = 'Set-DMLunGroup';  Identity = @{ LunGroupName = 'lungroup-old' };   Resource = 'lungroup/lg-01?vstoreId=7'; Id = 'lg-01' }
         @{ Command = 'Set-DMPortGroup'; Identity = @{ PortGroupName = 'portgroup-old' }; Resource = 'portgroup/pg-01?vstoreId=7'; Id = 'pg-01' }
+        @{ Command = 'Set-DMMappingView'; Identity = @{ MappingViewName = 'mappingview-old' }; Resource = 'mappingview/mv-01?vstoreId=7'; Id = 'mv-01' }
     ) {
         $result = & $Command -WebSession $script:session -NewName 'renamed' -VstoreId '7' -Confirm:$false @Identity
 
@@ -113,6 +122,7 @@ Describe 'Named object Set commands' {
         @{ Command = 'Set-DMHost';     Identities = @('host-old', 'taken');     ResourcePrefix = 'host';     Ids = @('host-01', 'host-02'); Noun = 'host' }
         @{ Command = 'Set-DMHostGroup'; Identities = @('hostgroup-old', 'taken'); ResourcePrefix = 'hostgroup'; Ids = @('hg-01', 'hg-02'); Noun = 'host group' }
         @{ Command = 'Set-DMPortGroup'; Identities = @('portgroup-old', 'taken'); ResourcePrefix = 'portgroup'; Ids = @('pg-01', 'pg-02'); Noun = 'port group' }
+        @{ Command = 'Set-DMMappingView'; Identities = @('mappingview-old', 'taken'); ResourcePrefix = 'mappingview'; Ids = @('mv-01', 'mv-02'); Noun = 'mapping view' }
     ) {
         $items = $Identities | ForEach-Object { [pscustomobject]@{ Name = $_ } }
         $null = $items | & $Command -WebSession $script:session -Description 'batch update' -Confirm:$false
@@ -129,6 +139,7 @@ Describe 'Rename command delegation' {
         Mock Set-DMHostGroup { [pscustomobject]@{ Code = 0 } }
         Mock Set-DMLunGroup { [pscustomobject]@{ Code = 0 } }
         Mock Set-DMPortGroup { [pscustomobject]@{ Code = 0 } }
+        Mock Set-DMMappingView { [pscustomobject]@{ Code = 0 } }
         Mock Set-DMLun { [pscustomobject]@{ Code = 0 } }
         Mock Set-DMFileSystem { [pscustomobject]@{ Code = 0 } }
     }
@@ -138,6 +149,7 @@ Describe 'Rename command delegation' {
         @{ Command = 'Rename-DMHostGroup';  SetCommand = 'Set-DMHostGroup';  Parameters = @{ HostGroupName = 'old'; NewName = 'new'; VstoreId = '7' } }
         @{ Command = 'Rename-DMLunGroup';   SetCommand = 'Set-DMLunGroup';   Parameters = @{ LunGroupName = 'old'; NewName = 'new'; VstoreId = '7' } }
         @{ Command = 'Rename-DMPortGroup';  SetCommand = 'Set-DMPortGroup';  Parameters = @{ PortGroupName = 'old'; NewName = 'new'; VstoreId = '7' } }
+        @{ Command = 'Rename-DMMappingView'; SetCommand = 'Set-DMMappingView'; Parameters = @{ MappingViewName = 'old'; NewName = 'new'; VstoreId = '7' } }
         @{ Command = 'Rename-DMLun';        SetCommand = 'Set-DMLun';        Parameters = @{ LunName = 'old'; NewName = 'new' } }
         @{ Command = 'Rename-DMLun';        SetCommand = 'Set-DMLun';        Parameters = @{ LunId = 'lun-01'; NewName = 'new' } }
         @{ Command = 'Rename-DMFileSystem'; SetCommand = 'Set-DMFileSystem'; Parameters = @{ FileSystemName = 'old'; NewName = 'new' } }
@@ -206,6 +218,14 @@ Describe 'Rename command delegation' {
 
         Should -Invoke Set-DMPortGroup -Times 1 -Exactly -ParameterFilter { $PortGroupName -eq 'item-a' -and $NewName -eq 'renamed' }
         Should -Invoke Set-DMPortGroup -Times 1 -Exactly -ParameterFilter { $PortGroupName -eq 'item-b' -and $NewName -eq 'renamed' }
+    }
+
+    It 'Rename-DMMappingView forwards every piped item, not just the last one' {
+        $items = @([pscustomobject]@{ Name = 'item-a' }, [pscustomobject]@{ Name = 'item-b' })
+        $null = $items | Rename-DMMappingView -WebSession $script:session -NewName 'renamed' -Confirm:$false
+
+        Should -Invoke Set-DMMappingView -Times 1 -Exactly -ParameterFilter { $MappingViewName -eq 'item-a' -and $NewName -eq 'renamed' }
+        Should -Invoke Set-DMMappingView -Times 1 -Exactly -ParameterFilter { $MappingViewName -eq 'item-b' -and $NewName -eq 'renamed' }
     }
 }
 }

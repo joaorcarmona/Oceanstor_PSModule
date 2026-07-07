@@ -57,6 +57,20 @@ $script:MappingMutationWorkflow = {
                     }
                 }
             }
+            if ($owned.MappingView.Contains($mappingViewName)) {
+                Invoke-MutationStep -Name 'Set-DMMappingView' -Action {
+                    Assert-TestOwnedResource -Kind MappingView -Identity $mappingViewName
+                    Set-DMMappingView -WebSession $session -MappingViewName $mappingViewName `
+                        -Description "Integrity validation updated $runId" -Confirm:$false
+                } | Out-Null
+                Add-MutationReadVerification -Name 'Set-DMMappingView:ReadBack' -ExpectedType 'OceanStorMappingView' -Action {
+                    $updated = @(Get-DMMappingView -WebSession $session | Where-Object Name -EQ $mappingViewName)
+                    if ($updated.Count -gt 0 -and $updated[0].Description -ne "Integrity validation updated $runId") {
+                        throw "Set-DMMappingView description mismatch: expected 'Integrity validation updated $runId', got '$($updated[0].Description)'."
+                    }
+                    $updated
+                } | Out-Null
+            }
             if ($owned.HostGroup.Contains($hostGroupName) -and $owned.MappingView.Contains($mappingViewName)) {
                 $mapHostGroup = @(Invoke-MutationStep -Name 'Add-DMHostGroupToMappingView' -Action {
                     Assert-TestOwnedResource -Kind HostGroup -Identity $hostGroupName
@@ -139,7 +153,7 @@ $script:MappingMutationWorkflow = {
         }
         else {
             Add-SkippedResult -Name @(
-                'New-DMPortGroup', 'Set-DMPortGroup', 'Rename-DMPortGroup', 'New-DMMappingView', 'Add-DMPortGroupToMappingView',
+                'New-DMPortGroup', 'Set-DMPortGroup', 'Rename-DMPortGroup', 'New-DMMappingView', 'Set-DMMappingView', 'Add-DMPortGroupToMappingView',
                 'Remove-DMPortGroupFromMappingView', 'Add-DMHostGroupToMappingView',
                 'Remove-DMHostGroupFromMappingView', 'Add-DMLunGroupToMappingView',
                 'Remove-DMLunGroupFromMappingView', 'Remove-DMMappingView', 'Remove-DMPortGroup'

@@ -108,3 +108,147 @@ If cleanup ever fails, the harness reports the object type, ID, and name;
 remove the object manually by ID (for example
 `Remove-DMReplicationPair -Id '<captured-id>'`) after confirming it carries
 the run's `NamePrefix`.
+
+## Standing read-only DR validation (Phase 07)
+
+Every read-only live run now exercises the full DR getter surface via
+`Tests/Integration/Private/ReadValidation.ps1`:
+
+- `Get-DMRemoteDevice`, `Get-DMReplicationPair`,
+  `Get-DMReplicationConsistencyGroup`, `Get-DMHyperMetroDomain`,
+  `Get-DMHyperMetroPair`, `Get-DMHyperMetroConsistencyGroup`,
+  `Get-DMVStorePair`, `Get-DMFileHyperMetroDomain`, and `Get-DMQuorumServer`
+  are registered as read-only checks. All tolerate an empty result and are
+  reported `NoData` rather than a failure on arrays with no DR configured.
+- **`Get-DMRemoteLun` is guarded.** The REST collection requires a remote
+  device id, so the check only runs when a replication-type remote device
+  exists. When no remote devices exist — or none are replication-type — it is
+  reported `NotConfigured`, never `Failed`. This keeps arrays without a remote
+  configuration green.
+
+`Get-DMQuorumServer` (new in Phase 07) is a read-only inventory getter over the
+documented `QuorumServer` collection (REST §4.9.8). Use it to resolve a
+`-QuorumServerId` for `Add-DMQuorumServerToHyperMetroDomain` without the
+DeviceManager UI.
+
+## `-WhatIf` coverage
+
+All 52 DR mutators have systematic no-API-call-under-`-WhatIf` coverage in
+`Tests/Unit/Public/replication-hypermetro-whatif.Tests.ps1`, driven by the
+shared `Tests/Unit/Support/Assert-DMWhatIfSafe.ps1` helper from a single
+`-ForEach` case table. The same spec asserts `ConfirmImpact = 'High'` on every
+in-place modify / remove / lifecycle-transition cmdlet (create cmdlets use the
+default impact). This proves `-WhatIf` sends no mutating request body and that
+`ShouldProcess` gates every mutation.
+
+## Enum / status translation audit
+
+DR classes translate the operational status enums that operators read, keeping
+the raw code alongside as an `X Code` companion property. Verified against the
+OceanStor Dorado 6.1.6 REST enum tables:
+
+- **Translated (confirmed):** health status, running status, link status,
+  domain type (SAN/NAS), arbitration/quorum type, replication type
+  (Sync/Async), array type, and quorum running status (27 online / 28 offline).
+  Unmapped codes fall through to the raw value rather than being guessed.
+- **Intentionally left raw (round-trip fidelity):** `Speed`, `Recovery Policy`,
+  `Replication Mode`, `Synchronization Type`, and `Is Primary` on the pair
+  classes surface the exact REST codes that the matching `New-*`/`Set-*`
+  parameters accept and emit (e.g. `Speed` 1–4 = Low/Medium/High/Highest per
+  the cmdlet `ValidateSet`). Translating them would make the getter output
+  asymmetric with the setter input in the most safety-sensitive domain, so
+  they remain raw by design.
+- **Deliberate label choice:** HyperMetro consistency-group running status `41`
+  is surfaced as `Suspended` to match the `Suspend-DM*` verb that produces it;
+  the REST reference labels the same code `Paused`. This is a naming choice,
+  not a translation error, and is kept for verb/output consistency.
+
+Rule going forward: only translate a code when the 6.1.6 reference confirms its
+meaning; a wrong translation in the DR domain is worse than a raw code.
+
+## Lab-pair mutation runbook
+
+Human-supervised procedure for a gated DR mutation validation run. Never run
+unattended; never point it at pre-existing DR objects.
+
+### Prerequisites (operator supplies, then reviews)
+
+1. **Remote array reachable** and a **remote device already configured** on the
+   local array (`Get-DMRemoteDevice` returns it). The harness never creates or
+   mutates remote devices.
+2. **DR-capable storage pool** on the local array for the test-owned LUN
+   (`StoragePoolId` in the config; the pool is never modified).
+3. **Remote LUN** on the remote device intended for this run
+   (`Get-DMRemoteLun -RemoteDeviceId <id>` or `Get-DMQuorumServer` /
+   `Get-DMHyperMetroDomain` for the HyperMetro path). For HyperMetro, an
+   **existing SAN domain** the harness will consume read-only.
+4. A **unique `NamePrefix`** so every created object is identifiable and
+   cleanup can never match a pre-existing object.
+
+### Required config flags
+
+```powershell
+# Replication path
+Replication = @{
+    Enabled         = $true
+    AllowDrMutation = $true        # acknowledges lab DR mutation
+    AllowFailover   = $false       # keep OFF unless doing a supervised switchover
+    RemoteDeviceId  = '<lab remote device id>'
+    RemoteLunId     = '<lab remote lun id>'   # or RemoteLunName
+}
+
+# HyperMetro path
+HyperMetro = @{
+    Enabled             = $true
+    AllowDrMutation     = $true
+    AllowPrioritySwitch = $false   # keep OFF unless doing a supervised priority switch
+    RemoteDeviceId      = '<lab remote device id>'
+    RemoteLunId         = '<lab remote lun id>'
+    DomainId            = '<existing SAN domain id>'  # consumed read-only
+}
+```
+
+### Expected outcomes
+
+- Test-owned local LUN created, replication/HyperMetro pair created against the
+  configured remote LUN, ID registered for cleanup **immediately**.
+- Safe lifecycle only: sync/split (replication) or sync/suspend/re-sync
+  (HyperMetro) on the **test-owned** pair, plus a test-owned consistency-group
+  associate/disassociate.
+- **`SkippedUnsafe`** (by design, unless the dedicated flag is set):
+  `Switch-*` switchover, `Switch-DMHyperMetroPairPriority`,
+  `Start-DMHyperMetroPair`/force-start, and any secondary-access change against
+  a non-test-owned object.
+- **Never touched:** pre-existing pairs/groups/domains/quorum, remote devices,
+  vStore pairs, and file-system DR objects. Domain and quorum objects are
+  consumed read-only.
+- Cleanup deletes the pair and group **by captured ID** in a `finally` block.
+  On cleanup failure the harness prints the type, ID, and name; remove manually
+  by ID after confirming the `NamePrefix`.
+
+### Rollback / supervision
+
+- The workflow is create → verify → safe-lifecycle → delete, entirely on
+  run-owned objects, so a clean run leaves the array as it started.
+- If any step fails mid-run, stop and reconcile by captured ID before retrying;
+  do not broaden the config to "fix" a failure.
+- An operator must review the intended config (remote IDs, prefix, flags)
+  before every run.
+
+### Example command (public — credentials redacted)
+
+```powershell
+$storageIP = 'StorageIP'
+$cred = Import-Clixml -Path "$env:USERPROFILE\.oceanstor\dm-creds.xml"
+
+./Tests/Integration/Invoke-GetterIntegrityValidation.ps1 `
+    -Hostname $storageIP -Credential $cred -SkipCertificateCheck `
+    -RunMutatingTests -ShowTestExecution
+```
+
+Internal lab note: the ready DR lab is `StorageIP` and requires
+`-SkipCertificateCheck`; the credential is imported from
+`$env:USERPROFILE\.oceanstor\dm-creds.xml`. Never inline or print the
+credential. The DR sections in `IntegrityValidationConfig.psd1` must be enabled
+and populated with the lab remote IDs (above) before `-RunMutatingTests` runs
+any DR workflow; they ship disabled and default runs remain read-only.

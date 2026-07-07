@@ -1,7 +1,7 @@
 # Remote Replication and HyperMetro
 
 POSH-Oceanstor wraps the OceanStor Dorado 6.1.6 disaster-recovery REST surface
-with 61 cmdlets covering remote replication (HyperReplication), HyperMetro
+with 62 cmdlets covering remote replication (HyperReplication), HyperMetro
 active-active, and the NAS/vStore DR tranche.
 
 > **Safety warning.** Most cmdlets in this area change disaster-recovery state:
@@ -57,6 +57,9 @@ Get-DMRemoteDevice
 # Remote LUNs usable as replication or HyperMetro secondaries
 Get-DMRemoteLun -RemoteDeviceId '0'
 Get-DMRemoteLun -RemoteDeviceId '0' -RemoteServiceType HyperMetroSecondaryLun
+
+# Quorum servers (resolve -QuorumServerId without the DeviceManager UI)
+Get-DMQuorumServer
 
 # Current SAN DR state
 Get-DMReplicationPair

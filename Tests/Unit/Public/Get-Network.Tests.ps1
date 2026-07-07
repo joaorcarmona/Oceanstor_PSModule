@@ -2,7 +2,14 @@ BeforeDiscovery {
     $script:getNetworkModule = New-Module -Name GetNetworkTestModule -ArgumentList $PSScriptRoot -ScriptBlock {
         param($testRoot)
 
-        function Invoke-DeviceManager {}
+        function Invoke-DeviceManager {
+            param(
+                [pscustomobject]$WebSession,
+                [string]$Method,
+                [string]$Resource,
+                [object]$BodyData
+            )
+        }
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Get-DMparsedElabel.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Set-DMHostInitiator.ps1"
@@ -125,6 +132,111 @@ Describe 'Public getter functions' {
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
                 Should -Be @('Id', 'Name', 'Vlan Tag Id', 'Port Type', 'Running Status')
             $result.Type | Should -Be 'VLAN'
+        }
+
+        It 'filters logical interfaces server-side with an exact NAME filter' {
+            Mock Invoke-DeviceManager { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'lif-01'; NAME = 'nas_lif1'; ADDRESSFAMILY = 0 }) } }
+
+            $result = @(Get-DMLif -WebSession $script:session -Name 'nas_lif1')
+
+            Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter {
+                $Resource -eq 'lif?filter=NAME%3A%3Anas_lif1' -or $Resource -eq 'lif?filter=NAME::nas_lif1'
+            }
+            $result.Count | Should -Be 1
+        }
+
+        It 'sends a fuzzy NAME filter and re-checks client-side for wildcard LIF lookups' {
+            Mock Invoke-DeviceManager { [pscustomobject]@{ data = @(
+                [pscustomobject]@{ ID = 'lif-01'; NAME = 'nas_lif1' },
+                [pscustomobject]@{ ID = 'lif-02'; NAME = 'other_nas_lif' }
+            ) } }
+
+            $result = @(Get-DMLif -WebSession $script:session -Name 'nas_lif*')
+
+            Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -like 'lif?filter=NAME:*' -and $Resource -notlike 'lif?filter=NAME::*' }
+            $result.Count | Should -Be 1
+            $result[0].'LIF Name' | Should -Be 'nas_lif1'
+        }
+
+        It 'gets a logical interface by id through the documented single-object query' {
+            Mock Invoke-DeviceManager { [pscustomobject]@{ data = [pscustomobject]@{ ID = 'lif-01'; NAME = 'nas_lif1' } } }
+
+            $result = @(Get-DMLif -WebSession $script:session -Id 'lif-01')
+
+            Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -eq 'lif/lif-01' }
+            $result[0].Id | Should -Be 'lif-01'
+        }
+
+        It 'still lists all logical interfaces without a filter' {
+            Mock Invoke-DeviceManager { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'lif-01' }, [pscustomobject]@{ ID = 'lif-02' }) } }
+
+            $result = @(Get-DMLif -WebSession $script:session)
+
+            Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -eq 'lif' }
+            $result.Count | Should -Be 2
+        }
+
+        It 'filters VLANs server-side with an exact NAME filter' {
+            Mock Invoke-DeviceManager { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'vlan-01'; NAME = 'CTE0.A.100'; TYPE = 280; TAG = 100 }) } }
+
+            $result = @(Get-DMvLan -WebSession $script:session -Name 'CTE0.A.100')
+
+            Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -like 'vlan?filter=NAME*' }
+            $result.Count | Should -Be 1
+        }
+
+        It 'gets a VLAN by id through the documented single-object query' {
+            Mock Invoke-DeviceManager { [pscustomobject]@{ data = [pscustomobject]@{ ID = 'vlan-01'; TYPE = 280; TAG = 100 } } }
+
+            $result = @(Get-DMvLan -WebSession $script:session -Id 'vlan-01')
+
+            Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -eq 'vlan/vlan-01' }
+            $result[0].Id | Should -Be 'vlan-01'
+        }
+
+        It 'gets failover group members from the three documented association queries' {
+            Mock Invoke-DeviceManager { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'eth-01'; NAME = 'CTE0.A.IOM1.P0'; TYPE = 213; RUNNINGSTATUS = 10 }) } } -ParameterFilter { $Resource -like 'eth_port/associate*' }
+            Mock Invoke-DeviceManager { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'bond-01'; NAME = 'bond0'; TYPE = 235; RUNNINGSTATUS = 11 }) } } -ParameterFilter { $Resource -like 'bond_port/associate*' }
+            Mock Invoke-DeviceManager { [pscustomobject]@{ data = @() } } -ParameterFilter { $Resource -like 'vlan/associate*' }
+
+            $result = @(Get-DMFailoverGroupMember -WebSession $script:session -Id 'fg-01')
+
+            Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -eq 'eth_port/associate?ASSOCIATEOBJTYPE=289&ASSOCIATEOBJID=fg-01' }
+            Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -eq 'bond_port/associate?ASSOCIATEOBJTYPE=289&ASSOCIATEOBJID=fg-01' }
+            Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -eq 'vlan/associate?ASSOCIATEOBJTYPE=289&ASSOCIATEOBJID=fg-01' }
+            $result.Count | Should -Be 2
+            $result[0].'Member Type' | Should -Be 'Ethernet Port'
+            $result[0].'Running Status' | Should -Be 'Link Up'
+            $result[0].'Failover Group Id' | Should -Be 'fg-01'
+            $result[1].'Member Type' | Should -Be 'Bond Port'
+            $result[0].PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
+                Should -Be @('Id', 'Name', 'Member Type', 'Running Status', 'Failover Group Id')
+        }
+
+        It 'narrows failover group member queries with -MemberType' {
+            Mock Invoke-DeviceManager { [pscustomobject]@{ data = @() } }
+
+            $null = Get-DMFailoverGroupMember -WebSession $script:session -Id 'fg-01' -MemberType 280
+
+            Should -Invoke Invoke-DeviceManager -Times 1 -Exactly
+            Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -eq 'vlan/associate?ASSOCIATEOBJTYPE=289&ASSOCIATEOBJID=fg-01' }
+        }
+
+        It 'returns an empty result for a failover group with no members' {
+            Mock Invoke-DeviceManager { [pscustomobject]@{ data = @() } }
+
+            $result = Get-DMFailoverGroupMember -WebSession $script:session -Id 'fg-01'
+
+            @($result).Count | Should -Be 0
+        }
+
+        It 'accepts a failover group from the pipeline for member lookup' {
+            Mock Invoke-DeviceManager { [pscustomobject]@{ data = @() } }
+
+            $group = [pscustomobject]@{ Id = 'fg-07' }
+            $null = $group | Get-DMFailoverGroupMember -WebSession $script:session
+
+            Should -Invoke Invoke-DeviceManager -Times 3 -Exactly -ParameterFilter { $Resource -like '*ASSOCIATEOBJID=fg-07' }
         }
 
         It 'gets failover groups' {

@@ -2,11 +2,40 @@
 
 ## Current Focus
 
-- Stabilize the network lifecycle cmdlets added on this branch (bond ports,
-  VLANs, LIFs, failover groups, LLDP working mode) and their unit coverage.
+- First human-supervised, config-gated live run of the failover-group
+  workflow (`Network.Enabled` + `Network.AllowFailoverGroupLifecycle`).
 
 ## Recently Completed
 
+- Phase 06 (2026-07-07) network hardening:
+  - `-WhatIf` regression tests for all 15 network mutators
+    (no-API-call assertion driven by the shared
+    `Tests/Unit/Support/Assert-DMWhatIfSafe.ps1` helper, reusable by the
+    Phase 07 DR `-WhatIf` suite), plus `ConfirmImpact = 'High'` checks for
+    in-place modify/delete mutators. `Set-DMLLDPWorkingMode` now declares
+    `ConfirmImpact = 'High'`.
+  - Failover-group member getter `Get-DMFailoverGroupMember` (typed
+    `OceanStorFailoverGroupMember` output, registered in read validation and
+    `ModuleCoverage.psd1`). Note: `failovergroup/associate` has **no
+    documented GET** in the Dorado 6.1.6 REST reference; the getter uses the
+    documented per-type queries (`eth_port/associate`, `bond_port/associate`,
+    `vlan/associate` with `ASSOCIATEOBJTYPE=289`) instead.
+  - Server-side narrowing for `Get-DMLif`/`Get-DMvLan`: documented
+    `filter=NAME` (exact `::`, fuzzy `:`, client-side `-Like` re-check) and
+    documented `lif/{id}` / `vlan/{id}` single-object queries for `-Id`.
+  - `Set-DMLif` addresses a LIF by `-Id` alone (resolves the documented
+    mandatory `NAME` body field via `lif/{id}` first); `-Name`-only behavior
+    unchanged.
+  - Pipeline property-binding tests: `Get-DMPortBond | Remove-DMPortBond`,
+    `Get-DMFailoverGroup | Set-DMFailoverGroup`, `Set-DMLif` by piped
+    `Id`/`LIF Name`.
+  - Config-gated, test-owned failover-group workflow
+    (`Tests/Integration/Private/Workflows/FailoverGroup.ps1`), disabled by
+    default behind `Network.Enabled` + `Network.AllowFailoverGroupLifecycle`;
+    cleanup by captured ID only; member add/remove skipped until a
+    test-owned member type exists.
+  - VLAN idle-port guard design documented in
+    [safety-and-live-validation.md](safety-and-live-validation.md).
 - Bond port lifecycle: `New/Set/Remove-DMPortBond`.
 - VLAN port lifecycle: `New/Set/Remove-DMvLan`.
 - Logical port (LIF) lifecycle: `New/Set/Remove-DMLif`.
@@ -25,30 +54,33 @@
 
 ## High Priority
 
-> Deduplication note: all High and Medium Priority items below are scoped for
-> implementation in
-> `todo/alpha-v1.0.0-post-merge-phase-06-network-hardening-and-workflows.md`,
-> which re-verified each as still open against current code (2026-07-07).
-> Status: `open` for all bullets in this section.
-
-- Add `-WhatIf` regression tests for every network mutator asserting that no
-  API call is made (currently none exist for this domain).
-- Add a failover-group member getter (`failovergroup/associate` GET) so
-  membership can be verified without inspecting LIFs.
-- Config-gated, test-owned live workflow for failover groups (create → modify
-  → member add/remove → delete by captured ID) in the integration harness,
-  following the existing `Workflows/*.ps1` pattern.
+- Human-supervised, gated live run of the failover-group workflow, then
+  record the run outcome here.
 
 ## Medium Priority
 
-- Server-side filters for `Get-DMLif` and `Get-DMvLan` (`-Name`/`-Id`), which
-  currently return the full collection.
-- Allow `Set-DMLif` to address a LIF by `-Id` alone (today `-Name` is
-  mandatory). Verified still open: `Set-DMLif` still declares `-Name` as
-  `Mandatory = $true` with no `-Id`-only path.
-- Pipeline tests: `Get-DMPortBond | Remove-DMPortBond`,
-  `Get-DMFailoverGroup | Set-DMFailoverGroup` property binding.
-- Expose bond member add/remove after creation if the REST API supports it.
+- Expose the remaining documented filter fields as parameters:
+  `Get-DMLif` (`IPV4ADDR`, `IPV6ADDR`, `HOMEPORTID`) and `Get-DMvLan`
+  (`TAG`, `fatherDrvType`).
+- Live member add/remove step in the failover-group workflow — **blocked**:
+  members are Ethernet ports / bond ports / VLANs (REST `ASSOCIATEOBJTYPE`
+  213/235/280, not LIFs), and the harness owns no such object. Requires the
+  test-owned VLAN workflow with the idle-port guard first.
+
+## Deferred (with reason)
+
+- Bond member add/remove after creation — **no documented REST endpoint**:
+  `PUT bond_port/{id}` documents only `NAME`, `MTU`, IP address fields,
+  `MSGRETURNTYPE` and `USEDTYPE`; no `PORTIDLIST`/member operation exists in
+  the Dorado 6.1.6 reference (verified 2026-07-07). Do not send speculative
+  bodies; revisit when Huawei documents one.
+- `Get-DMFailoverGroupMember` via a single `failovergroup/associate` GET —
+  **no documented REST endpoint** (only POST/DELETE are documented); the
+  implemented per-type association queries are the documented alternative.
+- VLAN live workflow — **requires idle-port guard** (design in
+  [safety-and-live-validation.md](safety-and-live-validation.md)); the guard
+  itself needs tests and a reviewed lab dry run before any
+  `Network.AllowVlanLifecycle` gate may exist.
 
 ## Low Priority / Polish
 
@@ -60,18 +92,22 @@
 ## Testing and Validation
 
 - Read-only network getters are covered by live read validation; keep new
-  getters registered there as they are added.
+  getters registered there as they are added
+  (`Get-DMFailoverGroupMember` registered 2026-07-07).
 - Network mutators must stay out of default live runs; any future live
   workflow must be config-gated and strictly test-owned (see
-  [safety-and-live-validation.md](safety-and-live-validation.md)).
+  [safety-and-live-validation.md](safety-and-live-validation.md)). The
+  failover-group workflow follows this pattern and stays off by default;
+  `-RunMutatingTests` alone never runs it.
 - VLAN live workflow (create/delete a tagged child on a verified-idle port)
-  is possible in a dedicated lab but needs an idle-port detection guard first.
+  is possible in a dedicated lab but needs the documented idle-port detection
+  guard implemented and tested first.
 
 ## Documentation
 
 - Keep the per-domain pages in this folder in sync when parameters change.
-- Add a worked NAS-provisioning walkthrough (failover group → LIF → share)
-  once a member getter exists.
+- NAS-provisioning walkthrough (failover group → LIF → share) added to
+  [failover-groups.md](failover-groups.md) (2026-07-07).
 
 ## Future Feature Branches
 

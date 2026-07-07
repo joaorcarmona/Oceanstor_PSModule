@@ -13,7 +13,7 @@
 RootModule = "posh-oceanstor.psm1"
 
 # Version number of this module.
-ModuleVersion = "0.9.5"
+ModuleVersion = "1.0.0"
 
 # ID used to uniquely identify this module
 GUID = "67f4a145-d50d-4c26-bd26-b1303fd48aa1"
@@ -125,6 +125,7 @@ FunctionsToExport = @(
     'Get-DMAlarm'
     'Get-DMbbu'
     'Get-DMCapacityHistory'
+    'Get-DMCertificate'
     'Get-DMcofferDisk'
     'Get-DMController'
     'Get-DMControllerPerformance'
@@ -136,6 +137,7 @@ FunctionsToExport = @(
     'Get-DMEnclosure'
     'Get-DMEquipmentStatus'
     'Get-DMFailoverGroup'
+    'Get-DMFailoverGroupMember'
     'Get-DMFiberChannelInitiator'
     'Get-DMFileHyperMetroDomain'
     'Get-DMFileSystem'
@@ -185,6 +187,7 @@ FunctionsToExport = @(
     'Get-DMPortSAS'
     'Get-DMProtectionGroup'
     'Get-DMQosPolicy'
+    'Get-DMQuorumServer'
     'Get-DMQuota'
     'Get-DMRemoteDevice'
     'Get-DMRemoteLun'
@@ -315,6 +318,7 @@ FunctionsToExport = @(
     'Rename-DMHostGroup'
     'Rename-DMLun'
     'Rename-DMLunGroup'
+    'Rename-DMMappingView'
     'Rename-DMPortGroup'
     'Rename-DMProtectionGroup'
     'Resize-DMLunSnapshot'
@@ -339,6 +343,7 @@ FunctionsToExport = @(
     'Set-DMLocalUser'
     'Set-DMLun'
     'Set-DMLunGroup'
+    'Set-DMMappingView'
     'Set-DMLif'
     'Set-DMLLDPWorkingMode'
     'Set-DMnfsClient'
@@ -406,6 +411,7 @@ AliasesToExport = @(
     'Delete-DMFailoverGroup'
     'Delete-DMFailoverGroupMember'
     'Get-DMFailoverGroups'
+    'Get-DMFailoverGroupMembers'
     'Get-DMFileSystemSnapshots'
     'Get-DMfreeDisks'
     'Get-DMhostGroups'
@@ -449,6 +455,9 @@ AliasesToExport = @(
 PrivateData = @{
 
     PSData = @{
+
+        # Prerelease string of this module
+         Prerelease = "alpha1"
 
         # Tags applied to this module. These help with module discovery in online galleries.
          Tags = @("Huawei", "Oceanstor", "DeviceManager", "Dorado")

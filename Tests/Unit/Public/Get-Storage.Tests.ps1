@@ -10,6 +10,7 @@ BeforeDiscovery {
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Select-DMResponseData.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Get-DMFilterableProperty.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\Assert-DMValidFilterProperty.ps1"
+        . "$testRoot\..\Support\DMResponseFixtures.ps1"
 
         . "$testRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
         Get-ChildItem -LiteralPath "$testRoot\..\..\..\POSH-Oceanstor\Private" -Filter 'class-*.ps1' |
@@ -175,7 +176,7 @@ Describe 'Public getter functions' {
         }
 
         It 'gets version 6 LUNs' {
-            Mock Invoke-DeviceManager { [pscustomobject]@{ data = @(New-TestLun) } }
+            Mock Invoke-DeviceManager { New-DMFixtureSuccessResponse -Data @(New-DMFixtureLun -Id 'lun-01' -Name 'data-lun' -Wwn 'wwn-01') }
 
             $result = Get-DMlun -WebSession $script:session
 
@@ -187,27 +188,27 @@ Describe 'Public getter functions' {
             Mock Invoke-DeviceManager {
                 param($WebSession, $Method, $Resource)
                 $script:keywordResource = $Resource
-                if ($Resource -like 'lun?filter=NAME::finance*') {
-                    return [pscustomobject]@{ data = @(New-TestLun -Id 'lun-01' -Name 'finance') }
+                if ($Resource -like (New-DMExactFilterResource -Resource 'lun' -Property 'NAME' -Value 'finance')) {
+                    return New-DMFixtureSuccessResponse -Data @(New-DMFixtureLun -Id 'lun-01' -Name 'finance')
                 }
-                [pscustomobject]@{ data = @() }
+                New-DMFixtureEmptyResponse
             }
 
             $result = @(Get-DMlun -WebSession $script:session 'finance')
 
             $result.Count | Should -Be 1
             $result[0].Id | Should -Be 'lun-01'
-            $script:keywordResource | Should -BeLike 'lun?filter=NAME::finance*'
+            $script:keywordResource | Should -BeLike (New-DMExactFilterResource -Resource 'lun' -Property 'NAME' -Value 'finance')
         }
 
         It 'falls back to WWN when Keyword matches no LUN by Name' {
             Mock Invoke-DeviceManager {
                 param($WebSession, $Method, $Resource)
                 $script:keywordResources += $Resource
-                if ($Resource -like 'lun?filter=WWN::658be72100f6793b6bb9512e000000e1*') {
-                    return [pscustomobject]@{ data = @(New-TestLun -Id 'lun-02' -WWN '658be72100f6793b6bb9512e000000e1') }
+                if ($Resource -like (New-DMExactFilterResource -Resource 'lun' -Property 'WWN' -Value '658be72100f6793b6bb9512e000000e1')) {
+                    return New-DMFixtureSuccessResponse -Data @(New-DMFixtureLun -Id 'lun-02' -Wwn '658be72100f6793b6bb9512e000000e1')
                 }
-                [pscustomobject]@{ data = @() }
+                New-DMFixtureEmptyResponse
             }
             $script:keywordResources = @()
 
@@ -215,22 +216,22 @@ Describe 'Public getter functions' {
 
             $result.Count | Should -Be 1
             $result[0].Id | Should -Be 'lun-02'
-            $script:keywordResources[0] | Should -BeLike 'lun?filter=NAME::658be72100f6793b6bb9512e000000e1*'
-            $script:keywordResources[1] | Should -BeLike 'lun?filter=WWN::658be72100f6793b6bb9512e000000e1*'
+            $script:keywordResources[0] | Should -BeLike (New-DMExactFilterResource -Resource 'lun' -Property 'NAME' -Value '658be72100f6793b6bb9512e000000e1')
+            $script:keywordResources[1] | Should -BeLike (New-DMExactFilterResource -Resource 'lun' -Property 'WWN' -Value '658be72100f6793b6bb9512e000000e1')
         }
 
         It 'gets a LUN by Id using an exact server-side filter' {
             Mock Invoke-DeviceManager {
                 param($WebSession, $Method, $Resource)
                 $script:idResource = $Resource
-                [pscustomobject]@{ data = @(New-TestLun -Id 'lun-01' -Name 'finance') }
+                New-DMFixtureSuccessResponse -Data @(New-DMFixtureLun -Id 'lun-01' -Name 'finance')
             }
 
             $result = @(Get-DMlun -WebSession $script:session -Id 'lun-01')
 
             $result.Count | Should -Be 1
             $result[0].Id | Should -Be 'lun-01'
-            $script:idResource | Should -BeLike 'lun?filter=ID::lun-01*'
+            $script:idResource | Should -BeLike (New-DMExactFilterResource -Resource 'lun' -Property 'ID' -Value 'lun-01')
         }
 
         It 'rejects supplying both Keyword and Id for Get-DMlun' {
@@ -241,17 +242,17 @@ Describe 'Public getter functions' {
             Mock Invoke-DeviceManager {
                 param($WebSession, $Method, $Resource)
                 $script:keywordResource = $Resource
-                if ($Resource -like 'lun?filter=NAME:fin*') {
-                    return [pscustomobject]@{ data = @(New-TestLun -Id 'lun-01' -Name 'finance') }
+                if ($Resource -like (New-DMFuzzyFilterResource -Resource 'lun' -Property 'NAME' -Value 'fin')) {
+                    return New-DMFixtureSuccessResponse -Data @(New-DMFixtureLun -Id 'lun-01' -Name 'finance')
                 }
-                [pscustomobject]@{ data = @() }
+                New-DMFixtureEmptyResponse
             }
 
             $result = @(Get-DMlun -WebSession $script:session -Keyword 'fin*')
 
             $result.Count | Should -Be 1
             $result[0].Id | Should -Be 'lun-01'
-            $script:keywordResource | Should -BeLike 'lun?filter=NAME:fin*'
+            $script:keywordResource | Should -BeLike (New-DMFuzzyFilterResource -Resource 'lun' -Property 'NAME' -Value 'fin')
         }
 
         It 'gets LUN snapshots' {

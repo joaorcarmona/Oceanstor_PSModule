@@ -1,6 +1,6 @@
 # Historical Performance and Capacity Guide
 
-Navigation: [README](README.md) | [Block](BLOCK.md) | [NAS](NAS.md) | [Array](ARRAY.md) | [Troubleshooting](TROUBLESHOOTING.md) | [Implementation](IMPLEMENTATION.md)
+Navigation: [README](README.md) | [Block](block.md) | [NAS](nas.md) | [Array](array.md) | [Troubleshooting](troubleshooting.md) | [Implementation](implementation.md)
 
 Realtime performance shows the current sample. Historical performance and capacity use the OceanStor report-task workflow: create a report task, run/export it, poll for a log, download a ZIP, parse CSV rows, and clean up.
 
