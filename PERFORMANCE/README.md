@@ -15,6 +15,7 @@ The organization follows common enterprise storage practice: block workload anal
 - [Historical performance and capacity](HISTORY.md)
 - [Troubleshooting cookbook](TROUBLESHOOTING.md)
 - [Implementation guide](IMPLEMENTATION.md)
+- [Live validation gap analysis](VALIDATION-GAP-ANALYSIS.md)
 
 ## Quick Start
 
@@ -102,6 +103,8 @@ Common NAS metrics:
 
 > Note: Metric applicability is not enforced by object type in code. If the array returns `-1`, the module surfaces that metric as `$null`.
 
+Live validation confirmed that `$null` can be object-specific rather than a command failure. For example, `QueueLength` can be `$null` on `System` samples, and `UsagePercent` can be `$null` on realtime `StoragePool` samples. Use capacity history for confirmed capacity fields such as `Capacity usage(%)`.
+
 ## Realtime vs Historical Data
 
 | Type | Data Source | Best For | Tradeoffs |
@@ -116,6 +119,7 @@ Common NAS metrics:
 - The examples in the operational guides use read-only performance checks unless explicitly labeled as report-task cleanup.
 - `Get-DMPerformanceHistory` and `Get-DMCapacityHistory` create temporary report tasks and export logs, then clean them up unless `-KeepReportTask` is used.
 - Do not use `-KeepReportTask` during routine checks unless you intend to inspect and manually clean up the task.
+- Keep manually named report tasks short. The live array rejected names longer than the module's 31-character validation limit.
 - `Set-DMPerformanceMonitoring`, `Enable-DMPerformanceMonitoring`, and `Disable-DMPerformanceMonitoring` can change live array behavior. Prefer `Get-DMPerformanceMonitoring` for normal troubleshooting.
 - No examples use hostnames, credentials, or private lab addresses.
 

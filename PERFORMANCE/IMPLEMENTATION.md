@@ -220,6 +220,8 @@ Supported `TimeSegment` values are `OneHour`, `OneDay`, `OneWeek`, `OneMonth`, `
 
 `Customer` requires `StartTime` and `EndTime`. The implementation sends these as epoch milliseconds.
 
+`Name` is validated to a maximum of 31 characters. Live validation confirmed the explicit report-task lifecycle with a short task name and rejected an overlong generated validation name before task creation.
+
 ## Report-Task Body
 
 Top-level body includes:
@@ -293,6 +295,8 @@ Behavior:
 - skips Disk/Host/LUN performance sections above 500 objects
 - joins `ObjectName` from source object IDs before writing worksheets
 - depends on `Export-Excel`
+
+Live validation confirmed that the workbook is still created when a large section is skipped. On an array with 1220 LUNs, the export skipped LUN performance because it exceeded the 500-object cap.
 
 ## Tests
 

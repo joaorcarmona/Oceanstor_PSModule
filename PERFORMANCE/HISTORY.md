@@ -41,6 +41,8 @@ Capacity history supports:
 
 `BondPort` is supported for realtime performance but not currently validated for report-task history.
 
+Report-task names must stay within the module validation limit of 31 characters. Prefer short debug names when using `New-DMPerformanceReportTask` directly.
+
 ## High-Level Flow
 
 ```text
@@ -120,9 +122,9 @@ Do not remove report tasks you did not create or confirm with the owner.
 Use this only when you need raw control over report-task lifecycle:
 
 ```powershell
-$task = New-DMPerformanceReportTask -Name "perf_debug_01" -ObjectType Controller -ObjectId "0A" -TimeSegment Customer -StartTime (Get-Date).AddHours(-1) -EndTime (Get-Date) -Metric TotalIOPS,AvgLatencyMs -Confirm
+$task = New-DMPerformanceReportTask -Name "pdoc_debug01" -ObjectType Controller -ObjectId "0A" -TimeSegment Customer -StartTime (Get-Date).AddHours(-1) -EndTime (Get-Date) -Metric TotalIOPS,AvgLatencyMs -Confirm
 $log = Invoke-DMPerformanceReportTask -Id $task.Id -TimeoutSec 300 -Confirm
-Save-DMPerformanceReportFile -LogId $log.LogId -TaskId $task.Id -Path "$env:TEMP\perf_debug_01.zip" -Force
+Save-DMPerformanceReportFile -LogId $log.LogId -TaskId $task.Id -Path "$env:TEMP\pdoc_debug01.zip" -Force
 ```
 
 When done:
@@ -130,6 +132,8 @@ When done:
 ```powershell
 Remove-DMPerformanceReportTask -Id $task.Id -Confirm
 ```
+
+Use short task names and remove only the captured `$task.Id`. Live validation confirmed explicit create, invoke, download, and cleanup with a short task name.
 
 ## Zero Rows
 

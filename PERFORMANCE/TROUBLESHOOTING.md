@@ -222,6 +222,8 @@ Interpretation:
 
 Do not assume `$null` is zero.
 
+Live validation examples: `QueueLength` returned `$null` on the system object, and realtime `StoragePool` `UsagePercent` returned `$null` for the tested pool. Other metrics from the same samples returned numeric values, so the right interpretation was "not applicable or not returned for this object", not "no workload".
+
 ## 10. Performance Monitoring Disabled
 
 Symptoms:
@@ -303,3 +305,5 @@ Interpretation:
 - Disk, Host, and LUN performance sections are skipped above the 500-object cap
 - `Export-Excel` must be available
 - the export uses live realtime samples, not history
+
+Live validation on an array with 1220 LUNs created the workbook and skipped LUN performance with the documented 500-object cap warning.

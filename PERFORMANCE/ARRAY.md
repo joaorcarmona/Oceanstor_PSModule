@@ -59,6 +59,8 @@ Get-DMSystemPerformance -Metric TotalIOPS,ReadIOPS,WriteIOPS,BandwidthMBps,ReadB
 
 `CpuUsagePercent` is implemented as a friendly metric, but applicability is array/object dependent. If the array does not return it for `System`, the sample may show `$null`.
 
+Live validation against one OceanStor array confirmed `CpuUsagePercent` on `System`, while `QueueLength` returned `$null` for the system object. Treat queue metrics as object/firmware dependent.
+
 ## Controller Performance and Imbalance
 
 ```powershell
