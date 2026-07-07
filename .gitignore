@@ -15,4 +15,6 @@ Reports/
 AGENTS.md
 .archived-commands/
 .temp/*
-
+.agents/
+.codex/
+scripts/
