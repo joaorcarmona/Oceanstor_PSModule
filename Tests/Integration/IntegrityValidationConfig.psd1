@@ -107,6 +107,12 @@
         AllowDrMutation = $false
         AllowPrioritySwitch = $false
 
+        # Force-start (HyperMetroPair/startup_node) forcibly brings up a pair and is
+        # only meaningful in a genuine arbitration/outage scenario. It stays off by
+        # default and independent of AllowPrioritySwitch/failover gates; enable only
+        # on a lab pair intended for this validation run.
+        AllowForceStart = $false
+
         # Supply either RemoteDeviceId or RemoteDeviceName.
         RemoteDeviceId = ''
         RemoteDeviceName = ''

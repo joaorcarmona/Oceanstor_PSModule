@@ -52,13 +52,26 @@ cross-domain server-side `filter=` migration, while keeping the genuinely blocke
 
 ## Implementation tasks
 
-1. Add `Set-DMVStorePair` and the `transfer` / `modifyPreferredPolicy` wrappers with
-   `SupportsShouldProcess` + appropriate `ConfirmImpact`, mock unit tests, `-WhatIf` coverage.
-2. Add the file-system-filtered replication-pair getter (read-only), register in read validation.
-3. Filter migration: for each getter where the REST reference documents `filter=`, send it
-   server-side; unit-test that the request carries the filter (not post-filtered in PowerShell).
-4. HyperMetro force-start: add a gated (default-off) workflow step + unit coverage for a test-owned
-   pair only.
+All four implemented in Phase 06 (see docs/replication-hypermetro/TODO.md for detail):
+
+1. [x] `Set-DMVStorePair` (`VSTORE_PAIR/change_ip_work_mode`), `Set-DMReplicationPairMode`
+   (`REPLICATIONPAIR/transfer`) and `Set-DMHyperMetroPairPreferredPolicy`
+   (`HyperMetroPair/MODIFY_PREFERRED_POLICY`) added — `SupportsShouldProcess`,
+   `ConfirmImpact=High`, mock unit tests, `-WhatIf` coverage, no `-ApiProperties` passthrough.
+2. [x] `Get-DMFileSystemReplicationPair` (read-only, server-side `filter=LOCALRESID`) added and
+   registered in read validation.
+3. [x] Filter migration: new getter + `Get-DMVStorePair` request server-side and are unit-tested to
+   carry the filter. `Get-DMReplicationPair`/`Get-DMHyperMetroPair` (`-Name` matches three fields)
+   and `Get-DMQuorumServer` (no documented `filter`) retained client-side as documented fallbacks.
+4. [x] HyperMetro force-start gated behind default-off `HyperMetro.AllowForceStart`
+   (`SkippedUnsafe` when off); command behavior unit-tested. Live force-start remains deferred.
+
+### Remaining (deferred / blocked — track only, do not implement in Phase 06)
+
+- DR batch operations — blocked, no documented per-object batch endpoint.
+- NAS/vStore dual-array + failover/switchover live runs — deferred, need dual-array lab +
+  per-operation flags + human supervision.
+- Remote LUN rescan, DR dashboards/reporting — future feature branches.
 
 ## Files likely to inspect
 

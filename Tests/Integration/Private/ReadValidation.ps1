@@ -196,6 +196,22 @@ function Invoke-ReadValidation {
     Add-ValidationResult -Name 'Get-DMReplicationPair' -ExpectedType 'OceanstorReplicationPair' -Action {
         Get-DMReplicationPair -WebSession $session
     } | Out-Null
+
+    # Get-DMFileSystemReplicationPair is guarded: it filters replication pairs by a
+    # specific local file system id (server-side filter=LOCALRESID), so it needs a
+    # file system to target. When file systems exist, exercise it against the first
+    # one; the read is safe even when that file system has no replication pair
+    # (empty result). With no file systems it is reported NotConfigured, never a
+    # failure.
+    if ($samples.FileSystems.Count -gt 0) {
+        $replicationFileSystemId = $samples.FileSystems[0].Id
+        Add-ValidationResult -Name 'Get-DMFileSystemReplicationPair' -ExpectedType 'OceanstorReplicationPair' -Action {
+            Get-DMFileSystemReplicationPair -WebSession $session -FileSystemId $replicationFileSystemId
+        } | Out-Null
+    }
+    else {
+        Add-SkippedResult -Name 'Get-DMFileSystemReplicationPair' -Reason 'No file systems are configured on this array; file-system replication pair lookup skipped.' -Status 'NotConfigured' -Category 'Read'
+    }
     Add-ValidationResult -Name 'Get-DMReplicationConsistencyGroup' -ExpectedType 'OceanstorReplicationConsistencyGroup' -Action {
         Get-DMReplicationConsistencyGroup -WebSession $session
     } | Out-Null

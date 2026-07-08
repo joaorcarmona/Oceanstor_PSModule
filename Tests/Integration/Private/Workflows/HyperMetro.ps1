@@ -95,10 +95,16 @@ $script:HyperMetroMutationWorkflow = {
                 Suspend-DMHyperMetroPair -WebSession $session -Id $hyperMetroPairId -Confirm:$false
             } | Out-Null
 
-            Invoke-MutationStep -Name 'Start-DMHyperMetroPair' -Action {
-                Assert-TestOwnedResource -Kind HyperMetroPair -Identity $hyperMetroPairId
-                Start-DMHyperMetroPair -WebSession $session -Id $hyperMetroPairId -Confirm:$false
-            } | Out-Null
+            if ($configuration.HyperMetro.AllowForceStart) {
+                Invoke-MutationStep -Name 'Start-DMHyperMetroPair' -Action {
+                    Assert-TestOwnedResource -Kind HyperMetroPair -Identity $hyperMetroPairId
+                    Start-DMHyperMetroPair -WebSession $session -Id $hyperMetroPairId -Confirm:$false
+                } | Out-Null
+            }
+            else {
+                Add-SkippedResult -Name 'Start-DMHyperMetroPair' -Status 'SkippedUnsafe' `
+                    -Reason 'Set HyperMetro.AllowForceStart = $true only on a test-owned pair in a lab where force-start (startup_node) is expected.'
+            }
 
             if ($configuration.HyperMetro.AllowPrioritySwitch) {
                 Invoke-MutationStep -Name 'Switch-DMHyperMetroPairPriority' -Action {

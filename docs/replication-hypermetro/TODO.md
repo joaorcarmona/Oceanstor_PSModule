@@ -79,17 +79,29 @@
 
 ## Low Priority / Polish
 
-- Dedicated wrappers for `REPLICATIONPAIR/transfer` and
-  `modifyPreferredPolicy` endpoints instead of `-ApiProperties` passthrough.
-- `Set-DMVStorePair` and a file-system-filtered replication pair getter.
-- Server-side `filter=` support on DR getters where the REST API documents it
-  (name filtering is currently client-side).
+- _Done (Phase 06)._ Dedicated wrappers `Set-DMReplicationPairMode`
+  (`REPLICATIONPAIR/transfer`) and `Set-DMHyperMetroPairPreferredPolicy`
+  (`HyperMetroPair/MODIFY_PREFERRED_POLICY`) replace `-ApiProperties`
+  passthrough for those endpoints.
+- _Done (Phase 06)._ `Set-DMVStorePair` (`VSTORE_PAIR/change_ip_work_mode`)
+  and `Get-DMFileSystemReplicationPair` (server-side `filter=LOCALRESID`)
+  shipped, unit-tested, and read-validation-registered.
+- Server-side `filter=` on DR getters where the REST API documents it:
+  - _Done._ `Get-DMFileSystemReplicationPair` (`filter=LOCALRESID`) and
+    `Get-DMVStorePair` (`filter=REPTYPE`) request server-side.
+  - _Retained client-side (documented fallback)._ `Get-DMReplicationPair` and
+    `Get-DMHyperMetroPair` `-Name` matches three fields (local name, remote
+    name, id); no single documented server-side filter field covers all three,
+    so a single-field server filter would drop valid matches. `Get-DMQuorumServer`
+    documents only `range`, no `filter`.
 
 ## Testing and Validation
 
-- Extend the HyperMetro workflow with optional force-start coverage on a
-  test-owned pair behind its own opt-in flag (currently not exercised at
-  all).
+- _Done (Phase 06)._ HyperMetro force-start coverage on a test-owned pair sits
+  behind the default-off `HyperMetro.AllowForceStart` gate (workflow step is
+  `SkippedUnsafe` when off; command behavior is unit-tested). The gate is
+  independent of failover/switchover gates and is never enabled in committed
+  config — a live force-start run stays deferred to a supervised session.
 - **Deferred — requires dual-array NAS lab.** Gated workflows for the
   NAS/vStore tranche (vStore pair lifecycle, file-system replication pair
   lifecycle).

@@ -75,6 +75,7 @@ InModuleScope DrWhatIfTestModule {
         @{ Command = 'Sync-DMReplicationPair'; ExpectConfirmImpactHigh = $true; Parameters = @{ Id = 'rp-01' } }
         @{ Command = 'Split-DMReplicationPair'; ExpectConfirmImpactHigh = $true; Parameters = @{ Id = 'rp-01' } }
         @{ Command = 'Switch-DMReplicationPair'; ExpectConfirmImpactHigh = $true; Parameters = @{ Id = 'rp-01' } }
+        @{ Command = 'Set-DMReplicationPairMode'; ExpectConfirmImpactHigh = $true; Parameters = @{ Id = 'rp-01'; ReplicationMode = 'Sync' } }
         @{ Command = 'Enable-DMReplicationPairSecondaryProtection'; ExpectConfirmImpactHigh = $true; Parameters = @{ Id = 'rp-01' } }
         @{ Command = 'Disable-DMReplicationPairSecondaryProtection'; ExpectConfirmImpactHigh = $true; Parameters = @{ Id = 'rp-01' } }
         # --- Replication consistency groups ---
@@ -94,6 +95,7 @@ InModuleScope DrWhatIfTestModule {
         @{ Command = 'Suspend-DMHyperMetroPair'; ExpectConfirmImpactHigh = $true; Parameters = @{ Id = 'hmp-01' } }
         @{ Command = 'Start-DMHyperMetroPair'; ExpectConfirmImpactHigh = $true; Parameters = @{ Id = 'hmp-01' } }
         @{ Command = 'Switch-DMHyperMetroPairPriority'; ExpectConfirmImpactHigh = $true; Parameters = @{ Id = 'hmp-01' } }
+        @{ Command = 'Set-DMHyperMetroPairPreferredPolicy'; ExpectConfirmImpactHigh = $true; Parameters = @{ Id = 'hmp-01'; PreferredSitePolicy = 'ServiceBased' } }
         # --- HyperMetro consistency groups ---
         @{ Command = 'New-DMHyperMetroConsistencyGroup'; ExpectConfirmImpactHigh = $false; Parameters = @{ Name = 'metro-cg'; DomainId = 'domain-01' } }
         @{ Command = 'Set-DMHyperMetroConsistencyGroup'; ExpectConfirmImpactHigh = $true; Parameters = @{ Id = 'hmcg-01'; Description = 'whatif-test' } }
@@ -123,6 +125,7 @@ InModuleScope DrWhatIfTestModule {
         @{ Command = 'Sync-DMVStorePair'; ExpectConfirmImpactHigh = $true; Parameters = @{ Id = 'vp-01' } }
         @{ Command = 'Split-DMVStorePair'; ExpectConfirmImpactHigh = $true; Parameters = @{ Id = 'vp-01' } }
         @{ Command = 'Switch-DMVStorePair'; ExpectConfirmImpactHigh = $true; Parameters = @{ Id = 'vp-01' } }
+        @{ Command = 'Set-DMVStorePair'; ExpectConfirmImpactHigh = $true; Parameters = @{ Id = 'vp-01'; IpWorkMode = 'LoadBalancing' } }
         # --- File-system replication pairs ---
         @{ Command = 'New-DMFileSystemReplicationPair'; ExpectConfirmImpactHigh = $false; Parameters = @{ LocalFileSystemId = 'fs-01'; RemoteDeviceId = 'rd-01'; RemoteFileSystemId = 'rfs-01' } }
         @{ Command = 'Enable-DMFileSystemReplicationPairSecondaryProtection'; ExpectConfirmImpactHigh = $true; Parameters = @{ Id = 'fsrp-01' } }
