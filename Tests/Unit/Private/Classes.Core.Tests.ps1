@@ -37,8 +37,8 @@ Describe 'Core model classes' {
 
     It 'maps alarm state and severity' {
         $source = [pscustomobject]@{
-            name = 'Controller warning'; alarmStatus = 1; level = 3; type = 1; eventType = 1
-            clearTime = 0; recoverTime = 0; startTime = 0
+            name = 'Controller warning'; alarmStatus = 1; level = 5; type = 1; eventType = 1
+            clearName = ''; clearTime = 0; recoverTime = 0; startTime = 0
         }
 
         $result = New-Object -TypeName OceanStorAlarm -ArgumentList @($source, $script:session)
@@ -47,6 +47,38 @@ Describe 'Core model classes' {
         $result.'Alarm Status' | Should -Be 'unrecovered'
         $result.Level | Should -Be 'major'
         $result.Session | Should -Be $script:session
+    }
+
+    It 'leaves epoch time properties null when the source value is zero' {
+        $source = [pscustomobject]@{
+            name = 'Idle event'; alarmStatus = 1; level = 3; type = 1; eventType = 1
+            clearName = ''; clearTime = 0; recoverTime = 0; startTime = 0
+        }
+
+        $result = New-Object -TypeName OceanStorAlarm -ArgumentList @($source, $script:session)
+
+        $result.'Start time' | Should -BeNullOrEmpty
+        $result.'Cleared Time' | Should -BeNullOrEmpty
+        $result.'Recover Time' | Should -BeNullOrEmpty
+    }
+
+    It 'converts epoch seconds to DateTime and maps the clearing user' {
+        # 1704067200 = 2024-01-01T00:00:00Z, 1704153600 = 2024-01-02Z, 1704240000 = 2024-01-03Z
+        $source = [pscustomobject]@{
+            name = 'Recovered alarm'; alarmStatus = 2; level = 3; type = 1; eventType = 1
+            clearName = 'admin'; startTime = 1704067200; clearTime = 1704153600; recoverTime = 1704240000
+        }
+
+        $result = New-Object -TypeName OceanStorAlarm -ArgumentList @($source, $script:session)
+
+        $result.'Cleared By' | Should -Be 'admin'
+        $result.'Start time' | Should -BeOfType ([datetime])
+        $result.'Cleared Time' | Should -BeOfType ([datetime])
+        $result.'Recover Time' | Should -BeOfType ([datetime])
+        # Compare in UTC so the assertion is independent of the host time zone.
+        $result.'Start time'.ToUniversalTime()   | Should -Be ([datetime]'2024-01-01T00:00:00Z').ToUniversalTime()
+        $result.'Cleared Time'.ToUniversalTime()  | Should -Be ([datetime]'2024-01-02T00:00:00Z').ToUniversalTime()
+        $result.'Recover Time'.ToUniversalTime()  | Should -Be ([datetime]'2024-01-03T00:00:00Z').ToUniversalTime()
     }
 
     It 'creates a dtree model instance' {

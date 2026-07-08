@@ -5,8 +5,8 @@ class OceanStorAlarm{
 	#Define Properties
     [string]${Alarm Object Type}
     [string]${Alarm Status}
-    [string]${Username Cleared}
-    [string]${Cleared Time}
+    [string]${Cleared By}
+    [nullable[datetime]]${Cleared Time}
     [string]${Confirmed Alarm}
     [string]${Description}
     [string]${Details}
@@ -16,11 +16,11 @@ class OceanStorAlarm{
     [string]${Level}
     [string]${Location}
     [string]${Name}
-    [string]${Recover Time}
+    [nullable[datetime]]${Recover Time}
     [string]${Alarm SN}
     [string]${Alarm src Id}
     [string]${Alarm src Type}
-    [string]${Start time}
+    [nullable[datetime]]${Start time}
     [string]${Hexadecimal ID}
     [string]${Suggestion Action}
     [string]${Type}
@@ -30,12 +30,12 @@ class OceanStorAlarm{
         $this.Session = $WebSession
 		$this.WebSession = $WebSession
         $this.{Alarm Object Type} = $AlarmReceived.alarmObjType
-        $this.{Username Cleared} = $AlarmReceived.clearName
+        $this.{Cleared By} = $AlarmReceived.clearName
 
         if ($AlarmReceived.ClearTime -ne 0) {
-            $this.{Cleared Time} = $(New-TimeSpan -Seconds $AlarmReceived.clearTime).ToString()
+            $this.{Cleared Time} = [datetimeoffset]::FromUnixTimeSeconds($AlarmReceived.clearTime).LocalDateTime
         } else {
-            $this.{Cleared Time} = $AlarmReceived.clearTime
+            $this.{Cleared Time} = $null
         }
 
         $this.{Confirmed Alarm} = $AlarmReceived.confirmTime
@@ -47,9 +47,9 @@ class OceanStorAlarm{
         $this.{Name} = $AlarmReceived.name
 
         if ($AlarmReceived.recoverTime -ne 0) {
-            $this.{Recover Time} = $(New-TimeSpan -Seconds $AlarmReceived.recoverTime).ToString()
+            $this.{Recover Time} = [datetimeoffset]::FromUnixTimeSeconds($AlarmReceived.recoverTime).LocalDateTime
         } else {
-            $this.{Recover Time} = $AlarmReceived.recoverTime
+            $this.{Recover Time} = $null
         }
 
         $this.{Alarm SN} = $AlarmReceived.sequence
@@ -57,9 +57,9 @@ class OceanStorAlarm{
         $this.{Alarm src Type} = $AlarmReceived.sourceType
 
         if ($AlarmReceived.startTime -ne 0) {
-            $this.{Start time} = $(New-TimeSpan -Seconds $AlarmReceived.startTime).ToString()
+            $this.{Start time} = [datetimeoffset]::FromUnixTimeSeconds($AlarmReceived.startTime).LocalDateTime
         } else {
-            $this.{Start time} = $AlarmReceived.startTime
+            $this.{Start time} = $null
         }
 
         $this.{Hexadecimal ID} = $AlarmReceived.strEventID
