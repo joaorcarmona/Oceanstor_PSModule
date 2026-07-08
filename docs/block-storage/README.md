@@ -13,7 +13,8 @@ protection groups.
 | [hosts-and-host-groups.md](hosts-and-host-groups.md) | Host and host-group lifecycle | Yes |
 | [initiators.md](initiators.md) | FC, iSCSI, and NVMe initiators | Yes |
 | [lun-groups.md](lun-groups.md) | LUN-group lifecycle and membership | Yes |
-| [mapping-views.md](mapping-views.md) | Mapping views and direct mappings | Yes |
+| [mapping-views.md](mapping-views.md) | Mapping views, direct mappings, relationship diagram, and sample inventory views | Yes |
+| [mapped-lun-removal-troubleshooting.md](mapped-lun-removal-troubleshooting.md) | Diagnosing why a mapped LUN cannot (or should not yet) be removed | Read-only diagnosis |
 | [protection-groups.md](protection-groups.md) | Protection groups for LUN/LUN-group protection workflows | Yes |
 | [safety-and-live-validation.md](safety-and-live-validation.md) | Safety rules for live arrays | - |
 | [TODO.md](TODO.md) | Confirmed gaps and follow-up work | - |

@@ -106,8 +106,14 @@
 
 - Friendly-name parameters instead of raw enums (`-BondPortType HostService`,
   `-AssociateObjectType EthernetPort`) with back-compat for numeric values.
+  **(Code enhancement — not implemented.)** Phase 08 documented the current
+  raw-value behavior as deferred in [bond-ports.md](bond-ports.md) and
+  [vlans.md](vlans.md) so operators do not assume the aliases exist.
 - Decode more display fields on `OceanStorvLan` / `OceanStorPortBond`
   (running status, MTU) the way `OceanStorFailoverGroup` does.
+  **(Code enhancement — not implemented.)** Phase 08 added display-field /
+  prefer-IDs notes to [bond-ports.md](bond-ports.md), [vlans.md](vlans.md), and
+  [logical-ports.md](logical-ports.md).
 
 ## Testing and Validation
 

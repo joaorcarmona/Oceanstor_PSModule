@@ -96,6 +96,67 @@ server-side-filtered getter parameters instead:
 The replacements narrow server-side and compose with other filters; the
 wrappers do not add functionality beyond the equivalent parameterized call.
 
+## Relationship Diagram
+
+A mapping view is the join object that ties block access together. Hosts reach
+LUNs only when both sides are members of the same mapping view (or through a
+direct map). The relationships are:
+
+```
+                      Mapping View
+        ┌──────────────────┼──────────────────┐
+   Host Group          LUN Group           Port Group
+        │                  │                    │
+      Host              LUN  LUN              Port  Port
+        │
+   Initiator (FC / iSCSI / NVMe)
+```
+
+- A **Host** joins a **Host Group**; its **Initiators** are what the array
+  actually authenticates.
+- A **LUN** joins a **LUN Group**; the LUN group (not the individual LUN) is
+  attached to the mapping view.
+- A **Port Group** narrows which front-end ports serve the view (optional).
+- Removing a LUN or host almost always means unwinding these memberships first —
+  see [mapped-lun-removal-troubleshooting.md](mapped-lun-removal-troubleshooting.md).
+
+## Sample Inventory Views (`Select-Object`)
+
+Read-only projections for inventory exports. Field names follow the raw
+DeviceManager properties surfaced on the typed objects; adjust to the columns
+your report needs. None of these mutate the array.
+
+```powershell
+$storageIP = 'StorageIP'
+$cred = Import-Clixml -Path "$env:USERPROFILE\.oceanstor\dm-creds.xml"
+$storage = Connect-deviceManager -Hostname $storageIP -Credential $cred -PassThru
+
+# LUN inventory
+Get-DMlun -WebSession $storage |
+    Select-Object ID, NAME, WWN, ALLOCTYPE, CAPACITY
+
+# Host / host-group inventory
+Get-DMhost -WebSession $storage      | Select-Object ID, NAME, OPERATIONSYSTEM
+Get-DMhostGroup -WebSession $storage | Select-Object ID, NAME
+
+# LUN-group inventory
+Get-DMlunGroup -WebSession $storage | Select-Object ID, NAME
+
+# Mapping-view inventory with its member-group IDs
+Get-DMMappingView -WebSession $storage |
+    Select-Object ID, NAME, HOSTGROUPID, LUNGROUPID, PORTGROUPID
+
+# Mapped-LUN relationship discovery: which mapping views expose which groups
+Get-DMMappingView -WebSession $storage |
+    Select-Object NAME, HOSTGROUPID, LUNGROUPID
+```
+
+On a multi-tenant (vStore) array, add the vStore column where the object type
+exposes it and keep the `-VstoreId` scope consistent with the objects you are
+listing (see [vStore-Scoped Mapping](#vstore-scoped-mapping--vstoreid) above).
+Keep the stable `ID` column in any export you plan to feed back into an
+automation step — names are for readers, IDs are for machines.
+
 ## Safety Notes
 
 Mapping changes can immediately add or remove host access. Never unmap or

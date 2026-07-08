@@ -87,6 +87,21 @@ Remove-DMvLan -WebSession $storage -Id $vlan.Id
   create/delete run stays deferred to a supervised session — see
   [safety-and-live-validation.md](safety-and-live-validation.md).
 
+## Friendly Names and Display Fields
+
+- **Enum parameters take raw values today.** `-PortType` and `-FatherDrvType`
+  accept the numeric / documented API values (e.g. `-PortType 1`), not
+  friendly-name aliases. A friendly-name convenience layer (for example
+  `-FatherDrvType HostService`) with back-compat for numeric values is a
+  planned, **not-yet-implemented** enhancement — do not assume it exists; pass
+  the documented value.
+- **Display fields are for readers, IDs are for automation.** `OceanStorvLan`
+  currently surfaces some attributes (running status, MTU) as raw fields rather
+  than decoded display strings the way `OceanStorFailoverGroup` does; richer
+  decoding is a deferred display-field enhancement. When a value is decoded for
+  readability, the REST API still expects the underlying ID or enum — keep and
+  pass the stable `Id`/`PortId` in automation rather than a display string.
+
 ## Known Gaps
 
 - `Set-DMvLan` exposes only MTU; name/description changes are not supported by

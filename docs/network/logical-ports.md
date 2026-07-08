@@ -110,6 +110,16 @@ Remove-DMLif -WebSession $storage -Name 'lif01'
   mutation workflow — intentional; the harness reports these mutators
   `SkippedUnsafe`.
 
+## Friendly Names and Display Fields
+
+- Use **ID parameters for automation.** `-HomePortId` and `-Id` address the
+  documented stable identifiers; `-HomePortName` is a convenience lookup that
+  resolves to the same ID. When a workflow captures a LIF or home port, retain
+  its `Id`/`HomePortId` and pass that back rather than a display name.
+- Decoded display fields (home-port type, role) are for operator readability;
+  the REST API still expects the underlying ID or enum, so do not build mutation
+  workflows on display strings.
+
 ## Known Gaps
 
 - None outstanding for read filters — `NAME`, `IPV4ADDR`, `IPV6ADDR` and

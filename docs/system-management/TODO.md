@@ -97,7 +97,7 @@ alarms/events.
   - local role + local user lifecycle (`AllowLocalUserLifecycle`, default
     **off** — security-sensitive, enabling it is an explicit reviewed
     decision)
-- **Live validation (Phase 03, 2026-07-07, lab `10.10.10.24`, human-supervised,
+- **Live validation (Phase 03, 2026-07-07, the lab array, human-supervised,
   one gate only — `SystemManagement.Enabled` + `AllowSnmpTrapServer`; USM,
   syslog, and local-user lifecycle stayed off):**
   - Read-only baseline `Blocked=0, Failed=0`; post-run read-only `Blocked=0,
@@ -145,7 +145,7 @@ alarms/events.
 ### 4. `Set-DMSnmpTrapServer` / `Test-DMSnmpTrapServer` reject update payload — API error 50331651 (found Phase 03, 2026-07-07)
 
 - Surfaced by the first supervised SNMP-trap live run (see High Priority #1). On
-  lab `10.10.10.24`, `New-DMSnmpTrapServer` and `Remove-DMSnmpTrapServer` succeed,
+  the lab array, `New-DMSnmpTrapServer` and `Remove-DMSnmpTrapServer` succeed,
   but `Set-DMSnmpTrapServer` (update) and `Test-DMSnmpTrapServer` (send test trap)
   both fail with `OceanStor API error 50331651: The entered parameter is
   incorrect.`

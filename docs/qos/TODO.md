@@ -41,8 +41,17 @@
 
 ## Documentation
 
-- Keep docs/testing status descriptions aligned with `NotConfigured` and
-  `Blocked` behavior for missing QoS prerequisites.
+- Keep QoS testing-status descriptions aligned with the harness vocabulary
+  defined in [Tests/README.md](../../Tests/README.md) ("Status Meanings") and
+  [docs/testing/integrity-tests.md](../testing/integrity-tests.md):
+  - `NotRequested` — the gating switch (`-RunMutatingTests`) was not passed.
+  - `NotConfigured` — the switch was passed but the config flag
+    (`QoS.Enabled` / `Lun.Enabled` / `LunGroup.Enabled`) is not enabled.
+  - `SkippedUnsafe` — the harness deliberately never exercises the action.
+  - `Blocked` — the QoS domain was requested but a genuine test-owned
+    prerequisite (e.g. a test-owned LUN group) did not materialize this run.
+  QoS is not an opt-in performance domain, so an unmet QoS prerequisite in a
+  requested mutating run surfaces as `Blocked` (not `NotRequested`).
 
 ## Future Feature Branches
 

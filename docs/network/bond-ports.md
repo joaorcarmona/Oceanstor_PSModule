@@ -82,6 +82,20 @@ Remove-DMPortBond -WebSession $storage -Id $bond.Id
   regression cases and a `Get-DMPortBond | Remove-DMPortBond` pipeline test.
   No live mutation workflow exists — intentional.
 
+## Friendly Names and Display Fields
+
+- **`-BondPortType` takes raw values today.** Pass the documented numeric value
+  (`1` = host/service, `2` = ...), not a friendly-name alias. A friendly-name
+  convenience layer such as `-BondPortType HostService` with back-compat for the
+  numeric values is a planned, **not-yet-implemented** enhancement — do not
+  assume it exists.
+- **Display fields are for readers, IDs are for automation.** `OceanStorPortBond`
+  currently surfaces some attributes (running status, MTU) as raw fields rather
+  than decoded display strings the way `OceanStorFailoverGroup` does; richer
+  decoding is a deferred display-field enhancement. Where a value is decoded for
+  readability, the REST API still expects the underlying ID or enum — keep and
+  pass the stable `Id`/`PortId` in automation rather than a display string.
+
 ## Known Gaps
 
 - Bond member add/remove after creation is **not implemented**: the Dorado

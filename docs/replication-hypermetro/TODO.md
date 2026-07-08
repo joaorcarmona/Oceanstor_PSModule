@@ -112,10 +112,18 @@
 
 ## Documentation
 
-- Refresh topic-page examples with real captured output once the lab mutation
-  workflows have run end to end.
-- Add a worked "planned failover runbook" example (split → switch → resync)
-  after live switchover validation.
+- **Pending live evidence from Phase 03 / Phase 06 supervised runs.** Refresh
+  topic-page examples with real captured output once the lab mutation workflows
+  have run end to end. Status: no supervised DR mutation run has executed
+  (Phase 03 deferred, 2026-07-07 — see High Priority above), so no sanitizable
+  captured output exists yet. Do not fabricate output; leave examples as
+  illustrative until a run produces evidence, then sanitize (strip lab IPs,
+  serials, WWNs/IQNs, tokens, and identifying IDs) before committing.
+- **Pending live switchover validation (Phase 06).** Add a worked "planned
+  failover runbook" example (split → switch → resync) only after a supervised
+  switchover run exists. Failover/switchover stays `SkippedUnsafe` by default
+  (`Replication.AllowFailover` / `HyperMetro.AllowPrioritySwitch`), so this
+  runbook must not imply validation occurred until that run is recorded.
 
 ## Future Feature Branches
 

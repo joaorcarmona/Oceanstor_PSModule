@@ -8,6 +8,11 @@
 
 ## Recently Completed
 
+- Phase 08 docs polish: relationship diagram (host / host group / LUN group /
+  mapping view / port group) and sample `Select-Object` inventory views added to
+  [mapping-views.md](mapping-views.md); the mapped-LUN-removal troubleshooting
+  page is now listed in the README documentation map. Legacy-wrapper migration
+  note and troubleshooting page were already shipped in Phase 05.
 - Public docs were added for block storage, including LUNs, pools, hosts,
   initiators, LUN groups, mapping views, and protection groups.
 - Existing integrity workflows already cover test-owned LUN, host, mapping,
@@ -44,8 +49,8 @@
 
 ## Low Priority / Polish
 
-- Add diagrams for host, host group, LUN group, and mapping-view relationships.
-- Add sample `Select-Object` views for common inventory exports.
+- _Done (Phase 08)._ Relationship diagram and sample `Select-Object` inventory
+  views added to [mapping-views.md](mapping-views.md).
 
 ## Testing and Validation
 
