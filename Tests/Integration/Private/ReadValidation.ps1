@@ -21,7 +21,16 @@ function Invoke-ReadValidation {
         Get-DMProtectionGroup -WebSession $session
     } | Out-Null
     Add-ValidationResult -Name 'Get-DMQosPolicy' -ExpectedType 'OceanstorQosPolicy' -Action {
-        Get-DMQosPolicy -WebSession $session
+        $policies = @(Get-DMQosPolicy -WebSession $session)
+        # Schedule Start Time is surfaced as a human-readable [datetime] (converted from the array's
+        # raw UTC epoch seconds). Assert the new type on any policy that reports a value.
+        foreach ($policy in $policies) {
+            $scheduleStart = $policy.'Schedule Start Time'
+            if ($null -ne $scheduleStart -and $scheduleStart -isnot [datetime]) {
+                throw "Get-DMQosPolicy 'Schedule Start Time' should be [datetime], got '$($scheduleStart.GetType().Name)'."
+            }
+        }
+        $policies
     } | Out-Null
     Add-ValidationResult -Name 'Get-DMSnapshotConsistencyGroup' -ExpectedType 'OceanstorSnapshotConsistencyGroup' -Action {
         Get-DMSnapshotConsistencyGroup -WebSession $session

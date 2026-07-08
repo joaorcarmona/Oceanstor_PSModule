@@ -105,7 +105,9 @@ function Set-DMQuota {
                 return
             }
 
-            $resource = "FS_QUOTA/$([uri]::EscapeDataString($Id))"
+            # The composite quota ID (e.g. '2671@4097@3') must be sent literally in the
+            # path. URL-encoding the '@' as %40 makes this firmware return 404 Not Found.
+            $resource = "FS_QUOTA/$Id"
             $response = Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource $resource -BodyData $body
             $response = $response | Assert-DMApiSuccess
             return $response.error

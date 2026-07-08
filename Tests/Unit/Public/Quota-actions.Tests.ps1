@@ -55,7 +55,9 @@ Describe 'Get-DMQuota' {
         $result.Id | Should -Be '34@4@1'
         $result.'Parent Type' | Should -Be 'FileSystem'
         $result.'Space Hard Quota' | Should -Be 10737418240
-        $script:resource | Should -Be 'FS_QUOTA/34%404%401'
+        # The composite quota Id ('@'-joined) must be sent literally in the path; URL-encoding
+        # the '@' as %40 makes this firmware return 404 (verified live). See Get-DMQuota.
+        $script:resource | Should -Be 'FS_QUOTA/34@4@1'
     }
 
     It 'scopes the query to a resolved file system' {
@@ -190,7 +192,8 @@ Describe 'Set-DMQuota' {
 
         $result.Code | Should -Be 0
         $script:method | Should -Be 'PUT'
-        $script:resource | Should -Be 'FS_QUOTA/34%404%401'
+        # Composite Id sent literally in the path (URL-encoding '@' as %40 → 404 on this firmware).
+        $script:resource | Should -Be 'FS_QUOTA/34@4@1'
         $script:request.ID | Should -Be '34@4@1'
         $script:request.SPACEHARDQUOTA | Should -Be 21474836480
     }
@@ -219,8 +222,8 @@ Describe 'Set-DMQuota' {
         $items = @([pscustomobject]@{ Id = '1@4@1' }, [pscustomobject]@{ Id = '2@4@1' })
         $null = $items | Set-DMQuota -WebSession $script:session -SpaceHardLimit '20GB' -Confirm:$false
 
-        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -eq 'FS_QUOTA/1%404%401' }
-        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -eq 'FS_QUOTA/2%404%401' }
+        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -eq 'FS_QUOTA/1@4@1' }
+        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -eq 'FS_QUOTA/2@4@1' }
     }
 }
 
@@ -239,7 +242,8 @@ Describe 'Remove-DMQuota' {
 
         $result.Code | Should -Be 0
         $script:method | Should -Be 'DELETE'
-        $script:resource | Should -Be 'FS_QUOTA/34%404%401'
+        # Composite Id sent literally in the path (URL-encoding '@' as %40 → 404 on this firmware).
+        $script:resource | Should -Be 'FS_QUOTA/34@4@1'
     }
 
     It 'does not remove when WhatIf is specified' {
@@ -252,8 +256,8 @@ Describe 'Remove-DMQuota' {
         $items = @([pscustomobject]@{ Id = '1@4@1' }, [pscustomobject]@{ Id = '2@4@1' })
         $null = $items | Remove-DMQuota -WebSession $script:session -Confirm:$false
 
-        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -eq 'FS_QUOTA/1%404%401' }
-        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -eq 'FS_QUOTA/2%404%401' }
+        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -eq 'FS_QUOTA/1@4@1' }
+        Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -eq 'FS_QUOTA/2@4@1' }
     }
 }
 }

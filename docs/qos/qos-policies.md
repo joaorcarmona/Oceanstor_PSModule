@@ -11,15 +11,15 @@ schedule, and vStore scoping.
 |---|---|---|---|
 | `New-DMQosPolicy` | Create a policy with `MaxBandwidth`, `MaxIOPS`, `MinBandwidth`, `MinIOPS`, or `Latency` | Mutate | Can throttle workloads |
 | `Set-DMQosPolicy` | Modify the same limit family plus burst and priority settings | Mutate | Can throttle workloads |
-| `Enable-DMQosPolicy`, `Disable-DMQosPolicy` | Toggle enforcement | Mutate | Changes live behavior |
-| `Remove-DMQosPolicy` | Delete policy | Mutate | Removes enforcement |
+| `Start-DMQosPolicy`, `Stop-DMQosPolicy` | Start or stop the policy's Running Status (active/inactive). Do not change the Enabled field | Mutate | Changes live behavior |
+| `Remove-DMQosPolicy` | Delete policy (policy must be stopped / Running Status 'Inactive' first) | Mutate | Removes enforcement |
 
 ## Common Workflows
 
-1. Create the policy disabled or with a short schedule when possible.
-2. Read back policy state.
+1. Create the policy stopped or with a short schedule when possible.
+2. Read back policy state (Running Status).
 3. Update limits gradually.
-4. Disable before cleanup.
+4. Stop the policy before cleanup (removal requires Running Status 'Inactive').
 
 ## Examples
 
@@ -40,7 +40,7 @@ Confirm units before applying changes.
 ## Integrity Test Coverage
 
 Unit tests cover policy action behavior. The live QoS workflow validates
-create, update, enable, disable, association, and removal for test-owned
+create, update, start, stop, association, and removal for test-owned
 objects.
 
 ## Known Gaps
@@ -52,5 +52,5 @@ objects.
 
 - `POSH-Oceanstor/Public/New-DMQosPolicy.ps1`
 - `POSH-Oceanstor/Public/Set-DMQosPolicy.ps1`
-- `POSH-Oceanstor/Public/Enable-DMQosPolicy.ps1`
-- `POSH-Oceanstor/Public/Disable-DMQosPolicy.ps1`
+- `POSH-Oceanstor/Public/Start-DMQosPolicy.ps1`
+- `POSH-Oceanstor/Public/Stop-DMQosPolicy.ps1`

@@ -85,10 +85,13 @@ function New-DMQosPolicy {
         OceanstorQosPolicy
 
     .EXAMPLE
-        PS> New-DMQosPolicy -Name 'qos01' -MaxIOPS 5000 -ScheduleStartTime (Get-Date) -StartTime '00:00' -Duration 3600
+        PS> New-DMQosPolicy -Name 'qos01' -MaxIOPS 5000 -ScheduleStartTime (Get-Date).AddDays(1) -StartTime '00:00' -Duration 3600
+
+        For a 'Once' schedule the effective window (ScheduleStartTime date at StartTime, for Duration
+        seconds) must be in the future; a past window is rejected by the array as an overdue schedule.
 
     .EXAMPLE
-        PS> New-DMQosPolicy -Name 'qos02' -MaxBandwidth 500 -LunName 'lun01', 'lun02' -ScheduleStartTime (Get-Date) -StartTime '00:00' -Duration 3600
+        PS> New-DMQosPolicy -Name 'qos02' -MaxBandwidth 500 -LunName 'lun01', 'lun02' -ScheduleStartTime (Get-Date).AddDays(1) -StartTime '00:00' -Duration 3600
     #>
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium', DefaultParameterSetName = 'NoAssociation')]
     # String form: class type literals in attributes do not resolve inside module scope.
@@ -224,13 +227,18 @@ function New-DMQosPolicy {
             $body = @{
                 NAME              = $Name
                 IOTYPE            = switch ($IOType) { 'ReadWrite' { 2 }; 'Split' { 3 } }
-                PRIORITY          = switch ($Priority) { 'Normal' { 0 }; 'High' { 1 } }
                 SCHEDULEPOLICY    = switch ($SchedulePolicy) { 'Once' { 0 }; 'Daily' { 1 }; 'Weekly' { 2 } }
                 SCHEDULESTARTTIME = [System.DateTimeOffset]::new($ScheduleStartTime.ToUniversalTime()).ToUnixTimeSeconds()
                 STARTTIME         = $StartTime
                 DURATION          = $Duration
             }
 
+            # PRIORITY is only sent when the caller explicitly asks for it. Sending PRIORITY on
+            # an ioclass create is rejected by some firmware (e.g. V600R005C27 returns the generic
+            # 50331651 "The entered parameter is incorrect" for any PRIORITY value on a normal
+            # policy), so the default path must omit it entirely. On read-back the array reports
+            # PRIORITY=0 as its own default, which is not evidence that a create body supplied it.
+            if ($PSBoundParameters.ContainsKey('Priority')) { $body.PRIORITY = switch ($Priority) { 'Normal' { 0 }; 'High' { 1 } } }
             if ($Description) { $body.DESCRIPTION = $Description }
             if ($PSBoundParameters.ContainsKey('MaxBandwidth')) { $body.MAXBANDWIDTH = $MaxBandwidth }
             if ($PSBoundParameters.ContainsKey('MaxIOPS')) { $body.MAXIOPS = $MaxIOPS }
@@ -244,9 +252,14 @@ function New-DMQosPolicy {
             if ($VstoreId) { $body.vstoreId = $VstoreId }
 
             if ($PSBoundParameters.ContainsKey('LunName')) {
-                $lunIds = foreach ($name in $LunName) {
-                    $lun = @(Get-DMlun -WebSession $session -Name $name | Where-Object Name -EQ $name)[0]
-                    if ($null -eq $lun) { throw "Could not resolve LunName '$name'." }
+                # Use a distinct loop variable: PowerShell variable names are
+                # case-insensitive, so a loop over $name would rebind the
+                # validated $Name parameter and re-trigger its ValidateLength/
+                # ValidatePattern attributes on the LUN name (which may be
+                # longer than the 31-char SmartQoS policy-name limit).
+                $lunIds = foreach ($lunNameToResolve in $LunName) {
+                    $lun = @(Get-DMlun -WebSession $session -Name $lunNameToResolve | Where-Object Name -EQ $lunNameToResolve)[0]
+                    if ($null -eq $lun) { throw "Could not resolve LunName '$lunNameToResolve'." }
                     $lun.Id
                 }
                 $body.LUNLIST = @($lunIds)
@@ -255,9 +268,11 @@ function New-DMQosPolicy {
                 $body.LUNLIST = @($LunId)
             }
             elseif ($PSBoundParameters.ContainsKey('FileSystemName')) {
-                $fsIds = foreach ($name in $FileSystemName) {
-                    $fileSystem = @(Get-DMFileSystem -WebSession $session | Where-Object Name -CEQ $name)[0]
-                    if ($null -eq $fileSystem) { throw "Could not resolve FileSystemName '$name'." }
+                # Distinct loop variable for the same reason as the LunName loop
+                # above: $name would collide with the validated $Name parameter.
+                $fsIds = foreach ($fsNameToResolve in $FileSystemName) {
+                    $fileSystem = @(Get-DMFileSystem -WebSession $session | Where-Object Name -CEQ $fsNameToResolve)[0]
+                    if ($null -eq $fileSystem) { throw "Could not resolve FileSystemName '$fsNameToResolve'." }
                     $fileSystem.Id
                 }
                 $body.FSLIST = @($fsIds)

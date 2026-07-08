@@ -4,8 +4,9 @@ function Rename-DMstoragePool {
         Renames an OceanStor storage pool.
 
     .DESCRIPTION
-        Renames a storage pool by resolving the current name to its ID and issuing a PUT that changes
-        only the pool's NAME label. No other pool attribute is touched: capacity, tiers, thresholds,
+        Renames a storage pool by resolving it to its ID and issuing a PUT that changes only the pool's
+        NAME label. The pool to rename is selected either by its current name (-StoragePoolName) or by
+        its ID (-StoragePoolId). No other pool attribute is touched: capacity, tiers, thresholds,
         container application, and every LUN/file-system placement on the pool are left unchanged, so a
         rename is fully reversible by renaming back to the original name.
 
@@ -26,7 +27,13 @@ function Rename-DMstoragePool {
         Optional session returned by Connect-deviceManager. The module's cached $script:CurrentOceanstorSession session is used by default.
 
     .PARAMETER StoragePoolName
-        Current name of the storage pool to rename.
+        Current name of the storage pool to rename. Selects the pool in the ByName parameter set.
+        Accepts pipeline input by property name (for example, from Get-DMstoragePool). Aliased to Name.
+
+    .PARAMETER StoragePoolId
+        ID of the storage pool to rename. Selects the pool in the ById parameter set. Use this when the
+        pool ID is already known, or to avoid a name lookup. Accepts pipeline input by property name.
+        Aliased to Id.
 
     .PARAMETER NewName
         New name to assign to the storage pool.
@@ -34,7 +41,9 @@ function Rename-DMstoragePool {
     .INPUTS
         System.Management.Automation.PSCustomObject
 
-        You can pipe an OceanStor session object to WebSession, and storage pool objects by property name.
+        You can pipe an OceanStor session object to WebSession, and storage pool objects by property
+        name. A piped storage pool binds by its Name (the default parameter set); pass -StoragePoolId
+        explicitly to select a pool by ID instead.
 
     .OUTPUTS
         System.Management.Automation.PSCustomObject
@@ -46,13 +55,18 @@ function Rename-DMstoragePool {
 
     .EXAMPLE
         PS> Get-DMstoragePool -Name 'Pool_01' | Rename-DMstoragePool -NewName 'Pool_01_archive'
+
+    .EXAMPLE
+        PS> Rename-DMstoragePool -StoragePoolId '0' -NewName 'Pool_01_archive'
     #>
-    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
+    [CmdletBinding(DefaultParameterSetName = 'ByName', SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param(
         [Parameter(ValueFromPipelineByPropertyName = $true)]
         [pscustomobject]$WebSession,
-        [Parameter(Mandatory, ValueFromPipelineByPropertyName = $true, Position = 0)]
+        [Parameter(Mandatory, ParameterSetName = 'ByName', ValueFromPipelineByPropertyName = $true, Position = 0)]
         [Alias('Name')][ValidateNotNullOrEmpty()][string]$StoragePoolName,
+        [Parameter(Mandatory, ParameterSetName = 'ById', ValueFromPipelineByPropertyName = $true)]
+        [Alias('Id')][ValidateNotNullOrEmpty()][string]$StoragePoolId,
         [Parameter(Mandatory, Position = 1)]
         [ValidateLength(1, 255)][ValidatePattern('^[A-Za-z0-9_.-]+$')][string]$NewName
     )
@@ -60,11 +74,29 @@ function Rename-DMstoragePool {
     process {
         try {
             $session = if ($WebSession) { $WebSession } else { $script:CurrentOceanstorSession }
-            $update = New-DMNamedObjectUpdate -Objects @(Get-DMstoragePool -WebSession $session) `
-                -CurrentName $StoragePoolName -EntityName 'storage pool' -ResourceBase 'storagepool' `
+            $pools = @(Get-DMstoragePool -WebSession $session)
+
+            if ($PSCmdlet.ParameterSetName -eq 'ById') {
+                $byId = @($pools | Where-Object { [string]$_.Id -eq [string]$StoragePoolId })
+                if ($byId.Count -gt 1) {
+                    throw "Storage pool ID '$StoragePoolId' is ambiguous."
+                }
+                if ($byId.Count -eq 0) {
+                    throw "Invalid storage pool ID '$StoragePoolId'. Valid values are: $($pools.Id -join ', ')"
+                }
+                $currentName = $byId[0].Name
+                $target = "ID $StoragePoolId"
+            }
+            else {
+                $currentName = $StoragePoolName
+                $target = $StoragePoolName
+            }
+
+            $update = New-DMNamedObjectUpdate -Objects $pools `
+                -CurrentName $currentName -EntityName 'storage pool' -ResourceBase 'storagepool' `
                 -NewName $NewName -NewNameSpecified
 
-            if ($PSCmdlet.ShouldProcess($StoragePoolName, $update.Action)) {
+            if ($PSCmdlet.ShouldProcess($target, $update.Action)) {
                 $response = Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource $update.Resource -BodyData $update.Body
                 $response = $response | Assert-DMApiSuccess
                 return $response.error

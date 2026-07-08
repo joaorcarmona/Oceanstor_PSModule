@@ -71,7 +71,9 @@ function Get-DMQuota {
             $session = if ($WebSession) { $WebSession } else { $script:CurrentOceanstorSession }
 
             if ($PSCmdlet.ParameterSetName -eq 'ById') {
-                $response = Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource "FS_QUOTA/$([uri]::EscapeDataString($Id))"
+                # The composite quota ID (e.g. '2671@4097@3') must be sent literally in the
+                # path. URL-encoding the '@' as %40 makes this firmware return 404 Not Found.
+                $response = Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource "FS_QUOTA/$Id"
                 $response = $response | Assert-DMApiSuccess
                 return [OceanstorQuota]::new($response.data, $session)
             }

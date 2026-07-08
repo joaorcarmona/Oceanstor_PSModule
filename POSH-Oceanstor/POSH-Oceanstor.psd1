@@ -110,13 +110,11 @@ FunctionsToExport = @(
     'Disable-DMFileSystemReplicationPairSecondaryProtection'
     'Disable-DMLocalUserSession'
     'Disable-DMPerformanceMonitoring'
-    'Disable-DMQosPolicy'
     'Disable-DMReplicationPairSecondaryProtection'
     'Enable-DMHyperCDPSchedule'
     'Enable-DMFileSystemReplicationPairSecondaryProtection'
     'Enable-DMLunSnapshot'
     'Enable-DMPerformanceMonitoring'
-    'Enable-DMQosPolicy'
     'Enable-DMReplicationPairSecondaryProtection'
     'Enable-DMSnapshotConsistencyGroup'
     'Export-DeviceManager'
@@ -376,6 +374,8 @@ FunctionsToExport = @(
     'Start-DMFileHyperMetroDomain'
     'Start-DMHyperMetroConsistencyGroup'
     'Start-DMHyperMetroPair'
+    'Start-DMQosPolicy'
+    'Stop-DMQosPolicy'
     'Suspend-DMHyperMetroConsistencyGroup'
     'Suspend-DMHyperMetroPair'
     'Switch-DMFileHyperMetroDomain'
@@ -441,6 +441,8 @@ AliasesToExport = @(
     'Get-DMvLans'
     'Get-DMWorkLoadTypes'
     'Get-DMWorkLoadTypesbyFilter'
+    'Enable-DMQosPolicy'
+    'Disable-DMQosPolicy'
 )
 
 # DSC resources to export from this module

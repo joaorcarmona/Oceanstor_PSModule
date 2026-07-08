@@ -55,6 +55,33 @@ InModuleScope StoragePoolRenameTestModule {
             $script:request.Body.NAME | Should -Be 'Pool_01_archive'
         }
 
+        It 'resolves the pool by -StoragePoolId and issues PUT storagepool/{id}' {
+            $result = Rename-DMstoragePool -WebSession $script:session -StoragePoolId 'pool-01' -NewName 'Pool_01_archive' -Confirm:$false
+
+            $result.Code | Should -Be 0
+            $script:request.Method | Should -Be 'PUT'
+            $script:request.Resource | Should -Be 'storagepool/pool-01'
+            $script:request.Body.ID | Should -Be 'pool-01'
+            $script:request.Body.NAME | Should -Be 'Pool_01_archive'
+        }
+
+        It 'accepts a full pool object (Name and Id) piped in without a parameter-set conflict' {
+            $null = [pscustomobject]@{ Id = 'pool-01'; Name = 'Pool_01' } |
+                Rename-DMstoragePool -WebSession $script:session -NewName 'Pool_01_archive' -Confirm:$false
+
+            $script:request.Resource | Should -Be 'storagepool/pool-01'
+            $script:request.Body.NAME | Should -Be 'Pool_01_archive'
+        }
+
+        It 'reports a non-terminating error for an unknown pool ID and makes no API call' {
+            $result = Rename-DMstoragePool -WebSession $script:session -StoragePoolId 'missing' -NewName 'whatever' -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable renameErrors
+
+            $result | Should -BeNullOrEmpty
+            $renameErrors.Count | Should -BeGreaterOrEqual 1
+            ($renameErrors.Exception.Message | Select-Object -Unique) | Should -BeLike '*Invalid storage pool ID*'
+            Should -Invoke Invoke-DeviceManager -Times 0 -Exactly
+        }
+
         It 'honors WhatIf and performs no API call' {
             $null = Rename-DMstoragePool -WebSession $script:session -StoragePoolName 'Pool_01' -NewName 'Pool_01_archive' -WhatIf
 

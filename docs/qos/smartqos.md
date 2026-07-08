@@ -12,8 +12,8 @@ entry points.
 | `Get-DMQosPolicy` | List policies or query by name, ID, parent, or vStore | Read | Safe inventory |
 | `New-DMQosPolicy` | Create a SmartQoS policy with at least one limit | Mutate | Can throttle workloads |
 | `Set-DMQosPolicy` | Rename or modify limits, burst settings, latency, or priority | Mutate | Can throttle workloads |
-| `Enable-DMQosPolicy`, `Disable-DMQosPolicy` | Toggle policy state | Mutate | Changes live enforcement |
-| `Remove-DMQosPolicy` | Delete a policy | Mutate | Removes enforcement |
+| `Start-DMQosPolicy`, `Stop-DMQosPolicy` | Start/stop the policy's Running Status (active/inactive); the Enabled field is unchanged | Mutate | Changes live enforcement |
+| `Remove-DMQosPolicy` | Delete a policy (must be stopped / Running Status 'Inactive' first) | Mutate | Removes enforcement |
 | `Add-DMQosAssociation`, `Remove-DMQosAssociation` | Associate or remove policy from supported objects | Mutate | Changes live enforcement scope |
 
 ## Common Workflows
@@ -21,8 +21,8 @@ entry points.
 1. Inventory existing policies.
 2. Create a policy with conservative limits and a schedule.
 3. Associate only test-owned or explicitly approved objects.
-4. Enable, verify, and monitor impact.
-5. Disable and remove only policies owned by the workflow.
+4. Start the policy, verify Running Status, and monitor impact.
+5. Stop and remove only policies owned by the workflow.
 
 ## Examples
 
@@ -33,7 +33,7 @@ New-DMQosPolicy -WebSession $storage -Name 'test_qos' -MaxIOPS 5000 `
     -ScheduleStartTime (Get-Date) -StartTime '00:00' -Duration 3600 -WhatIf
 
 Set-DMQosPolicy -WebSession $storage -Name 'test_qos' -MaxIOPS 8000 -WhatIf
-Disable-DMQosPolicy -WebSession $storage -Name 'test_qos' -WhatIf
+Stop-DMQosPolicy -WebSession $storage -Name 'test_qos' -WhatIf
 ```
 
 ## Safety Notes

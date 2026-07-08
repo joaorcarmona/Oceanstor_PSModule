@@ -1,19 +1,25 @@
-function Disable-DMQosPolicy {
+function Start-DMQosPolicy {
     <#
     .SYNOPSIS
-        Deactivates a Huawei Oceanstor SmartQoS policy.
+        Starts (activates the running state of) a Huawei Oceanstor SmartQoS policy.
 
     .DESCRIPTION
-        Deactivates a SmartQoS policy via the ioclass/active resource.
+        Starts a SmartQoS policy via the ioclass/active resource.
+
+        Starting a policy drives its Running Status to an active state: 'Idle' when the
+        policy is outside its scheduled window or has no associated objects, or 'Running'
+        when it is in-window and enforcing on associated objects. It does NOT change the
+        Enabled (ENABLESTATUS) field, which stays as configured - the ioclass/active
+        endpoint controls Running Status only.
 
     .PARAMETER WebSession
         Optional parameter to define the session to be use on the REST call. If not defined, the module's cached $script:CurrentOceanstorSession session will be used
 
     .PARAMETER Name
-        Name of the SmartQoS policy to deactivate. Mutually exclusive with Id (enforced by parameter set).
+        Name of the SmartQoS policy to start. Mutually exclusive with Id (enforced by parameter set).
 
     .PARAMETER Id
-        ID of the SmartQoS policy to deactivate. Mutually exclusive with Name (enforced by parameter set).
+        ID of the SmartQoS policy to start. Mutually exclusive with Name (enforced by parameter set).
 
     .PARAMETER VstoreId
         Optional vStore ID.
@@ -25,13 +31,13 @@ function Disable-DMQosPolicy {
         System.Object
 
     .EXAMPLE
-        PS> Disable-DMQosPolicy -Name 'qos01'
+        PS> Start-DMQosPolicy -Name 'qos01'
 
     .EXAMPLE
-        PS> Disable-DMQosPolicy -Id '1'
+        PS> Start-DMQosPolicy -Id '1'
 
     .NOTES
-        Filename: Disable-DMQosPolicy.ps1
+        Filename: Start-DMQosPolicy.ps1
     #>
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
 
@@ -71,13 +77,15 @@ function Disable-DMQosPolicy {
             }
             if ($null -eq $policy) { throw "Could not resolve the SmartQoS policy." }
 
+            # ENABLESTATUS is the field name the ioclass/active endpoint expects; on this
+            # resource it drives Running Status (start), not the policy's Enabled field.
             $body = @{
-                ID            = $policy.Id
-                ENABLESTATUS  = $false
+                ID           = $policy.Id
+                ENABLESTATUS = $true
             }
             if ($VstoreId) { $body.vstoreId = $VstoreId }
 
-            if ($PSCmdlet.ShouldProcess($policy.Name, 'Deactivate SmartQoS policy')) {
+            if ($PSCmdlet.ShouldProcess($policy.Name, 'Start SmartQoS policy')) {
                 $response = Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'ioclass/active' -BodyData $body
                 $response = $response | Assert-DMApiSuccess
                 return $response.error
@@ -88,3 +96,5 @@ function Disable-DMQosPolicy {
         }
     }
 }
+
+Set-Alias -Name Enable-DMQosPolicy -Value Start-DMQosPolicy

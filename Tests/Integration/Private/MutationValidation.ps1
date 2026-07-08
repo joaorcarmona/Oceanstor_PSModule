@@ -99,7 +99,7 @@ function Invoke-MutationValidation {
             'Add-DMmapLunGroupToHostGroup', 'Remove-DMunmapLunGroupFromHostGroup',
             'New-DMProtectionGroup', 'Remove-DMProtectionGroup', 'Set-DMProtectionGroup', 'Rename-DMProtectionGroup',
             'Add-DMLunToProtectionGroup', 'Remove-DMLunFromProtectionGroup',
-            'New-DMQosPolicy', 'Set-DMQosPolicy', 'Disable-DMQosPolicy', 'Enable-DMQosPolicy',
+            'New-DMQosPolicy', 'Set-DMQosPolicy', 'Stop-DMQosPolicy', 'Start-DMQosPolicy',
             'Add-DMQosAssociation', 'Remove-DMQosAssociation', 'Remove-DMQosPolicy',
             'New-DMSnapshotConsistencyGroup', 'New-DMSnapshotConsistencyGroupCopy',
             'Enable-DMSnapshotConsistencyGroup', 'Restart-DMSnapshotConsistencyGroup',
@@ -159,7 +159,11 @@ function Invoke-MutationValidation {
         $lunProtectionGroupName = New-TestName -Suffix 'protect_luntype'
         $protectionLunName = New-TestName -Suffix 'protect_lun'
         $qosPolicyName = New-TestName -Suffix 'qos'
-        $renamedQosPolicyName = New-TestName -Suffix 'qos_renamed'
+        # SmartQoS policy names are capped at 31 chars (Set-DMQosPolicy -NewName has
+        # [ValidateLength(1,31)]). The 'dm_integrity_<runId>_' prefix already consumes 28,
+        # so the rename target uses a compact 'qsr' suffix instead of the descriptive
+        # '_renamed' used by objects (LUN, FS, ...) that allow longer names.
+        $renamedQosPolicyName = New-TestName -Suffix 'qsr'
         $consistencyGroupName = New-TestName -Suffix 'cgsnap'
         $consistencyCopyName = New-TestName -Suffix 'cgcopy'
         $replicationPairName = New-TestName -Suffix 'rpair'

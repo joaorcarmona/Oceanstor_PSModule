@@ -13,7 +13,7 @@ implement storage pool creation, deletion, resize, or non-name updates
 | `Get-DMstoragePool` | List pools or filter by name | Read | Safe inventory |
 | `Get-DMDiskByStoragePool` | Legacy wrapper to list disks by pool object, name, or ID | Read | Safe inventory |
 | `Get-DMStoragePoolPerformance` | Realtime pool performance wrapper | Read | Safe when performance collection is expected |
-| `Rename-DMstoragePool` | Rename a pool (NAME label only) | Mutate | High-impact, `ConfirmImpact='High'`; fully reversible |
+| `Rename-DMstoragePool` | Rename a pool by name or ID (NAME label only) | Mutate | High-impact, `ConfirmImpact='High'`; fully reversible |
 
 ## Common Workflows
 
@@ -29,7 +29,9 @@ Get-DMstoragePool -WebSession $storage -Name 'Pool_01'
 Get-DMstoragePool -WebSession $storage -Name 'Pool_01' | Get-DMDiskByStoragePool
 
 # Rename a pool (preview first with -WhatIf; prompts because it is high-impact).
+# Select the pool by name, by ID, or straight from the pipeline.
 Rename-DMstoragePool -WebSession $storage -StoragePoolName 'Pool_01' -NewName 'Pool_01_archive' -WhatIf
+Rename-DMstoragePool -WebSession $storage -StoragePoolId '0' -NewName 'Pool_01_archive'
 Get-DMstoragePool -WebSession $storage -Name 'Pool_01' | Rename-DMstoragePool -NewName 'Pool_01_archive'
 ```
 

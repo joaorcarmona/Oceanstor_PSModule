@@ -27,12 +27,12 @@ BeforeDiscovery {
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Get-DMQosPolicy.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Set-DMQosPolicy.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Remove-DMQosPolicy.ps1"
-        . "$testRoot\..\..\..\POSH-Oceanstor\Public\Enable-DMQosPolicy.ps1"
-        . "$testRoot\..\..\..\POSH-Oceanstor\Public\Disable-DMQosPolicy.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Public\Start-DMQosPolicy.ps1"
+        . "$testRoot\..\..\..\POSH-Oceanstor\Public\Stop-DMQosPolicy.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Add-DMQosAssociation.ps1"
         . "$testRoot\..\..\..\POSH-Oceanstor\Public\Remove-DMQosAssociation.ps1"
 
-        Export-ModuleMember -Function 'New-DMQosPolicy', 'Get-DMQosPolicy', 'Set-DMQosPolicy', 'Remove-DMQosPolicy', 'Enable-DMQosPolicy', 'Disable-DMQosPolicy', 'Add-DMQosAssociation', 'Remove-DMQosAssociation'
+        Export-ModuleMember -Function 'New-DMQosPolicy', 'Get-DMQosPolicy', 'Set-DMQosPolicy', 'Remove-DMQosPolicy', 'Start-DMQosPolicy', 'Stop-DMQosPolicy', 'Add-DMQosAssociation', 'Remove-DMQosAssociation' -Alias 'Enable-DMQosPolicy', 'Disable-DMQosPolicy'
     }
     Import-Module $script:qosModule -Force
 }
@@ -71,7 +71,23 @@ Describe 'New-DMQosPolicy' {
         $script:request.DURATION | Should -Be 3600
         $script:request.SCHEDULEPOLICY | Should -Be 0
         $script:request.IOTYPE | Should -Be 2
-        $script:request.PRIORITY | Should -Be 0
+        # PRIORITY must NOT be sent by default: some firmware rejects any PRIORITY value on an
+        # ioclass create with the generic 50331651 error. See the dedicated regression test below.
+        $script:request.ContainsKey('PRIORITY') | Should -BeFalse
+    }
+
+    It 'omits PRIORITY from the create body by default but includes it when -Priority is passed' {
+        # Regression: PRIORITY was previously placed in the body unconditionally (default Normal->0),
+        # which the array rejects with API error 50331651 on every create. It must only be sent when
+        # the caller explicitly supplies -Priority.
+        $null = New-DMQosPolicy -WebSession $script:session -Name 'qos_default' -MaxIOPS 5000 `
+            -ScheduleStartTime (Get-Date) -StartTime '00:00' -Duration 3600 -Confirm:$false
+        $script:request.ContainsKey('PRIORITY') | Should -BeFalse
+
+        $null = New-DMQosPolicy -WebSession $script:session -Name 'qos_high' -MaxIOPS 5000 -Priority High `
+            -ScheduleStartTime (Get-Date) -StartTime '00:00' -Duration 3600 -Confirm:$false
+        $script:request.ContainsKey('PRIORITY') | Should -BeTrue
+        $script:request.PRIORITY | Should -Be 1
     }
 
     It 'resolves LunName entries to LUNLIST' {
@@ -86,6 +102,22 @@ Describe 'New-DMQosPolicy' {
             -FileSystemName 'documents' -ScheduleStartTime (Get-Date) -StartTime '00:00' -Duration 3600 -Confirm:$false
 
         $script:request.FSLIST | Should -Be @('fs-01')
+    }
+
+    It 'resolves a LunName longer than the 31-char policy-name limit without tripping the Name validator' {
+        # Regression: the LunName resolution loop previously used $name, which is
+        # the same variable as the validated $Name parameter (PowerShell names are
+        # case-insensitive). A LUN renamed to >31 chars therefore re-triggered
+        # $Name's ValidateLength(1,31) and threw before any REST call.
+        $longLun = 'dm_integrity_20260708004451_lun_renamed'  # 39 chars, all valid characters
+        Mock Get-DMlun { @([pscustomobject]@{ Id = 'lun-long'; Name = $longLun }) }
+
+        { New-DMQosPolicy -WebSession $script:session -Name 'qos_regress' -MaxIOPS 5000 `
+                -LunName $longLun -ScheduleStartTime (Get-Date) -StartTime '00:00' -Duration 3600 `
+                -Confirm:$false -ErrorAction Stop } | Should -Not -Throw
+
+        $script:request.NAME | Should -Be 'qos_regress'   # $Name not corrupted by the loop
+        $script:request.LUNLIST | Should -Be @('lun-long')
     }
 
     It 'rejects a create call with no bandwidth/IOPS/latency limit specified' {
@@ -238,8 +270,11 @@ Describe 'Remove-DMQosPolicy' {
         Mock Invoke-DeviceManager {
             $script:method = $Method
             $script:resource = $Resource
+            $script:request = $BodyData
             if ($Method -eq 'GET') {
-                return [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'qos-01'; NAME = 'qos01' }) }
+                # Default: an already-stopped policy (Running Status 45 = 'Inactive'), so Remove
+                # deletes straight away without the stop-then-delete detour.
+                return [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'qos-01'; NAME = 'qos01'; RUNNINGSTATUS = '45' }) }
             }
             return [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 } }
         }
@@ -260,6 +295,40 @@ Describe 'Remove-DMQosPolicy' {
         $script:resource | Should -Be 'ioclass/qos-01'
     }
 
+    It 'stops a running policy before deleting it' {
+        # ioclass/active drives Running Status (start/stop), not ENABLESTATUS. The array refuses
+        # to delete a running policy, so Remove must stop it (PUT ioclass/active ENABLESTATUS=$false)
+        # and wait for Running Status 'Inactive' before issuing the DELETE.
+        $script:calls = [System.Collections.Generic.List[object]]::new()
+        $script:stopped = $false
+        Mock Invoke-DeviceManager {
+            $script:calls.Add(@{ Method = $Method; Resource = $Resource; Body = $BodyData })
+            # The stop (PUT ioclass/active with ENABLESTATUS=$false) is what moves the policy to
+            # 'Inactive'. Report Running (2) until that happens, then Inactive (45) so the bounded
+            # settle poll exits. Robust to the extra GET that the -Id ValidateScript performs.
+            if ($Method -eq 'PUT' -and $Resource -eq 'ioclass/active') { $script:stopped = $true }
+            if ($Method -eq 'GET') {
+                $status = if ($script:stopped) { '45' } else { '2' }
+                return [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'qos-01'; NAME = 'qos01'; RUNNINGSTATUS = $status }) }
+            }
+            return [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 } }
+        }
+
+        $result = Remove-DMQosPolicy -WebSession $script:session -Id 'qos-01' -Confirm:$false
+
+        $result.Code | Should -Be 0
+        $deactivate = $script:calls | Where-Object { $_.Method -eq 'PUT' -and $_.Resource -eq 'ioclass/active' }
+        $deactivate | Should -Not -BeNullOrEmpty
+        $deactivate.Body.ENABLESTATUS | Should -BeFalse
+        ($script:calls | Where-Object { $_.Method -eq 'DELETE' }).Resource | Should -Be 'ioclass/qos-01'
+        # The DELETE must come after the stop (PUT ioclass/active).
+        $methods = @($script:calls | ForEach-Object { $_.Method })
+        $putPos = [array]::IndexOf($methods, 'PUT')
+        $delPos = [array]::IndexOf($methods, 'DELETE')
+        $putPos | Should -BeGreaterOrEqual 0
+        $delPos | Should -BeGreaterThan $putPos
+    }
+
     It 'rejects an unknown name' {
         { Remove-DMQosPolicy -WebSession $script:session -Name 'missing' -Confirm:$false -ErrorAction Stop } |
             Should -Throw '*Invalid Name*'
@@ -272,7 +341,7 @@ Describe 'Remove-DMQosPolicy' {
     }
 }
 
-Describe 'Enable-DMQosPolicy and Disable-DMQosPolicy' {
+Describe 'Start-DMQosPolicy and Stop-DMQosPolicy' {
     BeforeEach {
         $script:session = [pscustomobject]@{ version = 'V600R001' }
         Mock Invoke-DeviceManager {
@@ -286,8 +355,8 @@ Describe 'Enable-DMQosPolicy and Disable-DMQosPolicy' {
         }
     }
 
-    It 'activates a policy with ENABLESTATUS true' {
-        $result = Enable-DMQosPolicy -WebSession $script:session -Name 'qos01' -Confirm:$false
+    It 'starts a policy (Running Status active) with ENABLESTATUS true' {
+        $result = Start-DMQosPolicy -WebSession $script:session -Name 'qos01' -Confirm:$false
 
         $result.Code | Should -Be 0
         $script:resource | Should -Be 'ioclass/active'
@@ -295,18 +364,26 @@ Describe 'Enable-DMQosPolicy and Disable-DMQosPolicy' {
         $script:request.ENABLESTATUS | Should -BeTrue
     }
 
-    It 'deactivates a policy with ENABLESTATUS false' {
-        $result = Disable-DMQosPolicy -WebSession $script:session -Name 'qos01' -Confirm:$false
+    It 'stops a policy (Running Status inactive) with ENABLESTATUS false' {
+        $result = Stop-DMQosPolicy -WebSession $script:session -Name 'qos01' -Confirm:$false
 
         $result.Code | Should -Be 0
         $script:resource | Should -Be 'ioclass/active'
         $script:request.ENABLESTATUS | Should -BeFalse
     }
 
-    It 'does not activate when WhatIf is specified' {
-        $null = Enable-DMQosPolicy -WebSession $script:session -Name 'qos01' -WhatIf
+    It 'does not start when WhatIf is specified' {
+        $null = Start-DMQosPolicy -WebSession $script:session -Name 'qos01' -WhatIf
 
         Should -Invoke Invoke-DeviceManager -Times 0 -Exactly -ParameterFilter { $Method -eq 'PUT' }
+    }
+
+    It 'exposes Enable-DMQosPolicy as a backward-compatibility alias of Start-DMQosPolicy' {
+        (Get-Alias -Name 'Enable-DMQosPolicy').ResolvedCommandName | Should -Be 'Start-DMQosPolicy'
+    }
+
+    It 'exposes Disable-DMQosPolicy as a backward-compatibility alias of Stop-DMQosPolicy' {
+        (Get-Alias -Name 'Disable-DMQosPolicy').ResolvedCommandName | Should -Be 'Stop-DMQosPolicy'
     }
 }
 

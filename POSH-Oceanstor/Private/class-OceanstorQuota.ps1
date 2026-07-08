@@ -8,12 +8,12 @@ class OceanstorQuota {
     [string]${Quota Type}
     [string]${Account Name}
     [string]${Account Type}
-    [uint64]${Space Soft Quota}
-    [uint64]${Space Hard Quota}
-    [uint64]${Space Used}
-    [uint64]${File Soft Quota}
-    [uint64]${File Hard Quota}
-    [uint64]${File Used}
+    [Nullable[uint64]]${Space Soft Quota}
+    [Nullable[uint64]]${Space Hard Quota}
+    [Nullable[uint64]]${Space Used}
+    [Nullable[uint64]]${File Soft Quota}
+    [Nullable[uint64]]${File Hard Quota}
+    [Nullable[uint64]]${File Used}
     [string]${vStore Id}
 
     OceanstorQuota ([pscustomobject]$quota, [pscustomobject]$WebSession)
@@ -39,13 +39,27 @@ class OceanstorQuota {
             '2' { 'Domain' }
             default { $quota.USRGRPTYPE }
         }
-        $this.{Space Soft Quota} = [uint64]$quota.SPACESOFTQUOTA
-        $this.{Space Hard Quota} = [uint64]$quota.SPACEHARDQUOTA
-        $this.{Space Used} = [uint64]$quota.SPACEUSED
-        $this.{File Soft Quota} = [uint64]$quota.FILESOFTQUOTA
-        $this.{File Hard Quota} = [uint64]$quota.FILEHARDQUOTA
-        $this.{File Used} = [uint64]$quota.FILEUSED
+        $this.{Space Soft Quota} = [OceanstorQuota]::ToQuotaValue($quota.SPACESOFTQUOTA)
+        $this.{Space Hard Quota} = [OceanstorQuota]::ToQuotaValue($quota.SPACEHARDQUOTA)
+        $this.{Space Used} = [OceanstorQuota]::ToQuotaValue($quota.SPACEUSED)
+        $this.{File Soft Quota} = [OceanstorQuota]::ToQuotaValue($quota.FILESOFTQUOTA)
+        $this.{File Hard Quota} = [OceanstorQuota]::ToQuotaValue($quota.FILEHARDQUOTA)
+        $this.{File Used} = [OceanstorQuota]::ToQuotaValue($quota.FILEUSED)
         $this.{vStore Id} = $quota.vstoreId
+    }
+
+    # OceanStor renders an unconfigured quota dimension as the INVALID_VALUE64
+    # sentinel. The REST layer surfaces it as '-1' on some firmwares and as the
+    # unsigned 0xFFFFFFFFFFFFFFFF form on others; both mean "no quota configured".
+    # Return $null (blank) for the sentinel rather than a misleading numeric 0,
+    # and to avoid the [uint64]'-1' cast that would otherwise throw.
+    hidden static [Nullable[uint64]] ToQuotaValue([object]$raw) {
+        if ($null -eq $raw) { return $null }
+        $text = ([string]$raw).Trim()
+        if ($text -eq '' -or $text -eq '-1' -or $text -eq '18446744073709551615') {
+            return $null
+        }
+        return [uint64]$text
     }
 
     [psobject] Delete() {

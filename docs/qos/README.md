@@ -1,15 +1,16 @@
 # QoS Documentation
 
 This folder documents POSH-Oceanstor SmartQoS cmdlets. QoS is implemented for
-policy lifecycle, policy modification, enable/disable, removal, associations,
-and optional association at policy creation time with LUNs or file systems.
+policy lifecycle, policy modification, start/stop (Running Status), removal,
+associations, and optional association at policy creation time with LUNs or
+file systems.
 
 ## Documentation Map
 
 | Document | Domain | Implemented? |
 |---|---|---|
 | [smartqos.md](smartqos.md) | SmartQoS policy lifecycle and limits | Yes |
-| [qos-policies.md](qos-policies.md) | Policy settings, schedule, and enable/disable | Yes |
+| [qos-policies.md](qos-policies.md) | Policy settings, schedule, and start/stop | Yes |
 | [lun-qos.md](lun-qos.md) | LUN and LUN-group QoS usage | Yes |
 | [filesystem-qos.md](filesystem-qos.md) | File-system QoS attachment | Partial |
 | [safety-and-live-validation.md](safety-and-live-validation.md) | Safety rules for live arrays | - |
@@ -37,7 +38,7 @@ Get-DMQosPolicy -WebSession $storage -Name 'qos_policy_01'
 | Area | Cmdlets |
 |---|---|
 | Policy lifecycle | `Get-DMQosPolicy`, `New-DMQosPolicy`, `Set-DMQosPolicy`, `Remove-DMQosPolicy` |
-| Policy state | `Enable-DMQosPolicy`, `Disable-DMQosPolicy` |
+| Policy running state | `Start-DMQosPolicy`, `Stop-DMQosPolicy` |
 | Associations | `Add-DMQosAssociation`, `Remove-DMQosAssociation` |
 | LUN/file-system attachment at creation | `New-DMQosPolicy -LunName`, `-LunId`, `-FileSystemName`, `-FileSystemId` |
 

@@ -21,6 +21,7 @@ BeforeAll {
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorvStore.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorWorkload.ps1"
+    . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorQuota.ps1"
 }
 
 AfterAll {
@@ -113,5 +114,26 @@ Describe 'Core model classes' {
         $result.Id | Should -Be 'workload-01'
         $result.Name | Should -Be 'database'
         $result.'Block Size' | Should -Be '16 KB'
+    }
+
+    It 'maps unconfigured quota dimensions (INVALID_VALUE64) to $null instead of throwing' {
+        $source = [pscustomobject]@{
+            ID             = 'quota-01'; PARENTTYPE = 16445; PARENTID = 'dtree-01'; QUOTATYPE = 1
+            SPACESOFTQUOTA = '-1'                    # sentinel rendered as signed -1
+            SPACEHARDQUOTA = '10737418240'           # 10 GB configured
+            SPACEUSED      = '0'
+            FILESOFTQUOTA  = '18446744073709551615'  # sentinel rendered as unsigned 0xFFFFFFFFFFFFFFFF
+            FILEHARDQUOTA  = -1                       # sentinel as a native integer
+            FILEUSED       = '0'
+        }
+
+        { New-Object -TypeName OceanstorQuota -ArgumentList @($source, $script:session) } | Should -Not -Throw
+
+        $result = New-Object -TypeName OceanstorQuota -ArgumentList @($source, $script:session)
+        $result.'Space Soft Quota' | Should -BeNullOrEmpty
+        $result.'File Soft Quota' | Should -BeNullOrEmpty
+        $result.'File Hard Quota' | Should -BeNullOrEmpty
+        $result.'Space Hard Quota' | Should -Be 10737418240
+        $result.'Space Used' | Should -Be 0
     }
 }

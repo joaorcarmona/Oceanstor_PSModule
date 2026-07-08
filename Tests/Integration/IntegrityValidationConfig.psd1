@@ -165,8 +165,8 @@
         #
         # PoolName must be the EXACT name of a pool you accept being renamed and then
         # restored (never auto-picked). Leave blank to skip.
-        Enabled = $false
-        PoolName = ''
+        Enabled = $true
+        PoolName = 'StoragePool001'
     }
 
     Initiators = @{

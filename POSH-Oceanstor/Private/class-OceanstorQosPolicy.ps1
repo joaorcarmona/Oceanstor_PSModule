@@ -12,7 +12,7 @@ class OceanstorQosPolicy {
     [string]$Priority
     [string]${Policy Type}
     [string]${Schedule Policy}
-    [string]${Schedule Start Time}
+    [Nullable[datetime]]${Schedule Start Time}
     [string]${Start Time}
     [string]$Duration
     [string]${Cycle Set}
@@ -79,7 +79,17 @@ class OceanstorQosPolicy {
             '2' { 'Weekly' }
             default { $PolicyReceived.SCHEDULEPOLICY }
         }
-        $this.{Schedule Start Time} = $PolicyReceived.SCHEDULESTARTTIME
+        # SCHEDULESTARTTIME arrives as UTC epoch seconds (uint64). Expose it as a human-readable
+        # UTC DateTime instead of the raw number; blank when the array reports no value. Guard the
+        # '0'/empty sentinels explicitly: the raw value is a string, and a non-empty '0' is truthy
+        # in PowerShell, so it would otherwise be surfaced as the misleading 1970-01-01 epoch.
+        $scheduleEpoch = ([string]$PolicyReceived.SCHEDULESTARTTIME).Trim()
+        $this.{Schedule Start Time} = if ($scheduleEpoch -and $scheduleEpoch -ne '0') {
+            [System.DateTimeOffset]::FromUnixTimeSeconds([int64]$scheduleEpoch).UtcDateTime
+        }
+        else {
+            $null
+        }
         $this.{Start Time} = $PolicyReceived.STARTTIME
         $this.Duration = $PolicyReceived.DURATION
         $this.{Cycle Set} = $PolicyReceived.CYCLESET

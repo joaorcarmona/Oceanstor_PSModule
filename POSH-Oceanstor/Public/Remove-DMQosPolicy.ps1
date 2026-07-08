@@ -97,6 +97,25 @@ function Remove-DMQosPolicy {
             }
 
             if ($PSCmdlet.ShouldProcess($policy.Name, 'Remove SmartQoS policy')) {
+                # The array only allows deleting a STOPPED SmartQoS policy (Running Status
+                # 'Inactive'). The ioclass/active endpoint drives Running Status - it starts
+                # (Idle/Running) or stops (Inactive) the policy - and does NOT change ENABLESTATUS,
+                # so the deactivation must be observed on Running Status, not Enabled. The change is
+                # applied asynchronously (the PUT returns success before Running Status settles), so
+                # if the policy is still running, stop it and poll (bounded) for 'Inactive' before
+                # issuing the DELETE, otherwise the delete is rejected and the policy leaks.
+                if ($policy.'Running Status' -ne 'Inactive') {
+                    $deactivateBody = @{ ID = $policy.Id; ENABLESTATUS = $false }
+                    if ($VstoreId) { $deactivateBody.vstoreId = $VstoreId }
+                    $null = Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource 'ioclass/active' -BodyData $deactivateBody | Assert-DMApiSuccess
+
+                    $deadline = (Get-Date).AddSeconds(30)
+                    do {
+                        Start-Sleep -Seconds 2
+                        $current = @(Get-DMQosPolicy -WebSession $session -Id $policy.Id)[0]
+                    } while ($current -and $current.'Running Status' -ne 'Inactive' -and (Get-Date) -lt $deadline)
+                }
+
                 $response = Invoke-DeviceManager -WebSession $session -Method 'DELETE' -Resource $resource
                 $response = $response | Assert-DMApiSuccess
                 return $response.error
