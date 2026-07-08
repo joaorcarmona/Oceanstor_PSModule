@@ -105,7 +105,9 @@ InModuleScope AlarmHistoryTestModule {
         It 'resolves -AlarmObjectType name to its numeric value via the catalog' {
             $null = Get-DMAlarmHistory -WebSession $script:session -AlarmObjectType disk
 
-            ($script:resources | Where-Object { $_ -like 'ALARM_DEFINITION_OBJ*' }).Count | Should -BeGreaterThan 0
+            # The name is resolved from Get-DMAlarmType's internal list, so the
+            # object-type catalog endpoint is not queried.
+            ($script:resources | Where-Object { $_ -like 'ALARM_DEFINITION_OBJ*' }).Count | Should -Be 0
             $historyResource = $script:resources | Where-Object { $_ -like 'alarm/historyalarm*' } | Select-Object -First 1
             $historyResource | Should -Match 'alarmObjType::10'
         }

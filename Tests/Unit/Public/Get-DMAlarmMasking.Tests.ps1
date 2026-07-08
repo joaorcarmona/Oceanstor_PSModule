@@ -112,7 +112,9 @@ InModuleScope AlarmMaskingTestModule {
         It 'resolves -AlarmObjectType name to its numeric value via the catalog and AND-joins clauses' {
             $null = Get-DMAlarmMasking -WebSession $script:session -Level Major -AlarmObjectType 'storage pool'
 
-            ($script:resources | Where-Object { $_ -like 'ALARM_DEFINITION_OBJ*' }).Count | Should -BeGreaterThan 0
+            # The name is resolved from Get-DMAlarmType's internal list, so the
+            # object-type catalog endpoint is not queried.
+            ($script:resources | Where-Object { $_ -like 'ALARM_DEFINITION_OBJ*' }).Count | Should -Be 0
             $maskingResource = $script:resources | Where-Object { ($_ -like 'ALARM_DEFINITION*' -and $_ -notlike 'ALARM_DEFINITION_OBJ*') } | Select-Object -First 1
             $maskingResource | Should -Match 'CMO_ALARM_LEVEL::5 and CMO_ALARM_OBJ_TYPE::216'
         }

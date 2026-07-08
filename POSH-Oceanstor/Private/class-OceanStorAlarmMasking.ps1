@@ -12,7 +12,7 @@ class OceanStorAlarmMasking {
     [bool]${Masked}
     [bool]${Uncleared Alarm Exists}
     [string]${Id}
-    [string]${Type}
+    hidden [string]${Type}
 
     OceanStorAlarmMasking ([pscustomobject]$MaskingReceived, [pscustomobject]$WebSession, [hashtable]$ObjectTypeMap)
     {

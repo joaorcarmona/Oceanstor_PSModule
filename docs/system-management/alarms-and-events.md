@@ -16,7 +16,7 @@ Alarm notification *transport* (SNMP traps, syslog) is documented in
 |---|---|---|---|---:|
 | `Get-DMAlarm` | Query current (active) alarms, optionally by time range | `alarm/currentalarm?sortby=startTime,d[&filter=startTime:[start,end]]` | No | — |
 | `Get-DMAlarmHistory` | Query historical alarms/events with the full filter surface (level, status, type, object type, sequence, time) | `alarm/historyalarm?sortby=startTime,d[&filter=<clauses>]` | No | — |
-| `Get-DMAlarmType` | List the array's alarm object-type catalog (names ↔ numeric values) | `ALARM_DEFINITION_OBJ?language=1` | No | — |
+| `Get-DMAlarmType` | List the alarm object-type catalog (names ↔ numeric values) from an internal hardcoded list; queries the array only when `-ObjectType` is absent from that list, or when `-Database Storage` is passed | internal list, fallback/`-Database Storage` → `ALARM_DEFINITION_OBJ?language=1` | No | — |
 | `Get-DMAlarmMasking` | Query alarm maskings, optionally by level / object type / masked state | `ALARM_DEFINITION?language=1[&filter=<clauses>]` | No | — |
 | `Set-DMAlarmMasking` | Enable or disable masking for a specific alarm ID | `ALARM_DEFINITION` (PUT) | Yes | `-Confirm` (Medium) |
 | `Get-DMSystem` | Read overall system information | `system/` | No | — |
@@ -37,6 +37,11 @@ Key parameters:
 - `Get-DMAlarmHistory -Level -AlarmStatus -Type -AlarmObjectType -Sequence
   -StartSequence -EndSequence -StartTime/-EndTime/-Last` — all optional,
   AND-combined, mapped server-side to the documented numeric enums.
+- `Get-DMAlarmType [-Name] [-ObjectType] [-Database Internal|Storage]` — all
+  optional. `-Database Internal` (default) serves the fixed catalog from the
+  internal hardcoded list, hitting the array only as a fallback for an
+  `-ObjectType` value the list does not contain; `-Database Storage` bypasses
+  the internal list and reads the live catalog from the array.
 - `Get-DMAlarmMasking -Level -AlarmObjectType -Masked` — all optional and
   AND-combined server-side to the three documented `ALARM_DEFINITION` filter
   fields (`CMO_ALARM_LEVEL`, `CMO_ALARM_OBJ_TYPE`, `enableClose`). `-Masked
@@ -49,7 +54,10 @@ Key parameters:
   session through. Supports `-WhatIf`/`-Confirm` (Medium).
 
 `Get-DMAlarm` and `Get-DMAlarmHistory` return `OceanStorAlarm` objects;
-`Get-DMAlarmType` returns objects with `Name`/`ObjectType`/`Id`;
+`Get-DMAlarmType` returns objects with `Name`/`ObjectType`/`Id` (served from an
+internal catalog fixed per firmware; the array is queried only as a fallback for
+an `-ObjectType` value the internal list does not contain, or on demand via
+`-Database Storage`);
 `Get-DMAlarmMasking` returns `OceanStorAlarmMasking` objects (`Alarm Id`,
 `Name`, `Level`, `Alarm Object Type` — the friendly name resolved from the
 `Get-DMAlarmType` catalog — `Alarm Object Type Id` (the numeric value),

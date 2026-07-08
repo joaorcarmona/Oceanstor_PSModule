@@ -100,7 +100,7 @@ function Get-DMAlarmMasking {
         $session = $script:CurrentOceanstorSession
     }
 
-    $defaultDisplaySet = 'Name', 'Level', 'Alarm Object Type', 'Masked', 'Uncleared Alarm Exists'
+    $defaultDisplaySet = 'Alarm Id', 'Name', 'Level', 'Alarm Object Type', 'Masked', 'Uncleared Alarm Exists'
 
     $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
         'DefaultDisplayPropertySet',
