@@ -4,6 +4,7 @@
 @{
     Classes = @(
         'OceanStorAlarm'
+        'OceanStorAlarmMasking'
         'OceanStorBBU'
         'OceanStorCertificate'
         'OceanStorCIFSShare'
