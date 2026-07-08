@@ -26,6 +26,13 @@ function Get-DMAlarmHistory {
         All filters are optional and are combined with a logical AND. Results are
         returned newest-first (sortby startTime,d) and fully paged.
 
+        An unfiltered query scans the array's entire alarm/event history and is
+        very slow. When no filter of any kind is supplied, a default startTime
+        range of the last 7 days is applied so the common "show me recent
+        alarms" call stays cheap. Supplying any explicit filter (a level, status,
+        type, object type, sequence, or an explicit time filter) opts out of this
+        default.
+
     .PARAMETER WebSession
         Optional session to use on the REST call. If not defined, the module's
         cached $script:CurrentOceanstorSession session is used.
@@ -79,6 +86,13 @@ function Get-DMAlarmHistory {
         OceanStorAlarm
 
         Returns OceanStor alarm/event objects matching the supplied filters.
+
+    .EXAMPLE
+        PS C:\> Get-DMAlarmHistory
+
+        Returns alarms and events from the last 7 days. Because no filter was
+        supplied, a default startTime range of the last 7 days is applied to
+        avoid a slow full-history scan.
 
     .EXAMPLE
         PS C:\> Get-DMAlarmHistory -Level Critical
@@ -247,6 +261,18 @@ function Get-DMAlarmHistory {
 
     if ($PSBoundParameters.ContainsKey('EndSequence')) {
         $clauses.Add("endSeq::$EndSequence")
+    }
+
+    # An unfiltered query scans the array's entire alarm/event history and is very
+    # slow. If the caller supplied no filters at all, default to the last 7 days
+    # so the common "just show me recent alarms" call stays cheap. Any explicit
+    # filter (including a time filter) opts out of this default.
+    if ($clauses.Count -eq 0) {
+        $EndTime = Get-Date
+        $StartTime = $EndTime.AddDays(-7)
+        $startEpoch = [System.DateTimeOffset]::new($StartTime.ToUniversalTime()).ToUnixTimeSeconds()
+        $endEpoch = [System.DateTimeOffset]::new($EndTime.ToUniversalTime()).ToUnixTimeSeconds()
+        $clauses.Add("startTime:[$startEpoch,$endEpoch]")
     }
 
     $resource = 'alarm/historyalarm?sortby=startTime,d'
