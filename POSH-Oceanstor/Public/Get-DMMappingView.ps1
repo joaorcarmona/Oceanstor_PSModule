@@ -10,7 +10,9 @@
         Optional session object returned by Connect-deviceManager. When omitted, the module's cached $script:CurrentOceanstorSession session is used.
 
     .PARAMETER Name
-        Optional mapping view name filter.
+        Optional mapping view name filter. On the default parameter set this is pushed
+        server-side (filter=NAME::) and always re-verified client-side; the HostGroup/
+        LunGroup/PortGroup parameter sets filter client-side only.
 
     .PARAMETER HostGroupName
         Optional host group name used to filter related mapping views.
@@ -173,6 +175,20 @@
             }
             $resource = "mappingview/associate?TYPE=245&ASSOCIATEOBJTYPE=257&ASSOCIATEOBJID=$($group.Id)"
         }
+    }
+
+    if ($Name -and $PSCmdlet.ParameterSetName -eq 'All') {
+        # The mappingview batch GET documents NAME as a supported filter field; the
+        # associate-endpoint sets above (HostGroup/LunGroup/PortGroup) do not document
+        # filter=, so Name stays client-side-only for those. Re-verified client-side
+        # below regardless of which path built $resource.
+        $separator = if ($resource.Contains('?')) {
+            '&'
+        }
+        else {
+            '?'
+        }
+        $resource += "${separator}filter=NAME::$([uri]::EscapeDataString($Name))"
     }
 
     if ($VstoreId) {

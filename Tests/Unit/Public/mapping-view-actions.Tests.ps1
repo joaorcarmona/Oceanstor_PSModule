@@ -115,6 +115,26 @@ Describe 'Mapping view commands' {
         @($script:resources -like 'mappingview/associate?TYPE=245&ASSOCIATEOBJTYPE=257&ASSOCIATEOBJID=pg-01*').Count | Should -BeGreaterThan 0
     }
 
+    It 'requests mapping views by Name using a server-side filter hint' {
+        Mock Invoke-DeviceManager {
+            $script:resource = $Resource
+            [pscustomobject]@{ data = @($script:viewData) }
+        }
+
+        $result = @(Get-DMMappingView -WebSession $script:session -Name 'application')
+
+        $result[0].Name | Should -Be 'application'
+        $script:resource | Should -BeLike 'mappingview?filter=NAME::application*'
+    }
+
+    It 'still re-verifies Name client-side when the server returns a non-matching view' {
+        Mock Invoke-DeviceManager {
+            [pscustomobject]@{ data = @($script:viewData) }
+        }
+
+        @(Get-DMMappingView -WebSession $script:session -Name 'does-not-exist') | Should -BeNullOrEmpty
+    }
+
     It 'returns no mapping views when the API contains no data property' {
         Mock Invoke-DeviceManager { [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 } } }
 

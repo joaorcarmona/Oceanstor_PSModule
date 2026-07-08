@@ -824,6 +824,53 @@ Describe 'Public getter functions' {
                 Should -Be @('Id', 'Name', 'Workload Type', 'Block Size', 'Compression Enabled')
             $result.'Compression Enabled' | Should -Be 'enabled'
         }
+
+        It 'gets workload types by Name using a server-side filter hint' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                $script:workloadResource = $Resource
+                [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'workload-01'; NAME = 'db'; CREATETYPE = 1 }) }
+            }
+
+            $result = (Get-DMWorkLoadTypebyFilter -WebSession $script:session -Name 'db')[0]
+
+            $result.Id | Should -Be 'workload-01'
+            $script:workloadResource | Should -BeLike 'workload_type?isDetailInfo=true&filter=NAME::db*'
+        }
+
+        It 'gets workload types by CompressionEnabled using an unconfirmed server-side filter hint' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                $script:workloadResource = $Resource
+                [pscustomobject]@{ data = @(
+                    [pscustomobject]@{ ID = 'workload-01'; NAME = 'db'; CREATETYPE = 1; ENABLECOMPRESS = $true }
+                    [pscustomobject]@{ ID = 'workload-02'; NAME = 'archive'; CREATETYPE = 1; ENABLECOMPRESS = $false }
+                ) }
+            }
+
+            $result = @(Get-DMWorkLoadTypebyFilter -WebSession $script:session -CompressionEnabled $true)
+
+            $result.Count | Should -Be 1
+            $result[0].Id | Should -Be 'workload-01'
+            $script:workloadResource | Should -BeLike 'workload_type?isDetailInfo=true&filter=ENABLECOMPRESS::true*'
+        }
+
+        It 'gets workload types by DedupeEnabled using an unconfirmed server-side filter hint' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                $script:workloadResource = $Resource
+                [pscustomobject]@{ data = @(
+                    [pscustomobject]@{ ID = 'workload-01'; NAME = 'db'; CREATETYPE = 1; ENABLEDEDUP = $false }
+                    [pscustomobject]@{ ID = 'workload-02'; NAME = 'archive'; CREATETYPE = 1; ENABLEDEDUP = $true }
+                ) }
+            }
+
+            $result = @(Get-DMWorkLoadTypebyFilter -WebSession $script:session -DedupeEnabled $false)
+
+            $result.Count | Should -Be 1
+            $result[0].Id | Should -Be 'workload-01'
+            $script:workloadResource | Should -BeLike 'workload_type?isDetailInfo=true&filter=ENABLEDEDUP::false*'
+        }
     }
 }
 }
