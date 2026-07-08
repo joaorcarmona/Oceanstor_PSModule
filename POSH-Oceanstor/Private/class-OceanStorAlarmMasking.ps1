@@ -8,22 +8,35 @@ class OceanStorAlarmMasking {
     [string]${Name}
     [string]${Level}
     [string]${Alarm Object Type}
+    [string]${Alarm Object Type Id}
     [bool]${Masked}
     [bool]${Uncleared Alarm Exists}
     [string]${Id}
     [string]${Type}
 
-    OceanStorAlarmMasking ([pscustomobject]$MaskingReceived, [pscustomobject]$WebSession)
+    OceanStorAlarmMasking ([pscustomobject]$MaskingReceived, [pscustomobject]$WebSession, [hashtable]$ObjectTypeMap)
     {
         $this.Session = $WebSession
         $this.WebSession = $WebSession
 
         $this.{Alarm Id} = $MaskingReceived.CMO_ALARM_ID
         $this.{Name} = $MaskingReceived.CMO_ALARM_NAME
-        # Object type is returned as its numeric value; resolve names via Get-DMAlarmType.
-        $this.{Alarm Object Type} = $MaskingReceived.CMO_ALARM_OBJ_TYPE
         $this.{Id} = $MaskingReceived.ID
         $this.{Type} = $MaskingReceived.TYPE
+
+        # The API returns the object type as a numeric value. Keep it in
+        # "Alarm Object Type Id" for correlation, and translate it to a friendly
+        # name via the Get-DMAlarmType catalog map when the caller supplies one
+        # (falling back to the numeric value for object types absent from the
+        # catalog).
+        $objTypeId = [string]$MaskingReceived.CMO_ALARM_OBJ_TYPE
+        $this.{Alarm Object Type Id} = $objTypeId
+        if ($ObjectTypeMap -and $ObjectTypeMap.ContainsKey($objTypeId)) {
+            $this.{Alarm Object Type} = $ObjectTypeMap[$objTypeId]
+        }
+        else {
+            $this.{Alarm Object Type} = $objTypeId
+        }
 
         # enableClose and isExistAlarm are returned as string booleans ("true"/"false").
         $this.{Masked} = ($MaskingReceived.enableClose -eq 'true')

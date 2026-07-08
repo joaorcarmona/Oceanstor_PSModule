@@ -51,7 +51,9 @@ Key parameters:
 `Get-DMAlarm` and `Get-DMAlarmHistory` return `OceanStorAlarm` objects;
 `Get-DMAlarmType` returns objects with `Name`/`ObjectType`/`Id`;
 `Get-DMAlarmMasking` returns `OceanStorAlarmMasking` objects (`Alarm Id`,
-`Name`, `Level`, `Alarm Object Type`, `Masked`, `Uncleared Alarm Exists`);
+`Name`, `Level`, `Alarm Object Type` — the friendly name resolved from the
+`Get-DMAlarmType` catalog — `Alarm Object Type Id` (the numeric value),
+`Masked`, `Uncleared Alarm Exists`);
 `Get-DMSystem` returns `OceanStorSystem`; `Get-DMEquipmentStatus` returns a
 status object with `Status`, `StatusName` (e.g. `SecurityMode`), and
 `Description`.

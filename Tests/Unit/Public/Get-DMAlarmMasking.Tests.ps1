@@ -79,7 +79,10 @@ InModuleScope AlarmMaskingTestModule {
             $result[0].'Alarm Id' | Should -Be '14155777'
             $result[0].Name | Should -Be 'Storage Pool Remaining Capacity Is Insufficient'
             $result[0].Level | Should -Be 'major'
-            $result[0].'Alarm Object Type' | Should -Be '216'
+            # Numeric object type 216 is translated to its catalog name; the raw
+            # numeric is retained on Alarm Object Type Id.
+            $result[0].'Alarm Object Type' | Should -Be 'storage pool'
+            $result[0].'Alarm Object Type Id' | Should -Be '216'
             $result[0].Masked | Should -BeFalse
             $result[0].'Uncleared Alarm Exists' | Should -BeTrue
 
@@ -112,6 +115,15 @@ InModuleScope AlarmMaskingTestModule {
             ($script:resources | Where-Object { $_ -like 'ALARM_DEFINITION_OBJ*' }).Count | Should -BeGreaterThan 0
             $maskingResource = $script:resources | Where-Object { ($_ -like 'ALARM_DEFINITION*' -and $_ -notlike 'ALARM_DEFINITION_OBJ*') } | Select-Object -First 1
             $maskingResource | Should -Match 'CMO_ALARM_LEVEL::5 and CMO_ALARM_OBJ_TYPE::216'
+        }
+
+        It 'falls back to the numeric object type when it is absent from the catalog' {
+            $script:sampleMasking.CMO_ALARM_OBJ_TYPE = '999'
+
+            $result = @(Get-DMAlarmMasking -WebSession $script:session)
+
+            $result[0].'Alarm Object Type' | Should -Be '999'
+            $result[0].'Alarm Object Type Id' | Should -Be '999'
         }
 
         It 'throws a clear error for an unknown -AlarmObjectType name' {

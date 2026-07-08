@@ -51,7 +51,8 @@ function Get-DMAlarmMasking {
         OceanStorAlarmMasking
 
         One object per alarm definition, exposing Alarm Id, Name, Level, Alarm Object
-        Type, Masked, and Uncleared Alarm Exists.
+        Type (friendly name resolved from the Get-DMAlarmType catalog), Alarm Object
+        Type Id (the underlying numeric value), Masked, and Uncleared Alarm Exists.
 
     .EXAMPLE
         PS C:\> Get-DMAlarmMasking
@@ -108,6 +109,15 @@ function Get-DMAlarmMasking {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
+    # Fetch the alarm object-type catalog once. It is reused both to resolve an
+    # -AlarmObjectType name into its numeric filter value and to translate each
+    # result's numeric object type back into a friendly name (Alarm Object Type).
+    $catalog = @(Get-DMAlarmType -WebSession $session)
+    $objectTypeMap = @{}
+    foreach ($entry in $catalog) {
+        $objectTypeMap[[string]$entry.ObjectType] = $entry.Name
+    }
+
     # The ALARM_DEFINITION interface documents three filter fields
     # (CMO_ALARM_LEVEL, CMO_ALARM_OBJ_TYPE, enableClose). Each supplied friendly
     # value is mapped to the documented field/value and the clauses are AND-joined,
@@ -125,7 +135,6 @@ function Get-DMAlarmMasking {
     }
 
     if ($PSBoundParameters.ContainsKey('AlarmObjectType')) {
-        $catalog = Get-DMAlarmType -WebSession $session
         $match = @($catalog | Where-Object { $_.Name -eq $AlarmObjectType })
         if ($match.Count -eq 0) {
             $validNames = ($catalog.Name | Sort-Object) -join ', '
@@ -151,7 +160,7 @@ function Get-DMAlarmMasking {
     $maskings = New-Object System.Collections.ArrayList
 
     foreach ($item in $response) {
-        $masking = [OceanStorAlarmMasking]::new($item, $session)
+        $masking = [OceanStorAlarmMasking]::new($item, $session, $objectTypeMap)
         [void]$maskings.Add($masking)
     }
 
