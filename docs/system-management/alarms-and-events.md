@@ -1,8 +1,8 @@
 # Alarms and Events System Management
 
-> **Status: Partial — read-only alarm query plus system/equipment status.
-> No acknowledge/clear, no event log query, no alarm-forwarding
-> configuration cmdlets.**
+> **Status: Partial — alarm/event query, alarm clearing, and alarm-masking
+> query/modify, plus system/equipment status. No event-log-only query and no
+> alarm-forwarding configuration cmdlets.**
 
 ## Scope
 
@@ -17,6 +17,8 @@ Alarm notification *transport* (SNMP traps, syslog) is documented in
 | `Get-DMAlarm` | Query current (active) alarms, optionally by time range | `alarm/currentalarm?sortby=startTime,d[&filter=startTime:[start,end]]` | No | — |
 | `Get-DMAlarmHistory` | Query historical alarms/events with the full filter surface (level, status, type, object type, sequence, time) | `alarm/historyalarm?sortby=startTime,d[&filter=<clauses>]` | No | — |
 | `Get-DMAlarmType` | List the array's alarm object-type catalog (names ↔ numeric values) | `ALARM_DEFINITION_OBJ?language=1` | No | — |
+| `Get-DMAlarmMasking` | Query alarm maskings, optionally by level / object type / masked state | `ALARM_DEFINITION?language=1[&filter=<clauses>]` | No | — |
+| `Set-DMAlarmMasking` | Enable or disable masking for a specific alarm ID | `ALARM_DEFINITION` (PUT) | Yes | `-Confirm` (Medium) |
 | `Get-DMSystem` | Read overall system information | `system/` | No | — |
 | `Get-DMEquipmentStatus` | Read equipment/server status (e.g. security mode) | `server/status` | No | — |
 
@@ -35,9 +37,21 @@ Key parameters:
 - `Get-DMAlarmHistory -Level -AlarmStatus -Type -AlarmObjectType -Sequence
   -StartSequence -EndSequence -StartTime/-EndTime/-Last` — all optional,
   AND-combined, mapped server-side to the documented numeric enums.
+- `Get-DMAlarmMasking -Level -AlarmObjectType -Masked` — all optional and
+  AND-combined server-side to the three documented `ALARM_DEFINITION` filter
+  fields (`CMO_ALARM_LEVEL`, `CMO_ALARM_OBJ_TYPE`, `enableClose`). `-Masked
+  $true`/`$false` selects only masked / unmasked alarms; `-AlarmObjectType`
+  takes a catalog name (see `Get-DMAlarmType`) resolved to its numeric value.
+- `Set-DMAlarmMasking -AlarmId <id> -Enable | -Disable` — turns masking on
+  (`enableClose = true`) or off (`enableClose = false`) for one alarm. `-Enable`
+  and `-Disable` are mutually exclusive and one is required. Pipeline-aware:
+  `Get-DMAlarmMasking | Set-DMAlarmMasking -Disable` flows the alarm ID and
+  session through. Supports `-WhatIf`/`-Confirm` (Medium).
 
 `Get-DMAlarm` and `Get-DMAlarmHistory` return `OceanStorAlarm` objects;
 `Get-DMAlarmType` returns objects with `Name`/`ObjectType`/`Id`;
+`Get-DMAlarmMasking` returns `OceanStorAlarmMasking` objects (`Alarm Id`,
+`Name`, `Level`, `Alarm Object Type`, `Masked`, `Uncleared Alarm Exists`);
 `Get-DMSystem` returns `OceanStorSystem`; `Get-DMEquipmentStatus` returns a
 status object with `Status`, `StatusName` (e.g. `SecurityMode`), and
 `Description`.
@@ -73,6 +87,15 @@ Get-DMAlarm -WebSession $storage -StartTime (Get-Date).AddDays(-7) -EndTime (Get
 
 # Cleared/recovered or historical alarms (use the history cmdlet)
 Get-DMAlarmHistory -WebSession $storage -AlarmStatus Cleared
+
+# List which alarms are currently masked
+Get-DMAlarmMasking -WebSession $storage -Masked $true
+
+# Mask every informational alarm (prompts for confirmation)
+Get-DMAlarmMasking -WebSession $storage -Level Info | Set-DMAlarmMasking -Enable
+
+# Unmask a specific alarm by ID
+Set-DMAlarmMasking -WebSession $storage -AlarmId 64425164820 -Disable
 ```
 
 ## Safety Notes
@@ -84,6 +107,11 @@ Get-DMAlarmHistory -WebSession $storage -AlarmStatus Cleared
 - When acknowledge/clear cmdlets are eventually implemented, they must be
   classified `AlertingOrMonitoringMutation` and never run against
   pre-existing alarms in live validation.
+- `Set-DMAlarmMasking` is a monitoring-configuration mutation
+  (`AlertingOrMonitoringMutation`): it changes whether an alarm is suppressed.
+  The change is reversible (re-run with the opposite `-Enable`/`-Disable`
+  switch), but it must not be run against a production array during live
+  validation without an explicit rollback plan for the affected alarm IDs.
 
 ## Integrity Test Coverage
 
@@ -93,6 +121,10 @@ Get-DMAlarmHistory -WebSession $storage -AlarmStatus Cleared
 - Unit tests: `Get-SystemConfiguration.Tests.ps1` covers
   `Get-DMEquipmentStatus`; `Get-DMSystem` and `Get-DMAlarm` are covered by
   the older suites (`Get-Storage.Tests.ps1` / hardware-network suites).
+- Unit tests: `Get-DMAlarmMasking.Tests.ps1` and `Set-DMAlarmMasking.Tests.ps1`
+  cover the masking query (filter mapping, object-type resolution, output
+  shaping) and modify (PUT body, `-Enable`/`-Disable`, `-WhatIf`, pipeline)
+  cmdlets.
 
 ## Known Gaps
 
@@ -101,12 +133,19 @@ Get-DMAlarmHistory -WebSession $storage -AlarmStatus Cleared
   (`UnsupportedFeatureGap`).
 - `Get-DMEquipmentStatus` missing from read-only integrity validation
   (`IntegrityTestGap`).
+- `Get-DMAlarmMasking`/`Set-DMAlarmMasking` not yet exercised by live
+  integrity validation (`IntegrityTestGap`). The `ALARM_DEFINITION` filter
+  operator syntax follows the module's `field::value` convention (as used by
+  `Get-DMAlarmHistory`) and should be confirmed against a live array.
 
 ## Related Files
 
 - `POSH-Oceanstor/Public/Get-DMAlarm.ps1`, `Get-DMAlarmHistory.ps1`,
-  `Get-DMAlarmType.ps1`, `Get-DMSystem.ps1`, `Get-DMEquipmentStatus.ps1`
+  `Get-DMAlarmType.ps1`, `Get-DMAlarmMasking.ps1`, `Set-DMAlarmMasking.ps1`,
+  `Get-DMSystem.ps1`, `Get-DMEquipmentStatus.ps1`
+- `POSH-Oceanstor/Private/class-OceanStorAlarmMasking.ps1`
 - `Tests/Unit/Public/Get-Hardware.Tests.ps1` (covers `Get-DMAlarm`),
   `Get-DMAlarmHistory.Tests.ps1`, `Get-DMAlarmType.Tests.ps1`,
+  `Get-DMAlarmMasking.Tests.ps1`, `Set-DMAlarmMasking.Tests.ps1`,
   `Get-SystemConfiguration.Tests.ps1`
 - `Tests/Integration/Private/ReadValidation.ps1`
