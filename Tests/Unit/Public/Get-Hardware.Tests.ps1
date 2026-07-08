@@ -55,20 +55,21 @@ Describe 'Public getter functions' {
         Mock Invoke-DeviceManager { [pscustomobject]@{ data = @() } }
     }
     Describe 'Hardware getter functions' {
-        It 'gets alarms using the requested alarm state' {
+        It 'gets current alarms and shapes the output' {
             Mock Invoke-DeviceManager {
                 $script:resource = $Resource
-                [pscustomobject]@{ data = @([pscustomobject]@{ name = 'warning'; alarmStatus = 2; level = 2; type = 1; eventType = 1; clearTime = 0; recoverTime = 0; startTime = 0 }) }
+                [pscustomobject]@{ data = @([pscustomobject]@{ name = 'warning'; alarmStatus = 1; level = 3; type = 1; eventType = 1; clearTime = 0; recoverTime = 0; startTime = 0 }) }
             }
 
-            $result = Get-DMAlarm -WebSession $script:session -AlarmStatus Cleared
+            $result = Get-DMAlarm -WebSession $script:session
 
             $result[0].Name | Should -Be 'warning'
             $result[0].PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
                 Should -Be @('Name', 'Level', 'Alarm Status', 'Location', 'Start time')
             $result[0].'Event Type' | Should -Be 'alarm'
             $result[0].Session | Should -Be $script:session
-            $script:resource | Should -BeLike 'alarm/historyalarm?filter=alarmStatus::2*'
+            $script:resource | Should -BeLike 'alarm/currentalarm?sortby=startTime,d*'
+            $script:resource | Should -Not -BeLike '*filter=*'
         }
 
         It 'filters alarms by an explicit start and end time as a bracketed range' {
@@ -84,7 +85,7 @@ Describe 'Public getter functions' {
 
             $null = Get-DMAlarm -WebSession $script:session -StartTime $start -EndTime $end
 
-            $script:resource | Should -Match ([regex]::Escape("alarm/historyalarm?filter=alarmStatus::1 and startTime:[$startEpoch,$endEpoch]"))
+            $script:resource | Should -Match ([regex]::Escape("alarm/currentalarm?sortby=startTime,d&filter=startTime:[$startEpoch,$endEpoch]"))
         }
 
         It 'filters alarms using a Last timespan relative to now' {
@@ -95,7 +96,7 @@ Describe 'Public getter functions' {
 
             $null = Get-DMAlarm -WebSession $script:session -Last (New-TimeSpan -Hours 24)
 
-            $script:resource | Should -Match 'alarm/historyalarm\?filter=alarmStatus::1 and startTime:\[\d+,\d+\]'
+            $script:resource | Should -Match 'alarm/currentalarm\?sortby=startTime,d&filter=startTime:\[\d+,\d+\]'
         }
 
         It 'throws when -Last is combined with -StartTime or -EndTime' {

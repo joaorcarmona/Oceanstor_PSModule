@@ -40,7 +40,7 @@ function Invoke-ReadValidation {
     }
 
     Add-ValidationResult -Name 'Get-DMAlarm' -ExpectedType 'OceanStorAlarm' -Action {
-        Get-DMAlarm -WebSession $session -AlarmStatus Unrecovered
+        Get-DMAlarm -WebSession $session
     } | Out-Null
     Add-ValidationResult -Name 'Get-DMbbu' -ExpectedType 'OceanStorBBU' -Action {
         Get-DMbbu -WebSession $session

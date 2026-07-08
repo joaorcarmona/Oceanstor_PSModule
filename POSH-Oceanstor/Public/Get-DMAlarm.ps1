@@ -1,16 +1,19 @@
 function Get-DMAlarm {
     <#
 	.SYNOPSIS
-		To Get Huawei Oceanstor Storage alarms
+		To Get Huawei Oceanstor Storage current (active) alarms
 
 	.DESCRIPTION
-		Function to request Huawei Oceanstor Storage alarms (Unrecovered,Cleared,Recovered)
+		Function to request Huawei Oceanstor Storage current alarms via the
+		"Interface for Querying Current Alarm Information" (GET alarm/currentalarm,
+		OceanStor Dorado 6.1.6 REST Interface Reference section 4.2.2.4.4).
+
+		Current alarms are the currently active (unrecovered) alarms on the array.
+		To query historical alarms and events, or to filter by alarm status
+		(cleared/recovered), level, or entry type, use Get-DMAlarmHistory.
 
 	.PARAMETER webSession
 		Optional parameter to define the session to be use on the REST call. If not defined, the module's cached $script:CurrentOceanstorSession session will be used
-
-	.PARAMETER AlarmStatus
-		Optional alarm status filter. Valid values are Unrecovered, Cleared, and Recovered. If omitted, Unrecovered alarms are returned.
 
 	.PARAMETER StartTime
 		Optional. Only return alarms generated at or after this time. Converted to a Unix epoch second
@@ -34,15 +37,7 @@ function Get-DMAlarm {
 	.OUTPUTS
 		OceanStorAlarm
 
-		Returns OceanStor alarm objects. Unrecovered alarms are returned by default.
-
-	.EXAMPLE
-
-		PS C:\> Get-DMAlarm -webSession $session -AlarmStatus "Cleared"
-
-		OR
-
-		PS C:\> $disks = Get-DMAlarm -AlarmStatus "Cleared"
+		Returns OceanStor current (active) alarm objects.
 
 	.EXAMPLE
 
@@ -50,11 +45,11 @@ function Get-DMAlarm {
 
 		OR
 
-		PS C:\> $disks = Get-DMAlarm
+		PS C:\> $alarms = Get-DMAlarm
 
 	.EXAMPLE
 
-		PS C:\> Get-DMAlarm -AlarmStatus Unrecovered -Last (New-TimeSpan -Hours 24)
+		PS C:\> Get-DMAlarm -Last (New-TimeSpan -Hours 24)
 
 	.EXAMPLE
 
@@ -70,9 +65,6 @@ function Get-DMAlarm {
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Mandatory = $false)]
         [pscustomobject]$WebSession,
-        [Parameter(ValueFromPipeline = $false, ValueFromPipelineByPropertyName = $false, Position = 0, Mandatory = $false)]
-        [ValidateSet('Unrecovered', 'Cleared', 'Recovered')]
-        [string]$AlarmStatus,
         [Parameter(Mandatory = $false)]
         [datetime]$StartTime,
         [Parameter(Mandatory = $false)]
@@ -101,22 +93,11 @@ function Get-DMAlarm {
 
     $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($displayPropertySet)
 
-    switch ($alarmStatus) {
-        Unrecovered {
-            $statusAlarm = 1
-        }
-        Cleared {
-            $statusAlarm = 2
-        }
-        Recovered {
-            $statusAlarm = 4
-        }
-        default {
-            $statusAlarm = 1
-        }
-    }
-
-    $filter = "alarmStatus::$statusAlarm"
+    # The currentalarm interface supports filtering on startTime (plus level,
+    # alarmObjType and sequence, which are exposed by Get-DMAlarmHistory). Only a
+    # time-range clause is built here; when no time bound is supplied the query is
+    # unfiltered and returns all current alarms.
+    $filter = $null
 
     $hasStartTime = $PSBoundParameters.ContainsKey('StartTime')
     $hasEndTime = $PSBoundParameters.ContainsKey('EndTime')
@@ -137,10 +118,15 @@ function Get-DMAlarm {
         }
         $startEpoch = [System.DateTimeOffset]::new($StartTime.ToUniversalTime()).ToUnixTimeSeconds()
         $endEpoch = [System.DateTimeOffset]::new($EndTime.ToUniversalTime()).ToUnixTimeSeconds()
-        $filter += " and startTime:[$startEpoch,$endEpoch]"
+        $filter = "startTime:[$startEpoch,$endEpoch]"
     }
 
-    $response = Invoke-DMPagedRequest -WebSession $session -Resource "alarm/historyalarm?filter=$filter"
+    $resource = "alarm/currentalarm?sortby=startTime,d"
+    if ($filter) {
+        $resource += "&filter=$filter"
+    }
+
+    $response = Invoke-DMPagedRequest -WebSession $session -Resource $resource
     $alarms = New-Object System.Collections.ArrayList
 
     foreach ($talarm in $response) {

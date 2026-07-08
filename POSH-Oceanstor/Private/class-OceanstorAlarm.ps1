@@ -74,10 +74,10 @@ class OceanStorAlarm{
 
         switch($AlarmReceived.level)
 		{
-			1 {$this.{Level} = "info"}
-            2 {$this.{Level} = "warning"}
-            3 {$this.{Level} = "major"}
-            4 {$this.{Level} = "critical"}
+			2 {$this.{Level} = "info"}
+            3 {$this.{Level} = "warning"}
+            5 {$this.{Level} = "major"}
+            6 {$this.{Level} = "critical"}
 		}
 
         switch($AlarmReceived.type)
@@ -87,6 +87,7 @@ class OceanStorAlarm{
             2 {$this.{Type} = "cleared alarm"}
             3 {$this.{Type} = "operation log"}
             4 {$this.{Type} = "running log"}
+            10 {$this.{Type} = "security log"}
 		}
 
 		switch($AlarmReceived.eventType)
@@ -95,6 +96,7 @@ class OceanStorAlarm{
             2 {$this.{Event Type} = "cleared alarm"}
             3 {$this.{Event Type} = "operation log"}
             4 {$this.{Event Type} = "running log"}
+            10 {$this.{Event Type} = "security log"}
 		}
 
 	}

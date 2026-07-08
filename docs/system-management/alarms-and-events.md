@@ -14,24 +14,33 @@ Alarm notification *transport* (SNMP traps, syslog) is documented in
 
 | Cmdlet | Action | REST resource | Mutating | ShouldProcess |
 |---|---|---|---|---:|
-| `Get-DMAlarm` | Query alarms filtered by status and/or time range | `alarm/historyalarm?filter=alarmStatus::<status>[ and startTime:[start,end]]` | No | — |
+| `Get-DMAlarm` | Query current (active) alarms, optionally by time range | `alarm/currentalarm?sortby=startTime,d[&filter=startTime:[start,end]]` | No | — |
+| `Get-DMAlarmHistory` | Query historical alarms/events with the full filter surface (level, status, type, object type, sequence, time) | `alarm/historyalarm?sortby=startTime,d[&filter=<clauses>]` | No | — |
+| `Get-DMAlarmType` | List the array's alarm object-type catalog (names ↔ numeric values) | `ALARM_DEFINITION_OBJ?language=1` | No | — |
 | `Get-DMSystem` | Read overall system information | `system/` | No | — |
 | `Get-DMEquipmentStatus` | Read equipment/server status (e.g. security mode) | `server/status` | No | — |
 
 Key parameters:
 
-- `Get-DMAlarm -AlarmStatus <status>` — e.g. `Unrecovered`; filters
-  server-side on alarm status.
+- `Get-DMAlarm` (no filter) — returns all current (active/unrecovered)
+  alarms. The `currentalarm` interface does **not** support an
+  `alarmStatus` filter; to query cleared/recovered alarms or any historical
+  state, use `Get-DMAlarmHistory -AlarmStatus <status>`.
 - `Get-DMAlarm -StartTime <datetime> -EndTime <datetime>` — filters
   server-side on a `startTime` range, converted to Unix epoch seconds.
   Either bound may be omitted (defaults to epoch 0 / now respectively).
 - `Get-DMAlarm -Last <timespan>` — convenience filter equivalent to
   `-StartTime (Get-Date) - <timespan> -EndTime (Get-Date)`. Cannot be
   combined with `-StartTime`/`-EndTime`.
+- `Get-DMAlarmHistory -Level -AlarmStatus -Type -AlarmObjectType -Sequence
+  -StartSequence -EndSequence -StartTime/-EndTime/-Last` — all optional,
+  AND-combined, mapped server-side to the documented numeric enums.
 
-`Get-DMAlarm` returns `OceanStorAlarm` objects; `Get-DMSystem` returns
-`OceanStorSystem`; `Get-DMEquipmentStatus` returns a status object with
-`Status`, `StatusName` (e.g. `SecurityMode`), and `Description`.
+`Get-DMAlarm` and `Get-DMAlarmHistory` return `OceanStorAlarm` objects;
+`Get-DMAlarmType` returns objects with `Name`/`ObjectType`/`Id`;
+`Get-DMSystem` returns `OceanStorSystem`; `Get-DMEquipmentStatus` returns a
+status object with `Status`, `StatusName` (e.g. `SecurityMode`), and
+`Description`.
 
 ## Common Workflows
 
@@ -50,24 +59,28 @@ $storage = Connect-deviceManager -Hostname $storageIP -Credential $cred -PassThr
 # Health check
 Get-DMSystem -WebSession $storage
 Get-DMEquipmentStatus -WebSession $storage
-Get-DMAlarm -WebSession $storage -AlarmStatus Unrecovered
+Get-DMAlarm -WebSession $storage
 
-# Alarm evidence export (local file only)
-Get-DMAlarm -WebSession $storage -AlarmStatus Unrecovered |
-    Export-Csv -Path .\unrecovered-alarms.csv -NoTypeInformation
+# Current-alarm evidence export (local file only)
+Get-DMAlarm -WebSession $storage |
+    Export-Csv -Path .\current-alarms.csv -NoTypeInformation
 
-# Alarms generated in the last 24 hours
+# Current alarms generated in the last 24 hours
 Get-DMAlarm -WebSession $storage -Last (New-TimeSpan -Hours 24)
 
-# Alarms generated in an explicit date range
+# Current alarms generated in an explicit date range
 Get-DMAlarm -WebSession $storage -StartTime (Get-Date).AddDays(-7) -EndTime (Get-Date)
+
+# Cleared/recovered or historical alarms (use the history cmdlet)
+Get-DMAlarmHistory -WebSession $storage -AlarmStatus Cleared
 ```
 
 ## Safety Notes
 
-- All three cmdlets are `ReadOnlySystemManagement` — safe to run live at any
-  time. All three passed live validation on 2026-07-07 (`Get-DMAlarm
-  -AlarmStatus Unrecovered`: 3 alarms in ~150 ms on the lab array).
+- All read cmdlets are `ReadOnlySystemManagement` — safe to run live at any
+  time. `Get-DMSystem`/`Get-DMEquipmentStatus` passed live validation on
+  2026-07-07. `Get-DMAlarm` has since been repointed from `historyalarm` to
+  `currentalarm` (see Related Files) and should be re-validated live.
 - When acknowledge/clear cmdlets are eventually implemented, they must be
   classified `AlertingOrMonitoringMutation` and never run against
   pre-existing alarms in live validation.
@@ -91,7 +104,9 @@ Get-DMAlarm -WebSession $storage -StartTime (Get-Date).AddDays(-7) -EndTime (Get
 
 ## Related Files
 
-- `POSH-Oceanstor/Public/Get-DMAlarm.ps1`, `Get-DMSystem.ps1`,
-  `Get-DMEquipmentStatus.ps1`
-- `Tests/Unit/Public/Get-SystemConfiguration.Tests.ps1`
+- `POSH-Oceanstor/Public/Get-DMAlarm.ps1`, `Get-DMAlarmHistory.ps1`,
+  `Get-DMAlarmType.ps1`, `Get-DMSystem.ps1`, `Get-DMEquipmentStatus.ps1`
+- `Tests/Unit/Public/Get-Hardware.Tests.ps1` (covers `Get-DMAlarm`),
+  `Get-DMAlarmHistory.Tests.ps1`, `Get-DMAlarmType.Tests.ps1`,
+  `Get-SystemConfiguration.Tests.ps1`
 - `Tests/Integration/Private/ReadValidation.ps1`
