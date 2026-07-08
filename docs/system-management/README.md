@@ -16,6 +16,7 @@ rather than storage objects (LUNs, file systems, hosts).
 | [certificates.md](certificates.md) | Certificate management | Partial (read-only inventory: `Get-DMCertificate`; mutation not implemented) |
 | [alarms-and-events.md](alarms-and-events.md) | Alarm queries; system and equipment status | Partial (read-only) |
 | [safety-and-live-validation.md](safety-and-live-validation.md) | Safety classification and live-validation rules | — |
+| [ldap-ad-smtp-alerting-research.md](ldap-ad-smtp-alerting-research.md) | LDAP/AD auth, Email/SMTP alerting, password/security-policy — future-branch research/scoping | No (research only) |
 | [TODO.md](TODO.md) | Roadmap and open gaps for this domain | — |
 
 ## Connecting

@@ -162,11 +162,18 @@ alarms/events.
 
 > Deduplication note: LDAP/AD and Email/SMTP remain `open` future feature
 > branches per Phase 04's dedup decision (research placeholders only, no
-> implementation phase yet).
+> implementation phase yet). Phase 07 added a scoped research/scoping note —
+> documented endpoints, blast radius, proposed cmdlet shapes, and
+> `SupportsShouldProcess`/`ConfirmImpact` posture — at
+> `docs/system-management/ldap-ad-smtp-alerting-research.md`. No code was
+> implemented for any of these in Phase 07.
 
-- LDAP/AD/domain authentication configuration.
-- Email/SMTP alert notification.
-- Local login password/security policy.
+- LDAP/AD/domain authentication configuration. — research only; auth-sensitive,
+  `ConfirmImpact=High`, mock-only first, live validation `SkippedUnsafe`.
+- Email/SMTP alert notification. — research only; alerting-sensitive,
+  `ConfirmImpact=Medium`/`High`, mock-only first, live validation `SkippedUnsafe`.
+- Local login password/security policy. — research only; no dedicated documented
+  endpoint found (only SNMP security policy exists), `ConfirmImpact=High`.
 
 ### Alarm acknowledge/clear and event query — decision (Phase 04, 2026-07-07)
 
@@ -185,12 +192,16 @@ Researched against the OceanStor Dorado 6.1.6 REST Interface Reference:
   branch later adds a reliable test-alarm generator, clear may be exercised
   against that test-generated alarm's captured sequence number only — never
   against pre-existing alarms.
-- **Event query: future feature branch (read-only, low risk).** Historical
-  alarms/events are queryable via `GET alarm/historyalarm` (section
-  4.2.2.4.7) with the same filter surface `Get-DMAlarm` already uses for
-  `alarm/currentalarm`. A read-only getter (e.g. `Get-DMAlarm -History` or
-  `Get-DMEvent`) fits existing module patterns and belongs in the
-  alarm/event lifecycle feature branch, not Phase 04.
+- **Event query: implemented read-only in Phase 07 (2026-07-08).** Historical
+  alarms/events are queried via `GET alarm/historyalarm` (section 4.2.2.4.7)
+  through the dedicated cmdlet **`Get-DMAlarmHistory`**. Naming decision: a
+  separate getter was chosen over `Get-DMAlarm -History` because history exposes
+  a broader server-side filter surface (level, alarm status, entry type, alarm
+  object type, single/ranged sequence number) than current-alarm filtering, and
+  it defaults to the last 7 days to avoid a full-history scan. It returns typed
+  `OceanStorAlarm` objects, is exported in the manifest, unit-tested, and
+  registered in read validation. `Get-DMAlarm` (current alarms, `alarm/
+  currentalarm`) is unchanged.
 
 ## Low Priority / Polish
 

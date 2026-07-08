@@ -42,6 +42,13 @@ function Invoke-ReadValidation {
     Add-ValidationResult -Name 'Get-DMAlarm' -ExpectedType 'OceanStorAlarm' -Action {
         Get-DMAlarm -WebSession $session
     } | Out-Null
+    Add-ValidationResult -Name 'Get-DMAlarmHistory' -ExpectedType 'OceanStorAlarm' -Action {
+        # Read-only historical alarm/event query (GET alarm/historyalarm). With
+        # no filter supplied the cmdlet defaults to the last 7 days, so the scan
+        # stays cheap. An empty window surfaces as NoData, which read validation
+        # accepts. No lab-specific IDs required.
+        Get-DMAlarmHistory -WebSession $session
+    } | Out-Null
     Add-ValidationResult -Name 'Get-DMbbu' -ExpectedType 'OceanStorBBU' -Action {
         Get-DMbbu -WebSession $session
     } | Out-Null
