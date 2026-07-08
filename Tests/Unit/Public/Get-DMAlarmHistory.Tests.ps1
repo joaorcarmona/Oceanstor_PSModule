@@ -76,7 +76,22 @@ InModuleScope AlarmHistoryTestModule {
             $result[0].Level | Should -Be 'critical'
             $historyResource = $script:resources | Where-Object { $_ -like 'alarm/historyalarm*' } | Select-Object -First 1
             $historyResource | Should -BeLike '*sortby=startTime,d*'
-            $historyResource | Should -Not -BeLike '*filter=*'
+        }
+
+        It 'defaults to a last-7-days startTime filter when no filter is supplied' {
+            $null = Get-DMAlarmHistory -WebSession $script:session
+
+            $historyResource = $script:resources | Where-Object { $_ -like 'alarm/historyalarm*' } | Select-Object -First 1
+            $historyResource | Should -Match 'filter=startTime:\[(\d+),(\d+)\]'
+
+            $matched = [regex]::Match($historyResource, 'startTime:\[(\d+),(\d+)\]')
+            $startEpoch = [int64]$matched.Groups[1].Value
+            $endEpoch = [int64]$matched.Groups[2].Value
+
+            # Default window is the last 7 days (604800 seconds), allowing a small
+            # tolerance for the two Get-Date calls straddling the range build.
+            ($endEpoch - $startEpoch) | Should -BeGreaterThan (604800 - 5)
+            ($endEpoch - $startEpoch) | Should -BeLessThan (604800 + 5)
         }
 
         It 'maps -Level Critical and -Type Alarm to the documented enum values' {
