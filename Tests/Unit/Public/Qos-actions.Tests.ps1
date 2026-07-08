@@ -439,6 +439,84 @@ Describe 'Add-DMQosAssociation and Remove-DMQosAssociation' {
         $script:request.ASSOCIATEOBJIDLIST | Should -Be @('qos-02')
     }
 
+    It 'blocks a LUN group when the policy is already bound to a LUN, without calling the array' {
+        Mock Invoke-DeviceManager {
+            $script:method = $Method
+            $script:resource = $Resource
+            $script:request = $BodyData
+            if ($Method -eq 'GET') {
+                return [pscustomobject]@{
+                    data = @([pscustomobject]@{ ID = 'qos-01'; NAME = 'qos01-parent'; LUNLIST = @('lun-99') })
+                }
+            }
+            return [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 } }
+        }
+
+        { Add-DMQosAssociation -WebSession $script:session -Name 'qos01-parent' -LunGroupName 'production-luns' -Confirm:$false -ErrorAction Stop } |
+            Should -Throw '*already associated with LUN (lun-99)*'
+
+        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly -ParameterFilter { $Resource -eq 'ioclass/create_associate' }
+    }
+
+    It 'blocks a host association when the policy is already bound to a LUN' {
+        Mock Invoke-DeviceManager {
+            if ($Method -eq 'GET') {
+                return [pscustomobject]@{
+                    data = @([pscustomobject]@{ ID = 'qos-01'; NAME = 'qos01-parent'; LUNLIST = @('lun-99') })
+                }
+            }
+            return [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 } }
+        }
+
+        { Add-DMQosAssociation -WebSession $script:session -Name 'qos01-parent' -HostName 'esx01' -Confirm:$false -ErrorAction Stop } |
+            Should -Throw '*can only be bound to one object type*'
+
+        Should -Invoke Invoke-DeviceManager -Times 0 -Exactly -ParameterFilter { $Resource -eq 'ioclass/create_associate' }
+    }
+
+    It 'allows a second host when the policy is already bound to a host (same object type)' {
+        Mock Invoke-DeviceManager {
+            $script:method = $Method
+            $script:resource = $Resource
+            $script:request = $BodyData
+            if ($Method -eq 'GET') {
+                return [pscustomobject]@{
+                    data = @([pscustomobject]@{ ID = 'qos-01'; NAME = 'qos01-parent'; HOSTLIST = @('host-existing') })
+                }
+            }
+            return [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 } }
+        }
+
+        $null = Add-DMQosAssociation -WebSession $script:session -Name 'qos01-parent' -HostName 'esx01' -Confirm:$false
+
+        $script:resource | Should -Be 'ioclass/create_associate'
+        $script:request.ASSOCIATEOBJTYPE | Should -Be 21
+        $script:request.ASSOCIATEOBJIDLIST | Should -Be @('host-01')
+    }
+
+    It 'allows another child policy on a hierarchical parent (same object type)' {
+        Mock Invoke-DeviceManager {
+            $script:method = $Method
+            $script:resource = $Resource
+            $script:request = $BodyData
+            if ($Method -eq 'GET') {
+                return [pscustomobject]@{
+                    data = @(
+                        [pscustomobject]@{ ID = 'qos-01'; NAME = 'qos01-parent'; POLICYLIST = @('qos-existing-child') }
+                        [pscustomobject]@{ ID = 'qos-02'; NAME = 'qos01-child' }
+                    )
+                }
+            }
+            return [pscustomobject]@{ error = [pscustomobject]@{ Code = 0 } }
+        }
+
+        $null = Add-DMQosAssociation -WebSession $script:session -Name 'qos01-parent' -ChildPolicyName 'qos01-child' -Confirm:$false
+
+        $script:resource | Should -Be 'ioclass/create_associate'
+        $script:request.ASSOCIATEOBJTYPE | Should -Be 230
+        $script:request.ASSOCIATEOBJIDLIST | Should -Be @('qos-02')
+    }
+
     It 'rejects when no target parameter is specified' {
         { Add-DMQosAssociation -WebSession $script:session -Name 'qos01-parent' -Confirm:$false -ErrorAction Stop } |
             Should -Throw '*exactly one of*'

@@ -10,6 +10,11 @@ function Add-DMQosAssociation {
         parameters instead. ASSOCIATEOBJTYPE values used: 230 (child SmartQoS policy),
         256 (LUN group), 21 (host), 16442 (vStore).
 
+        A SmartQoS policy can only be bound to one object type. The cmdlet pre-validates the
+        resolved policy's current binding (LUN, file system, host, or child policy) and fails
+        with a clear message - without calling the array - when the requested association
+        would conflict with an existing binding of a different type.
+
     .PARAMETER WebSession
         Optional parameter to define the session to be use on the REST call. If not defined, the module's cached $script:CurrentOceanstorSession session will be used
 
@@ -161,6 +166,38 @@ function Add-DMQosAssociation {
                 $associateObjType = 230
                 $associateObjId = $ChildPolicyId
                 $targetDescription = "child policy '$ChildPolicyId'"
+            }
+
+            # Pre-validation: a SmartQoS (ioclass) policy binds to a single object type.
+            # Associating an object whose type differs from the one already bound triggers
+            # the array's ioclass object-type conflict (e.g. a policy already bound to a LUN
+            # cannot also take a LUN group). Detect the current binding from the resolved
+            # policy and fail with a clear message instead of firing a request the array
+            # will reject. Empty entries are filtered so an absent list ('@($null)') does
+            # not read as a binding.
+            $boundTo = [ordered]@{
+                'LUN'          = @($policy.'Lun List'    | Where-Object { $_ })
+                'file system'  = @($policy.'FS List'     | Where-Object { $_ })
+                'host'         = @($policy.'Host List'   | Where-Object { $_ })
+                'child policy' = @($policy.'Policy List' | Where-Object { $_ })
+            }
+            # Adding an object of the same type as an existing binding is legitimate (a
+            # second host, or another child policy on a hierarchical parent), so exclude the
+            # compatible bucket from the conflict check. LUN group (256) and vStore (16442)
+            # have no same-type list exposed on the policy object, so any existing binding
+            # conflicts with them.
+            $compatibleBinding = switch ($associateObjType) {
+                21 { 'host' }
+                230 { 'child policy' }
+                default { $null }
+            }
+            $conflicts = foreach ($kind in $boundTo.Keys) {
+                if ($kind -ne $compatibleBinding -and $boundTo[$kind].Count -gt 0) {
+                    "$kind ($($boundTo[$kind] -join ', '))"
+                }
+            }
+            if ($conflicts) {
+                throw "SmartQoS policy '$($policy.Name)' is already associated with $($conflicts -join '; '). A SmartQoS policy can only be bound to one object type; remove the existing association before adding $targetDescription."
             }
 
             $body = @{
