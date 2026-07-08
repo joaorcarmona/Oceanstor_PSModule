@@ -22,7 +22,11 @@ class OceanStorAlarmMasking {
         $this.{Alarm Id} = $MaskingReceived.CMO_ALARM_ID
         $this.{Name} = $MaskingReceived.CMO_ALARM_NAME
         $this.{Id} = $MaskingReceived.ID
-        $this.{Type} = $MaskingReceived.TYPE
+        $this.{Type} = switch ([string]$MaskingReceived.TYPE)
+        {
+            '16435' { $this.{Type} = 'ALARM_DEFINITION' }
+            Default { $this.{Type} = [string]$MaskingReceived.TYPE }
+        }
 
         # The API returns the object type as a numeric value. Keep it in
         # "Alarm Object Type Id" for correlation, and translate it to a friendly
