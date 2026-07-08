@@ -238,6 +238,17 @@
         # a test-owned eligible member type exists (see
         # docs/network/safety-and-live-validation.md).
         AllowFailoverGroupLifecycle = $false
+
+        # Test-owned VLAN lifecycle: create a run-unique VLAN on a verified-idle
+        # parent port, then delete it by captured ID. Deferred and disabled by
+        # default -- live VLAN create/delete is NOT run in the current release.
+        # Enabling this gate alone does nothing: the workflow additionally
+        # requires a parent port that the idle-port guard
+        # (Get-DMVlanParentPortStatus) positively confirms is Idle, and the
+        # harness owns no such port yet. Any live run remains a separate,
+        # supervised, deferred session. See
+        # docs/network/safety-and-live-validation.md.
+        AllowVlanLifecycle = $false
     }
 
     Performance = @{

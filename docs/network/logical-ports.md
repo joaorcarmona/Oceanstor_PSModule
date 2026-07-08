@@ -38,7 +38,10 @@ Key parameters of `New-DMLif`:
 `Get-DMLif` narrows server-side: `-Name` sends the documented `filter=NAME`
 query (exact `::` match, fuzzy `:` for simple leading/trailing `*` wildcards)
 and always re-checks the full pattern client-side; `-Id` uses the documented
-`lif/{id}` single-object query.
+`lif/{id}` single-object query. `-Ipv4Addr`, `-Ipv6Addr` and `-HomePortId` map
+to the documented `IPV4ADDR`, `IPV6ADDR` and `HOMEPORTID` filter fields
+respectively; they are sent server-side and compose with `-Name` and with each
+other as AND-joined `filter=` clauses.
 
 `Set-DMLif` identifies the LIF by `-Name`, by `-Id`, or both (pipeline-bindable
 via the `Id` and `LIF Name` properties of `Get-DMLif` output); it can retarget
@@ -109,8 +112,8 @@ Remove-DMLif -WebSession $storage -Name 'lif01'
 
 ## Known Gaps
 
-- The `lif` batch query also documents `IPV4ADDR`, `IPV6ADDR` and `HOMEPORTID`
-  filter fields; only `NAME` is exposed as a parameter today.
+- None outstanding for read filters — `NAME`, `IPV4ADDR`, `IPV6ADDR` and
+  `HOMEPORTID` are all exposed as server-side `filter=` parameters.
 
 ## Related Files
 

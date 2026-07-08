@@ -176,6 +176,49 @@ Describe 'Public getter functions' {
             $result.Count | Should -Be 2
         }
 
+        It 'filters logical interfaces server-side by IPV4ADDR' {
+            Mock Invoke-DeviceManager { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'lif-01' }) } }
+
+            $null = @(Get-DMLif -WebSession $script:session -Ipv4Addr '10.0.0.5')
+
+            Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter {
+                $Resource -eq 'lif?filter=IPV4ADDR::10.0.0.5' -or $Resource -eq 'lif?filter=IPV4ADDR%3A%3A10.0.0.5'
+            }
+        }
+
+        It 'filters logical interfaces server-side by IPV6ADDR' {
+            Mock Invoke-DeviceManager { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'lif-01' }) } }
+
+            $null = @(Get-DMLif -WebSession $script:session -Ipv6Addr 'fe80::1')
+
+            Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter {
+                $Resource -like 'lif?filter=IPV6ADDR*fe80*'
+            }
+        }
+
+        It 'filters logical interfaces server-side by HOMEPORTID' {
+            Mock Invoke-DeviceManager { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'lif-01' }) } }
+
+            $null = @(Get-DMLif -WebSession $script:session -HomePortId 'eth-01')
+
+            Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter {
+                $Resource -eq 'lif?filter=HOMEPORTID::eth-01' -or $Resource -eq 'lif?filter=HOMEPORTID%3A%3Aeth-01'
+            }
+        }
+
+        It 'composes LIF NAME and HOMEPORTID filters with an AND clause' {
+            Mock Invoke-DeviceManager { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'lif-01'; NAME = 'nas_lif1' }) } }
+
+            $null = @(Get-DMLif -WebSession $script:session -Name 'nas_lif1' -HomePortId 'eth-01')
+
+            Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter {
+                $Resource -match 'NAME(::|%3A%3A)nas_lif1' -and
+                $Resource -match 'HOMEPORTID(::|%3A%3A)eth-01' -and
+                $Resource -match '\?filter=' -and
+                $Resource -match ' and '
+            }
+        }
+
         It 'filters VLANs server-side with an exact NAME filter' {
             Mock Invoke-DeviceManager { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'vlan-01'; NAME = 'CTE0.A.100'; TYPE = 280; TAG = 100 }) } }
 
@@ -183,6 +226,38 @@ Describe 'Public getter functions' {
 
             Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter { $Resource -like 'vlan?filter=NAME*' }
             $result.Count | Should -Be 1
+        }
+
+        It 'filters VLANs server-side by TAG' {
+            Mock Invoke-DeviceManager { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'vlan-01'; TYPE = 280; TAG = 100 }) } }
+
+            $null = @(Get-DMvLan -WebSession $script:session -Tag '100')
+
+            Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter {
+                $Resource -eq 'vlan?filter=TAG::100' -or $Resource -eq 'vlan?filter=TAG%3A%3A100'
+            }
+        }
+
+        It 'filters VLANs server-side by fatherDrvType' {
+            Mock Invoke-DeviceManager { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'vlan-01'; TYPE = 280 }) } }
+
+            $null = @(Get-DMvLan -WebSession $script:session -FatherDrvType '1')
+
+            Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter {
+                $Resource -eq 'vlan?filter=fatherDrvType::1' -or $Resource -eq 'vlan?filter=fatherDrvType%3A%3A1'
+            }
+        }
+
+        It 'composes VLAN TAG and fatherDrvType filters with an AND clause' {
+            Mock Invoke-DeviceManager { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'vlan-01'; TYPE = 280; TAG = 100 }) } }
+
+            $null = @(Get-DMvLan -WebSession $script:session -Tag '100' -FatherDrvType '1')
+
+            Should -Invoke Invoke-DeviceManager -Times 1 -Exactly -ParameterFilter {
+                $Resource -match 'TAG(::|%3A%3A)100' -and
+                $Resource -match 'fatherDrvType(::|%3A%3A)1' -and
+                $Resource -match ' and '
+            }
         }
 
         It 'gets a VLAN by id through the documented single-object query' {

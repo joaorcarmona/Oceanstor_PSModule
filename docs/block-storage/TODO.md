@@ -25,6 +25,11 @@
   were rejected (immutable WWN/IQN identity, command-only for `ShouldProcess`
   clarity). NAS-child modification (`Set-DMCifsShare`, `Set-DMdTree`,
   `Set-DMnfsShare`, `Set-DMnfsClient`) already shipped.
+- Phase 05: block-storage documentation carry-over closed —
+  vStore-scoped mapping (`-VstoreId`) guidance and a legacy-wrapper migration
+  note added to [mapping-views.md](mapping-views.md), and a dedicated
+  [mapped-lun-removal-troubleshooting.md](mapped-lun-removal-troubleshooting.md)
+  page added.
 
 ## High Priority
 
@@ -32,14 +37,9 @@
   and removal behavior.
 - Keep direct mapping and mapping-view examples in sync with cmdlet parameter
   names.
-- Confirm which mapping operations are accepted on arrays with vStore-specific
-  object scopes and document required `-VstoreId` use.
 
 ## Medium Priority
 
-- Add a deeper troubleshooting page for mapped LUN removal failures.
-- Add a migration note for legacy wrapper cmdlets such as
-  `Get-DMlunByName`, `Get-DMlunByWWN`, and `Get-DMhostbyHostGroup`.
 - Expand protection-group guidance after more live validation is available.
 
 ## Low Priority / Polish
@@ -69,8 +69,7 @@
 
 | Branch | Effort | Reason |
 |---|---:|---|
-| block-storage-troubleshooting | Medium | Admin cookbook for common SAN failures |
-| mapping-vstore-docs | Medium | vStore and mapping-view nuance |
+| block-storage-troubleshooting | Medium | Broader admin cookbook (the mapped-LUN-removal page landed in Phase 05) |
 | protection-group-live-examples | Medium | Needs careful lab confirmation |
 
 ## Not Planned / Unsafe by Default

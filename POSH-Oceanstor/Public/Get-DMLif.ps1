@@ -19,6 +19,18 @@ function Get-DMLif {
 		Logical interface name to filter by. Supports * wildcards; the exact
 		pattern is always re-checked client-side after any server-side filter.
 
+	.PARAMETER Ipv4Addr
+		IPv4 address to filter by (documented IPV4ADDR filter field). Sent
+		server-side and composes with the other filter parameters.
+
+	.PARAMETER Ipv6Addr
+		IPv6 address to filter by (documented IPV6ADDR filter field). Sent
+		server-side and composes with the other filter parameters.
+
+	.PARAMETER HomePortId
+		Home port ID to filter by (documented HOMEPORTID filter field). Sent
+		server-side and composes with the other filter parameters.
+
 	.INPUTS
 		System.Management.Automation.PSCustomObject
 
@@ -62,7 +74,19 @@ function Get-DMLif {
 
         [Parameter(Position = 0, ParameterSetName = 'ByName')]
         [ValidateLength(1, 255)]
-        [string]$Name
+        [string]$Name,
+
+        [Parameter(ParameterSetName = 'ByName')]
+        [ValidateNotNullOrEmpty()]
+        [string]$Ipv4Addr,
+
+        [Parameter(ParameterSetName = 'ByName')]
+        [ValidateNotNullOrEmpty()]
+        [string]$Ipv6Addr,
+
+        [Parameter(ParameterSetName = 'ByName')]
+        [ValidateNotNullOrEmpty()]
+        [string]$HomePortId
     )
 
     if ($WebSession) {
@@ -86,20 +110,40 @@ function Get-DMLif {
     if ($PSCmdlet.ParameterSetName -eq 'ById') {
         $resource = "lif/$([uri]::EscapeDataString($Id))"
     }
-    elseif ($Name) {
-        $hasWildcard = $Name -match '[*?\[\]]'
-        if (-not $hasWildcard) {
-            # No wildcard: request an exact match server-side (double colon).
-            $resource += "?filter=NAME::$([uri]::EscapeDataString($Name))"
+    else {
+        # Build documented filter clauses and AND-join them, matching the
+        # field::value syntax used by the other filterable getters.
+        $clauses = New-Object System.Collections.Generic.List[string]
+
+        if ($Name) {
+            $hasWildcard = $Name -match '[*?\[\]]'
+            if (-not $hasWildcard) {
+                # No wildcard: request an exact match server-side (double colon).
+                $clauses.Add("NAME::$([uri]::EscapeDataString($Name))")
+            }
+            elseif ($Name -match '^\*?([^*?\[\]]+)\*?$') {
+                # Wildcard limited to a leading/trailing *: the middle is a literal
+                # substring, safe to send as a fuzzy (single colon) narrowing hint.
+                $clauses.Add("NAME:$([uri]::EscapeDataString($Matches[1]))")
+            }
+            # Any other wildcard shape (?, a [...] class, or a * in the middle) can't
+            # be expressed as one fuzzy substring, so no NAME filter is sent -- every
+            # LIF is fetched and the client-side -Like re-check below narrows it down.
         }
-        elseif ($Name -match '^\*?([^*?\[\]]+)\*?$') {
-            # Wildcard limited to a leading/trailing *: the middle is a literal
-            # substring, safe to send as a fuzzy (single colon) narrowing hint.
-            $resource += "?filter=NAME:$([uri]::EscapeDataString($Matches[1]))"
+
+        if ($PSBoundParameters.ContainsKey('Ipv4Addr')) {
+            $clauses.Add("IPV4ADDR::$([uri]::EscapeDataString($Ipv4Addr))")
         }
-        # Any other wildcard shape (?, a [...] class, or a * in the middle) can't be
-        # expressed as one fuzzy substring, so no filter is sent -- every LIF is
-        # fetched and the client-side -Like re-check below narrows it down.
+        if ($PSBoundParameters.ContainsKey('Ipv6Addr')) {
+            $clauses.Add("IPV6ADDR::$([uri]::EscapeDataString($Ipv6Addr))")
+        }
+        if ($PSBoundParameters.ContainsKey('HomePortId')) {
+            $clauses.Add("HOMEPORTID::$([uri]::EscapeDataString($HomePortId))")
+        }
+
+        if ($clauses.Count -gt 0) {
+            $resource += "?filter=$($clauses -join ' and ')"
+        }
     }
 
     $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource $resource | Select-DMResponseData

@@ -47,6 +47,55 @@ Rename-DMMappingView -WebSession $storage -MappingViewName 'test_map' `
     -NewName 'test_map_prod' -WhatIf
 ```
 
+## vStore-Scoped Mapping (`-VstoreId`)
+
+On arrays that partition objects into vStores, LUNs, hosts, and mapping objects
+live inside a specific vStore rather than the system scope. The direct-mapping
+and mapping-view membership cmdlets accept an optional `-VstoreId` that scopes
+the operation to that vStore (it is sent as `vstoreId` in the REST body):
+
+- `Add-DMmapLunToHost`, `Remove-DMmapLunFromHost`
+- `Add-DMmapLunGroupToHost`, `Remove-DMunmapLunGroupFromHost`
+- `Add-DMmapLunGroupToHostGroup`, `Remove-DMunmapLunGroupFromHostGroup`
+- `Add-/Remove-DMHostGroupToMappingView`,
+  `Add-/Remove-DMLunGroupToMappingView`,
+  `Add-/Remove-DMPortGroupToMappingView`, and `New-/Get-DMMappingView`
+
+Guidance:
+
+- Omit `-VstoreId` on a system-scoped (non-multi-tenant) array — the default
+  system scope is used.
+- When the target LUN/host lives in a vStore, pass that vStore's ID; a mismatch
+  between the object's vStore and the mapping scope is a common cause of
+  "object not found" or empty-result mapping calls.
+- The `-VstoreId` value is an ID, not a name — resolve it from your vStore
+  inventory first, and keep it consistent across every step of one workflow.
+
+```powershell
+$storageIP = 'StorageIP'
+$cred = Import-Clixml -Path "$env:USERPROFILE\.oceanstor\dm-creds.xml"
+$storage = Connect-deviceManager -Hostname $storageIP -Credential $cred -PassThru
+
+# Preview a vStore-scoped direct map (mutating cmdlets support -WhatIf)
+Add-DMmapLunToHost -WebSession $storage -LunName 'test_lun' -HostName 'test_host' `
+    -VstoreId '0' -WhatIf
+```
+
+## Legacy Wrapper Migration
+
+The following cmdlets are **deprecated thin wrappers** kept only for backward
+compatibility and slated for removal in a future release. Prefer the
+server-side-filtered getter parameters instead:
+
+| Deprecated wrapper | Use instead |
+|---|---|
+| `Get-DMlunByName` | `Get-DMlun -Name` |
+| `Get-DMlunByWWN` | `Get-DMlun -WWN` |
+| `Get-DMhostbyHostGroup` | `Get-DMhost -HostGroup` / `-HostGroupName` / `-HostGroupId` |
+
+The replacements narrow server-side and compose with other filters; the
+wrappers do not add functionality beyond the equivalent parameterized call.
+
 ## Safety Notes
 
 Mapping changes can immediately add or remove host access. Never unmap or

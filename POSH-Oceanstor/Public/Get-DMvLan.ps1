@@ -19,6 +19,14 @@ function Get-DMvLan {
 		VLAN name to filter by. Supports * wildcards; the exact pattern is
 		always re-checked client-side after any server-side filter.
 
+	.PARAMETER Tag
+		VLAN tag ID to filter by (documented TAG filter field). Sent
+		server-side and composes with the other filter parameters.
+
+	.PARAMETER FatherDrvType
+		Parent port driver type to filter by (documented fatherDrvType filter
+		field). Sent server-side and composes with the other filter parameters.
+
 	.INPUTS
 		System.Management.Automation.PSCustomObject
 
@@ -62,7 +70,15 @@ function Get-DMvLan {
 
         [Parameter(Position = 0, ParameterSetName = 'ByName')]
         [ValidateLength(1, 255)]
-        [string]$Name
+        [string]$Name,
+
+        [Parameter(ParameterSetName = 'ByName')]
+        [ValidateNotNullOrEmpty()]
+        [string]$Tag,
+
+        [Parameter(ParameterSetName = 'ByName')]
+        [ValidateNotNullOrEmpty()]
+        [string]$FatherDrvType
     )
 
     if ($WebSession) {
@@ -86,20 +102,37 @@ function Get-DMvLan {
     if ($PSCmdlet.ParameterSetName -eq 'ById') {
         $resource = "vlan/$([uri]::EscapeDataString($Id))"
     }
-    elseif ($Name) {
-        $hasWildcard = $Name -match '[*?\[\]]'
-        if (-not $hasWildcard) {
-            # No wildcard: request an exact match server-side (double colon).
-            $resource += "?filter=NAME::$([uri]::EscapeDataString($Name))"
+    else {
+        # Build documented filter clauses and AND-join them, matching the
+        # field::value syntax used by the other filterable getters.
+        $clauses = New-Object System.Collections.Generic.List[string]
+
+        if ($Name) {
+            $hasWildcard = $Name -match '[*?\[\]]'
+            if (-not $hasWildcard) {
+                # No wildcard: request an exact match server-side (double colon).
+                $clauses.Add("NAME::$([uri]::EscapeDataString($Name))")
+            }
+            elseif ($Name -match '^\*?([^*?\[\]]+)\*?$') {
+                # Wildcard limited to a leading/trailing *: the middle is a literal
+                # substring, safe to send as a fuzzy (single colon) narrowing hint.
+                $clauses.Add("NAME:$([uri]::EscapeDataString($Matches[1]))")
+            }
+            # Any other wildcard shape (?, a [...] class, or a * in the middle) can't
+            # be expressed as one fuzzy substring, so no NAME filter is sent -- every
+            # VLAN is fetched and the client-side -Like re-check below narrows it down.
         }
-        elseif ($Name -match '^\*?([^*?\[\]]+)\*?$') {
-            # Wildcard limited to a leading/trailing *: the middle is a literal
-            # substring, safe to send as a fuzzy (single colon) narrowing hint.
-            $resource += "?filter=NAME:$([uri]::EscapeDataString($Matches[1]))"
+
+        if ($PSBoundParameters.ContainsKey('Tag')) {
+            $clauses.Add("TAG::$([uri]::EscapeDataString($Tag))")
         }
-        # Any other wildcard shape (?, a [...] class, or a * in the middle) can't be
-        # expressed as one fuzzy substring, so no filter is sent -- every VLAN is
-        # fetched and the client-side -Like re-check below narrows it down.
+        if ($PSBoundParameters.ContainsKey('FatherDrvType')) {
+            $clauses.Add("fatherDrvType::$([uri]::EscapeDataString($FatherDrvType))")
+        }
+
+        if ($clauses.Count -gt 0) {
+            $resource += "?filter=$($clauses -join ' and ')"
+        }
     }
 
     $response = Invoke-DeviceManager -WebSession $session -Method "GET" -Resource $resource | Select-DMResponseData

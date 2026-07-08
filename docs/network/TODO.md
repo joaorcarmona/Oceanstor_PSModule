@@ -36,6 +36,18 @@
     test-owned member type exists.
   - VLAN idle-port guard design documented in
     [safety-and-live-validation.md](safety-and-live-validation.md).
+- Phase 05 (2026-07-08) network carry-over:
+  - `Get-DMLif` filter parameters `-Ipv4Addr` / `-Ipv6Addr` / `-HomePortId`
+    (documented `IPV4ADDR` / `IPV6ADDR` / `HOMEPORTID` fields) and `Get-DMvLan`
+    filter parameters `-Tag` / `-FatherDrvType` (documented `TAG` /
+    `fatherDrvType` fields). All sent server-side, AND-composed with `-Name`,
+    unit-tested in `Get-Network.Tests.ps1`.
+  - VLAN idle-port guard **implemented and unit-tested** as private helper
+    `Get-DMVlanParentPortStatus` (read-only; returns Idle/InUse/Unknown, treats
+    unknown as unsafe; tests in
+    `Tests/Unit/Private/Get-DMVlanParentPortStatus.Tests.ps1`). Gate
+    `Network.AllowVlanLifecycle` defined in `IntegrityValidationConfig.psd1`,
+    **default off**. No live VLAN validation run.
 - Bond port lifecycle: `New/Set/Remove-DMPortBond`.
 - VLAN port lifecycle: `New/Set/Remove-DMvLan`.
 - Logical port (LIF) lifecycle: `New/Set/Remove-DMLif`.
@@ -67,13 +79,11 @@
 
 ## Medium Priority
 
-- Expose the remaining documented filter fields as parameters:
-  `Get-DMLif` (`IPV4ADDR`, `IPV6ADDR`, `HOMEPORTID`) and `Get-DMvLan`
-  (`TAG`, `fatherDrvType`).
 - Live member add/remove step in the failover-group workflow — **blocked**:
   members are Ethernet ports / bond ports / VLANs (REST `ASSOCIATEOBJTYPE`
-  213/235/280, not LIFs), and the harness owns no such object. Requires the
-  test-owned VLAN workflow with the idle-port guard first.
+  213/235/280, not LIFs), and the harness owns no such object. The idle-port
+  guard now exists (`Get-DMVlanParentPortStatus`), but a live test-owned VLAN
+  workflow that produces such a member must run first — still deferred.
 
 ## Deferred (with reason)
 
@@ -85,10 +95,12 @@
 - `Get-DMFailoverGroupMember` via a single `failovergroup/associate` GET —
   **no documented REST endpoint** (only POST/DELETE are documented); the
   implemented per-type association queries are the documented alternative.
-- VLAN live workflow — **requires idle-port guard** (design in
-  [safety-and-live-validation.md](safety-and-live-validation.md)); the guard
-  itself needs tests and a reviewed lab dry run before any
-  `Network.AllowVlanLifecycle` gate may exist.
+- VLAN live workflow — idle-port guard `Get-DMVlanParentPortStatus` is now
+  implemented and unit-tested, and the `Network.AllowVlanLifecycle` gate is
+  defined (**default off**). Still deferred: the live create/delete run needs a
+  reviewed lab dry run of the guard against real hardware and a verified-idle
+  parent port the harness owns. No live VLAN run was performed. Details in
+  [safety-and-live-validation.md](safety-and-live-validation.md).
 
 ## Low Priority / Polish
 
@@ -108,8 +120,10 @@
   failover-group workflow follows this pattern and stays off by default;
   `-RunMutatingTests` alone never runs it.
 - VLAN live workflow (create/delete a tagged child on a verified-idle port)
-  is possible in a dedicated lab but needs the documented idle-port detection
-  guard implemented and tested first.
+  is possible in a dedicated lab. The idle-port detection guard is now
+  implemented and unit-tested (`Get-DMVlanParentPortStatus`); the remaining
+  prerequisite is a human-reviewed lab dry run of the guard before any gated
+  live create/delete.
 
 ## Documentation
 

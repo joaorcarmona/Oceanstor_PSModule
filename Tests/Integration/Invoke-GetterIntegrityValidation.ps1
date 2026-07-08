@@ -86,6 +86,7 @@ $validationModule = New-Module -Name OceanstorLiveGetterValidation -ArgumentList
         'Get-DMApiErrorMessage.ps1',
         'Get-DMparsedElabel.ps1',
         'Get-DMPortGroupCandidate.ps1',
+        'Get-DMVlanParentPortStatus.ps1',
         'Import-DMPerformanceReportCsv.ps1',
         'Import-ReportTemplates.ps1',
         'Invoke-DeviceManager.ps1',

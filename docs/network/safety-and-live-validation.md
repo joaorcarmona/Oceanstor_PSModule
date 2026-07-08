@@ -126,32 +126,37 @@ Statuses:
 - `NotRequested` — runner invoked without `-RunMutatingTests`.
 - `Blocked` / `NotExecuted` — command has no workflow representation.
 
-## VLAN live workflow: idle-port guard design (not enabled)
+## VLAN live workflow: idle-port guard (implemented, workflow not enabled)
 
 A future VLAN live workflow (create/delete a tagged child interface on a
-verified-idle port) stays **disabled** until the following guard exists and is
-itself tested. Design:
+verified-idle port) stays **disabled**. The idle-port guard it depends on is
+now implemented and unit-tested as the private helper
+`Get-DMVlanParentPortStatus`; the live create/delete run remains deferred to a
+separate, supervised session.
 
-1. **Idle-port detection.** A candidate Ethernet port qualifies as idle only
-   if *all* of the following hold, gathered read-only in the same run:
-   - it hosts no LIF (`Get-DMLif` home/current port references), no VLAN
-     (`Get-DMvLan -Name`/`Port Id` inspection), and no bond membership
-     (`Get-DMPortBond` `Ethernet Ports`);
-   - it is not a member of any failover group
-     (`Get-DMFailoverGroupMember` across all groups);
-   - it is not a management port and carries no IP address
-     (`Get-DMPortETH` role/address fields);
-   - its running status is Link Down, **or** the operator has explicitly
-     listed the port ID in a dedicated config key (for example
-     `Network.VlanCandidatePortIds`) — never auto-picked when link is up.
-2. **Refusal behavior.** If any check fails, the workflow refuses the port and
-   reports `SkippedUnsafe` with the failing check; it never falls back to
-   another port on its own.
-3. **Evidence required before enabling.** The guard's checks must have unit
-   tests, a dry run against a lab array showing correct classification of
-   busy vs. idle ports, and a human-reviewed run log — only then may a
-   `Network.AllowVlanLifecycle` gate be introduced.
-4. **Why it stays disabled.** Creating a tagged child on a port that carries
+1. **Idle-port detection (implemented).** `Get-DMVlanParentPortStatus -PortId
+   <id>` inspects a candidate port read-only and returns a structured status
+   (`PortId`, `IsIdle`, `Status`, `Reasons`, `CheckedAssociations`). It reports
+   `InUse` if *any* association is found — a LIF homed on the port
+   (`Get-DMLif -HomePortId`), a VLAN parented on it (`Get-DMvLan` `Port Id`),
+   bond membership (`Get-DMPortBond` `Ethernet Ports`), or failover-group
+   membership (`Get-DMFailoverGroupMember` across all groups). It reports
+   `Status = Idle` (`IsIdle = $true`) **only** when every check completed and
+   found nothing.
+2. **Unknown is unsafe.** Any inspection failure yields `Status = Unknown`
+   (`IsIdle = $false`) with the error captured in `Reasons`; the guard never
+   reports `Idle` without positively confirming each checked association is
+   empty. Callers must treat both `InUse` and `Unknown` as "do not use".
+3. **Gate.** `Network.AllowVlanLifecycle` is defined in
+   `IntegrityValidationConfig.psd1` and defaults to `$false`. Enabling it alone
+   does nothing: a live VLAN workflow additionally requires a parent port the
+   guard positively confirms is `Idle`, and the harness owns no such port yet.
+4. **Evidence still required before a live run.** Unit tests for the guard now
+   exist (`Tests/Unit/Private/Get-DMVlanParentPortStatus.Tests.ps1`). A dry run
+   against a lab array classifying busy vs. idle ports and a human-reviewed run
+   log are still outstanding; only after those may the gated workflow be run
+   live. This phase performed **no** live VLAN validation.
+5. **Why it stays disabled.** Creating a tagged child on a port that carries
    traffic can disturb frames on the parent; misclassifying one busy port as
    idle is enough to sever data access. The guard must be provably refusing
-   non-idle ports before the workflow may exist.
+   non-idle ports against real hardware before the workflow may run live.

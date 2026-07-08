@@ -75,20 +75,24 @@ Remove-DMvLan -WebSession $storage -Id $vlan.Id
   `OceanStorvLan`). It narrows server-side: `-Name` sends the documented
   `filter=NAME` query (exact `::`, fuzzy `:` for simple leading/trailing `*`
   wildcards, always re-checked client-side) and `-Id` uses the documented
-  `vlan/{id}` single-object query.
+  `vlan/{id}` single-object query. `-Tag` and `-FatherDrvType` map to the
+  documented `TAG` and `fatherDrvType` filter fields; they are sent server-side
+  and compose with `-Name` and each other as AND-joined `filter=` clauses.
 - `New/Set/Remove-DMvLan` have unit tests in
   `Tests/Unit/Public/Network-Actions.Tests.ps1`, including
   no-API-call-under-`-WhatIf` regression cases. No live mutation workflow
-  exists — intentional until the idle-port guard described in
-  [safety-and-live-validation.md](safety-and-live-validation.md) is
-  implemented and itself tested.
+  runs yet: the idle-port guard it depends on
+  (`Get-DMVlanParentPortStatus`) is now implemented and unit-tested, and the
+  `Network.AllowVlanLifecycle` gate is defined but defaults off. The live
+  create/delete run stays deferred to a supervised session — see
+  [safety-and-live-validation.md](safety-and-live-validation.md).
 
 ## Known Gaps
 
 - `Set-DMvLan` exposes only MTU; name/description changes are not supported by
   the API for VLAN ports.
-- The `vlan` batch query also documents `TAG` and `fatherDrvType` filter
-  fields; only `NAME` is exposed as a parameter today.
+- Read filters `NAME`, `TAG` and `fatherDrvType` are all exposed as server-side
+  `filter=` parameters; no read-filter gap remains.
 
 ## Related Files
 
