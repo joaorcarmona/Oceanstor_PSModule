@@ -142,19 +142,41 @@
     objects and both ports back to `link down`/unbonded. No pre-existing
     object was touched at any point, and neither requested modification
     ever actually took effect on the array.
-    - **Root cause identified (NeedsInvestigation, not fixed as part of
-      this run):** `Set-DMLif` always issues `PUT lif` (the bare
-      collection resource, with `ID` and the resolved current `NAME`
-      embedded in the body) regardless of whether `-Id` is supplied.
-      Sibling mutators `Set-DMPortBond` and `Set-DMFailoverGroup` both PUT
-      to a path-scoped resource instead (`bond_port/{id}`,
-      `failovergroup/{id}`) whenever an Id is known. The array appears to
-      interpret `Set-DMLif`'s body-only PUT to the collection endpoint as
-      a name collision against the LIF's own existing name rather than a
-      scoped update. Likely fix: mirror the sibling pattern — `PUT
-      lif/{id}` when `-Id` is supplied, `PUT lif` only for the by-name
-      path — but this has not been applied; the module is unchanged
-      pending operator decision.
+    - **Root cause confirmed by live re-test 2026-07-09 (operator-supervised,
+      lab array 10.10.10.24) — the path-scoped-PUT hypothesis above was
+      investigated and disproven.** There is no `PUT lif/{id}` endpoint in
+      the Dorado 6.1.6 REST reference (unlike `bond_port`/`failovergroup`);
+      `NAME` is a documented mandatory field for every `PUT lif` call. Five
+      raw-body variants were tested against a test-owned VLAN+LIF pair (via
+      `Invoke-DeviceManager` called directly at module scope, bypassing
+      `Set-DMLif`'s non-terminating error handling so every outcome
+      surfaced), with full LIFO teardown and zero leftovers confirmed after
+      each run:
+
+      | Variant | Body sent | Result |
+      |---|---|---|
+      | A — `Set-DMLif -Id` (current behavior) | `ID`, `NAME`(current, auto-resolved), `IPV4GATEWAY` | `THROW` 1077948993 "The object name already exists" |
+      | B — raw PUT, NAME omitted | `ID`, `IPV4GATEWAY` | `THROW` 50331651 "The entered parameter is incorrect" |
+      | C — raw PUT, NAME resent unchanged | `ID`, `NAME`(current), `IPV4GATEWAY` | `THROW` 1077948993 "The object name already exists" |
+      | E — raw PUT, NAME set to a new distinct value | `ID`, `NAME`(new), `IPV4GATEWAY` | `THROW` 50331651 "The entered parameter is incorrect" |
+      | F — raw PUT, pure rename, no other field | `ID`, `NAME`(new) | **SUCCESS**, errorCode=0, read-back confirms new name |
+
+      Conclusion: on this firmware, `PUT lif` accepts a bare rename (`NAME`
+      changed, nothing else) but rejects combining `NAME` with any other
+      simultaneously-changing property, regardless of whether `NAME` is
+      omitted, unchanged, or newly different. This is an **array-firmware
+      self-collision/validation bug**, not a `Set-DMLif` implementation
+      defect — the current implementation already matches the documented
+      REST contract, and raw calls with an identical body shape reproduce
+      the same failure outside the module entirely. **No client-side PUT
+      body variant works around it**; there is no code fix to apply.
+      Remediation applied: `Get-DMApiErrorMessage.ps1` now attaches an
+      actionable hint to error 1077948993 pointing back to this finding, so
+      operators see an explanation instead of a raw Huawei code.
+      `Set-DMLif` itself is unchanged — its non-terminating error handling
+      is correct/by-design; callers must still read back after every call
+      (as the diagnostic runs above already do) since a caught API error
+      never implies partial application here.
 - `Get-DMFailoverGroupMember` via a single `failovergroup/associate` GET —
   **no documented REST endpoint** (only POST/DELETE are documented); the
   implemented per-type association queries are the documented alternative.
