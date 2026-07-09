@@ -28,8 +28,8 @@
 
 ## Low Priority / Polish
 
-- Add compact reporting examples for policy inventory.
-- Add a small glossary for SmartQoS API concepts.
+- _Done (Phase 07)._ Compact policy-inventory reporting example and a SmartQoS
+  glossary added to [smartqos.md](smartqos.md).
 
 ## Testing and Validation
 

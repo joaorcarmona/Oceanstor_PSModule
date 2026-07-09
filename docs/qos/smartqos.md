@@ -36,6 +36,37 @@ Set-DMQosPolicy -WebSession $storage -Name 'test_qos' -MaxIOPS 8000 -WhatIf
 Stop-DMQosPolicy -WebSession $storage -Name 'test_qos' -WhatIf
 ```
 
+## Compact Policy Inventory Report
+
+Read-only view of every policy with the fields most useful for an audit:
+
+```powershell
+Get-DMQosPolicy -WebSession $storage |
+    Select-Object Name, Id, Enabled, 'Running Status', MaxIOPS, MaxBandwidth |
+    Format-Table -AutoSize
+
+# Group by enforcement state to spot policies that are enabled but inactive
+Get-DMQosPolicy -WebSession $storage |
+    Group-Object 'Running Status' |
+    Select-Object Name, Count
+```
+
+## Glossary
+
+| Term | Meaning |
+|---|---|
+| Policy | A named SmartQoS object holding one or more limits and an optional schedule. |
+| Limit | An upper bound on `MaxIOPS` or `MaxBandwidth` (or a lower-bound service objective). |
+| Latency target | Optional maximum latency the policy tries to hold. |
+| Burst | Short-term allowance above the steady-state limit. |
+| Priority | Relative importance used when the array arbitrates contention. |
+| Enabled | Whether the policy is configured for enforcement (distinct from Running Status). |
+| Running Status | Live enforcement state: `Active` (enforcing) or `Inactive` (stopped). Changed by `Start-DMQosPolicy` / `Stop-DMQosPolicy`. |
+| Association | The link between a policy and a target object (LUN, LUN group, or file system). |
+| Schedule | The `StartTime` / `Duration` window during which the policy applies. |
+| Parent / child policy | A hierarchy where a child policy inherits or refines a parent's limits. |
+| vStore | The tenant scope a policy belongs to; used to query policies per tenant. |
+
 ## Safety Notes
 
 Do not test throttle values on production workloads. Prefer short test

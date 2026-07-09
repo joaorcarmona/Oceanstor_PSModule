@@ -104,16 +104,13 @@
 
 ## Low Priority / Polish
 
-- Friendly-name parameters instead of raw enums (`-BondPortType HostService`,
-  `-AssociateObjectType EthernetPort`) with back-compat for numeric values.
-  **(Code enhancement — not implemented.)** Phase 08 documented the current
-  raw-value behavior as deferred in [bond-ports.md](bond-ports.md) and
-  [vlans.md](vlans.md) so operators do not assume the aliases exist.
-- Decode more display fields on `OceanStorvLan` / `OceanStorPortBond`
-  (running status, MTU) the way `OceanStorFailoverGroup` does.
-  **(Code enhancement — not implemented.)** Phase 08 added display-field /
-  prefer-IDs notes to [bond-ports.md](bond-ports.md), [vlans.md](vlans.md), and
-  [logical-ports.md](logical-ports.md).
+- _Docs polish done (Phase 08)._ Raw-enum-vs-friendly-name behavior and the
+  display-field / prefer-IDs guidance are documented in
+  [bond-ports.md](bond-ports.md), [vlans.md](vlans.md), and
+  [logical-ports.md](logical-ports.md). The remaining friendly-name aliases
+  (`-BondPortType HostService`, `-AssociateObjectType EthernetPort`) and richer
+  `OceanStorvLan` / `OceanStorPortBond` display-field decoding are **code
+  enhancements** tracked in the code backlog, not docs-only items.
 
 ## Testing and Validation
 
@@ -139,9 +136,8 @@
 
 ## Future Feature Branches
 
-> Status: `open`, explicitly out of scope for
-> `todo/alpha-v1.0.0-post-merge-phase-06-network-hardening-and-workflows.md`
-> (no active phase targets these yet).
+> Status: `open`, not yet scheduled against any active phase. Tracked in the
+> current open-issues / remaining-open-todos planning set.
 
 - Routes and gateways (query/create/delete static routes) — not implemented.
 - iSCSI portal / CHAP configuration cmdlets.
