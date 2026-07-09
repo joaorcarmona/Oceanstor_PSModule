@@ -98,12 +98,26 @@
 - `Get-DMFailoverGroupMember` via a single `failovergroup/associate` GET —
   **no documented REST endpoint** (only POST/DELETE are documented); the
   implemented per-type association queries are the documented alternative.
-- VLAN live workflow — idle-port guard `Get-DMVlanParentPortStatus` is now
-  implemented and unit-tested, and the `Network.AllowVlanLifecycle` gate is
-  defined (**default off**). Still deferred: the live create/delete run needs a
-  reviewed lab dry run of the guard against real hardware and a verified-idle
-  parent port the harness owns. No live VLAN run was performed. Details in
-  [safety-and-live-validation.md](safety-and-live-validation.md).
+- VLAN live workflow — **validated 2026-07-09 in an operator-supervised
+  session.** With the operator explicitly designating two lab parent ports and
+  tag 123, `New-DMvLan` (PortType 1) created a run-owned VLAN on each
+  designated port (both read back `link up`), and `Remove-DMvLan` deleted both
+  strictly by captured ID; post-run checks confirmed zero tag-123 objects
+  remain and the ports' pre-existing VLAN objects were untouched. Two findings
+  for follow-up:
+  - Guard calibration: `Get-DMVlanParentPortStatus` reported `InUse` for
+    every ethernet port on the lab array because the built-in
+    `System-defined` failover group contains all ports, and the lab ports
+    already parent a production-style VLAN. As designed the guard can
+    therefore never green-light a port on such an array — the unattended
+    harness workflow stays `SkippedUnsafe`, and live VLAN runs remain
+    operator-designated-port sessions like this one (or the guard learns to
+    ignore the `System-defined` group and accept operator-supplied ports via
+    config).
+  - `Get-DMvLan` returns an empty `Tag` property for live VLANs (names embed
+    the tag, e.g. `<port>.123`); the class field mapping needs a look
+    (NeedsInvestigation).
+  Details in [safety-and-live-validation.md](safety-and-live-validation.md).
 
 ## Low Priority / Polish
 
