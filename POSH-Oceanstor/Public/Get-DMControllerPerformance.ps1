@@ -56,9 +56,9 @@ function Get-DMControllerPerformance {
             })]
         [ValidateScript({
                 $validNames = (Get-DMPerformanceIndicatorMap).Keys
-                foreach ($name in $_) {
-                    if ($name -notin $validNames) {
-                        throw "Unknown performance metric '$name'. Valid metrics: $($validNames -join ', ')"
+                foreach ($metricName in $_) {
+                    if ($metricName -notin $validNames) {
+                        throw "Unknown performance metric '$metricName'. Valid metrics: $($validNames -join ', ')"
                     }
                 }
                 return $true

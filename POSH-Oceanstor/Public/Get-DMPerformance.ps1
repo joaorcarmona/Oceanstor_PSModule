@@ -82,9 +82,9 @@ function Get-DMPerformance {
             })]
         [ValidateScript({
                 $validNames = (Get-DMPerformanceIndicatorMap).Keys
-                foreach ($name in $_) {
-                    if ($name -notin $validNames) {
-                        throw "Unknown performance metric '$name'. Valid metrics: $($validNames -join ', ')"
+                foreach ($metricName in $_) {
+                    if ($metricName -notin $validNames) {
+                        throw "Unknown performance metric '$metricName'. Valid metrics: $($validNames -join ', ')"
                     }
                 }
                 return $true
@@ -151,8 +151,8 @@ function Get-DMPerformance {
 
             $metrics = [ordered]@{}
             for ($i = 0; $i -lt $metricNames.Count; $i++) {
-                $name = $metricNames[$i]
-                $meta = $indicatorMap[$name]
+                $metricName = $metricNames[$i]
+                $meta = $indicatorMap[$metricName]
                 $pos = -1
                 for ($j = 0; $j -lt $responseIds.Count; $j++) {
                     if ("$($responseIds[$j])" -eq "$($meta.Id)") { $pos = $j; break }
@@ -172,7 +172,7 @@ function Get-DMPerformance {
                     }
                 }
 
-                $metrics[$name] = $raw
+                $metrics[$metricName] = $raw
             }
 
             $timestamp = [DateTimeOffset]::FromUnixTimeSeconds([long]$entry.timestamp).UtcDateTime
