@@ -176,7 +176,9 @@ function Invoke-MutationValidation {
         $mapLunName = New-TestName -Suffix 'maplun'
         $mapHostName = New-TestName -Suffix 'maphost'
         $mapHostGroupName = New-TestName -Suffix 'maphostgroup'
-        $hyperCdpScheduleName = New-TestName -Suffix 'hypercdp'
+        # HyperCDP schedule names are capped at 31 characters on live arrays;
+        # prefix(12) + '_' + runId(14) + '_' + 'cdp'(3) lands exactly on the cap.
+        $hyperCdpScheduleName = New-TestName -Suffix 'cdp'
         $hyperCdpScheduleId = $null
         $lunGroupContainsLun = $false
         $hyperCdpScheduleContainsLun = $false

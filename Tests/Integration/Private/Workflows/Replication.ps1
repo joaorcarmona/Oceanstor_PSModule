@@ -57,7 +57,7 @@ $script:ReplicationMutationWorkflow = {
             Assert-TestOwnedResource -Kind Lun -Identity $lunName
             New-DMReplicationPair -WebSession $session -LocalLunId $lunId -RemoteDeviceId $remoteDeviceId `
                 -RemoteLunId $remoteLunId -ReplicationMode Async -SynchronizationType Manual `
-                -RecoveryPolicy Manual -Speed Low -InitialSyncType WrittenData
+                -RecoveryPolicy Manual -Speed Low -InitialSyncType AllData
         })
         if ($replicationPair.Count -gt 0) {
             $replicationPairId = $replicationPair[0].Id

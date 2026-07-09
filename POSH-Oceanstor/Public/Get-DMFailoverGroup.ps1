@@ -60,6 +60,7 @@ function Get-DMFailoverGroup {
         $response = Invoke-DeviceManager -WebSession $session -Method 'GET' -Resource $resource | Select-DMResponseData
         $groups = New-Object System.Collections.ArrayList
         foreach ($group in @($response)) {
+            if ($null -eq $group) { continue }
             $groupObject = [OceanStorFailoverGroup]::new($group, $session)
             [void]$groups.Add($groupObject)
         }
