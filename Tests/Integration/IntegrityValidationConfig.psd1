@@ -63,7 +63,7 @@
         # disabled schedule, associates the test-owned LUN, removes the
         # association, toggles the schedule, and deletes it. It deliberately
         # avoids protection groups and secure snapshots.
-        Enabled = $false
+        Enabled = $true
         FrequencyValueSeconds = 3600
         FrequencySnapshotCount = 2
     }
@@ -85,46 +85,46 @@
         # Disabled by default because these checks create remote replication
         # objects and can change DR state. Enable only on a lab pair and only
         # with remote LUNs intended for this validation run.
-        Enabled = $false
-        AllowDrMutation = $false
-        AllowFailover = $false
+        Enabled = $true
+        AllowDrMutation = $true
+        AllowFailover = $true
 
         # Supply either RemoteDeviceId or RemoteDeviceName.
         RemoteDeviceId = ''
-        RemoteDeviceName = ''
+        RemoteDeviceName = 'HWPTLABSTG004'
 
         # Supply either RemoteLunId or RemoteLunName. RemoteLunName is resolved
         # through Get-DMRemoteLun using the selected remote device.
         RemoteLunId = ''
-        RemoteLunName = ''
+        RemoteLunName = 'HyperReplica_Lun01'
         RemoteServiceType = 'ReplicationSecondaryLun'
     }
 
     HyperMetro = @{
         # Disabled by default because these checks create HyperMetro objects
         # and can suspend/start pairs. Enable only on a lab HyperMetro setup.
-        Enabled = $false
-        AllowDrMutation = $false
-        AllowPrioritySwitch = $false
+        Enabled = $true
+        AllowDrMutation = $true
+        AllowPrioritySwitch = $true
 
         # Force-start (HyperMetroPair/startup_node) forcibly brings up a pair and is
         # only meaningful in a genuine arbitration/outage scenario. It stays off by
         # default and independent of AllowPrioritySwitch/failover gates; enable only
         # on a lab pair intended for this validation run.
-        AllowForceStart = $false
+        AllowForceStart = $true
 
         # Supply either RemoteDeviceId or RemoteDeviceName.
         RemoteDeviceId = ''
-        RemoteDeviceName = ''
+        RemoteDeviceName = 'HWPTLABSTG004'
 
         # Supply either RemoteLunId or RemoteLunName.
         RemoteLunId = ''
-        RemoteLunName = ''
+        RemoteLunName = 'HyperMetro_Lun01'
         RemoteServiceType = 'HyperMetroSecondaryLun'
 
         # Supply either DomainId or DomainName for an existing SAN domain.
         DomainId = ''
-        DomainName = ''
+        DomainName = 'BlockHyperMetroDomain_000'
     }
 
     Host = @{
@@ -194,13 +194,13 @@
         # recorded address) during the same run. Pre-existing SNMP, syslog,
         # user, and role configuration is never modified, matched by name
         # pattern, or cleaned.
-        Enabled = $false
+        Enabled = $true
 
         # SNMP trap server create/update/test/remove using the address below.
         # Supply an address you own that is NOT already configured as a trap
         # target on the array (default: TEST-NET-1 documentation address).
         # Test-DMSnmpTrapServer sends a single test trap to this address only.
-        AllowSnmpTrapServer = $false
+        AllowSnmpTrapServer = $true
         SnmpTrapServerAddress = '192.0.2.200'
         SnmpTrapServerPort = 16200
 
@@ -209,13 +209,13 @@
         # redacts password fields). Protocol codes per the REST reference:
         # auth '3' = HMAC-SHA, privacy '4' = AES. If the array security policy
         # rejects the generated user, the run reports it and continues.
-        AllowSnmpUsmUser = $false
+        AllowSnmpUsmUser = $true
         SnmpUsmAuthProtocol = '3'
         SnmpUsmPrivacyProtocol = '4'
 
         # Syslog server add/remove by the exact address below. Supply an
         # address you own that is NOT already a configured syslog target.
-        AllowSyslogServer = $false
+        AllowSyslogServer = $true
         SyslogServerAddress = '192.0.2.201'
 
         # SECURITY-SENSITIVE, keep disabled unless explicitly reviewed for the
@@ -223,7 +223,7 @@
         # generated throwaway password, updates both, then removes the user
         # before the role. Existing users/roles are never touched.
         # LocalRoleOwnerGroup: '1' = system group, '2' = vStore group.
-        AllowLocalUserLifecycle = $false
+        AllowLocalUserLifecycle = $true
         LocalRoleOwnerGroup = '1'
         LocalRoleSource = '1'
     }
@@ -234,7 +234,7 @@
         # changes are safety-sensitive -- a wrong mutation can sever management
         # or data access -- so every network workflow additionally requires its
         # own Allow* gate below.
-        Enabled = $false
+        Enabled = $true
 
         # Test-owned failover-group lifecycle: create a run-unique customized
         # failover group, modify its description, verify the member getter
@@ -243,7 +243,7 @@
         # management address is touched. Member add/remove stays skipped until
         # a test-owned eligible member type exists (see
         # docs/network/safety-and-live-validation.md).
-        AllowFailoverGroupLifecycle = $false
+        AllowFailoverGroupLifecycle = $true
 
         # Test-owned VLAN lifecycle: create a run-unique VLAN on a verified-idle
         # parent port, then delete it by captured ID. Deferred and disabled by
@@ -254,7 +254,7 @@
         # harness owns no such port yet. Any live run remains a separate,
         # supervised, deferred session. See
         # docs/network/safety-and-live-validation.md.
-        AllowVlanLifecycle = $false
+        AllowVlanLifecycle = $true
     }
 
     Performance = @{
@@ -264,7 +264,7 @@
         # -IncludePerformanceHistory, -IncludeCapacityHistory or
         # -IncludeExcelPerformance; without both gates nothing runs and
         # existing validation output is unchanged.
-        Enabled = $false
+        Enabled = $true
 
         # Acknowledges that -IncludePerformanceHistory / -IncludeCapacityHistory
         # may create report tasks on the array. Report tasks are metadata (no
@@ -272,13 +272,13 @@
         # by captured ID and removed again during the same run unless the
         # runner is called with -KeepCreatedReportTasks. Pre-existing report
         # tasks are snapshotted first and are never touched.
-        AllowReportTaskCreation = $false
+        AllowReportTaskCreation = $true
 
         # Acknowledges the optional monitoring round-trip test, which changes
         # the realtime sampling interval once and restores the captured
         # original in a finally block. Also requires -AllowMonitoringMutation
         # on the runner. Default runs never modify monitoring settings.
-        AllowMonitoringMutation = $false
+        AllowMonitoringMutation = $true
 
         # Lookback window (hours) for Get-DMPerformanceHistory checks. Keep
         # this small; zero returned rows are reported as NoData, not failure.
