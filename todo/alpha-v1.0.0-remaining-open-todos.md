@@ -61,11 +61,13 @@ markers: 86 TODO, 40 NOTE, 1 WIP, 2 UNIMPLEMENTED) cross-referenced against all 
   (2026-07-08).
 - Docs Phase 08 polish pass (block/network/QoS, lab-IP sanitization) — confirmed via commit
   `c79921a`.
-- The `release-readiness-go-no-go.md` top-level `NO-GO` header — **stale**, contradicted by its own
-  inline Phase 01 update (see Phase 01 of this plan).
+- The `release-readiness-go-no-go.md` top-level `NO-GO` header — **RESOLVED (Phase 01,
+  2026-07-09)**: refreshed to headline `Current hard-gate decision: GO`, original NO-GO evidence
+  preserved as a dated historical section.
 - Two dangling `post-merge-phase-06`/`post-merge-phase-08` references in
-  `Oceanstor_PSModule_TODO.md` and one more in `docs/network/TODO.md` — stale naming-scheme
-  leftovers, not real open work (see Phases 01 and 07).
+  `Oceanstor_PSModule_TODO.md` — **RESOLVED (Phase 01, 2026-07-09)**: repointed to
+  `docs/network/TODO.md` "Recently Completed" and `remaining-open-todos-phase-05`. One more
+  such leftover in `docs/network/TODO.md` remains for Phase 07.
 
 ## Release blockers
 

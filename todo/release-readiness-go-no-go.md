@@ -9,7 +9,26 @@ This phase implements nothing functional. It verifies, documents, and records a
 decision. Anything found broken is routed back to its owning phase below, not
 patched here.
 
-## Decision: **NO-GO** (as of this evidence run)
+## Current hard-gate decision: **GO** (as of the Phase 01 update, 2026-07-07)
+
+The release pipeline's hard gate now **passes**: `./Tests/Invoke-UnitTests.ps1
+-FailOnAnalyzerIssue -Output Normal` reports **0 Error-severity analyzer findings and
+1232/1232 tests passing** (see the Phase 01 update note below and §3a). This supersedes the
+original **NO-GO** evidence run recorded immediately after, which is preserved verbatim for
+traceability.
+
+Separately tracked, non-gating release-readiness items remain open and do **not** change this
+hard-gate decision:
+
+- Code-signing certificate sourcing/approval and the first supervised publish dry-run
+  (CI `SIGNING_ENABLED` / `PUBLISH_ENABLED` still default off) — tracked in Phase 02.
+- Supervised live-mutation validation of a few shipped mutators, including the
+  `Set-DMSnmpTrapServer` / `Test-DMSnmpTrapServer` `50331651` update-payload defect — tracked
+  in Phase 04 (create/remove already validated, so this is not a hard-gate blocker).
+
+---
+
+## Decision: **NO-GO** (original 2026-07-07 evidence run — SUPERSEDED, retained for history)
 
 The release pipeline's hard gate
 (`./Tests/Invoke-UnitTests.ps1 -FailOnAnalyzerIssue` in `.github/workflows/release.yml`,
@@ -278,6 +297,13 @@ find docs -iname "*validation*" -o -iname "*gap-analysis*"   → no matches
   recorded anywhere.
 
 ## 10. Recommendation
+
+> **SUPERSEDED (Phase 01, 2026-07-07):** items 1–3 below are **DONE** — the 2 SNMP USM
+> analyzer errors were cleared (§3a) and the 39 test failures resolved (0 errors / 0
+> failures, 1232/1232). The hard gate is now **GO** (see the top of this file). The
+> recommendation text below is retained as the original snapshot; only item 4 (tag as
+> `v1.0.0`, not `v1.0.0-alpha1`) and the separately tracked signing/publishing/live-mutation
+> items (Phases 02/04) remain.
 
 **Do not tag or publish v1.0.0-alpha1 yet.** Before the next go/no-go pass:
 1. Fix or explicitly accept the 2 `PSAvoidUsingUsernameAndPasswordParams` analyzer

@@ -142,8 +142,31 @@ alarms/events.
   `ConfirmImpact = 'High'`, permanently `SkippedUnsafe` in live validation.
 - Live tests must never replace or delete existing certificates.
 
-### 4. `Set-DMSnmpTrapServer` / `Test-DMSnmpTrapServer` reject update payload — API error 50331651 (found Phase 03, 2026-07-07)
+### 4. `Set-DMSnmpTrapServer` / `Test-DMSnmpTrapServer` reject update payload — API error 50331651 (found Phase 03, 2026-07-07 — **root cause identified + code/unit-test fix landed 2026-07-09; awaiting live re-confirm**)
 
+- **Root cause (static analysis, 2026-07-09):** confirmed against the in-repo
+  `OceanStor Dorado 6.1.6 REST Interface Reference.md`. Two independent body-field
+  omissions, both rejected as `50331651`:
+  - Modify (`PUT snmp_trap_addr/{id}`, §4.2.1.3.1) marks **`ID` as a Mandatory body
+    field** (the reference request example includes `"ID": "2"`), but
+    `Set-DMSnmpTrapServer` only sent the ID in the URL path.
+  - Send-test (`PUT snmp_trap_addr/send_test_trapmsg`, §4.2.1.5.x) marks
+    **`CMO_TRAP_SERVER_TYPE` and `CMO_TRAP_VERSION` as Mandatory**, but
+    `Test-DMSnmpTrapServer` sent them only when the caller supplied `-Type`/`-Version`.
+- **Fix (2026-07-09):** `Set-DMSnmpTrapServer` now always adds `$body.ID = $Id`;
+  `Test-DMSnmpTrapServer` now always sends `CMO_TRAP_SERVER_TYPE`/`CMO_TRAP_VERSION`,
+  defaulting to the REST-documented create defaults (type `3`/All, version `1`/SNMPv1)
+  when omitted. Mock-based unit tests added
+  (`Tests/Unit/Public/Set-DMSnmpTrapServer.Tests.ps1`,
+  `Tests/Unit/Public/Test-DMSnmpTrapServer.Tests.ps1`) asserting the corrected request
+  bodies. `ShouldProcess`/`-WhatIf` behavior on `Set` is unchanged and still covered.
+- **Still open — live re-confirm required (Phase 04):** a supervised lab run must verify
+  `50331651` no longer occurs against real firmware, using the existing test-owned
+  object / captured-ID cleanup pattern. Two items to watch on the live run: whether the
+  modify endpoint also requires `CMO_TRAP_SERVER_IP`/`CMO_TRAP_SERVER_PORT` on every
+  `PUT` (they are Mandatory per spec, so partial-field updates may need the caller to
+  re-supply them), and whether a defaulted test `VERSION`/`TYPE` produces a meaningful
+  test against an SNMPv3-configured address.
 - Surfaced by the first supervised SNMP-trap live run (see High Priority #1). On
   the lab array, `New-DMSnmpTrapServer` and `Remove-DMSnmpTrapServer` succeed,
   but `Set-DMSnmpTrapServer` (update) and `Test-DMSnmpTrapServer` (send test trap)

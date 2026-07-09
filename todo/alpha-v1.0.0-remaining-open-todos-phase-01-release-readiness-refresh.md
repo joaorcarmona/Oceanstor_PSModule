@@ -1,5 +1,18 @@
 # alpha-v1.0.0 Remaining Open TODOs Phase 01 — Release-Readiness Refresh and SNMP Trap Update Defect
 
+> **STATUS: DONE (2026-07-09).**
+> - Docs refresh — **complete**: `todo/release-readiness-go-no-go.md` now headlines
+>   `Current hard-gate decision: GO (Phase 01, 2026-07-07)` with the original NO-GO evidence
+>   preserved as a dated historical section; §10 Recommendation marked SUPERSEDED.
+> - Dangling refs — **complete**: no `post-merge-phase-*` references remain in
+>   `Oceanstor_PSModule_TODO.md` (network hardening → `docs/network/TODO.md` "Recently
+>   Completed"; coverage decisions → `remaining-open-todos-phase-05`).
+> - SNMP `50331651` defect — **root cause found from the in-repo REST reference and fixed in
+>   code + unit tests** (ahead of the original "later session" plan, since static evidence was
+>   conclusive): `Set-DMSnmpTrapServer` now sends `ID` in the modify body; `Test-DMSnmpTrapServer`
+>   now always sends the Mandatory `CMO_TRAP_SERVER_TYPE`/`CMO_TRAP_VERSION`. **Live re-confirm
+>   still owed** — tracked in `docs/system-management/TODO.md` item 4 and Phase 04.
+
 **Type:** Docs-only (status refresh) + Code+Tests (one defect fix, implemented in a later phase).
 **Live validation allowed:** No (this phase is planning/refresh only; the defect fix itself will
 need a live re-check in a future supervised session, out of scope here).

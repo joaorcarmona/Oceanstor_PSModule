@@ -18,6 +18,10 @@ function Set-DMSnmpTrapServer {
     }
 
     $body = @{} + $Property
+    # The modify interface (PUT snmp_trap_addr/{id}) requires the object ID in the
+    # request body as well as in the URL path; omitting it makes the array reject the
+    # payload with OceanStor API error 50331651 ("The entered parameter is incorrect").
+    $body.ID = $Id
     if ($Address) { $body.CMO_TRAP_SERVER_IP = $Address }
     if ($PSBoundParameters.ContainsKey('Port')) { $body.CMO_TRAP_SERVER_PORT = "$Port" }
     if ($User) { $body.CMO_TRAP_SERVER_USER = $User }
