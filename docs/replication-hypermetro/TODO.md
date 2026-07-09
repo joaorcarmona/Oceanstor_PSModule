@@ -65,6 +65,27 @@
     SNMP-trap surface. `Replication.*` and `HyperMetro.*` gates stayed **off**.
     Blocker unchanged: operator must supply the lab-pair IDs and review the config
     before a dedicated single-gate supervised run.
+  - **Status (2026-07-09, run ID 20260709033729): Attempted — Blocked on lab
+    resources; no DR object was created or mutated.**
+    - Replication: the configured remote LUN (`HyperReplica_Lun01`, remote
+      device `HWPTLABSTG004`) resolved correctly, but `New-DMReplicationPair`
+      failed with `1073749234` — a read-only check confirmed **every**
+      `HyperReplica_Lun00..09` remote LUN is already the secondary of a
+      pre-existing replication pair, so no free test-usable remote LUN exists.
+      All downstream pair/consistency-group steps correctly reported `Blocked`.
+      (A first attempt also surfaced that the workflow's hardcoded
+      `-InitialSyncType WrittenData` is rejected for non-snapshot volumes on
+      this build — error `1073749222`; the workflow now uses `AllData`.)
+    - HyperMetro: the configured remote LUN name `HyperMetro_Lun01` does not
+      exist on `HWPTLABSTG004` (verified read-only via `Get-DMRemoteLun`), so
+      `Verify:Get-DMRemoteLun:HyperMetro` failed and every pair step reported
+      `Blocked`. Nothing was created.
+    - Remaining blocker: an operator must create/designate a **free**,
+      test-dedicated remote LUN for each surface (and a HyperMetro domain
+      check) before a re-run. `HyperMetro.AllowDrMutation`,
+      `AllowPrioritySwitch`, and `AllowForceStart` were restored to `$false`
+      in the committed config per the safe-default guard tests; re-enable them
+      only for that supervised session.
 
 ## Medium Priority
 

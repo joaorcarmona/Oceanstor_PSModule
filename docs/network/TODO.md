@@ -68,14 +68,17 @@
 
 - Human-supervised, gated live run of the failover-group workflow, then
   record the run outcome here.
-  - **Status (Phase 03, 2026-07-07): Deferred — not run this session.** The
-    2026-07-07 supervised session used its single mutation gate for the
-    SystemManagement SNMP-trap surface (one-gate-per-session discipline), so
-    `Network.Enabled` + `AllowFailoverGroupLifecycle` stayed **off**. Workflow,
-    gate, and captured-ID cleanup are verified in place
-    (`Tests/Integration/Private/Workflows/FailoverGroup.ps1`); this needs its own
-    dedicated supervised session. Blocker: operator scheduling of a separate
-    single-gate run against a non-production lab.
+  - **Status (2026-07-09): Passed — live run completed.** With
+    `Network.Enabled` + `AllowFailoverGroupLifecycle` on, the lab run
+    (run ID 20260709033729) exercised the full lifecycle on a test-owned
+    group: `New-DMFailoverGroup`, read-back, `Set-DMFailoverGroup`,
+    read-back, `Get-DMFailoverGroupMember` (zero members), and
+    `Remove-DMFailoverGroup` by captured ID — all `Passed`, no leftovers.
+    Member add/remove stayed `SkippedUnsafe` by design (see Medium
+    Priority). The first attempt exposed a `Get-DMFailoverGroup -Name`
+    bug (a `$null` REST response materialized one phantom object, so the
+    pre-create ownership guard misfired); fixed with the standard
+    null-guard in the response loop and covered by existing unit tests.
 
 ## Medium Priority
 

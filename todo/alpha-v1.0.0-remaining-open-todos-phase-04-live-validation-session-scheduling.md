@@ -87,6 +87,30 @@ Each session must: enable exactly one gate, use a test-owned object with capture
 record the outcome in the relevant domain `TODO.md` afterward (status + date, per the existing
 "Status (Phase NN, date): ..." convention already used in these files).
 
+### Update (2026-07-09 live sweep, run ID 20260709033729)
+
+A supervised sweep with the gates enabled in config executed items 1–5 and 7; the harness
+sequenced one workflow surface at a time. Outcomes (details in each domain `TODO.md`):
+
+1. `AllowSyslogServer` — **Failed / NeedsInvestigation** (`syslog_addip` rejects IP-only body,
+   `50331651`; nothing created).
+2. `AllowSnmpUsmUser` — **Passed** end-to-end, cleanup by captured ID.
+3. `AllowLocalUserLifecycle` — **Blocked** by `New-DMRole` `50331651` (role likely requires a
+   `permitList`); user steps safely skipped.
+4. SNMP trap-server re-check — **partially resolved**: `Test-DMSnmpTrapServer` now Passed;
+   `Set-DMSnmpTrapServer` fails with a new `1077949001` timeout (NeedsInvestigation).
+5. Failover-group workflow — **Passed** end-to-end (after fixing a `Get-DMFailoverGroup -Name`
+   null-response bug found live).
+6. VLAN live workflow — **not run**, still `SkippedUnsafe`: the idle-port guard positively
+   confirmed no harness-owned idle port exists; remains deferred by design.
+7. Replication/HyperMetro lab-pair workflow — **Blocked on lab resources**: every
+   `HyperReplica_Lun0x` remote LUN is already a secondary of a pre-existing pair, and
+   `HyperMetro_Lun01` does not exist on the remote device. No DR object created or mutated.
+   HyperMetro `AllowDrMutation`/`AllowPrioritySwitch`/`AllowForceStart` restored to `$false` in
+   committed config per the safe-default guard tests.
+8. Dual-array NAS lab workflow — unchanged, deferred (lab topology).
+9. Failover/switchover exercise window — unchanged, deferred (blocked by item 7's resources).
+
 ## Files likely to inspect
 
 - `docs/network/TODO.md`, `docs/replication-hypermetro/TODO.md`, `docs/system-management/TODO.md`

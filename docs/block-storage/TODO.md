@@ -63,6 +63,14 @@
   `LunGroup.Enabled`, `Host.Enabled`, `Mapping.Enabled`,
   `Initiators.Enabled`, `Protection.Enabled`, and
   `HyperCDPSchedule.Enabled`.
+- Live validation 2026-07-09 (run ID 20260709033729): the HyperCDP schedule
+  lifecycle passed end-to-end on a test-owned schedule (create, get by
+  ID/name, set, LUN associate/dissociate, enable/disable, remove by captured
+  ID). Two harness fixes were required: the HyperCDP private helpers were
+  missing from the integrity runner's dot-source whitelist (live-only
+  failure), and the generated schedule name exceeded the array's 31-character
+  cap (suffix shortened to `cdp`). The storage-pool rename round-trip also
+  passed live with the original name verified restored.
 
 ## Documentation
 

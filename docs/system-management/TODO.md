@@ -114,10 +114,25 @@ alarms/events.
   - **Outcome: create + registered cleanup *Validated*; update/test-trap is a
     defect (`50331651`) — tracked as High Priority #4 below and routed to the
     owning SystemManagement domain (Phase 04 cmdlet/workflow), not Phase 03.**
-- Remaining live runs (still separately scheduled, human-supervised, one gate at a
-  time): `AllowSnmpUsmUser`, `AllowSyslogServer`, and — only under an explicit
-  reviewed decision — `AllowLocalUserLifecycle`. Runbook:
-  `docs/testing/system-management-integrity-tests.md`.
+- **Remaining live runs executed 2026-07-09 (lab array, run ID 20260709033729,
+  all `SystemManagement` gates enabled in config; no leftovers, no pre-existing
+  SNMP/syslog/user/role object touched):**
+  - `AllowSnmpUsmUser` — **Passed end-to-end**: `New-DMSnmpUsmUser`, read-back,
+    `Set-DMSnmpUsmUser`, read-back, and `Remove-DMSnmpUsmUser` by captured ID all
+    green on a run-unique user with generated throwaway secrets.
+  - `AllowSyslogServer` — **Failed / NeedsInvestigation**: `POST syslog_addip`
+    with body `{CMO_SYSLOG_SERVER_IP: <test-owned address>}` rejected by this
+    6.1.6 build with `50331651 The entered parameter is incorrect`.
+    `Add-DMSyslogServer` sends only the IP (its documented contract), so this
+    build likely demands additional mandatory fields; needs the vendor REST
+    reference before any payload change. Nothing created; `Remove-DMSyslogServer`
+    correctly reported `Blocked`.
+  - `AllowLocalUserLifecycle` — **Blocked by `New-DMRole` / NeedsInvestigation**:
+    `POST role` with `{name, description, roleOwnerGroup, roleSource}` fails with
+    `50331651`. Every existing role returned by `GET role` carries a `permitList`,
+    so role creation likely requires at least one permission entry, which
+    `New-DMRole` does not expose. Dependent user steps correctly skipped; nothing
+    created, and the connected session was never at lockout risk.
 
 ### 2. Certificate management — Stage A done (Phase 05), Stage B deferred
 
@@ -160,13 +175,20 @@ alarms/events.
   (`Tests/Unit/Public/Set-DMSnmpTrapServer.Tests.ps1`,
   `Tests/Unit/Public/Test-DMSnmpTrapServer.Tests.ps1`) asserting the corrected request
   bodies. `ShouldProcess`/`-WhatIf` behavior on `Set` is unchanged and still covered.
-- **Still open — live re-confirm required (Phase 04):** a supervised lab run must verify
-  `50331651` no longer occurs against real firmware, using the existing test-owned
-  object / captured-ID cleanup pattern. Two items to watch on the live run: whether the
-  modify endpoint also requires `CMO_TRAP_SERVER_IP`/`CMO_TRAP_SERVER_PORT` on every
-  `PUT` (they are Mandatory per spec, so partial-field updates may need the caller to
-  re-supply them), and whether a defaulted test `VERSION`/`TYPE` produces a meaningful
-  test against an SNMPv3-configured address.
+- **Live re-confirm (2026-07-09, run ID 20260709033729): partially resolved.**
+  `Test-DMSnmpTrapServer` now **Passed** live — `50331651` is gone and the test
+  trap sends against the test-owned address; that half of the defect is closed.
+  `Set-DMSnmpTrapServer` no longer returns `50331651` either, but now fails with
+  `OceanStor API error 1077949001: The message has timed out` (PUT took ~50 s,
+  read-back shows the port unchanged). Two candidate causes, unresolved
+  (`NeedsInvestigation`): (a) the mutation trace shows the PUT body carries only
+  `ID` + `CMO_TRAP_SERVER_PORT`, while the spec marks
+  `CMO_TRAP_SERVER_IP`/`PORT` Mandatory on every `PUT` — the array may stall on
+  a partial-field update; (b) the test-owned trap target is the unreachable
+  TEST-NET-1 documentation address, and the array may probe it during modify.
+  Next step: have `Set-DMSnmpTrapServer` re-supply the full mandatory field set
+  (read-modify-write), then live re-confirm. Cleanup by captured ID succeeded;
+  no leftovers.
 - Surfaced by the first supervised SNMP-trap live run (see High Priority #1). On
   the lab array, `New-DMSnmpTrapServer` and `Remove-DMSnmpTrapServer` succeed,
   but `Set-DMSnmpTrapServer` (update) and `Test-DMSnmpTrapServer` (send test trap)
