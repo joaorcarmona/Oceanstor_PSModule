@@ -121,6 +121,40 @@
     the `Tag`/`Port List` gaps): `OceanStorLIF` exposes the name only as
     `LIF Name` (no `Name` property, unlike sibling classes), and the LIF
     `Role` decode table renders replication (code 4) as an empty string.
+  - **Repeat run 2026-07-09, operator-supervised, with two in-place
+    `Set-DMLif` modifications requested before teardown:** same bond +
+    VLAN(123-126) + LIF(mgmt/service/replication/mgmt+service) stack
+    recreated and validated identically to the baseline run above (same
+    replication role-decode gap observed again). The operator then
+    requested two live modifications on already-validated LIFs, still
+    before teardown: add `IPv4Gateway 10.124.10.254` to the LIF at
+    `10.124.10.1`, and change the `IPv4Address` of the LIF at
+    `10.123.10.1` to `10.123.10.100`. **Both `Set-DMLif` calls failed
+    silently**: the array returned OceanStor error `1077948993` ("The
+    object name already exists") for each, but `Set-DMLif` treats API
+    failures as non-terminating (`catch { $PSCmdlet.WriteError($_) }`), so
+    neither call threw and a naive caller would see apparent success. A
+    post-modify read-back (added specifically to guard this step) caught
+    the discrepancy — gateway still empty, IP unchanged — and the script
+    aborted before teardown; teardown itself ran unconditionally from a
+    `finally` block and completed normally (LIFs 126→125→124→123, VLANs
+    126→125→124→123, then the bond, all by captured ID), leaving zero test
+    objects and both ports back to `link down`/unbonded. No pre-existing
+    object was touched at any point, and neither requested modification
+    ever actually took effect on the array.
+    - **Root cause identified (NeedsInvestigation, not fixed as part of
+      this run):** `Set-DMLif` always issues `PUT lif` (the bare
+      collection resource, with `ID` and the resolved current `NAME`
+      embedded in the body) regardless of whether `-Id` is supplied.
+      Sibling mutators `Set-DMPortBond` and `Set-DMFailoverGroup` both PUT
+      to a path-scoped resource instead (`bond_port/{id}`,
+      `failovergroup/{id}`) whenever an Id is known. The array appears to
+      interpret `Set-DMLif`'s body-only PUT to the collection endpoint as
+      a name collision against the LIF's own existing name rather than a
+      scoped update. Likely fix: mirror the sibling pattern — `PUT
+      lif/{id}` when `-Id` is supplied, `PUT lif` only for the by-name
+      path — but this has not been applied; the module is unchanged
+      pending operator decision.
 - `Get-DMFailoverGroupMember` via a single `failovergroup/associate` GET —
   **no documented REST endpoint** (only POST/DELETE are documented); the
   implemented per-type association queries are the documented alternative.
