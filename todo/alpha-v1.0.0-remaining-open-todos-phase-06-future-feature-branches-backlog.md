@@ -97,9 +97,10 @@ None — this is a consolidation-only phase. Future work:
 - LDAP/AD authentication implementation (research note exists;
   `docs/system-management/ldap-ad-smtp-alerting-research.md`)
 - Email/SMTP alerting implementation (same research note)
-- Alarm/event lifecycle enhancements beyond `Get-DMAlarmHistory` (alarm acknowledge/clear — see
-  Phase 05 for why these are deferred rather than simply "future," since they have specific safety
-  blockers, not just scope-out-for-alpha status)
+- Alarm/event lifecycle enhancements beyond `Get-DMAlarmHistory`. Note these are deferred with
+  specific safety blockers rather than simply "future" (see Phase 05): **alarm acknowledge** has no
+  documented endpoint (rejected), and **alarm clear** already ships as the `Clear-DMAlarm` cmdlet —
+  only its *live validation* is deferred pending a safe test-alarm generator.
 
 ## Files likely to inspect
 
