@@ -36,7 +36,7 @@ function Export-DMInventory {
 
 	.LINK
 	#>
-    [Cmdletbinding()]
+    [Cmdletbinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0, Mandatory = $true, ParameterSetName = "NewConnection")]
         [String]$Hostname,
@@ -87,5 +87,7 @@ function Export-DMInventory {
         $Inventory.Rows.Add($InventoryRow)
     }
 
-    Export-Excel $ReportFile -AutoSize -TableName Inventory -InputObject $inventory -WorksheetName "Inventory"
+    if ($PSCmdlet.ShouldProcess($ReportFile, 'Export inventory report')) {
+        Export-Excel $ReportFile -AutoSize -TableName Inventory -InputObject $inventory -WorksheetName "Inventory"
+    }
 }

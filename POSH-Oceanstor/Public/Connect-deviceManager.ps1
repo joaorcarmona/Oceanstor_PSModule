@@ -50,7 +50,7 @@
 	.LINK
 	#>
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
-    [Cmdletbinding(DefaultParameterSetName = 'Prompt')]
+    [Cmdletbinding(DefaultParameterSetName = 'Prompt', SupportsShouldProcess = $true, ConfirmImpact = 'Low')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0, Mandatory = $true)]
         [String]$Hostname,
@@ -81,6 +81,10 @@
 
     $username = $credentials.GetNetworkCredential().UserName
     $password = $credentials.GetNetworkCredential().Password
+
+    if (-not $PSCmdlet.ShouldProcess($Hostname, 'Connect to OceanStor array')) {
+        return
+    }
 
     $body = @{username = $username;
         password       = $password;

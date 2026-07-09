@@ -45,7 +45,7 @@ function Disconnect-deviceManager {
 
     .LINK
     #>
-    [Cmdletbinding()]
+    [Cmdletbinding(SupportsShouldProcess = $true, ConfirmImpact = 'Low')]
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Mandatory = $false)]
         [pscustomobject]$WebSession
@@ -63,6 +63,10 @@ function Disconnect-deviceManager {
 
     if (-not $session) {
         throw "No active OceanStor session. Supply -WebSession or connect first with Connect-deviceManager."
+    }
+
+    if (-not $PSCmdlet.ShouldProcess($session.Hostname, 'Disconnect OceanStor session')) {
+        return
     }
 
     $response = Invoke-DeviceManager -WebSession $session -Method "DELETE" -Resource "sessions"

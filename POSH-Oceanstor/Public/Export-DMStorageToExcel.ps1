@@ -43,7 +43,7 @@ function Export-DMStorageToExcel {
 
 	.LINK
 	#>
-    [Cmdletbinding()]
+    [Cmdletbinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param(
         [Parameter(ValueFromPipeline = $false,
             ValueFromPipelineByPropertyName = $false,
@@ -64,6 +64,10 @@ function Export-DMStorageToExcel {
         [ValidateRange(0, [int]::MaxValue)]
         [int]$PerformanceLunLimit = $script:DMPerformanceExcelDefaultLunLimit
     )
+
+    if (-not $PSCmdlet.ShouldProcess($ReportFile, 'Export storage configuration report')) {
+        return
+    }
 
     if ($hostname -ne "") {
         $storage = Export-DeviceManager -Hostname $Hostname

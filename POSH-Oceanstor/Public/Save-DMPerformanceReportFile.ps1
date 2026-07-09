@@ -41,7 +41,7 @@ function Save-DMPerformanceReportFile {
     .NOTES
         Filename: Save-DMPerformanceReportFile.ps1
     #>
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     [OutputType([System.IO.FileInfo])]
     param(
         [Parameter(ValueFromPipelineByPropertyName = $true)]
@@ -69,7 +69,9 @@ function Save-DMPerformanceReportFile {
 
             $session = if ($WebSession) { $WebSession } else { $script:CurrentOceanstorSession }
 
-            return Save-DMDeviceManagerFile -WebSession $session -Resource "pms/report_task/file?log_id=$LogId&task_id=$TaskId" -OutFile $Path -ApiV2
+            if ($PSCmdlet.ShouldProcess($Path, 'Save performance report file')) {
+                return Save-DMDeviceManagerFile -WebSession $session -Resource "pms/report_task/file?log_id=$LogId&task_id=$TaskId" -OutFile $Path -ApiV2
+            }
         }
         catch {
             $PSCmdlet.WriteError($_)
