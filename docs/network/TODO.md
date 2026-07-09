@@ -95,6 +95,16 @@
   `MSGRETURNTYPE` and `USEDTYPE`; no `PORTIDLIST`/member operation exists in
   the Dorado 6.1.6 reference (verified 2026-07-07). Do not send speculative
   bodies; revisit when Huawei documents one.
+  - Bond **create/remove** (members fixed at creation) is validated live as of
+    2026-07-09: in an operator-supervised session on two designated free
+    front-end ports (link down, `host port/service port`, no LIF/VLAN/bond
+    association), `New-DMPortBond -PortIdList` created a run-owned bond
+    (read back `link down`/`normal`), `New-DMvLan -PortType 7` created VLAN
+    123 on that bond, and teardown ran in inverse order — VLAN removed by
+    captured ID, then the bond — leaving zero test objects and both member
+    ports unchanged. Follow-up finding: the `Get-DMPortBond` read-back shows
+    an empty `Port List` property (same class field-mapping gap as the empty
+    `Get-DMvLan` `Tag`; NeedsInvestigation).
 - `Get-DMFailoverGroupMember` via a single `failovergroup/associate` GET —
   **no documented REST endpoint** (only POST/DELETE are documented); the
   implemented per-type association queries are the documented alternative.
