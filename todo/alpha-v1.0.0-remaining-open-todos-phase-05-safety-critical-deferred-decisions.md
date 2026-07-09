@@ -20,7 +20,9 @@ mistakenly re-attempted without their blocker being resolved first.
   procedure. Also: LDAP/AD/Email/SMTP/local-login-password-policy — research-only, no dedicated
   endpoint found for password policy; research note exists at
   `docs/system-management/ldap-ad-smtp-alerting-research.md`. Alarm acknowledge — not planned, no
-  endpoint documented. Alarm clear — deferred, no safe test-alarm generator exists.
+  endpoint documented. Alarm clear — `Clear-DMAlarm` cmdlet implemented (commit `f48845b`,
+  `-WhatIf`/`ConfirmImpact = High`, clears by captured sequence only); **live validation** still
+  deferred — no safe test-alarm generator exists.
 - `docs/block-storage/TODO.md` — storage-pool `Set` (description/threshold/container) and
   create/delete/resize deferred, blocked on per-generation lab confirmation (V3 vs V6 LUN classes;
   only Dorado 6.1.6 reference available on-branch).
@@ -34,7 +36,11 @@ mistakenly re-attempted without their blocker being resolved first.
 
 - No commits since these items were documented have added an `Import-DMCertificate`,
   `Export-DMCertificate`, `Remove-DMCertificate`, storage-pool `Set`/create/delete/resize, bond
-  member add/remove, DR batch, or alarm-clear cmdlet.
+  member add/remove, or DR batch cmdlet.
+- **Exception (alarm clear):** the `Clear-DMAlarm` cmdlet *was* added (commit `f48845b`, exported in
+  the module manifest) with `-WhatIf`/`ConfirmImpact = High` guards and clear-by-sequence semantics.
+  Its implementation is not the deferred item — **live validation** of alarm clear stays deferred
+  because no safe test-alarm generator exists to produce a test-owned alarm to clear.
 - `docs/system-management/ldap-ad-smtp-alerting-research.md` exists (confirmed via directory
   listing) and remains research-only — no `Connect-DM*Ldap`/`Send-DMAlert`-style cmdlet exists in
   `POSH-Oceanstor/Public/`.
@@ -53,7 +59,7 @@ item (see table).
 | Bond member add/remove | No documented REST endpoint | Medium — speculative body could misconfigure networking |
 | DR batch operations | No documented REST endpoint | Medium — batch multiplies blast radius |
 | Alarm acknowledge | No endpoint documented | Low — feature simply not possible today |
-| Alarm clear | No safe test-alarm generator | Medium — could suppress real alarms if done carelessly |
+| Alarm clear (live validation) | Cmdlet implemented; no safe test-alarm generator to validate against | Medium — could suppress real alarms if exercised carelessly |
 | LDAP/AD/Email/SMTP/password-policy | Research-only, no implementation phase yet | Low — nothing implemented to carry risk yet |
 
 ## Scope
@@ -80,8 +86,10 @@ task list. Future re-evaluation triggers:
    confirmation that Dorado 6.1.6 behavior applies uniformly) is available.
 3. Bond member add/remove — re-open only with a confirmed REST reference section.
 4. DR batch operations — re-open only with a confirmed REST reference section.
-5. Alarm clear — re-open once a safe test-alarm generator (or equivalent test-owned alarm object)
-   exists.
+5. Alarm clear — cmdlet (`Clear-DMAlarm`) already implemented; only **live validation** stays
+   deferred. Re-open the live exercise once a safe test-alarm generator (or equivalent test-owned
+   alarm object) exists — exercise against a captured test-alarm sequence only, never pre-existing
+   alarms.
 6. Alarm acknowledge — no re-open trigger known; effectively rejected until Huawei documents an
    endpoint.
 7. LDAP/AD/Email/SMTP/password-policy — re-open as a future feature branch (tracked in Phase 06)

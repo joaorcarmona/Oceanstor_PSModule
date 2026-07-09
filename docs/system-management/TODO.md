@@ -206,15 +206,17 @@ Researched against the OceanStor Dorado 6.1.6 REST Interface Reference:
   acknowledge/confirm endpoint — `confirmTime` appears only as a read-only
   field on `alarm/currentalarm` query results. There is nothing safe to
   implement against.
-- **Alarm clear: future feature branch, safe only for test-generated
-  alarms.** The endpoint is documented (`DELETE alarm/currentalarm?
-  sequence=<sn>`, section 4.2.2.5.1) but clearing removes the alarm record,
-  which is destructive on any real alarm. The integrity harness has no safe,
-  deterministic way to *generate* a test alarm today, so no `Clear-DMAlarm`
-  cmdlet or workflow is implemented in Phase 04. If an alarm/event feature
-  branch later adds a reliable test-alarm generator, clear may be exercised
-  against that test-generated alarm's captured sequence number only — never
-  against pre-existing alarms.
+- **Alarm clear: cmdlet implemented, live validation still deferred.** The
+  endpoint is documented (`DELETE alarm/currentalarm?sequence=<sn>`, section
+  4.2.2.5.1) but clearing removes the alarm record, which is destructive on any
+  real alarm. As of Phase 04 no cmdlet existed; the `Clear-DMAlarm` cmdlet was
+  subsequently implemented (commit `f48845b`) with `-WhatIf`/`ConfirmImpact =
+  High` guards, clearing by captured sequence number only. **Live validation
+  remains deferred**: the integrity harness still has no safe, deterministic way
+  to *generate* a test alarm, so `Clear-DMAlarm` must not be exercised live yet.
+  If an alarm/event feature branch later adds a reliable test-alarm generator,
+  clear may be exercised against that test-generated alarm's captured sequence
+  number only — never against pre-existing alarms.
 - **Event query: implemented read-only in Phase 07 (2026-07-08).** Historical
   alarms/events are queried via `GET alarm/historyalarm` (section 4.2.2.4.7)
   through the dedicated cmdlet **`Get-DMAlarmHistory`**. Naming decision: a
