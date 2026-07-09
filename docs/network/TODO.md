@@ -105,6 +105,22 @@
     ports unchanged. Follow-up finding: the `Get-DMPortBond` read-back shows
     an empty `Port List` property (same class field-mapping gap as the empty
     `Get-DMvLan` `Tag`; NeedsInvestigation).
+  - **Full network stack validated live 2026-07-09 (operator-supervised):**
+    bond on the two designated link-down front-end ports → VLANs
+    123/124/125/126 on the bond (`New-DMvLan -PortType 7`) → four LIFs
+    (`New-DMLif -HomePortType 8`, one per VLAN) with roles management (1),
+    service (2), replication (4), and management+service (3), each with a
+    run-unique `10.12x.10.1/24` address. All read-backs correct (role, IP,
+    mask, home VLAN), then everything deleted in exact reverse creation
+    order (LIFs → VLANs 126..123 → bond) by captured ID; post-run checks
+    showed zero test objects and unchanged ports/pre-existing VLANs.
+    Dependency ordering was also negatively confirmed: the array refuses
+    `Remove-DMvLan` while a LIF exists on the VLAN (`1073813505`) and
+    `Remove-DMPortBond` while VLANs exist on the bond (`1073801985`).
+    New class field-mapping findings (NeedsInvestigation, same family as
+    the `Tag`/`Port List` gaps): `OceanStorLIF` exposes the name only as
+    `LIF Name` (no `Name` property, unlike sibling classes), and the LIF
+    `Role` decode table renders replication (code 4) as an empty string.
 - `Get-DMFailoverGroupMember` via a single `failovergroup/associate` GET —
   **no documented REST endpoint** (only POST/DELETE are documented); the
   implemented per-type association queries are the documented alternative.
