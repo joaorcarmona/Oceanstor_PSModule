@@ -1,4 +1,4 @@
-function Get-DMCertificate {
+﻿function Get-DMCertificate {
     <#
     .SYNOPSIS
         Gets the Huawei OceanStor certificate inventory (read-only).

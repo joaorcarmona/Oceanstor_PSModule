@@ -1,5 +1,6 @@
 function ConvertTo-DMRequestBody {
     [CmdletBinding()]
+    [OutputType([hashtable])]
     param(
         [Parameter(Mandatory)]
         [System.Collections.IDictionary]$BoundParameters,

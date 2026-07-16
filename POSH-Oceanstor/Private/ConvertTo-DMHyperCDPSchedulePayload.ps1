@@ -1,5 +1,6 @@
 function ConvertTo-DMHyperCDPSchedulePayload {
     [CmdletBinding()]
+    [OutputType([hashtable])]
     param(
         [string]$Name,
         [string]$Description,

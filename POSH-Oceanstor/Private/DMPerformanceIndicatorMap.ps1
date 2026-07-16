@@ -12,7 +12,7 @@ function Get-DMPerformanceIndicatorMap {
         are only exposed with the Us suffix because their live unit is unconfirmed.
     #>
     [CmdletBinding()]
-    [OutputType([hashtable])]
+    [OutputType([System.Collections.Specialized.OrderedDictionary])]
     param()
 
     return [ordered]@{

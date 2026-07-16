@@ -1,4 +1,4 @@
-function Get-DMWorkLoadTypebyFilter {
+﻿function Get-DMWorkLoadTypebyFilter {
     <#
 	.SYNOPSIS
 		To Get Huawei OceanStor workload types by filter. This command only works for V6 arrays.
