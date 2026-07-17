@@ -6,36 +6,6 @@
 2. Preserve test-owned mutation rules in every future workflow.
 3. Improve examples as storage-admin workflows are validated against lab arrays.
 
-## Recently Completed
-
-- Phase 08 docs polish: relationship diagram (host / host group / LUN group /
-  mapping view / port group) and sample `Select-Object` inventory views added to
-  [mapping-views.md](mapping-views.md); the mapped-LUN-removal troubleshooting
-  page is now listed in the README documentation map. Legacy-wrapper migration
-  note and troubleshooting page were already shipped in Phase 05.
-- Public docs were added for block storage, including LUNs, pools, hosts,
-  initiators, LUN groups, mapping views, and protection groups.
-- Existing integrity workflows already cover test-owned LUN, host, mapping,
-  initiator, LUN-group, protection, QoS dependency, and HyperCDP schedule
-  scenarios when configured.
-- Phase 08: `Set-DMMappingView` / `Rename-DMMappingView` added (name/description
-  labels only, `PUT /mappingview/{id}`; associations unchanged). The mapping
-  workflow now includes a test-owned `Set-DMMappingView` description read-back.
-  Storage-pool **rename** shipped as `Rename-DMstoragePool` (NAME label only,
-  `PUT storagepool/{id}`, `ConfirmImpact='High'`), validated live as a reversible
-  round-trip (rename → read-back → rename to original → verify) on a pre-existing
-  pool. Storage-pool **Set** (description / threshold / container) and
-  create/delete/resize remain deferred (documented for Dorado 6.1.6 only, high
-  blast radius, per-generation behavior unconfirmed). Initiator action methods
-  were rejected (immutable WWN/IQN identity, command-only for `ShouldProcess`
-  clarity). NAS-child modification (`Set-DMCifsShare`, `Set-DMdTree`,
-  `Set-DMnfsShare`, `Set-DMnfsClient`) already shipped.
-- Phase 05: block-storage documentation carry-over closed —
-  vStore-scoped mapping (`-VstoreId`) guidance and a legacy-wrapper migration
-  note added to [mapping-views.md](mapping-views.md), and a dedicated
-  [mapped-lun-removal-troubleshooting.md](mapped-lun-removal-troubleshooting.md)
-  page added.
-
 ## High Priority
 
 - Document any future array-version differences for LUN creation, expansion,
@@ -46,11 +16,6 @@
 ## Medium Priority
 
 - Expand protection-group guidance after more live validation is available.
-
-## Low Priority / Polish
-
-- _Done (Phase 08)._ Relationship diagram and sample `Select-Object` inventory
-  views added to [mapping-views.md](mapping-views.md).
 
 ## Testing and Validation
 

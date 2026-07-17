@@ -6,13 +6,6 @@
 2. Make throttling risks visible in every mutating example.
 3. Clarify which live validation paths are LUN/LUN-group based today.
 
-## Recently Completed
-
-- Public docs were added for SmartQoS policy lifecycle, LUN QoS, file-system
-  QoS, and safety.
-- Existing integrity workflow validates test-owned SmartQoS when dependencies
-  are enabled.
-
 ## High Priority
 
 - Confirm live mutation coverage for file-system QoS attachment before
@@ -25,11 +18,6 @@
 - Add guidance for choosing IOPS, bandwidth, latency, burst, and priority
   settings.
 - Document parent/child policy behavior after more admin validation.
-
-## Low Priority / Polish
-
-- _Done (Phase 07)._ Compact policy-inventory reporting example and a SmartQoS
-  glossary added to [smartqos.md](smartqos.md).
 
 ## Testing and Validation
 

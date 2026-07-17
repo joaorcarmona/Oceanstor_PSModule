@@ -14,39 +14,6 @@ alarms/events.
    inventory) shipped in Phase 05.
 3. Remaining system-management parity gaps (LDAP/AD, alerting, alarms).
 
-## Recently Completed
-
-- Phase 05 Stage A: certificate REST research
-  (`.archived-commands/certificate-endpoint-research.md`) and read-only
-  inventory getter `Get-DMCertificate` with typed `OceanStorCertificate`
-  output, unit tests, and read-validation registration. Stage B (mutation)
-  deferred: import is blocked on vendor documentation (no documented
-  certificate upload interface), export/remove deferred pending an approved
-  lab-safe procedure; certificate mutation stays permanently `SkippedUnsafe`.
-
-- Phase 04: config-gated `SystemManagement` integration workflow
-  (`Tests/Integration/Private/Workflows/SystemManagement.ps1`) covering
-  SNMP trap server, SNMP USM user, syslog server, and (default-off)
-  local role/user lifecycles — all gates disabled by default, cleanup by
-  captured ID or exact recorded address only. Not yet exercised live.
-
-- `Get-DMRole` list mode no longer hangs on arrays whose `role` endpoint
-  pads range-paged responses.
-- System-management mutators now report `SkippedUnsafe` instead of a
-  false `Blocked` in mutating integrity runs.
-- `Get-DMTimeZone`, `Get-DMutcTime`, and `Get-DMEquipmentStatus` are
-  registered in read validation.
-- DNS cmdlets (`Get-DMdnsServer` / `Set-DMdnsServer`) have unit-test
-  coverage.
-- `Get-DMAlarm` supports `-StartTime`/`-EndTime`/`-Last` date/range
-  filtering alongside `-AlarmStatus`.
-- `Set-DMSyslogNotification` exposes named `-Severity`/`-Port`/`-Protocol`
-  parameters (no `-Facility`: no such field exists in the REST syslog
-  resource). `Add-DMSyslogServer` confirmed to have no per-server
-  severity/port/protocol fields, by design.
-- `Get-DMdnsServer` returns typed `OceanStorDnsServer` objects instead of
-  an untyped hashtable.
-
 ## High Priority
 
 > Deduplication note: item 1 (mutation workflow, including the alarm

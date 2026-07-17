@@ -6,13 +6,6 @@
 2. Keep examples safe and test-owned.
 3. Record service-configuration gaps without implying support.
 
-## Recently Completed
-
-- Public docs were added for file systems, NFS/CIFS shares, NFS clients,
-  dTrees, quotas, NAS service gaps, and safety.
-- Existing integrity workflows already include test-owned NAS lifecycle
-  coverage when configured.
-
 ## High Priority
 
 - Add deeper examples for multi-vStore NAS environments.

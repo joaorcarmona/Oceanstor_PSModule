@@ -7,14 +7,6 @@
 2. Keep restore and deletion warnings prominent.
 3. Track live integrity gaps without publishing raw validation reports.
 
-## Recently Completed
-
-- Public snapshot docs were added for LUN snapshots, file-system snapshots,
-  consistency groups, copies, protection relationships, schedules, and safety.
-- Existing test-owned workflows already cover LUN snapshots, file-system
-  snapshots, snapshot consistency groups, copies, and HyperCDP schedules when
-  configured.
-
 ## High Priority
 
 - Confirm whether additional snapshot policy or schedule APIs should be

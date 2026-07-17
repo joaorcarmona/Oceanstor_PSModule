@@ -6,47 +6,6 @@
   documentation, live read-only coverage, and the opt-in lab mutation
   workflows.
 
-## Recently Completed
-
-- **Phase 07 (2026-07-07):** Registered all nine DR getters
-  (`Get-DMRemoteDevice`, `Get-DMReplicationPair`,
-  `Get-DMReplicationConsistencyGroup`, `Get-DMHyperMetroDomain`,
-  `Get-DMHyperMetroPair`, `Get-DMHyperMetroConsistencyGroup`,
-  `Get-DMVStorePair`, `Get-DMFileHyperMetroDomain`, and the guarded
-  `Get-DMRemoteLun`) plus the new `Get-DMQuorumServer` in
-  `Tests/Integration/Private/ReadValidation.ps1`. `Get-DMRemoteLun` is
-  guarded: it only runs when a replication-type remote device exists and is
-  otherwise reported `NotConfigured`, never a failure.
-- **Phase 07:** Systematic `-WhatIf` no-API-call coverage across all 52 DR
-  mutators via a single `-ForEach` spec
-  (`Tests/Unit/Public/replication-hypermetro-whatif.Tests.ps1`) driving the
-  shared `Tests/Unit/Support/Assert-DMWhatIfSafe.ps1` helper, plus a
-  `ConfirmImpact = High` assertion for every in-place modify/remove/transition.
-- **Phase 07:** New `Get-DMQuorumServer` read-only inventory getter
-  (`OceanStorQuorumServer` class) backed by the documented `QuorumServer`
-  collection resource (REST §4.9.8), so `-QuorumServerId` for
-  `Add-DMQuorumServerToHyperMetroDomain` can be resolved without DeviceManager.
-- **Phase 07:** Pipeline-input assertions proving `Get-DMReplicationPair |
-  Sync/Split/Switch-DMReplicationPair` and `Get-DMHyperMetroPair |
-  Sync/Suspend-DMHyperMetroPair` bind `-Id` by property name while
-  `ShouldProcess` still gates the mutation.
-- **Phase 07:** DR enum/status translation audit against the 6.1.6 enum tables
-  (see [safety-and-live-validation.md](safety-and-live-validation.md) §Enum
-  audit).
-- SAN DR surface: replication pairs, replication consistency groups,
-  HyperMetro domains (including quorum association), HyperMetro pairs, and
-  HyperMetro consistency groups.
-- NAS/vStore tranche: vStore pairs, file-system replication pair creation and
-  secondary protection, and file-system HyperMetro domains.
-- Typed output classes, table format views, manifest exports, and focused
-  unit tests across the DR test files.
-- Opt-in integration workflows with `NotConfigured`/`SkippedUnsafe` gating and
-  ID-based cleanup.
-- Fixed class-literal `[OutputType([...])]` attributes (string form now) so DR
-  cmdlets work from a normal `Import-Module` session; verified read-only
-  against a lab array. The same fix was applied module-wide (QoS, quota, and
-  HyperCDP schedule cmdlets had the identical defect).
-
 ## High Priority
 
 - **Deferred — requires human-supervised live run.** Run the gated Replication
@@ -100,29 +59,21 @@
 
 ## Low Priority / Polish
 
-- _Done (Phase 06)._ Dedicated wrappers `Set-DMReplicationPairMode`
-  (`REPLICATIONPAIR/transfer`) and `Set-DMHyperMetroPairPreferredPolicy`
-  (`HyperMetroPair/MODIFY_PREFERRED_POLICY`) replace `-ApiProperties`
-  passthrough for those endpoints.
-- _Done (Phase 06)._ `Set-DMVStorePair` (`VSTORE_PAIR/change_ip_work_mode`)
-  and `Get-DMFileSystemReplicationPair` (server-side `filter=LOCALRESID`)
-  shipped, unit-tested, and read-validation-registered.
-- Server-side `filter=` on DR getters where the REST API documents it:
-  - _Done._ `Get-DMFileSystemReplicationPair` (`filter=LOCALRESID`) and
-    `Get-DMVStorePair` (`filter=REPTYPE`) request server-side.
-  - _Retained client-side (documented fallback)._ `Get-DMReplicationPair` and
-    `Get-DMHyperMetroPair` `-Name` matches three fields (local name, remote
-    name, id); no single documented server-side filter field covers all three,
-    so a single-field server filter would drop valid matches. `Get-DMQuorumServer`
-    documents only `range`, no `filter`.
+- Server-side `filter=` on DR getters where the REST API documents it —
+  retained client-side (documented fallback) for `Get-DMReplicationPair` and
+  `Get-DMHyperMetroPair`: `-Name` matches three fields (local name, remote
+  name, id); no single documented server-side filter field covers all three,
+  so a single-field server filter would drop valid matches. `Get-DMQuorumServer`
+  documents only `range`, no `filter`.
 
 ## Testing and Validation
 
-- _Done (Phase 06)._ HyperMetro force-start coverage on a test-owned pair sits
-  behind the default-off `HyperMetro.AllowForceStart` gate (workflow step is
-  `SkippedUnsafe` when off; command behavior is unit-tested). The gate is
-  independent of failover/switchover gates and is never enabled in committed
-  config — a live force-start run stays deferred to a supervised session.
+- **Deferred — requires human-supervised run.** HyperMetro force-start
+  coverage on a test-owned pair sits behind the default-off
+  `HyperMetro.AllowForceStart` gate (workflow step is `SkippedUnsafe` when off;
+  command behavior is unit-tested). The gate is independent of
+  failover/switchover gates and is never enabled in committed config — a live
+  force-start run stays deferred to a supervised session.
 - **Deferred — requires dual-array NAS lab.** Gated workflows for the
   NAS/vStore tranche (vStore pair lifecycle, file-system replication pair
   lifecycle).
