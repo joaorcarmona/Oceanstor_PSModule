@@ -42,6 +42,11 @@ data-protection features whose live validation needs a second array or quorum se
 simply not exported, so `Get-Command -Module POSH-Oceanstor` and tab-completion do not show
 them until you enable the feature and re-import the module.
 
+> ⚠️ **HyperMetro and Replication are still in development and are not yet fully validated
+> against real disaster-recovery hardware. Treat them as experimental / not production
+> ready** — that is why they ship disabled. See
+> [docs/feature-modules/README.md](docs/feature-modules/README.md) for full details.
+
 | Feature | Default | Contents |
 |---|---|---|
 | `Core` | always on (locked) | Connect/Disconnect, `Get-DMSystem`, exports, and the `*-DMFeature` cmdlets |
