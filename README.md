@@ -8,7 +8,7 @@
 
 Oceanstor PowerShell Module, is a module to operate with Huawei Oceanstor devices (v6) - Previous versions should work in limited way. Please report any bugs.
 
-Current module version: 0.9.5
+Current module version: 1.0.0
 
 The module includes commands for inventory, reporting, host and initiator
 management, storage-resource creation, mapping-view operations, snapshot
@@ -208,14 +208,6 @@ Sync-DMVStorePair -WebSession $storage -Id $vstorePair.Id
 Get-DMFileHyperMetroDomain -WebSession $storage
 ```
 
-Live integration validation keeps DR workflows disabled by default. To exercise
-remote replication or HyperMetro mutation checks, enable the matching
-`Replication` or `HyperMetro` section in
-`Tests/Integration/IntegrityValidationConfig.psd1`, provide lab-only remote
-device/LUN/domain identifiers, and set the explicit DR mutation acknowledgement.
-Full documentation for this area, including per-family topic pages and the DR
-safety model, lives in [docs/replication-hypermetro/](docs/replication-hypermetro/README.md).
-
 #### Search one lun by WWN
 ```powershell
 # Connect to a storage (PowerShell securely prompts for credentials).
@@ -227,7 +219,7 @@ $storage = Connect-deviceManager -Hostname "10.0.0.1" -PassThru
 
 ## Additional Resources
 
-NOTE: This Module have been modfied to support Powershell version 6 and 7. Previous version will not work.
+NOTE: This Module have been modified to support Powershell version 6 and 7. Previous version will not work.
 
 ### Links
 
