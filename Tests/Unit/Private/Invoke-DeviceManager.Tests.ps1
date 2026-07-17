@@ -1,4 +1,7 @@
 BeforeAll {
+    # Run under StrictMode so trace/HTTP-status code paths are exercised the way a user
+    # with Set-StrictMode enabled would hit them (missing members throw rather than return $null).
+    Set-StrictMode -Version Latest
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\Invoke-DeviceManager.ps1"
 }
 
@@ -26,6 +29,8 @@ Describe 'Invoke-DeviceManager' {
         Remove-Variable -Name CurrentOceanstorSession -Scope Script -ErrorAction SilentlyContinue
         Remove-Variable -Name DeviceManagerTraceAction -Scope Script -ErrorAction SilentlyContinue
         Remove-Variable -Name DeviceManagerTraceContext -Scope Script -ErrorAction SilentlyContinue
+        Remove-Variable -Name DeviceManagerTraceDepth -Scope Script -ErrorAction SilentlyContinue
+        Remove-Variable -Name DeviceManagerTraceEntries -Scope Script -ErrorAction SilentlyContinue
     }
 
     It 'builds the REST request using the supplied session' {
@@ -195,5 +200,42 @@ Describe 'Invoke-DeviceManager' {
         $script:traceRecords[0].Request.CHAPPASSWORD | Should -Be '[REDACTED]'
         $script:traceRecords[0].Request.SNMP_COMMUNITY | Should -Be '[REDACTED]'
         $script:traceRecords[0].Response.data.ID | Should -Be 'lun-01'
+    }
+
+    It 'records vendor, host and HTTP status in trace entries' {
+        $script:traceRecords = [System.Collections.Generic.List[object]]::new()
+        $script:DeviceManagerTraceAction = { param($entry) $script:traceRecords.Add($entry) }
+
+        $null = Invoke-DeviceManager -WebSession $script:session -Method GET -Resource 'lun'
+
+        $script:traceRecords[0].Vendor | Should -Be 'Huawei OceanStor'
+        $script:traceRecords[0].Hostname | Should -Be 'oceanstor.test'
+        # The mock does not populate StatusCodeVariable, so success falls back to HTTP 200.
+        $script:traceRecords[0].StatusCode | Should -Be 200
+    }
+
+    It 'captures exact wire JSON and redacted headers at trace depth 2' {
+        $script:traceRecords = [System.Collections.Generic.List[object]]::new()
+        $script:DeviceManagerTraceDepth = 2
+        $script:DeviceManagerTraceAction = { param($entry) $script:traceRecords.Add($entry) }
+
+        $null = Invoke-DeviceManager -WebSession $script:session -Method POST -Resource 'lun' `
+            -BodyData @{ NAME = 'depth2-lun' }
+
+        $entry = $script:traceRecords[0]
+        $entry.RawJsonBody | Should -Match 'depth2-lun'
+        $entry.Headers.iBaseToken | Should -Be '[REDACTED]'
+        $entry.RawResponse | Should -Not -BeNullOrEmpty
+    }
+
+    It 'omits depth-2 raw fields at the default trace depth' {
+        $script:traceRecords = [System.Collections.Generic.List[object]]::new()
+        $script:DeviceManagerTraceAction = { param($entry) $script:traceRecords.Add($entry) }
+
+        $null = Invoke-DeviceManager -WebSession $script:session -Method POST -Resource 'lun' `
+            -BodyData @{ NAME = 'depth1-lun' }
+
+        $script:traceRecords[0].PSObject.Properties['RawJsonBody'] | Should -BeNullOrEmpty
+        $script:traceRecords[0].PSObject.Properties['Headers'] | Should -BeNullOrEmpty
     }
 }

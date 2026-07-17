@@ -36,6 +36,17 @@
             )
         }
 
+        Diagnostics = @{
+            DefaultEnabled = $true
+            Description    = 'REST request/response debug tracing. Capture the vendor, URI, body, HTTP/business codes and response for every array call.'
+            Commands       = @(
+                'Enable-DMRequestTrace'
+                'Disable-DMRequestTrace'
+                'Get-DMRequestTrace'
+                'Clear-DMRequestTrace'
+            )
+        }
+
         HyperMetro = @{
             DefaultEnabled = $false
             Description    = 'Block and file HyperMetro (active-active) plus quorum servers. Off by default: live validation needs a second array / quorum most environments do not expose.'

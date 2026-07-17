@@ -30,6 +30,14 @@
 #used as the fallback for every command's -WebSession parameter when it is omitted.
     $script:CurrentOceanstorSession = $null
 
+#Module-scoped REST debug-trace state, managed by Enable/Disable/Get/Clear-DMRequestTrace.
+#Initialized here so reads are safe even under Set-StrictMode before tracing is enabled.
+    $script:DeviceManagerTraceAction  = $null
+    $script:DeviceManagerTraceEntries = [System.Collections.Generic.List[object]]::new()
+    $script:DeviceManagerTraceDepth   = 1
+    $script:DeviceManagerTraceConsole = $false
+    $script:DeviceManagerTraceLogPath = $null
+
 #Resolve the feature state for this import and cache it so Get-DMFeature can report what
 #is active in the current session without re-reading disk. Get-DMFeatureState never throws
 #on a missing/broken config, so a bad config can never stop the module from importing.

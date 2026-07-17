@@ -75,7 +75,11 @@ function Write-DMRequestTrace {
 		[object]$BodyData,
 		[switch]$ApiV2,
 		[object]$Response,
-		[string]$Exception
+		[string]$Exception,
+		[object]$Session,
+		[object]$StatusCode,
+		[string]$RawJsonBody,
+		[object]$Headers
 	)
 
 	$traceAction = Get-Variable -Name DeviceManagerTraceAction -Scope Script -ErrorAction SilentlyContinue
@@ -85,18 +89,50 @@ function Write-DMRequestTrace {
 
 	$contextVariable = Get-Variable -Name DeviceManagerTraceContext -Scope Script -ErrorAction SilentlyContinue
 	$context = if ($null -ne $contextVariable) { $contextVariable.Value } else { $null }
+
+	$depthVariable = Get-Variable -Name DeviceManagerTraceDepth -Scope Script -ErrorAction SilentlyContinue
+	$depth = if ($null -ne $depthVariable -and $depthVariable.Value) { [int]$depthVariable.Value } else { 1 }
+
+	# Read Hostname/Version defensively: a partial or legacy session object may lack them,
+	# and direct member access throws under Set-StrictMode.
+	$sessionHostname = $null
+	$sessionVersion = $null
+	if ($Session) {
+		$hostProp = $Session.PSObject.Properties['Hostname']
+		if ($hostProp) { $sessionHostname = $hostProp.Value }
+		$versionProp = $Session.PSObject.Properties['Version']
+		if ($versionProp) { $sessionVersion = $versionProp.Value }
+	}
+
 	$entry = [pscustomobject]@{
 		Timestamp  = $StartedAt.ToString('o')
 		DurationMs = [math]::Round(((Get-Date) - $StartedAt).TotalMilliseconds, 2)
 		Step       = if ($context) { $context.Name } else { $null }
 		Category   = if ($context) { $context.Category } else { $null }
+		Vendor     = 'Huawei OceanStor'
+		Hostname   = $sessionHostname
+		Version    = $sessionVersion
 		Method     = $Method
 		Resource   = $Resource
 		ApiV2      = [bool]$ApiV2
 		Uri        = $Uri
+		StatusCode = $StatusCode
 		Request    = Copy-DMTraceValue -Value $BodyData
 		Response   = Copy-DMTraceValue -Value $Response
 		Exception  = $Exception
+	}
+
+	# Depth 2 captures the exact wire representation: the JSON string actually sent, the
+	# request headers (iBaseToken redacted via Copy-DMTraceValue), and the response
+	# re-serialized to JSON. Only added when explicitly requested to keep depth-1 entries lean.
+	if ($depth -ge 2) {
+		$rawResponse = $null
+		if ($null -ne $Response) {
+			try { $rawResponse = $Response | ConvertTo-Json -Depth 12 } catch { $rawResponse = "$Response" }
+		}
+		Add-Member -InputObject $entry -MemberType NoteProperty -Name RawJsonBody -Value $RawJsonBody
+		Add-Member -InputObject $entry -MemberType NoteProperty -Name RawResponse -Value $rawResponse
+		Add-Member -InputObject $entry -MemberType NoteProperty -Name Headers -Value (Copy-DMTraceValue -Value $Headers)
 	}
 
 	try {
@@ -104,6 +140,82 @@ function Write-DMRequestTrace {
 	}
 	catch {
 		Write-Verbose "DeviceManager trace action failed: $($_.Exception.Message)"
+	}
+}
+
+function Format-DMTraceConsole {
+	<#
+	.SYNOPSIS
+		Renders a single DeviceManager trace entry as a colored console block.
+	.DESCRIPTION
+		Called by the trace action installed by Enable-DMRequestTrace when console output is
+		enabled. Kept inside Invoke-DeviceManager.ps1 (rather than a standalone Private/*.ps1)
+		so it is always dot-sourced alongside the tracer without needing an entry in the
+		integrity harness's private-helper whitelist.
+	#>
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingWriteHost', '', Justification = 'Deliberate colored live-debug console output; suppression is controlled by Enable-DMRequestTrace -Quiet.')]
+	param(
+		[Parameter(Mandatory)][object]$Entry
+	)
+
+	$depthVariable = Get-Variable -Name DeviceManagerTraceDepth -Scope Script -ErrorAction SilentlyContinue
+	$depth = if ($null -ne $depthVariable -and $depthVariable.Value) { [int]$depthVariable.Value } else { 1 }
+
+	$header = "[$($Entry.Vendor)"
+	if ($Entry.Hostname) { $header += " | $($Entry.Hostname)" }
+	if ($Entry.Version)  { $header += " | v$($Entry.Version)" }
+	$header += ']'
+	if ($Entry.Step) { $header += " ($($Entry.Step))" }
+	Write-Host $header -ForegroundColor Cyan
+
+	# --- Request ---
+	Write-Host "  -> $($Entry.Method) $($Entry.Uri)" -ForegroundColor Yellow
+	if ($depth -ge 2 -and $Entry.PSObject.Properties['RawJsonBody'] -and $Entry.RawJsonBody) {
+		Write-Host "     body: $($Entry.RawJsonBody)" -ForegroundColor DarkYellow
+	}
+	elseif ($null -ne $Entry.Request) {
+		$reqJson = try { $Entry.Request | ConvertTo-Json -Depth 10 -Compress } catch { "$($Entry.Request)" }
+		Write-Host "     body: $reqJson" -ForegroundColor DarkYellow
+	}
+	if ($depth -ge 2 -and $Entry.PSObject.Properties['Headers'] -and $Entry.Headers) {
+		$hdrJson = try { $Entry.Headers | ConvertTo-Json -Depth 6 -Compress } catch { "$($Entry.Headers)" }
+		Write-Host "     headers: $hdrJson" -ForegroundColor DarkGray
+	}
+
+	# --- Response ---
+	if ($Entry.Exception) {
+		Write-Host "  <- HTTP $($Entry.StatusCode)  FAILED  ($($Entry.DurationMs) ms)" -ForegroundColor Red
+		Write-Host "     $($Entry.Exception)" -ForegroundColor Red
+		return
+	}
+
+	# Extract the OceanStor business result defensively -- error, code and description are all
+	# optional on a given response, and direct access to a missing member throws under StrictMode.
+	$businessCode = $null
+	$businessDesc = $null
+	if ($null -ne $Entry.Response) {
+		$errorProp = $Entry.Response.PSObject.Properties['error']
+		if ($errorProp -and $null -ne $errorProp.Value) {
+			$codeProp = $errorProp.Value.PSObject.Properties['code']
+			if ($codeProp) { $businessCode = $codeProp.Value }
+			$descProp = $errorProp.Value.PSObject.Properties['description']
+			if ($descProp) { $businessDesc = $descProp.Value }
+		}
+	}
+	$respHeader = "  <- HTTP $($Entry.StatusCode)"
+	if ($null -ne $businessCode) { $respHeader += "  error.code=$businessCode" }
+	$respHeader += "  ($($Entry.DurationMs) ms)"
+	$respColor = if ($null -ne $businessCode -and $businessCode -ne 0) { 'Red' } else { 'Green' }
+	Write-Host $respHeader -ForegroundColor $respColor
+	# OceanStor returns description "0" (or empty) on success -- only surface a real message.
+	if ($businessDesc -and "$businessDesc" -ne '0') { Write-Host "     $businessDesc" -ForegroundColor $respColor }
+
+	if ($depth -ge 2 -and $Entry.PSObject.Properties['RawResponse'] -and $Entry.RawResponse) {
+		Write-Host "     response: $($Entry.RawResponse)" -ForegroundColor DarkGray
+	}
+	elseif ($null -ne $Entry.Response) {
+		$respJson = try { $Entry.Response | ConvertTo-Json -Depth 10 -Compress } catch { "$($Entry.Response)" }
+		Write-Host "     response: $respJson" -ForegroundColor DarkGray
 	}
 }
 
@@ -178,6 +290,8 @@ function Invoke-DeviceManager{
 	}
 
 	$startedAt = Get-Date
+	$JsonBody = $null
+	$dmStatus = $null
 	try {
 		# Preserve the certificate validation choice made when the session was created.
 		$invokeParams = @{
@@ -198,7 +312,18 @@ function Invoke-DeviceManager{
 			$JsonBody = ConvertTo-Json $BodyData -Depth 10
 			$invokeParams.Body = $JsonBody
 		}
-		$result = Invoke-RestMethod @invokeParams
+
+		# StatusCodeVariable captures the real HTTP status but only exists on PS 7.4+ (the
+		# module targets PS 6.0). Add it only to the Invoke-RestMethod call via a cloned splat
+		# so the Invoke-WebRequest fallback below, which reuses $invokeParams, is never handed a
+		# parameter it may not support. On hosts without it, success falls back to HTTP 200 --
+		# OceanStor reports real failures via the body's error.code, not the HTTP status.
+		$restParams = $invokeParams
+		if ((Get-Command Invoke-RestMethod).Parameters.ContainsKey('StatusCodeVariable')) {
+			$restParams = $invokeParams.Clone()
+			$restParams.StatusCodeVariable = 'dmStatus'
+		}
+		$result = Invoke-RestMethod @restParams
 
 		# Some PS7 builds fall back to returning the raw JSON string instead of throwing when
 		# the response body contains case-conflicting duplicate keys (e.g. 'snapType'/'SNAPTYPE'
@@ -212,8 +337,10 @@ function Invoke-DeviceManager{
 			}
 		}
 
+		$successStatus = if ($dmStatus) { [int]$dmStatus } else { 200 }
 		Write-DMRequestTrace -StartedAt $startedAt -Method $Method -Resource $Resource -Uri $RestURI `
-			-BodyData $BodyData -ApiV2:$ApiV2 -Response $result
+			-BodyData $BodyData -ApiV2:$ApiV2 -Response $result `
+			-Session $session -StatusCode $successStatus -RawJsonBody $JsonBody -Headers $session.Headers
 		return $result
 	}
 	catch {
@@ -234,15 +361,26 @@ function Invoke-DeviceManager{
 			try {
 				$rawResponse = Invoke-WebRequest @invokeParams
 				$result = ConvertFrom-DMCasedHashtable ($rawResponse.Content | ConvertFrom-Json -AsHashtable)
+				$fallbackStatus = if ($rawResponse.PSObject.Properties['StatusCode']) { [int]$rawResponse.StatusCode } else { $null }
 				Write-DMRequestTrace -StartedAt $startedAt -Method $Method -Resource $Resource -Uri $RestURI `
-					-BodyData $BodyData -ApiV2:$ApiV2 -Response $result
+					-BodyData $BodyData -ApiV2:$ApiV2 -Response $result `
+					-Session $session -StatusCode $fallbackStatus -RawJsonBody $JsonBody -Headers $session.Headers
 				return $result
 			} catch {
 				Write-Verbose "Invoke-WebRequest fallback also failed for '$RestURI': $($_.Exception.Message)"
 			}
 		}
+		# Extract the HTTP status defensively: many exception types (e.g. ArgumentException)
+		# have no Response member, which throws under Set-StrictMode if accessed directly.
+		$httpStatus = $null
+		$responseProp = $originalError.Exception.PSObject.Properties['Response']
+		if ($responseProp -and $responseProp.Value) {
+			$statusProp = $responseProp.Value.PSObject.Properties['StatusCode']
+			if ($statusProp) { try { $httpStatus = [int]$statusProp.Value } catch { $httpStatus = $null } }
+		}
 		Write-DMRequestTrace -StartedAt $startedAt -Method $Method -Resource $Resource -Uri $RestURI `
-			-BodyData $BodyData -ApiV2:$ApiV2 -Exception $originalError.Exception.Message
+			-BodyData $BodyData -ApiV2:$ApiV2 -Exception $originalError.Exception.Message `
+			-Session $session -StatusCode $httpStatus -RawJsonBody $JsonBody -Headers $session.Headers
 		throw $originalError
 	}
 }
