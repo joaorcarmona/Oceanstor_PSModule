@@ -1,3 +1,8 @@
+# Run the operator-supervised, config-gated live network-stack workflows (bond +
+# VLAN + LIF, and failover group + VLAN members + service LIF). Requires
+# -RunSupervisedTests AND Network.Enabled + Network.Supervised.Enabled + a stack
+# gate in IntegrityValidationConfig.psd1; all off by default:
+#   ./Invoke-GetterIntegrityValidation.ps1 -Hostname '<array>' -RunSupervisedTests -SkipCertificateCheck
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)]
@@ -18,6 +23,8 @@ param(
     [string]$ConfigurationPath = (Join-Path $PSScriptRoot 'IntegrityValidationConfig.psd1'),
 
     [switch]$RunMutatingTests,
+
+    [switch]$RunSupervisedTests,
 
     [switch]$RunPipelineBatchCoverage,
 
@@ -149,7 +156,7 @@ $cleanupActions = [System.Collections.Generic.List[object]]::new()
 $sessionDisconnected = $false
 $samples = @{}
 $owned = @{}
-foreach ($kind in @('Lun', 'LunSnapshot', 'HyperCDPSchedule', 'LunGroup', 'ProtectionGroup', 'SnapshotConsistencyGroup', 'QosPolicy', 'Host', 'HostGroup', 'FileSystem', 'FileSystemSnapshot', 'DTree', 'CifsShare', 'NfsShare', 'NfsClient', 'Quota', 'MappingView', 'PortGroup', 'FibreChannelInitiator', 'IscsiInitiator', 'NvmeInitiator', 'ReportTask', 'ReportLog', 'ReplicationPair', 'ReplicationConsistencyGroup', 'HyperMetroPair', 'HyperMetroConsistencyGroup', 'SnmpTrapServer', 'SnmpUsmUser', 'SyslogServer', 'LocalUser', 'Role', 'FailoverGroup')) {
+foreach ($kind in @('Lun', 'LunSnapshot', 'HyperCDPSchedule', 'LunGroup', 'ProtectionGroup', 'SnapshotConsistencyGroup', 'QosPolicy', 'Host', 'HostGroup', 'FileSystem', 'FileSystemSnapshot', 'DTree', 'CifsShare', 'NfsShare', 'NfsClient', 'Quota', 'MappingView', 'PortGroup', 'FibreChannelInitiator', 'IscsiInitiator', 'NvmeInitiator', 'ReportTask', 'ReportLog', 'ReplicationPair', 'ReplicationConsistencyGroup', 'HyperMetroPair', 'HyperMetroConsistencyGroup', 'SnmpTrapServer', 'SnmpUsmUser', 'SyslogServer', 'LocalUser', 'Role', 'FailoverGroup', 'Vlan', 'Lif', 'Bond')) {
     $owned[$kind] = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 }
 $performanceCleanupRegistry = [System.Collections.Generic.List[object]]::new()

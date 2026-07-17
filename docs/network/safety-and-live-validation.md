@@ -94,8 +94,7 @@ finally {
 
 `Tests/Integration/Invoke-GetterIntegrityValidation.ps1` runs the read-only
 network getters (including `Get-DMFailoverGroupMember`) as part of read
-validation. On the mutation side there is exactly one network workflow,
-disabled by default:
+validation. On the mutation side there are two tiers, both disabled by default:
 
 - **Failover-group lifecycle**
   (`Tests/Integration/Private/Workflows/FailoverGroup.ps1`): requires
@@ -108,22 +107,40 @@ disabled by default:
   the description, verifies `Get-DMFailoverGroupMember` reports zero members,
   and removes the group by the captured ID. It never touches pre-existing
   groups, LIFs, VLANs, bonds, ports, routes, or management addressing, and a
-  name collision aborts the step loudly.
-- **Member add/remove inside that workflow is skipped by design**: per the
-  REST reference, failover-group members are Ethernet ports (213), bond ports
-  (235) or VLANs (280) — not LIFs — and the harness owns no such object. The
-  step stays `SkippedUnsafe` until a test-owned VLAN workflow (below) exists.
+  name collision aborts the step loudly. Member add/remove is skipped in this
+  workflow (it owns no eligible member); that gap is covered by the supervised
+  failover-group stack below.
+- **Supervised network-stack category**
+  (`Tests/Integration/Private/Workflows/SupervisedNetwork.ps1`): a stricter
+  tier that actually creates and destroys bonds, VLANs and LIFs on live ports.
+  It requires the dedicated **`-RunSupervisedTests`** switch **and**
+  `Network.Enabled = $true` **and** `Network.Supervised.Enabled = $true` **and**
+  a per-stack gate (`AllowNetworkStackLifecycle` and/or
+  `AllowFailoverGroupStackLifecycle`). `-RunMutatingTests` never triggers it,
+  and it is independent of `AllowMutatingTests`. Contract:
+  - operates only on the operator-designated `Network.Supervised.PortLocations`,
+    each re-verified read-only (front-end, link down, unbonded, no LIF, no child
+    VLAN) before anything is created; a failed invariant blocks the stacks;
+  - the idle-port guard `Get-DMVlanParentPortStatus` is invoked and recorded as
+    a **dry-run**, never used to gate (on lab arrays it reports `InUse` for every
+    port because the built-in `System-defined` group owns them all);
+  - only test-owned, run-unique objects (`dm_integrity_<runId>_*`) are created;
+    each ID is captured and removed in reverse creation order (LIFO), with the
+    two stacks torn down sequentially so the shared ports are free between them;
+  - the failover-group stack adds two test-owned VLANs as members (280) — the
+    live member add/remove path the FailoverGroup workflow could not exercise.
 
-All other network mutators (`New/Set/Remove-DMPortBond`, `New/Set/Remove-DMvLan`,
-`New/Set/Remove-DMLif`, `Set-DMLLDPWorkingMode`) are reported `SkippedUnsafe`
-on every run; an intentionally skipped unsafe mutator is not a validated one.
-Statuses:
+The in-place network setters (`Set-DMPortBond`, `Set-DMvLan`, `Set-DMLif`) and
+the global `Set-DMLLDPWorkingMode` have no test-owned variant and are reported
+`SkippedUnsafe` on every run. Statuses:
 
 - `SkippedUnsafe` — recognized as unsafe to run against a live array.
 - `NotConfigured` — the relevant gate(s) in
   `IntegrityValidationConfig.psd1` (`AllowMutatingTests`, `Network.Enabled`,
-  `Network.AllowFailoverGroupLifecycle`) are off.
-- `NotRequested` — runner invoked without `-RunMutatingTests`.
+  `Network.AllowFailoverGroupLifecycle`, `Network.Supervised.Enabled`, the
+  per-stack `Allow*` gates) are off.
+- `NotRequested` — runner invoked without `-RunMutatingTests` (or, for the
+  supervised network commands, without `-RunSupervisedTests`).
 - `Blocked` / `NotExecuted` — command has no workflow representation.
 
 ## VLAN live workflow: idle-port guard (implemented, workflow not enabled)

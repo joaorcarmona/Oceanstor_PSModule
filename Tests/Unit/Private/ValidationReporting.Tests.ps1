@@ -220,4 +220,64 @@ Describe 'Integrity harness status classification' {
             @($report.Checks | Where-Object Name -EQ 'New-DMRole')[0].Status | Should -Be 'SkippedUnsafe'
         }
     }
+
+    Context 'Supervised network-stack classification' {
+        BeforeEach {
+            $script:supervisedCommands = @('New-DMPortBond', 'Remove-DMPortBond', 'New-DMvLan', 'Remove-DMvLan', 'New-DMLif', 'Remove-DMLif')
+        }
+
+        It 'reports supervised network commands NotRequested when -RunSupervisedTests is absent' {
+            $script:RunMutatingTests = $true
+            $script:RunSupervisedTests = $false
+
+            Invoke-MutationValidation
+
+            foreach ($commandName in $supervisedCommands) {
+                $rows = @($checks | Where-Object Name -EQ $commandName)
+                $rows.Count | Should -Be 1 -Because "$commandName must be represented exactly once"
+                $rows[0].Status | Should -Be 'NotRequested'
+                $rows[0].Category | Should -Be 'Supervised'
+                $rows[0].Error | Should -BeLike '*-RunSupervisedTests*'
+            }
+        }
+
+        It 'keeps in-place network setters SkippedUnsafe while create/remove move to the supervised lane' {
+            $script:RunMutatingTests = $true
+            $script:RunSupervisedTests = $false
+
+            Invoke-MutationValidation
+
+            foreach ($setter in @('Set-DMPortBond', 'Set-DMvLan', 'Set-DMLif', 'Set-DMLLDPWorkingMode')) {
+                @($checks | Where-Object Name -EQ $setter)[0].Status | Should -Be 'SkippedUnsafe'
+            }
+            @($checks | Where-Object { $_.Name -eq 'New-DMvLan' -and $_.Status -eq 'SkippedUnsafe' }).Count | Should -Be 0 -Because 'New-DMvLan is now owned by the supervised workflow'
+        }
+
+        It 'reports supervised network commands NotConfigured when the switch is set but Network.Supervised is disabled' {
+            $script:RunSupervisedTests = $true
+            $script:configuration = @{ AllowMutatingTests = $false; Network = @{ Enabled = $true; Supervised = @{ Enabled = $false } } }
+
+            Invoke-MutationValidation
+
+            foreach ($commandName in $supervisedCommands) {
+                $rows = @($checks | Where-Object Name -EQ $commandName)
+                $rows.Count | Should -Be 1
+                $rows[0].Status | Should -Be 'NotConfigured'
+                $rows[0].Category | Should -Be 'Supervised'
+            }
+        }
+
+        It 'reports every supervised command NotConfigured when the master gate is on but both stack gates are off' {
+            $script:configuration = @{
+                Network = @{ Supervised = @{ Enabled = $true; AllowNetworkStackLifecycle = $false; AllowFailoverGroupStackLifecycle = $false } }
+            }
+
+            . $script:SupervisedNetworkWorkflow
+
+            @($checks | Where-Object Status -NE 'NotConfigured').Count | Should -Be 0 -Because 'no stack may execute or read a port while both gates are off'
+            foreach ($commandName in $supervisedCommands) {
+                @($checks | Where-Object Name -EQ $commandName)[0].Status | Should -Be 'NotConfigured'
+            }
+        }
+    }
 }

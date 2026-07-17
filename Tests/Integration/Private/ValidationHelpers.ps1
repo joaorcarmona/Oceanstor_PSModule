@@ -244,12 +244,16 @@ function Invoke-MutationStep {
         [string]$Name,
         [Alias('Action')]
         [scriptblock]$MutationAction,
-        [string]$ExpectedType
+        [string]$ExpectedType,
+        # Result category. Defaults to the mutation lane; the supervised
+        # network-stack workflow passes 'Supervised' so its rows group separately.
+        [string]$Category = 'Mutation'
     )
 
     $stepName = $Name
+    $stepCategory = $Category
     return Add-ValidationResult -Name $Name -Action {
-        Set-DMValidationRequestTraceContext -Name $stepName -Category 'Mutation'
+        Set-DMValidationRequestTraceContext -Name $stepName -Category $stepCategory
         try {
             $result = @(& $MutationAction)
             foreach ($item in $result) {
@@ -263,7 +267,7 @@ function Invoke-MutationStep {
         finally {
             Set-DMValidationRequestTraceContext
         }
-    } -ExpectedType $ExpectedType -Category 'Mutation'
+    } -ExpectedType $ExpectedType -Category $stepCategory
 }
 
 function Add-MutationReadVerification {
@@ -271,13 +275,17 @@ function Add-MutationReadVerification {
         [string]$Name,
         [Alias('Action')]
         [scriptblock]$ValidationAction,
-        [string]$ExpectedType
+        [string]$ExpectedType,
+        # Read-verification category. Defaults to the mutation read lane; the
+        # supervised network-stack workflow passes 'SupervisedRead'.
+        [string]$Category = 'MutationRead'
     )
 
     $verificationName = $Name
     $readAction = $ValidationAction
+    $readCategory = $Category
     return Add-ValidationResult -Name "Verify:$Name" -Action {
-        Set-DMValidationRequestTraceContext -Name "Verify:$verificationName" -Category 'MutationRead'
+        Set-DMValidationRequestTraceContext -Name "Verify:$verificationName" -Category $readCategory
         try {
             $rows = @(& $readAction)
             if ($rows.Count -eq 0) {
@@ -288,7 +296,7 @@ function Add-MutationReadVerification {
         finally {
             Set-DMValidationRequestTraceContext
         }
-    } -ExpectedType $ExpectedType -Category 'MutationRead'
+    } -ExpectedType $ExpectedType -Category $readCategory
 }
 
 function Register-TestOwnedResource {
@@ -454,6 +462,53 @@ function Test-MutatingConfiguration {
         }
         if (-not $configuration.HyperMetro.DomainId -and -not $configuration.HyperMetro.DomainName) {
             throw 'HyperMetro.DomainId or HyperMetro.DomainName is required when HyperMetro.Enabled is true.'
+        }
+    }
+}
+
+function Test-SupervisedConfiguration {
+    # Validates the Network.Supervised block used by the operator-supervised
+    # network-stack workflows. Only called when a supervised run is active
+    # (-RunSupervisedTests + Network.Enabled + Network.Supervised.Enabled).
+    $network = $configuration.Network
+    if (-not ($network -and $network.Supervised)) {
+        throw 'Network.Supervised configuration block is required when -RunSupervisedTests is used with Network.Enabled.'
+    }
+    $sup = $network.Supervised
+    $netStack = [bool]$sup.AllowNetworkStackLifecycle
+    $fgStack = [bool]$sup.AllowFailoverGroupStackLifecycle
+    if (-not ($netStack -or $fgStack)) {
+        # Master gate on but no stack selected; the workflow reports each stack
+        # NotConfigured. Nothing else to validate.
+        return
+    }
+    if (@($sup.PortLocations).Count -lt 2) {
+        throw 'Network.Supervised.PortLocations must list at least two link-down front-end port Location values (ideally one per controller).'
+    }
+    $requiredTags = if ($netStack) { 4 } else { 2 }
+    if (@($sup.VlanTags).Count -lt $requiredTags) {
+        throw "Network.Supervised.VlanTags must provide at least $requiredTags tag(s) for the enabled supervised stack(s)."
+    }
+    foreach ($tag in $sup.VlanTags) {
+        if ([int]$tag -lt 1 -or [int]$tag -gt 4094) {
+            throw "Network.Supervised.VlanTags contains an out-of-range tag '$tag' (valid range is 1-4094)."
+        }
+    }
+    if ("$($sup.IpAddressFormat)" -notmatch '\{0\}') {
+        throw "Network.Supervised.IpAddressFormat must contain '{0}' (substituted with the VLAN tag), e.g. '10.{0}.10.1'."
+    }
+    if (-not $sup.IpMask) {
+        throw 'Network.Supervised.IpMask is required (e.g. 255.255.255.0).'
+    }
+    if ($fgStack) {
+        if ([int]$sup.LifRole -notin @(1, 2, 3, 4, 8, 9, 10)) {
+            throw "Network.Supervised.LifRole '$($sup.LifRole)' is invalid (valid values are 1,2,3,4,8,9,10)."
+        }
+        if ([int]$sup.LifSupportProtocol -notin @(0, 1, 2, 3, 4, 8, 64, 512)) {
+            throw "Network.Supervised.LifSupportProtocol '$($sup.LifSupportProtocol)' is invalid (valid values are 0,1,2,3,4,8,64,512)."
+        }
+        if ([int]$sup.LifFailbackMode -notin @(0, 1, 2)) {
+            throw "Network.Supervised.LifFailbackMode '$($sup.LifFailbackMode)' is invalid (valid values are 0,1,2)."
         }
     }
 }

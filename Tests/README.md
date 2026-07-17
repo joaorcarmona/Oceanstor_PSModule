@@ -186,6 +186,31 @@ arrays where LUN creation or removal is slow. The same coverage can be enabled
 in a custom configuration file with `LunGroup.EnablePipelineBatchCoverage =
 $true`.
 
+### Supervised network-stack tests
+
+The **supervised** category runs live bond/VLAN/LIF and failover-group NAS
+workflows that create and destroy real network objects on operator-designated
+ports. It is a stricter tier than `-RunMutatingTests` and shares none of its
+gates: it requires the dedicated `-RunSupervisedTests` switch **and**
+`Network.Enabled = $true` **and** `Network.Supervised.Enabled = $true` **and** a
+per-stack gate (`AllowNetworkStackLifecycle` and/or
+`AllowFailoverGroupStackLifecycle`) in `IntegrityValidationConfig.psd1`. All of
+those are off by default, so `-RunSupervisedTests` alone does nothing. A human
+must be present and the `Network.Supervised.PortLocations` must be verified
+link-down. Results appear under the `Supervised` / `SupervisedRead` categories.
+
+```powershell
+./Tests/Integration/Invoke-GetterIntegrityValidation.ps1 `
+    -Hostname 'IP_or_FQDN' `
+    -RunSupervisedTests `
+    -SkipCertificateCheck `
+    -ShowTestExecution
+```
+
+See [../docs/network/safety-and-live-validation.md](../docs/network/safety-and-live-validation.md)
+for the full safety contract and the mirrored operator prompts in
+`Tests/Prompts/prompt-network-*-supervised-test.md`.
+
 Enable the non-secure HyperCDP schedule workflow in the configuration file:
 
 ```powershell

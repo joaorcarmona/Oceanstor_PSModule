@@ -14,6 +14,7 @@
 . (Join-Path $PSScriptRoot 'Workflows\Initiators.ps1')
 . (Join-Path $PSScriptRoot 'Workflows\SystemManagement.ps1')
 . (Join-Path $PSScriptRoot 'Workflows\FailoverGroup.ps1')
+. (Join-Path $PSScriptRoot 'Workflows\SupervisedNetwork.ps1')
 . (Join-Path $PSScriptRoot 'Workflows\ReadBack.ps1')
 
 function Invoke-MutationValidation {
@@ -62,15 +63,32 @@ function Invoke-MutationValidation {
     # LLDP working mode is a global setting; none of these are exercised by the
     # harness. The failover-group lifecycle (a pure metadata object) is covered
     # by the config-gated FailoverGroup workflow instead.
+    # In-place network setters and the global LLDP working mode have no test-owned
+    # variant and are never exercised. Create/remove of bonds, VLANs and LIFs is now
+    # covered by the operator-supervised network-stack workflow (gated separately
+    # below), so those commands are no longer unconditionally SkippedUnsafe here.
     $script:networkUnsafeMutators = @(
-        'New-DMPortBond', 'Set-DMPortBond', 'Remove-DMPortBond',
-        'New-DMvLan', 'Set-DMvLan', 'Remove-DMvLan',
-        'New-DMLif', 'Set-DMLif', 'Remove-DMLif',
-        'Set-DMLLDPWorkingMode'
+        'Set-DMPortBond', 'Set-DMvLan', 'Set-DMLif', 'Set-DMLLDPWorkingMode'
     )
-    Add-SkippedResult -Name $script:networkUnsafeMutators -Status 'SkippedUnsafe' -Reason 'Network mutations against ports, VLANs, LIFs, or the global LLDP working mode risk severing management or data access and are not exercised by the integrity harness (see docs/network/safety-and-live-validation.md).'
+    Add-SkippedResult -Name $script:networkUnsafeMutators -Status 'SkippedUnsafe' -Reason 'In-place network setters (Set-DMPortBond/Set-DMvLan/Set-DMLif) and the global LLDP working mode have no test-owned variant and are not exercised by the integrity harness (see docs/network/safety-and-live-validation.md).'
 
     $script:failoverGroupWorkflowCommands = @($script:FailoverGroupWorkflowCommandGates.Values | ForEach-Object { $_ })
+
+    # Operator-supervised network-stack workflow gating. Create/remove of bonds,
+    # VLANs and LIFs is represented by real Supervised results only when a supervised
+    # run is active (-RunSupervisedTests + Network.Enabled + Network.Supervised.Enabled
+    # + a stack Allow* gate). Otherwise the commands report NotRequested (switch
+    # absent) or NotConfigured (master/Network gate off); when the master gate is on
+    # but a stack is off, the workflow itself emits NotConfigured for the uncovered
+    # commands. Failover-group commands stay owned by the FailoverGroup workflow above.
+    $runMutation = [bool]($RunMutatingTests -and $configuration.AllowMutatingTests)
+    $runSupervised = [bool]($RunSupervisedTests -and $configuration.Network -and $configuration.Network.Enabled -and $configuration.Network.Supervised -and $configuration.Network.Supervised.Enabled)
+    if (-not $RunSupervisedTests) {
+        Add-SkippedResult -Name $script:SupervisedNetworkStackCommands -Status 'NotRequested' -Category 'Supervised' -Reason 'Call the runner with -RunSupervisedTests and enable the Network.Supervised gates in IntegrityValidationConfig.psd1 to run the operator-supervised network-stack workflows.'
+    }
+    elseif (-not $runSupervised) {
+        Add-SkippedResult -Name $script:SupervisedNetworkStackCommands -Status 'NotConfigured' -Category 'Supervised' -Reason 'Set Network.Enabled = $true and Network.Supervised.Enabled = $true (plus a stack Allow* gate) in IntegrityValidationConfig.psd1 to run the supervised network-stack workflows.'
+    }
 
     if (-not $RunMutatingTests) {
         Add-SkippedResult -Name @(
@@ -136,9 +154,12 @@ function Invoke-MutationValidation {
     elseif (-not $configuration.AllowMutatingTests) {
         Add-SkippedResult -Name @('test-owned mutation workflows') -Status 'NotConfigured' -Reason 'Set AllowMutatingTests = $true in IntegrityValidationConfig.psd1 to acknowledge creation and cleanup of test resources.'
     }
-    else {
-        Test-MutatingConfiguration
+
+    if ($runMutation -or $runSupervised) {
         Enable-DMValidationRequestTrace -Sink $mutationRequests
+
+        if ($runMutation) {
+        Test-MutatingConfiguration
         $lunName = New-TestName -Suffix 'lun'
         $renamedLunName = New-TestName -Suffix 'lun_renamed'
         $snapshotName = New-TestName -Suffix 'snap'
@@ -204,6 +225,12 @@ function Invoke-MutationValidation {
         . $script:SystemManagementMutationWorkflow
         . $script:FailoverGroupMutationWorkflow
         . $script:MutationReadBackWorkflow
+        }
+
+        if ($runSupervised) {
+            Test-SupervisedConfiguration
+            . $script:SupervisedNetworkWorkflow
+        }
 
         Invoke-RegisteredCleanup
 

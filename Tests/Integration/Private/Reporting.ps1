@@ -93,7 +93,7 @@ function Write-ValidationMarkdownReport {
     $lines.Add('## Checks')
     $lines.Add('')
 
-    $categoryOrder = @('Session', 'Read', 'Mutation', 'MutationRead')
+    $categoryOrder = @('Session', 'Read', 'Mutation', 'MutationRead', 'Supervised', 'SupervisedRead')
     $groupedChecks = @($Report.Checks | Group-Object Category)
     $orderedGroups = @(
         foreach ($category in $categoryOrder) {
@@ -119,7 +119,7 @@ function Write-ValidationMarkdownReport {
 
 # Public commands that belong to an opt-in validation domain. Coverage-fallback rows for
 # these commands must read NotRequested (not Blocked) when their runner switch was not
-# passed, even during a mutating run — RunMutatingTests alone never requests these domains.
+# passed, even during a mutating run -- RunMutatingTests alone never requests these domains.
 # Mode 'All' requires every listed switch to be set (used for the AllowMonitoringMutation
 # sub-gate, which also requires IncludePerformance); Mode 'Any' requires at least one.
 $script:OptInCommandDomains = @(
@@ -249,7 +249,7 @@ function Write-ValidationReport {
             RunId       = $runId
             ReportPath  = $ReportPath
             RequestCount = $mutationRequests.Count
-            FailedChecks = @($checks | Where-Object { $_.Category -in @('Mutation', 'MutationRead') -and $_.Status -in @('Failed', 'UnexpectedType') })
+            FailedChecks = @($checks | Where-Object { $_.Category -in @('Mutation', 'MutationRead', 'Supervised', 'SupervisedRead') -and $_.Status -in @('Failed', 'UnexpectedType') })
             RemainingTestOwnedResources = $remainingOwned
             Requests    = $mutationRequests
         }

@@ -2,91 +2,26 @@
 
 ## Current Focus
 
-- First human-supervised, config-gated live run of the failover-group
-  workflow (`Network.Enabled` + `Network.AllowFailoverGroupLifecycle`).
-
-## Recently Completed
-
-- Phase 06 (2026-07-07) network hardening:
-  - `-WhatIf` regression tests for all 15 network mutators
-    (no-API-call assertion driven by the shared
-    `Tests/Unit/Support/Assert-DMWhatIfSafe.ps1` helper, reusable by the
-    Phase 07 DR `-WhatIf` suite), plus `ConfirmImpact = 'High'` checks for
-    in-place modify/delete mutators. `Set-DMLLDPWorkingMode` now declares
-    `ConfirmImpact = 'High'`.
-  - Failover-group member getter `Get-DMFailoverGroupMember` (typed
-    `OceanStorFailoverGroupMember` output, registered in read validation and
-    `ModuleCoverage.psd1`). Note: `failovergroup/associate` has **no
-    documented GET** in the Dorado 6.1.6 REST reference; the getter uses the
-    documented per-type queries (`eth_port/associate`, `bond_port/associate`,
-    `vlan/associate` with `ASSOCIATEOBJTYPE=289`) instead.
-  - Server-side narrowing for `Get-DMLif`/`Get-DMvLan`: documented
-    `filter=NAME` (exact `::`, fuzzy `:`, client-side `-Like` re-check) and
-    documented `lif/{id}` / `vlan/{id}` single-object queries for `-Id`.
-  - `Set-DMLif` addresses a LIF by `-Id` alone (resolves the documented
-    mandatory `NAME` body field via `lif/{id}` first); `-Name`-only behavior
-    unchanged.
-  - Pipeline property-binding tests: `Get-DMPortBond | Remove-DMPortBond`,
-    `Get-DMFailoverGroup | Set-DMFailoverGroup`, `Set-DMLif` by piped
-    `Id`/`LIF Name`.
-  - Config-gated, test-owned failover-group workflow
-    (`Tests/Integration/Private/Workflows/FailoverGroup.ps1`), disabled by
-    default behind `Network.Enabled` + `Network.AllowFailoverGroupLifecycle`;
-    cleanup by captured ID only; member add/remove skipped until a
-    test-owned member type exists.
-  - VLAN idle-port guard design documented in
-    [safety-and-live-validation.md](safety-and-live-validation.md).
-- Phase 05 (2026-07-08) network carry-over:
-  - `Get-DMLif` filter parameters `-Ipv4Addr` / `-Ipv6Addr` / `-HomePortId`
-    (documented `IPV4ADDR` / `IPV6ADDR` / `HOMEPORTID` fields) and `Get-DMvLan`
-    filter parameters `-Tag` / `-FatherDrvType` (documented `TAG` /
-    `fatherDrvType` fields). All sent server-side, AND-composed with `-Name`,
-    unit-tested in `Get-Network.Tests.ps1`.
-  - VLAN idle-port guard **implemented and unit-tested** as private helper
-    `Get-DMVlanParentPortStatus` (read-only; returns Idle/InUse/Unknown, treats
-    unknown as unsafe; tests in
-    `Tests/Unit/Private/Get-DMVlanParentPortStatus.Tests.ps1`). Gate
-    `Network.AllowVlanLifecycle` defined in `IntegrityValidationConfig.psd1`,
-    **default off**. No live VLAN validation run.
-- Bond port lifecycle: `New/Set/Remove-DMPortBond`.
-- VLAN port lifecycle: `New/Set/Remove-DMvLan`.
-- Logical port (LIF) lifecycle: `New/Set/Remove-DMLif`.
-- Failover group lifecycle: `Get/New/Set/Remove-DMFailoverGroup`,
-  `Add/Remove-DMFailoverGroupMember`, typed `OceanStorFailoverGroup` output.
-- LLDP working mode: `Get/Set-DMLLDPWorkingMode`.
-- Shared `ConvertTo-DMRequestBody` helper for parameter→REST body mapping.
-- Paged-request hardening: per-page `-TimeoutSec` and identical-page loop
-  detection in `Invoke-DMPagedRequest`.
-- Unit tests for all new getters and mutators
-  (`Network-Actions.Tests.ps1`, `Get-Network.Tests.ps1`, LLDP cases in the
-  system-configuration test files).
-- `Get-DMFailoverGroup` and `Get-DMLLDPWorkingMode` registered in live
-  read validation; `New-DMRequestBody.ps1` added to the harness dot-source
-  whitelist.
-
-## High Priority
-
-- Human-supervised, gated live run of the failover-group workflow, then
-  record the run outcome here.
-  - **Status (2026-07-09): Passed — live run completed.** With
-    `Network.Enabled` + `AllowFailoverGroupLifecycle` on, the lab run
-    (run ID 20260709033729) exercised the full lifecycle on a test-owned
-    group: `New-DMFailoverGroup`, read-back, `Set-DMFailoverGroup`,
-    read-back, `Get-DMFailoverGroupMember` (zero members), and
-    `Remove-DMFailoverGroup` by captured ID — all `Passed`, no leftovers.
-    Member add/remove stayed `SkippedUnsafe` by design (see Medium
-    Priority). The first attempt exposed a `Get-DMFailoverGroup -Name`
-    bug (a `$null` REST response materialized one phantom object, so the
-    pre-create ownership guard misfired); fixed with the standard
-    null-guard in the response loop and covered by existing unit tests.
+- First human-supervised, config-gated live run of the new **supervised
+  network-stack category** in the integrity harness (`-RunSupervisedTests` +
+  `Network.Enabled` + `Network.Supervised.Enabled` + a stack gate). Two stacks
+  are codified in `Tests/Integration/Private/Workflows/SupervisedNetwork.ps1`:
+  - `AllowNetworkStackLifecycle` — bond + 4 VLANs + 4 role-LIFs (mirrors the
+    already live-validated `prompt-network-stack-supervised-test.md`).
+  - `AllowFailoverGroupStackLifecycle` — failover group + 2 VLAN members +
+    service LIF (mirrors the new `prompt-network-failovergroup-supervised-test.md`).
+    This one **awaits its first operator-supervised live run** before it is
+    trusted; the harness code and gates ship disabled by default.
 
 ## Medium Priority
 
-- Live member add/remove step in the failover-group workflow — **blocked**:
-  members are Ethernet ports / bond ports / VLANs (REST `ASSOCIATEOBJTYPE`
-  213/235/280, not LIFs), and the harness owns no such object. The idle-port
-  guard now exists (`Get-DMVlanParentPortStatus`), but a live test-owned VLAN
-  workflow that produces such a member must run first — still deferred.
+- Live member add/remove step — **now covered** by the supervised
+  failover-group stack, which creates two test-owned VLANs (REST
+  `ASSOCIATEOBJTYPE` 280) on the operator-designated ports and adds/removes them
+  as members. The old blocker (harness owned no eligible member object) is
+  resolved; the idle-port guard (`Get-DMVlanParentPortStatus`) runs as a
+  recorded dry-run in that workflow, not a gate. Remaining: run it live once and
+  record the LIF↔failover-group binding read-back behavior.
 
 ## Deferred (with reason)
 
@@ -203,13 +138,10 @@
 
 ## Low Priority / Polish
 
-- _Docs polish done (Phase 08)._ Raw-enum-vs-friendly-name behavior and the
-  display-field / prefer-IDs guidance are documented in
-  [bond-ports.md](bond-ports.md), [vlans.md](vlans.md), and
-  [logical-ports.md](logical-ports.md). The remaining friendly-name aliases
-  (`-BondPortType HostService`, `-AssociateObjectType EthernetPort`) and richer
-  `OceanStorvLan` / `OceanStorPortBond` display-field decoding are **code
-  enhancements** tracked in the code backlog, not docs-only items.
+- Friendly-name aliases (`-BondPortType HostService`,
+  `-AssociateObjectType EthernetPort`) and richer `OceanStorvLan` /
+  `OceanStorPortBond` display-field decoding — **code enhancements** tracked in
+  the code backlog, not docs-only items.
 
 ## Testing and Validation
 
@@ -221,6 +153,13 @@
   [safety-and-live-validation.md](safety-and-live-validation.md)). The
   failover-group workflow follows this pattern and stays off by default;
   `-RunMutatingTests` alone never runs it.
+- The supervised network-stack category (bond/VLAN/LIF create-remove and the
+  failover-group NAS stack) is a stricter tier: it requires the dedicated
+  `-RunSupervisedTests` switch **and** `Network.Supervised.Enabled` **and** a
+  per-stack `Allow*` gate, operates only on operator-designated link-down ports
+  re-verified read-only, and tears down every object by captured ID in reverse
+  order. `-RunMutatingTests` never triggers it. Classification is unit-covered
+  in `Tests/Unit/Private/ValidationReporting.Tests.ps1`.
 - VLAN live workflow (create/delete a tagged child on a verified-idle port)
   is possible in a dedicated lab. The idle-port detection guard is now
   implemented and unit-tested (`Get-DMVlanParentPortStatus`); the remaining

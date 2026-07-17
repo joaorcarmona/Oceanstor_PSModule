@@ -255,6 +255,58 @@
         # supervised, deferred session. See
         # docs/network/safety-and-live-validation.md.
         AllowVlanLifecycle = $true
+
+        # Operator-supervised, config-gated live network-stack workflows. These
+        # CREATE AND DESTROY real bonds, VLANs, LIFs and a failover group on the
+        # operator-designated ports below, so they run ONLY when the runner is
+        # called with -RunSupervisedTests AND this block's Enabled = $true (the
+        # -RunMutatingTests switch never triggers them). A human must be present
+        # and the ports must be verified link-down/idle. Every object is
+        # test-owned (dm_integrity_<runId>_*), captured by ID, and removed in
+        # reverse creation order within the same run. See
+        # docs/network/safety-and-live-validation.md. All gates disabled by default.
+        Supervised = @{
+            # Master gate for the supervised network-stack workflows.
+            Enabled = $false
+
+            # Bond + 4 VLANs (PortType 7) + 4 role-LIFs stack. Mirrors
+            # Tests/Prompts/prompt-network-stack-supervised-test.md (live-validated
+            # 2026-07-09). Uses the first four VlanTags below.
+            AllowNetworkStackLifecycle = $false
+
+            # Failover group + 2 VLAN members (PortType 1) + service LIF stack.
+            # Mirrors Tests/Prompts/prompt-network-failovergroup-supervised-test.md.
+            # Uses the first two VlanTags below.
+            AllowFailoverGroupStackLifecycle = $false
+
+            # Two currently link-down front-end ports (their Location values),
+            # reusable between runs, ideally one per controller so a failover group
+            # spans controllers. Re-verified read-only before anything is created.
+            PortLocations = @('CTE0.A.IOM0.P2', 'CTE0.B.IOM0.P2')
+
+            # VLAN tags from the reserved 130-140 range. The failover-group stack
+            # uses the first two; the bond stack uses the first four.
+            VlanTags = @(130, 131, 132, 133)
+
+            # LIF IPv4 address format: {0} is substituted with the VLAN tag, e.g.
+            # tag 130 -> 10.130.10.1. Paired with IpMask below (a /24 subnet).
+            IpAddressFormat = '10.{0}.10.1'
+            IpMask = '255.255.255.0'
+
+            # Service LIF on the failover-group stack: Role 2 = service,
+            # SupportProtocol 3 = NFS+CIFS, FailbackMode 1 = manual. CanFailover
+            # binds the LIF to the failover group so its service IP can move.
+            LifRole = 2
+            LifSupportProtocol = 3
+            LifCanFailover = $true
+            LifFailbackMode = 1
+
+            # Invoke the read-only idle-port guard (Get-DMVlanParentPortStatus) and
+            # record its verdict WITHOUT gating on it. On lab arrays it reports
+            # InUse for every port (the built-in System-defined failover group owns
+            # them all); recording this confirms that calibration finding.
+            RecordGuardDryRun = $true
+        }
     }
 
     Performance = @{
