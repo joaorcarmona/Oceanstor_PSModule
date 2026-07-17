@@ -31,36 +31,34 @@ and `followup-name-loopvar-collision-audit.md`, all of which were folded into th
 
 ## Phase 1 — HIGH priority
 
-Open, actionable code defects with a known next step, plus keeping the release status honest. These
-are the only genuine bugs left in shipped cmdlets.
+**Status 2026-07-17: Phase 1 is code-complete.** Both remaining shipped-cmdlet defects had their
+code + unit-test fixes landed on 2026-07-17 (commit `aa3c9b3`). The only work left for either is a
+supervised live re-confirm, which is a Phase 2.2 live-session activity — not open code work. Full
+detail is preserved in the Appendix; the live re-confirms are tracked under Phase 2.2.
 
-### 1.1 `Set-DMSnmpTrapServer` update — `1077949001` timeout (NeedsInvestigation)
-- The original `50331651` rejection is **fixed** (`Set` now always sends `ID`; `Test-DMSnmpTrapServer`
-  always sends `CMO_TRAP_SERVER_TYPE`/`CMO_TRAP_VERSION`). `Test-DMSnmpTrapServer` now **Passes** live.
-- `Set-DMSnmpTrapServer` no longer returns `50331651` but now fails with
-  `OceanStor API error 1077949001: The message has timed out` (PUT ~50 s; read-back shows port
-  unchanged).
-- **Next step:** make `Set-DMSnmpTrapServer` do a read-modify-write that re-supplies the full mandatory
-  field set (`CMO_TRAP_SERVER_IP`/`CMO_TRAP_SERVER_PORT`) rather than a partial `ID` + `PORT` body;
-  add/adjust the mock unit test; then a single-gate supervised live re-confirm.
-- Files: `POSH-Oceanstor/Public/Set-DMSnmpTrapServer.ps1`,
-  `Tests/Unit/Public/Set-DMSnmpTrapServer.Tests.ps1`; evidence in `docs/system-management/TODO.md` #4.
+### 1.1 `Set-DMSnmpTrapServer` update — DONE (code) ✅
+- ~~`1077949001` timeout on partial-field `PUT`~~ — **fixed 2026-07-17**: `Set-DMSnmpTrapServer` now
+  does a read-modify-write via `Get-DMSnmpTrapServer -Id`, re-supplying the full mandatory set
+  (`ID` + `CMO_TRAP_SERVER_IP` + `CMO_TRAP_SERVER_PORT`, plus USM/type/version) and overlaying only
+  caller-passed fields. Mock unit tests guard the regression. (The earlier `50331651` was already
+  fixed 2026-07-09; `Test-DMSnmpTrapServer` passed live then.)
+- **Remaining:** one supervised live re-confirm on reachable lab hardware → Phase 2.2 SNMP gate.
 
-### 1.2 Network field-mapping / update defects (NeedsInvestigation)
-- `Get-DMvLan` `Tag` field mapping returns unexpected value (NeedsInvestigation) and the related new
-  class field-mapping findings in the same family — `docs/network/TODO.md` "Deferred (with reason)".
-- VLAN raw-PUT update experiments return `50331651` ("The entered parameter is incorrect") whether
-  `NAME` is omitted or set to a new value — the update body contract is not yet pinned down.
-- **Next step:** static-analyze the VLAN update/read body against the 6.1.6 REST reference (mirror how
-  1.1 was root-caused); fix the class field map and/or update body; unit test; defer any live run to
-  Phase 2's VLAN session.
-- Files: `POSH-Oceanstor/Public/*vLan*.ps1`, `class-OceanStorvLan.ps1`; evidence in
-  `docs/network/TODO.md`.
+### 1.2 Network VLAN modify body — DONE (code) ✅
+- ~~`Set-DMvLan` `50331651` (MTU update)~~ — **fixed 2026-07-17**: body now echoes `ID` alongside
+  `MTU` (§4.6.9.3.8 marks both Mandatory); unit test `Tests/Unit/Public/Set-DMvLan.Tests.ps1` added.
+  The earlier `NAME`-omit/set experiments were a red herring — the modify interface documents no
+  `NAME` field.
+- `Get-DMvLan` empty `Tag` — static analysis 2026-07-17 concluded the `OceanStorvLan` class map is
+  correct against the 6.1.6 reference (constructing from the doc's own example JSON yields
+  `Tag = 123`). The empty live value is a firmware/response discrepancy, **not statically fixable**
+  and unsafe to guess an alternate field for. Moved to Phase 2.2 VLAN session (capture raw
+  `GET vlan` JSON, diff vs schema, only then decide on a tolerant fallback).
 
 ### Clearing on completion (Phase 1)
-- [ ] 1.1 fixed + live-confirmed → clear `docs/system-management/TODO.md` High Priority #4; strike here.
-- [ ] 1.2 fixed → clear the matching `docs/network/TODO.md` "Deferred (with reason)" / NeedsInvestigation
-      rows; strike here.
+- [x] 1.1 code fixed (2026-07-17, `aa3c9b3`) → live re-confirm now tracked under Phase 2.2 SNMP gate.
+- [x] 1.2 `Set-DMvLan` fixed (2026-07-17, `aa3c9b3`); `Get-DMvLan Tag` moved to Phase 2.2 VLAN session.
+      `docs/network/TODO.md` rows already carry the dated resolution.
 - [ ] If any Phase 1 defect ever becomes gating (none are today), update
       `release-readiness-go-no-go.md`.
 
@@ -89,25 +87,31 @@ failover-group workflow, syslog server (resolved 2026-07-17), local role + local
 (resolved 2026-07-17).
 
 Remaining sessions, easiest-unblocked first:
-1. **Network — VLAN live workflow.** Needs a human-reviewed lab dry run of `Get-DMVlanParentPortStatus`
-   (idle-port guard) against real hardware first, then the gated create/delete. Pairs with the 1.2 fix.
-   Currently `SkippedUnsafe` by design (guard confirmed no harness-owned idle port exists).
-2. **Replication/HyperMetro — lab-pair mutation workflow.** Blocked on lab resources: every
+1. **SNMP — `Set-DMSnmpTrapServer` update re-confirm (Phase 1.1).** Single-gate
+   (`SystemManagement.Enabled` + `AllowSnmpTrapServer`) supervised re-run on reachable lab hardware to
+   confirm the 2026-07-17 read-modify-write fix clears the `1077949001` timeout. Lowest setup cost —
+   the workflow already exists and create/remove are live-validated.
+2. **Network — VLAN live workflow (Phase 1.2).** Needs a human-reviewed lab dry run of
+   `Get-DMVlanParentPortStatus` (idle-port guard) against real hardware first, then the gated
+   create/delete to re-confirm the `Set-DMvLan` fix. **Also capture the raw `GET vlan` JSON** in this
+   session and diff it vs the documented schema to settle the empty-`Tag` firmware discrepancy. Currently
+   `SkippedUnsafe` by design (guard confirmed no harness-owned idle port exists).
+3. **Replication/HyperMetro — lab-pair mutation workflow.** Blocked on lab resources: every
    `HyperReplica_Lun0x` remote LUN is already a secondary of a pre-existing pair and `HyperMetro_Lun01`
    is absent on the remote device. Needs operator-supplied `RemoteDeviceId`/`RemoteLunId`/`DomainId`
    and a config review. HyperMetro `AllowDrMutation`/`AllowPrioritySwitch`/`AllowForceStart` must stay
    `$false` in committed config.
-3. **Replication/HyperMetro — dual-array NAS lab workflow.** Needs a second array in the lab topology
+4. **Replication/HyperMetro — dual-array NAS lab workflow.** Needs a second array in the lab topology
    (highest setup cost).
-4. **Replication/HyperMetro — failover/switchover exercise window.** Highest blast radius; own dedicated
-   window, never combined with another gate; blocked behind item 2's resources.
+5. **Replication/HyperMetro — failover/switchover exercise window.** Highest blast radius; own dedicated
+   window, never combined with another gate; blocked behind item 3's resources.
 - Config gates live in `IntegrityValidationConfig.psd1` (all default off). Record every outcome in the
   owning `docs/*/TODO.md` with `Status (date): ...`.
 
 ### 2.3 Documentation polish reconciliation
-- Fix the stale `alpha-v1.0.0-post-merge-phase-06-...` cross-reference inside `docs/network/TODO.md`'s
-  "Future Feature Branches" header (that naming scheme no longer exists — point at the current file or
-  drop the filename).
+- ~~Fix the stale `alpha-v1.0.0-post-merge-phase-06-...` cross-reference inside `docs/network/TODO.md`'s
+  "Future Feature Branches" header.~~ **DONE** — that header now reads "Tracked in the current
+  open-issues / remaining-open-todos planning set" with no stale filename.
 - Re-verify each domain's "Low Priority / Polish" section against actual doc content after commit
   `c79921a` (Phase 08 polish); strike items already done rather than redoing them.
 - Add the QoS SmartQoS glossary + compact policy-inventory reporting examples if still missing.
@@ -173,7 +177,12 @@ Do **not** implement until the stated blocker is externally resolved. Re-open tr
   NO-GO evidence retained as history); dangling `post-merge-phase-*` refs repointed in
   `Oceanstor_PSModule_TODO.md`.
 - SNMP trap `50331651` — root cause + code/unit-test fix landed 2026-07-09; `Test-DMSnmpTrapServer`
-  live-**Passed** (the `Set` timeout `1077949001` is the residual, now Phase 1.1).
+  live-**Passed**. `Set` timeout `1077949001` — read-modify-write code + unit-test fix landed
+  2026-07-17 (`aa3c9b3`); only a supervised live re-confirm remains (Phase 2.2 SNMP session).
+- `Set-DMvLan` `50331651` (MTU update) — modify-body fix (echo `ID` alongside `MTU`, §4.6.9.3.8) +
+  unit test `Set-DMvLan.Tests.ps1` landed 2026-07-17 (`aa3c9b3`); live re-confirm Phase 2.2 VLAN
+  session. `Get-DMvLan` empty `Tag` static-analyzed 2026-07-17 → firmware/response discrepancy,
+  raw-JSON capture folded into the same VLAN session.
 - Syslog `50331651` — **RESOLVED, live-confirmed 2026-07-17** (`CMO_ALARM_SYSLOG_SERVER_IP` field-name fix).
 - Role/local-user `50331651` — **RESOLVED, live-confirmed 2026-07-17** (`New-DMRole -PermitList` /
   `roleSource` drop; `New-DMLocalUser` `SCOPE`/`ROLEID` fix).
