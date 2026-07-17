@@ -129,7 +129,7 @@ alarms/events.
   `ConfirmImpact = 'High'`, permanently `SkippedUnsafe` in live validation.
 - Live tests must never replace or delete existing certificates.
 
-### 4. `Set-DMSnmpTrapServer` / `Test-DMSnmpTrapServer` reject update payload — API error 50331651 (found Phase 03, 2026-07-07 — **root cause identified + code/unit-test fix landed 2026-07-09; awaiting live re-confirm**)
+### 4. `Set-DMSnmpTrapServer` / `Test-DMSnmpTrapServer` reject update payload — API error 50331651 (found Phase 03, 2026-07-07 — **root cause identified; `Test` closed live 2026-07-09; `Set` read-modify-write fix + unit tests landed 2026-07-17; awaiting `Set` live re-confirm**)
 
 - **Root cause (static analysis, 2026-07-09):** confirmed against the in-repo
   `OceanStor Dorado 6.1.6 REST Interface Reference.md`. Two independent body-field
@@ -161,6 +161,17 @@ alarms/events.
   Next step: have `Set-DMSnmpTrapServer` re-supply the full mandatory field set
   (read-modify-write), then live re-confirm. Cleanup by captured ID succeeded;
   no leftovers.
+- **Code fix landed (2026-07-17):** `Set-DMSnmpTrapServer` now performs a
+  read-modify-write — it re-reads the current server via `Get-DMSnmpTrapServer -Id`
+  inside the `ShouldProcess` block and re-supplies the full mandatory field set
+  (`ID` + `CMO_TRAP_SERVER_IP` + `CMO_TRAP_SERVER_PORT`, plus USM/type/version),
+  overlaying only the fields the caller explicitly passed. This resolves candidate
+  cause (a) — the array no longer receives a partial-field `PUT`. Mock unit tests
+  in `Tests/Unit/Public/Set-DMSnmpTrapServer.Tests.ps1` now assert the mandatory
+  IP/PORT are re-supplied from the read-back when only `-Id` (or `-Id -Port`) is
+  given (regression guard for `1077949001`). **Still `NeedsInvestigation`:**
+  candidate cause (b) — the unreachable TEST-NET-1 target — can only be ruled out
+  by a supervised live re-confirm against reachable lab hardware (Phase 2 SNMP gate).
 - Surfaced by the first supervised SNMP-trap live run (see High Priority #1). On
   the lab array, `New-DMSnmpTrapServer` and `Remove-DMSnmpTrapServer` succeed,
   but `Set-DMSnmpTrapServer` (update) and `Test-DMSnmpTrapServer` (send test trap)

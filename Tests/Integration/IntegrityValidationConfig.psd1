@@ -85,9 +85,9 @@
         # Disabled by default because these checks create remote replication
         # objects and can change DR state. Enable only on a lab pair and only
         # with remote LUNs intended for this validation run.
-        Enabled = $true
-        AllowDrMutation = $true
-        AllowFailover = $true
+        Enabled = $false
+        AllowDrMutation = $false
+        AllowFailover = $false
 
         # Supply either RemoteDeviceId or RemoteDeviceName.
         RemoteDeviceId = ''
@@ -103,9 +103,9 @@
     HyperMetro = @{
         # Disabled by default because these checks create HyperMetro objects
         # and can suspend/start pairs. Enable only on a lab HyperMetro setup.
-        Enabled = $true
-        AllowDrMutation = $true
-        AllowPrioritySwitch = $true
+        Enabled = $false
+        AllowDrMutation = $false
+        AllowPrioritySwitch = $false
 
         # Force-start (HyperMetroPair/startup_node) forcibly brings up a pair and is
         # only meaningful in a genuine arbitration/outage scenario. It stays off by

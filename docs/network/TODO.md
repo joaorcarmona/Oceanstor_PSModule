@@ -132,9 +132,31 @@
     ignore the `System-defined` group and accept operator-supplied ports via
     config).
   - `Get-DMvLan` returns an empty `Tag` property for live VLANs (names embed
-    the tag, e.g. `<port>.123`); the class field mapping needs a look
-    (NeedsInvestigation).
+    the tag, e.g. `<port>.123`). **Static analysis 2026-07-17: the class
+    mapping is correct against the 6.1.6 reference.** All three VLAN GET
+    interfaces — batch `GET vlan` (§4.6.9.4.9), single `GET vlan/{id}`
+    (§4.6.9.4.36) and `GET vlan/associate` (§4.6.12.1.1) — document `TAG`
+    (string(uint32), example `"TAG": "123"`), and `OceanStorvLan` reads
+    `$vlanReceived.TAG` into `Vlan Tag Id`. A repro constructing the class from
+    the reference's own example JSON yields `Vlan Tag Id = 123` correctly, so
+    this is **not** a field-name mismatch (unlike the syslog case). The empty
+    live value is therefore a firmware/response discrepancy — the lab array's
+    `GET vlan` element apparently omitted or emptied `TAG` for those VLANs.
+    Not statically fixable and not safe to guess an alternate field name for.
+    **Next step (Phase 2 VLAN live session):** capture the raw `GET vlan` JSON
+    on the lab array and diff it against the documented schema; only then decide
+    whether a tolerant fallback field name is warranted.
   Details in [safety-and-live-validation.md](safety-and-live-validation.md).
+- `Set-DMvLan` (`PUT vlan/{id}`, MTU change) rejected raw-PUT update experiments
+  with OceanStor API error `50331651` whether `NAME` was omitted or set —
+  **root-caused + fixed 2026-07-17.** The earlier `NAME` experiments were a red
+  herring: the modify interface (§4.6.9.3.8) documents no `NAME` field at all and
+  marks **both `ID` and `MTU` Mandatory** in the body. `Set-DMvLan` was sending
+  only `MTU` (ID in the URL path alone), which the array rejects — the same
+  omission pattern as the SNMP-trap `50331651` fix. `Set-DMvLan` now echoes
+  `ID` in the body alongside `MTU`; unit test added
+  (`Tests/Unit/Public/Set-DMvLan.Tests.ps1`) asserting the corrected body.
+  **Awaiting live re-confirm in the Phase 2 VLAN session.**
 
 ## Low Priority / Polish
 
