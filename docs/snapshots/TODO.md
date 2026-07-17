@@ -17,7 +17,10 @@
   the `Set-DMvLan`/SNMP-trap fixes. `Set-DMHyperCDPSchedule` now echoes
   `$body.ID = $schedule.Id` before the PUT; unit assertion added to
   `Tests/Unit/Public/HyperCDPSchedule.Tests.ps1` ("modifies a schedule by name").
-  **Awaiting live re-confirm in a Phase 2 HyperCDP session.**
+  **Live-confirmed 2026-07-17 against a V600R005C27 lab array (10.10.10.24): a throwaway
+  HyperCDP schedule was created, its description modified via `Set-DMHyperCDPSchedule`
+  (accepted — no `50331651`), read back, and removed by captured ID; array state restored,
+  no leftovers.**
 - Confirm whether additional snapshot policy or schedule APIs should be
   implemented beyond HyperCDP schedules.
 - Add deeper restore runbooks for isolated lab use.

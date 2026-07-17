@@ -197,8 +197,10 @@ alarms/events.
 - **Fix (2026-07-17, static analysis only):** `Set-DMRole` now echoes `$body.id = $Id`
   (lowercase, matching the role interface's field casing) alongside the URL path. Unit
   assertion added to `Tests/Unit/Public/Set-SystemConfiguration.Tests.ps1` (the "creates,
-  modifies, and removes roles" test). **Awaiting live re-confirm in a Phase 2
-  local-user/role session.**
+  modifies, and removes roles" test). **Live-confirmed 2026-07-17 against a V600R005C27
+  lab array (10.10.10.24): a throwaway role was created, its description modified via
+  `Set-DMRole` (accepted — no `50331651`), read back, and removed by captured ID; array
+  state restored, no leftovers.**
 - Note: `Set-DMLocalUser` (`PUT user/{id}`, §4.3.1.3.3) omits `ID` from the body too, but
   there the field is **Conditional** (required only when a super-administrator modifies
   another user), so it is recorded here as an audit note rather than fixed in this pass.

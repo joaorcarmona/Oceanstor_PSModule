@@ -165,8 +165,10 @@
   `Set-DMvLan` fixes. `Set-DMFailoverGroup` now echoes `ID` in the body (added to its
   `ConvertTo-DMRequestBody` map; `Id` is a Mandatory parameter, so it is always present)
   alongside the URL path; unit assertion added to
-  `Tests/Unit/Public/Network-Actions.Tests.ps1`. **Awaiting live re-confirm in a Phase 2
-  failover-group session.**
+  `Tests/Unit/Public/Network-Actions.Tests.ps1`. **Live-confirmed 2026-07-17 against a
+  V600R005C27 lab array (10.10.10.24): a throwaway customized failover group was created,
+  its description modified via `Set-DMFailoverGroup` (accepted — no `50331651`), read back,
+  and removed by captured ID; array state restored, no leftovers.**
 
 ## Low Priority / Polish
 
