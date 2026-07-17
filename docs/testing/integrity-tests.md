@@ -8,6 +8,20 @@ workflows (create/update/delete cycles the harness fully owns and cleans up).
 Performance/capacity checks are a separate opt-in layer — see
 [Performance integrity tests](performance-integrity-tests.md).
 
+## Focused runners
+
+Alongside the full harness, `Tests/Integration/` holds small single-purpose
+runners for targeted live re-confirmation:
+
+- `Invoke-ModifyBodyLiveCheck.ps1` — re-confirms the "missing Mandatory `ID` body
+  field" modify fixes (`Set-DMFailoverGroup`, `Set-DMRole`, `Set-DMHyperCDPSchedule`;
+  REST §4.6.9.3.7 / §4.3.6.3.1 / §4.9.12.3.3). For each cmdlet it creates one
+  run-unique, test-owned object, modifies its description, reads it back, and removes
+  it by captured ID. A rejected body (error `50331651`/`1077949001`) makes the cmdlet
+  throw, so a PASS proves the echoed ID is accepted. Same `-Hostname`/`-Credential`/
+  `-SkipCertificateCheck` parameters as the main runner; exit code 0 = all passed.
+  Live-confirmed 2026-07-17 against a V600R005C27 lab array.
+
 ## Purpose
 
 - Confirm every public getter returns the expected object type(s) against a
