@@ -40,6 +40,20 @@ Known gaps below rather than claimed here.
 
 ## New Features
 
+- Added **feature-gated command modules**. The ~314 public commands are now grouped
+  into named features (`Host`, `Lun`, `FileSystem`, `Network`, `HyperMetro`,
+  `Replication`, `Performance`, …) in `POSH-Oceanstor/DMFeatureMap.psd1`. The two
+  data-protection features that cannot be live-validated without a second array or
+  quorum — `HyperMetro` and `Replication` — ship **disabled by default**: their
+  commands are not exported, so `Get-Command` and tab-completion hide them until the
+  feature is enabled. New `Get-DMFeature`, `Enable-DMFeature`, and `Disable-DMFeature`
+  cmdlets manage state through a per-user config at
+  `%APPDATA%\POSH-Oceanstor\ModuleConfig.json` (only non-default overrides are stored;
+  `$env:POSH_OCEANSTOR_CONFIG_PATH` redirects it for labs/CI). Toggling a feature
+  requires `Import-Module POSH-Oceanstor -Force` to take effect. Import always fails
+  open — a missing, malformed, or unknown-key config falls back to built-in defaults
+  with a warning rather than blocking module load — and a Pester suite enforces that
+  every exported command is assigned to exactly one feature.
 - Added `Set-DMMappingView` and `Rename-DMMappingView` for editing a mapping
   view's name and description (REST `PUT /mappingview/{id}`). Only the
   `NAME`/`DESCRIPTION` labels change; host-group, LUN-group, and port-group

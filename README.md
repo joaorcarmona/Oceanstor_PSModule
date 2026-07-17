@@ -34,6 +34,51 @@ configuration such as NTP, SNMP, syslog, local users, and roles.
     Get-Help about_POSH-Oceanstor
 ```
 
+## Feature modules
+
+Commands are grouped into **features**. Most features are enabled by default, but the two
+data-protection features whose live validation needs a second array or quorum server —
+**HyperMetro** and **Replication** — ship **disabled**. A disabled feature's commands are
+simply not exported, so `Get-Command -Module POSH-Oceanstor` and tab-completion do not show
+them until you enable the feature and re-import the module.
+
+| Feature | Default | Contents |
+|---|---|---|
+| `Core` | always on (locked) | Connect/Disconnect, `Get-DMSystem`, exports, and the `*-DMFeature` cmdlets |
+| `HyperMetro` | **off** | HyperMetro domains/pairs/consistency-groups and quorum servers |
+| `Replication` | **off** | remote replication pairs/consistency-groups, vStore pairs, remote device/LUN |
+| `Host` | on | hosts, host groups, FC/iSCSI/NVMe initiators, host links |
+| `Lun` | on | LUN CRUD, LUN groups, workload types |
+| `Mapping` | on | mapping views, port groups, map/unmap commands |
+| `Snapshot` | on | LUN snapshots, snapshot consistency groups, HyperCDP schedules |
+| `Protection` | on | protection groups |
+| `QoS` | on | QoS policies and associations |
+| `FileSystem` | on | file systems, FS snapshots, dTrees, quotas, CIFS/NFS shares & clients, vStores |
+| `Network` | on | ETH/FC/SAS ports, VLANs, LIFs, bonds, failover groups, DNS, LLDP |
+| `Hardware` | on | disks, enclosures, controllers, BBUs, interface modules, equipment status |
+| `StoragePool` | on | storage pool getters and rename |
+| `Performance` | on | performance counters, capacity history, monitoring, report tasks |
+| `SystemManagement` | on | alarms, certificates, local users, roles, SNMP, NTP, syslog, timezone/UTC |
+
+```powershell
+# See every feature, its configured state, and how many commands it groups.
+Get-DMFeature
+
+# Enable HyperMetro, then re-import so its commands become available in this session.
+Enable-DMFeature -Name HyperMetro
+Import-Module POSH-Oceanstor -Force
+
+# Disable it again (removes the override).
+Disable-DMFeature -Name HyperMetro
+Import-Module POSH-Oceanstor -Force
+```
+
+Enabling or disabling a feature records the change in a per-user config file at
+`%APPDATA%\POSH-Oceanstor\ModuleConfig.json` (only overrides that differ from the built-in
+defaults are stored). The change does **not** affect the current session — you must run
+`Import-Module POSH-Oceanstor -Force`, or start a new session, for the export list to change.
+Set `$env:POSH_OCEANSTOR_CONFIG_PATH` to redirect the config file (used by labs and CI).
+
 ### Examples
 
 The module is a PowerShell module to interact with Huawei OceanStor devices through the REST API. All commands are designed to work without extra arguments unless you are filtering results. The WebSession parameter is optional on all commands. If you are querying multiple storage systems at the same time, pass the WebSession object returned by Connect-deviceManager.
