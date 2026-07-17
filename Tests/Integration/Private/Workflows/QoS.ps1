@@ -17,8 +17,12 @@ $script:QosMutationWorkflow = {
             }
             # A 'Once' policy window must be in the future or the array rejects it as overdue
             # (API 1077950863), so schedule the effective date one day ahead.
+            # The policy is created WITHOUT a LUN binding: a SmartQoS policy can bind to exactly
+            # one object type, and this workflow validates the LUN-group association path below
+            # (Add-DMQosAssociation). Binding a LUN here makes that association conflict, which
+            # the cmdlet's pre-validation (correctly) rejects.
             New-DMQosPolicy -WebSession $session -Name $qosPolicyName -Description "Integrity validation run $runId" `
-                -MaxIOPS 1000 -LunName $lunName -ScheduleStartTime (Get-Date).AddDays(1) -StartTime '00:00' -Duration 3600
+                -MaxIOPS 1000 -ScheduleStartTime (Get-Date).AddDays(1) -StartTime '00:00' -Duration 3600
         })
         if ($qosPolicy.Count -gt 0 -and $qosPolicy[0].Name -eq $qosPolicyName) {
             Register-TestOwnedResource -Kind QosPolicy -Identity $qosPolicyName

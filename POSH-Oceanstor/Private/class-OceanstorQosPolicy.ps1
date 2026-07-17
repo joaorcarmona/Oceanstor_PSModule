@@ -101,14 +101,28 @@ class OceanstorQosPolicy {
         $this.{Burst Bandwidth} = $PolicyReceived.BURSTBANDWIDTH
         $this.{Burst IOPS} = $PolicyReceived.BURSTIOPS
         $this.{Burst Time} = $PolicyReceived.BURSTTIME
-        $this.{Lun List} = @($PolicyReceived.LUNLIST)
-        $this.{FS List} = @($PolicyReceived.FSLIST)
-        $this.{Host List} = @($PolicyReceived.HOSTLIST)
+        $this.{Lun List} = [OceanstorQosPolicy]::ParseAssociationList($PolicyReceived.LUNLIST)
+        $this.{FS List} = [OceanstorQosPolicy]::ParseAssociationList($PolicyReceived.FSLIST)
+        $this.{Host List} = [OceanstorQosPolicy]::ParseAssociationList($PolicyReceived.HOSTLIST)
         $this.{Parent Policy Id} = $PolicyReceived.PARENTPOLICYID
         $this.{Parent Policy Name} = $PolicyReceived.PARENTPOLICYNAME
-        $this.{Policy List} = @($PolicyReceived.POLICYLIST)
+        $this.{Policy List} = [OceanstorQosPolicy]::ParseAssociationList($PolicyReceived.POLICYLIST)
         $this.{vStore Id} = $PolicyReceived.vstoreId
         $this.{vStore Name} = $PolicyReceived.vstoreName
+    }
+
+    # OceanStor returns association lists (LUNLIST/FSLIST/HOSTLIST/POLICYLIST) as
+    # JSON-encoded strings such as '["1875"]' or, when empty, '[""]'. Decode them into a
+    # real string array and drop empty entries so an unbound policy yields @() instead of a
+    # single '[""]' element that later reads as a phantom binding. Values already delivered
+    # as an array (e.g. in unit-test mocks) pass through unchanged.
+    static [string[]] ParseAssociationList([object]$Raw) {
+        if ($null -eq $Raw) { return @() }
+        $items = if ($Raw -is [string]) {
+            try { @($Raw | ConvertFrom-Json) } catch { @($Raw) }
+        }
+        else { @($Raw) }
+        return @($items | Where-Object { $null -ne $_ -and "$_".Trim() -ne '' })
     }
 
     [psobject] Delete() {

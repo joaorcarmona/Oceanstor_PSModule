@@ -207,8 +207,11 @@ $script:SystemManagementMutationWorkflow = {
             if (@(Get-DMRole -WebSession $session | Where-Object Name -EQ $localRoleName).Count -gt 0) {
                 throw "A role named '$localRoleName' already exists; refusing to claim it test-owned."
             }
+            # Create per REST reference section 4.3.6.1.1: the array rejects a role with no
+            # permission entry (50331651), and roleSource is response-only on create, so we
+            # supply a minimal read-only permitList and omit roleSource here.
             New-DMRole -WebSession $session -Name $localRoleName -Description "Integrity run $runId" `
-                -RoleOwnerGroup $systemManagement.LocalRoleOwnerGroup -RoleSource $systemManagement.LocalRoleSource -Confirm:$false
+                -RoleOwnerGroup $systemManagement.LocalRoleOwnerGroup -PermitList 'lun:lun_R;' -Confirm:$false
         })
         if ($roleCreated.Count -gt 0) {
             $createdRole = @(Add-MutationReadVerification -Name 'New-DMRole:ReadBack' -ExpectedType 'OceanStorRole' -Action {

@@ -87,19 +87,24 @@ alarms/events.
   - `AllowSnmpUsmUser` — **Passed end-to-end**: `New-DMSnmpUsmUser`, read-back,
     `Set-DMSnmpUsmUser`, read-back, and `Remove-DMSnmpUsmUser` by captured ID all
     green on a run-unique user with generated throwaway secrets.
-  - `AllowSyslogServer` — **Failed / NeedsInvestigation**: `POST syslog_addip`
-    with body `{CMO_SYSLOG_SERVER_IP: <test-owned address>}` rejected by this
-    6.1.6 build with `50331651 The entered parameter is incorrect`.
-    `Add-DMSyslogServer` sends only the IP (its documented contract), so this
-    build likely demands additional mandatory fields; needs the vendor REST
-    reference before any payload change. Nothing created; `Remove-DMSyslogServer`
-    correctly reported `Blocked`.
-  - `AllowLocalUserLifecycle` — **Blocked by `New-DMRole` / NeedsInvestigation**:
-    `POST role` with `{name, description, roleOwnerGroup, roleSource}` fails with
-    `50331651`. Every existing role returned by `GET role` carries a `permitList`,
-    so role creation likely requires at least one permission entry, which
-    `New-DMRole` does not expose. Dependent user steps correctly skipped; nothing
-    created, and the connected session was never at lockout risk.
+  - `AllowSyslogServer` — **Resolved (root cause found + fix landed, live-confirmed
+    2026-07-17)**: the `50331651` was a field-name error, not a missing field. Per
+    REST reference §4.2.2.1.1/§4.2.2.2.1 the mandatory field is
+    `CMO_ALARM_SYSLOG_SERVER_IP`, but `Add-DMSyslogServer`/`Remove-DMSyslogServer`
+    sent `CMO_SYSLOG_SERVER_IP`. Corrected both cmdlets; the read model
+    (`class-OceanStorSystemConfiguration.ps1`) also now reads
+    `CMO_ALARM_SYSLOG_SERVER_IP`, fixing the read-back verify. Add/read-back/remove
+    all **Passed** live.
+  - `AllowLocalUserLifecycle` — **Resolved (root cause found + fix landed, live-confirmed
+    2026-07-17)**. Two independent `50331651` causes:
+    - `New-DMRole`: the create body carried `roleSource` (a response-only field per
+      REST reference §4.3.6.1.1) and no `permitList`. `New-DMRole` now exposes a
+      `-PermitList` parameter; the workflow supplies a minimal `lun:lun_R;` permission
+      and omits `roleSource` on create.
+    - `New-DMLocalUser`: the create body omitted the mandatory `SCOPE` field and used
+      camel-case `roleId` instead of `ROLEID` (REST reference, Creating a User).
+      `New-DMLocalUser` now defaults `SCOPE = '0'` (local user) and sends `ROLEID`.
+    Full role + user create/set/remove lifecycle **Passed** live.
 
 ### 2. Certificate management — Stage A done (Phase 05), Stage B deferred
 

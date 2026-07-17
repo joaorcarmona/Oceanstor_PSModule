@@ -116,7 +116,10 @@ class OceanStorSyslogNotification : OceanStorSystemConfigObject {
     [string]$Port
 
     OceanStorSyslogNotification([object]$Source, [pscustomobject]$WebSession) : base($Source, $WebSession) {
-        $addresses = [OceanStorSystemConfigObject]::GetValue($Source, @('CMO_SYSLOG_SERVER_IP', 'CMO_SYSLOG_SERVER_IP_LIST'))
+        # The syslog GET interface returns the receiver address under
+        # CMO_ALARM_SYSLOG_SERVER_IP (see REST reference 4.2.2); older/other builds
+        # may expose CMO_SYSLOG_SERVER_IP(_LIST), so both are accepted here.
+        $addresses = [OceanStorSystemConfigObject]::GetValue($Source, @('CMO_SYSLOG_SERVER_IP', 'CMO_SYSLOG_SERVER_IP_LIST', 'CMO_ALARM_SYSLOG_SERVER_IP', 'CMO_ALARM_SYSLOG_SERVER_IP_LIST'))
         $this.{Server Addresses} = @($addresses)
         $this.Format = [OceanStorSystemConfigObject]::GetString($Source, @('syslogFormat'))
         $this.Protocol = [OceanStorSystemConfigObject]::GetString($Source, @('protocol', 'CMO_SYSLOG_PROTOCOL'))

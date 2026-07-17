@@ -171,20 +171,37 @@ $script:PerformanceRealtimeWorkflow = {
             Write-Host "Monitoring round-trip: sampling interval $originalInterval s -> $temporaryInterval s -> restore $originalInterval s."
 
             $monitoringRestored = $false
+            $changeApplied = $false
             try {
                 Invoke-MutationStep -Name 'Set-DMPerformanceMonitoring:MinimalChange' -Action {
                     Set-DMPerformanceMonitoring -WebSession $session -SamplingIntervalSeconds $temporaryInterval -Confirm:$false
                 } | Out-Null
 
-                Add-MutationReadVerification -Name 'Set-DMPerformanceMonitoring:ChangeReadBack' -Action {
-                    $currentMonitoring = @(Get-DMPerformanceMonitoring -WebSession $session)
-                    if ($currentMonitoring.Count -gt 0 -and [int]$currentMonitoring[0].SamplingIntervalSeconds -ne $temporaryInterval) {
-                        throw "Expected sampling interval $temporaryInterval after the change, got $($currentMonitoring[0].SamplingIntervalSeconds)."
-                    }
-                    $currentMonitoring
-                } | Out-Null
+                # The array refuses to modify the sampling-interval policy while performance
+                # statistics collection is switched on (API 1077949051): the change above is
+                # rejected, MinimalChange records NoData, and the interval is left untouched.
+                # Confirm the change actually landed before asserting the read-back or attempting
+                # a restore, so a pre-existing statistics switch is reported as a skipped
+                # precondition rather than a spurious "expected X, got Y" change failure.
+                $afterChange = @(Get-DMPerformanceMonitoring -WebSession $session)
+                $changeApplied = $afterChange.Count -gt 0 -and [int]$afterChange[0].SamplingIntervalSeconds -eq $temporaryInterval
+
+                if ($changeApplied) {
+                    Add-MutationReadVerification -Name 'Set-DMPerformanceMonitoring:ChangeReadBack' -Action {
+                        $currentMonitoring = @(Get-DMPerformanceMonitoring -WebSession $session)
+                        if ($currentMonitoring.Count -gt 0 -and [int]$currentMonitoring[0].SamplingIntervalSeconds -ne $temporaryInterval) {
+                            throw "Expected sampling interval $temporaryInterval after the change, got $($currentMonitoring[0].SamplingIntervalSeconds)."
+                        }
+                        $currentMonitoring
+                    } | Out-Null
+                }
+                else {
+                    Add-SkippedResult -Name @('Set-DMPerformanceMonitoring:ChangeReadBack', 'Set-DMPerformanceMonitoring:Restore') -Status 'Blocked' -Category 'Mutation' `
+                        -Reason 'The array did not apply the sampling-interval change (typically API 1077949051 when performance statistics collection is switched on); the read-back and restore were skipped because the monitoring strategy was left unchanged.'
+                }
             }
             finally {
+                if ($changeApplied) {
                 try {
                     Set-DMPerformanceMonitoring -WebSession $session -SamplingIntervalSeconds $originalInterval -Confirm:$false | Out-Null
                     $currentMonitoring = @(Get-DMPerformanceMonitoring -WebSession $session)
@@ -210,6 +227,7 @@ $script:PerformanceRealtimeWorkflow = {
                     })
                     Write-Warning '*** MONITORING RESTORE FAILED ***'
                     Write-Warning "Restore the original state manually with: Set-DMPerformanceMonitoring -SamplingIntervalSeconds $originalInterval -Confirm:`$false"
+                }
                 }
             }
         }

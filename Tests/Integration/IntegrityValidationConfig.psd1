@@ -104,8 +104,8 @@
         # Disabled by default because these checks create HyperMetro objects
         # and can suspend/start pairs. Enable only on a lab HyperMetro setup.
         Enabled = $true
-        AllowDrMutation = $false
-        AllowPrioritySwitch = $false
+        AllowDrMutation = $true
+        AllowPrioritySwitch = $true
 
         # Force-start (HyperMetroPair/startup_node) forcibly brings up a pair and is
         # only meaningful in a genuine arbitration/outage scenario. It stays off by
