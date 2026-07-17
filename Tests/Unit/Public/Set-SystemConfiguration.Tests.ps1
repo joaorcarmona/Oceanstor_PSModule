@@ -314,6 +314,10 @@ Describe 'System configuration mutation functions' {
         $script:method | Should -Be 'PUT'
         $script:resource | Should -Be 'role/role%2F01'
         $script:body.description | Should -Be 'updated'
+        # Regression guard for OceanStor API error 50331651: the modify interface (REST
+        # reference 4.3.6.3.1) marks id (lowercase) as a Mandatory body field; sending
+        # description alone (id only in the URL path) is rejected by the array.
+        $script:body.id | Should -Be 'role/01'
 
         $null = Remove-DMRole -WebSession $script:session -Id 'role/01' -Confirm:$false
         $script:method | Should -Be 'DELETE'

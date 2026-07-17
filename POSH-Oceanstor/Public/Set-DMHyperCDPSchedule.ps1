@@ -84,6 +84,13 @@ function Set-DMHyperCDPSchedule {
                 $body.isRetainPreviousSnapshot = $true
             }
 
+            # The modify interface (PUT SNAPSHOT_SCHEDULE/{id}, OceanStor Dorado 6.1.6 REST
+            # reference 4.9.12.3.3) marks ID as a Mandatory body field; all other fields are
+            # Optional/Conditional. ConvertTo-DMHyperCDPSchedulePayload never emits ID, so echo
+            # the resolved schedule ID in the body as well as the URL path to avoid an
+            # error-50331651 rejection.
+            $body.ID = $schedule.Id
+
             if ($PSCmdlet.ShouldProcess($schedule.Name, 'Modify HyperCDP schedule')) {
                 $response = Invoke-DeviceManager -WebSession $session -Method 'PUT' -Resource "snapshot_schedule/$($schedule.Id)" -BodyData $body
                 $response = $response | Assert-DMApiSuccess

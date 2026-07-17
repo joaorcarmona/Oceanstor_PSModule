@@ -171,6 +171,10 @@ InModuleScope NetworkActionsTestModule {
             $script:lastRequest.Method | Should -Be 'PUT'
             $script:lastRequest.Resource | Should -Be 'failovergroup/fg-01'
             $script:lastRequest.BodyData.DESCRIPTION | Should -Be 'updated'
+            # Regression guard for OceanStor API error 50331651: the modify interface
+            # (REST reference 4.6.9.3.7) marks ID as a Mandatory body field; sending the
+            # changed fields alone (ID only in the URL path) is rejected by the array.
+            $script:lastRequest.BodyData.ID | Should -Be 'fg-01'
         }
 
         It 'removes failover groups through the delete alias' {

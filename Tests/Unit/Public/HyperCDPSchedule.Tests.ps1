@@ -140,6 +140,10 @@ Describe 'HyperCDP schedule commands' {
         ($script:requests | Select-Object -Last 1).Resource | Should -Be 'snapshot_schedule/7'
         ($script:requests | Select-Object -Last 1).Body.DESCRIPTION | Should -Be 'updated'
         ($script:requests | Select-Object -Last 1).Body.SCHEDULETYPE | Should -Be 1
+        # Regression guard for OceanStor API error 50331651: the modify interface (REST
+        # reference 4.9.12.3.3) marks ID as a Mandatory body field; the schedule payload
+        # omits it, so Set-DMHyperCDPSchedule must echo the resolved ID in the body.
+        ($script:requests | Select-Object -Last 1).Body.ID | Should -Be '7'
     }
 
     It 'enables and disables a schedule' {

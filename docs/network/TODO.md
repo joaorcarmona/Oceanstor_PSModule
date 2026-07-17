@@ -157,6 +157,16 @@
   `ID` in the body alongside `MTU`; unit test added
   (`Tests/Unit/Public/Set-DMvLan.Tests.ps1`) asserting the corrected body.
   **Awaiting live re-confirm in the Phase 2 VLAN session.**
+- `Set-DMFailoverGroup` (`PUT failovergroup/{id}`, NAME/DESCRIPTION change) omitted the
+  Mandatory `ID` body field — **root-caused + fixed 2026-07-17 (static analysis).** The
+  modify interface (§4.6.9.3.7) marks **`ID` Mandatory** in the body; NAME/DESCRIPTION/
+  MSGRETURNTYPE are Optional. The doc's terse example body is ID-less, but the Parameters
+  table is the contract — the same `50331651` omission pattern as the SNMP-trap and
+  `Set-DMvLan` fixes. `Set-DMFailoverGroup` now echoes `ID` in the body (added to its
+  `ConvertTo-DMRequestBody` map; `Id` is a Mandatory parameter, so it is always present)
+  alongside the URL path; unit assertion added to
+  `Tests/Unit/Public/Network-Actions.Tests.ps1`. **Awaiting live re-confirm in a Phase 2
+  failover-group session.**
 
 ## Low Priority / Polish
 

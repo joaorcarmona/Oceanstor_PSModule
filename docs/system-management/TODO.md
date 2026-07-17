@@ -186,6 +186,23 @@ alarms/events.
   Phase 03 (evidence-gathering only). No workflow code changed here — recorded and
   routed. Cleanup was unaffected: the created object was removed by captured ID.
 
+### 5. `Set-DMRole` modify rejects payload — missing Mandatory `id` body field (static analysis 2026-07-17)
+
+- Sibling defect to High Priority #4 and the network `Set-DMvLan`/`Set-DMFailoverGroup`
+  fixes: the modify interface (`PUT role/{id}`, REST reference §4.3.6.3.1) marks **`id`
+  (lowercase) as a Mandatory body field**; `name`/`description` are Optional (and cannot be
+  changed concurrently). The doc's terse example body omits `id`, but the Parameters table
+  is the contract, so sending `description`/`name` alone (id only in the URL path) is
+  rejected as `50331651`.
+- **Fix (2026-07-17, static analysis only):** `Set-DMRole` now echoes `$body.id = $Id`
+  (lowercase, matching the role interface's field casing) alongside the URL path. Unit
+  assertion added to `Tests/Unit/Public/Set-SystemConfiguration.Tests.ps1` (the "creates,
+  modifies, and removes roles" test). **Awaiting live re-confirm in a Phase 2
+  local-user/role session.**
+- Note: `Set-DMLocalUser` (`PUT user/{id}`, §4.3.1.3.3) omits `ID` from the body too, but
+  there the field is **Conditional** (required only when a super-administrator modifies
+  another user), so it is recorded here as an audit note rather than fixed in this pass.
+
 ## Medium Priority
 
 > Deduplication note: LDAP/AD and Email/SMTP remain `open` future feature

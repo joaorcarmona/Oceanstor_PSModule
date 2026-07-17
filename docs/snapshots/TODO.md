@@ -9,6 +9,15 @@
 
 ## High Priority
 
+- `Set-DMHyperCDPSchedule` (`PUT SNAPSHOT_SCHEDULE/{id}`) omitted the Mandatory `ID`
+  body field — **root-caused + fixed 2026-07-17 (static analysis).** The modify interface
+  (REST reference §4.9.12.3.3) marks **`ID` Mandatory** in the body; every other field is
+  Optional/Conditional. `ConvertTo-DMHyperCDPSchedulePayload` never emits `ID`, so the
+  cmdlet previously sent it only in the URL path — the same `50331651` omission pattern as
+  the `Set-DMvLan`/SNMP-trap fixes. `Set-DMHyperCDPSchedule` now echoes
+  `$body.ID = $schedule.Id` before the PUT; unit assertion added to
+  `Tests/Unit/Public/HyperCDPSchedule.Tests.ps1` ("modifies a schedule by name").
+  **Awaiting live re-confirm in a Phase 2 HyperCDP session.**
 - Confirm whether additional snapshot policy or schedule APIs should be
   implemented beyond HyperCDP schedules.
 - Add deeper restore runbooks for isolated lab use.
