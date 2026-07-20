@@ -49,8 +49,8 @@ prerelease scheme.
 - Source/approve a code-signing certificate, then flip CI `SIGNING_ENABLED`; do a first
   supervised `PUBLISH_ENABLED` dry-run. Both default **off** — no real Gallery publish has
   been attempted.
-- When tagging, use `v1.0.0` (not `v1.0.0-beta`) — the release workflow's
-  tag-vs-`ModuleVersion` guard compares against the bare `1.0.0`; the prerelease is carried
+- When tagging, use `1.0.0` (not `1.0.0-beta`) — the release workflow's
+  tag-vs-`ModuleVersion` guard compares against the bare `1.0.0` (a leading `v` is trimmed if present); the prerelease is carried
   by the manifest's `Prerelease` field.
 
 ---

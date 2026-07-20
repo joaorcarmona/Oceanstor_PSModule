@@ -10,14 +10,14 @@ Status: Prerelease — not yet tagged/published
 
 ## Release Mechanics (read before tagging)
 
-- **Tag convention: use `v1.0.0`, not `v1.0.0-beta`.** `ModuleVersion` in the
-  manifest is `1.0.0`; prerelease status is conveyed only by
+- **Tag convention: use `1.0.0` (matches `ModuleVersion` exactly), not `1.0.0-beta`.**
+  `ModuleVersion` in the manifest is `1.0.0`; prerelease status is conveyed only by
   `PrivateData.PSData.Prerelease = 'beta'`, never by the git tag. The
   `validate` job in `.github/workflows/release.yml` trims a leading `v`/`V`
-  from the tag and compares the result to `ModuleVersion` verbatim — a tag of
-  `v1.0.0-beta` fails that guard (`'1.0.0-beta' -ne '1.0.0'`). The guard is
-  left as-is (no prerelease-suffix normalization) for this beta; releasers
-  must tag `v1.0.0`.
+  from the tag and compares the result to `ModuleVersion` verbatim, so `1.0.0`
+  (or `v1.0.0`) passes but a tag of `1.0.0-beta` fails that guard
+  (`'1.0.0-beta' -ne '1.0.0'`). The guard is left as-is (no prerelease-suffix
+  normalization) for this beta; releasers must tag `1.0.0`.
 - **Signing: deferred, beta ships unsigned.** No signing certificate has been
   sourced or approved. `vars.SIGNING_ENABLED` remains unset/off, so the `sign`
   job re-uploads the package unsigned and logs a `::notice::`. This is an

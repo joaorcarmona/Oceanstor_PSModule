@@ -118,6 +118,8 @@ function Invoke-SupervisedStackTeardown {
 }
 
 function Write-SupervisedGuardDryRun {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', 'Ports',
+        Justification = 'Used inside the Invoke-MutationStep -Action scriptblock (foreach $p in $Ports), which the analyzer does not track as usage.')]
     # Invoke the read-only idle-port guard and record its verdict WITHOUT gating.
     param([Parameter(Mandatory)][pscustomobject[]]$Ports)
     Invoke-MutationStep -Name 'Get-DMVlanParentPortStatus:GuardDryRun' -Category 'Supervised' -Action {
@@ -140,6 +142,8 @@ function Write-SupervisedGuardDryRun {
 function Invoke-SupervisedNetworkStack {
     # bond(2 ports) -> 4 VLANs (PortType 7, on the bond) -> 4 role-LIFs
     # (HomePortType 8, one per VLAN) -> validate -> inline LIFO teardown.
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', 'Ports',
+        Justification = 'Used inside the Invoke-MutationStep -Action scriptblock (@($Ports.Id)), which the analyzer does not track as usage.')]
     param(
         [Parameter(Mandatory)][pscustomobject[]]$Ports,
         [Parameter(Mandatory)]$Sup
@@ -219,6 +223,10 @@ function New-SupervisedBond {
     # (the step label 'New-DMPortBond:Supervised'), not this function's argument --
     # which then fails New-DMPortBond's name-pattern validation. $BondName does not
     # collide with any Invoke-MutationStep parameter, so it resolves correctly.
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '',
+        Justification = 'Internal test helper; the bond create it wraps is confirm-suppressed via -Confirm:$false at the call site, and the harness is non-interactive.')]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', 'Ports',
+        Justification = 'Used inside the Invoke-MutationStep -Action scriptblock (@($Ports.Id)), which the analyzer does not track as usage.')]
     param(
         [Parameter(Mandatory)][pscustomobject[]]$Ports,
         [Parameter(Mandatory)][string]$BondName,
