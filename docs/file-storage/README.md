@@ -15,7 +15,8 @@ NFS and CIFS shares, NFS clients, dTrees, quotas, and file-system snapshots.
 | [quotas.md](quotas.md) | Directory, user, and user-group quotas | Yes |
 | [nas-services.md](nas-services.md) | NAS service configuration | Not implemented here |
 | [safety-and-live-validation.md](safety-and-live-validation.md) | Safety rules for live arrays | - |
-| [CHANGELOG.md](../../CHANGELOG.md) | Consolidated changelog — completed work, deferred items, safety reference | - |
+| [CHANGELOG.md](../../CHANGELOG.md) | Completed work, live-validation history, standing safety reference | - |
+| [TODO.md](../../TODO.md) | Open, deferred & future work | - |
 
 ## Connecting
 
@@ -96,4 +97,4 @@ snapshot, and quota getters where data is available. Mutating integrity has
 opt-in test-owned NAS workflows for file systems, file-system rename/resize,
 dTrees, NFS, CIFS, file-system snapshots, and quotas.
 
-See [CHANGELOG.md](../../CHANGELOG.md) for completed work and deferred gaps.
+See [CHANGELOG.md](../../CHANGELOG.md) for completed work and [TODO.md](../../TODO.md) for open/deferred gaps.

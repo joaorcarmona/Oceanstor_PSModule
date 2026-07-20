@@ -22,7 +22,8 @@ ports, bond ports, VLANs, logical interfaces (LIFs), failover groups, and LLDP.
 | [failover-groups.md](failover-groups.md) | Failover groups and port membership | `Get-DMFailoverGroup`, `Get-DMFailoverGroupMember`, `New-DMFailoverGroup`, `Set-DMFailoverGroup`, `Remove-DMFailoverGroup`, `Add-DMFailoverGroupMember`, `Remove-DMFailoverGroupMember` | Yes — test-owned only |
 | [lldp.md](lldp.md) | LLDP working mode (global) | `Get-DMLLDPWorkingMode`, `Set-DMLLDPWorkingMode` | Yes — global setting, unsafe by default |
 | [safety-and-live-validation.md](safety-and-live-validation.md) | Safety classification and live-validation rules | — | — |
-| [CHANGELOG.md](../../CHANGELOG.md) | Consolidated changelog — completed work, deferred items, future branches | — | — |
+| [CHANGELOG.md](../../CHANGELOG.md) | Completed work, live-validation history, standing safety reference | — | — |
+| [TODO.md](../../TODO.md) | Open, deferred & future work | — | — |
 
 Related domains documented elsewhere: DNS servers (`Get-DMdnsServer`,
 `Set-DMdnsServer`) belong to the system-management docs; port groups and
@@ -88,4 +89,4 @@ are intentionally **not** part of any live mutation workflow. See
 
 ## Roadmap
 
-Completed work, deferred gaps, and future branches: [Changelog](../../CHANGELOG.md)
+Completed work: [Changelog](../../CHANGELOG.md); open, deferred & future work: [TODO](../../TODO.md)

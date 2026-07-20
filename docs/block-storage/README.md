@@ -17,7 +17,8 @@ protection groups.
 | [mapped-lun-removal-troubleshooting.md](mapped-lun-removal-troubleshooting.md) | Diagnosing why a mapped LUN cannot (or should not yet) be removed | Read-only diagnosis |
 | [protection-groups.md](protection-groups.md) | Protection groups for LUN/LUN-group protection workflows | Yes |
 | [safety-and-live-validation.md](safety-and-live-validation.md) | Safety rules for live arrays | - |
-| [CHANGELOG.md](../../CHANGELOG.md) | Consolidated changelog — completed work, deferred items, safety reference | - |
+| [CHANGELOG.md](../../CHANGELOG.md) | Completed work, live-validation history, standing safety reference | - |
+| [TODO.md](../../TODO.md) | Open, deferred & future work | - |
 
 ## Connecting
 
@@ -70,5 +71,5 @@ by-name/by-ID lookups. Mutating integrity has opt-in workflows for test-owned
 LUN, LUN group, host/host group, mapping, direct mapping, initiator, protection
 group, and HyperCDP schedule objects.
 
-See [CHANGELOG.md](../../CHANGELOG.md) for completed work and deferred gaps, and [safety-and-live-validation.md](safety-and-live-validation.md)
+See [CHANGELOG.md](../../CHANGELOG.md) for completed work, [TODO.md](../../TODO.md) for open/deferred gaps, and [safety-and-live-validation.md](safety-and-live-validation.md)
 before running live mutators.
