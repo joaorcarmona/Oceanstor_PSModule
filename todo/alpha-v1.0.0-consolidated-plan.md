@@ -87,10 +87,11 @@ failover-group workflow, syslog server (resolved 2026-07-17), local role + local
 (resolved 2026-07-17).
 
 Remaining sessions, easiest-unblocked first:
-1. **SNMP — `Set-DMSnmpTrapServer` update re-confirm (Phase 1.1).** Single-gate
-   (`SystemManagement.Enabled` + `AllowSnmpTrapServer`) supervised re-run on reachable lab hardware to
-   confirm the 2026-07-17 read-modify-write fix clears the `1077949001` timeout. Lowest setup cost —
-   the workflow already exists and create/remove are live-validated.
+1. ~~**SNMP — `Set-DMSnmpTrapServer` update re-confirm (Phase 1.1).**~~ **DONE 2026-07-20** —
+   re-confirmed live on `10.10.10.24` via a reversible port round-trip on a pre-existing reachable
+   trap server (Id `0`, `10.10.12.84`): update applied and reverted with no `1077949001`/`50331651`,
+   mandatory-field re-supply left other fields intact. Rules out the last `NeedsInvestigation`
+   candidate (unreachable TEST-NET-1 target). Outcome recorded in `docs/system-management/TODO.md` §4.
 2. **Network — VLAN live workflow (Phase 1.2).** Needs a human-reviewed lab dry run of
    `Get-DMVlanParentPortStatus` (idle-port guard) against real hardware first, then the gated
    create/delete to re-confirm the `Set-DMvLan` fix. **Also capture the raw `GET vlan` JSON** in this

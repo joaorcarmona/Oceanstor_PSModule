@@ -129,7 +129,7 @@ alarms/events.
   `ConfirmImpact = 'High'`, permanently `SkippedUnsafe` in live validation.
 - Live tests must never replace or delete existing certificates.
 
-### 4. `Set-DMSnmpTrapServer` / `Test-DMSnmpTrapServer` reject update payload — API error 50331651 (found Phase 03, 2026-07-07 — **root cause identified; `Test` closed live 2026-07-09; `Set` read-modify-write fix + unit tests landed 2026-07-17; awaiting `Set` live re-confirm**)
+### 4. `Set-DMSnmpTrapServer` / `Test-DMSnmpTrapServer` reject update payload — API error 50331651 (found Phase 03, 2026-07-07 — **root cause identified; `Test` closed live 2026-07-09; `Set` read-modify-write fix + unit tests landed 2026-07-17; `Set` live-confirmed 2026-07-20 — CLOSED**)
 
 - **Root cause (static analysis, 2026-07-09):** confirmed against the in-repo
   `OceanStor Dorado 6.1.6 REST Interface Reference.md`. Two independent body-field
@@ -169,9 +169,19 @@ alarms/events.
   cause (a) — the array no longer receives a partial-field `PUT`. Mock unit tests
   in `Tests/Unit/Public/Set-DMSnmpTrapServer.Tests.ps1` now assert the mandatory
   IP/PORT are re-supplied from the read-back when only `-Id` (or `-Id -Port`) is
-  given (regression guard for `1077949001`). **Still `NeedsInvestigation`:**
-  candidate cause (b) — the unreachable TEST-NET-1 target — can only be ruled out
-  by a supervised live re-confirm against reachable lab hardware (Phase 2 SNMP gate).
+  given (regression guard for `1077949001`).
+- **Live re-confirm — CLOSED (2026-07-20, lab array `10.10.10.24`, human-directed,
+  reversible round-trip on a pre-existing reachable trap server):** targeted the
+  already-configured server Id `0` (`10.10.12.84`, port 162). `Set-DMSnmpTrapServer
+  -Id 0 -Port 1162` applied with **no `1077949001` timeout and no `50331651`** — the
+  `PUT` returned promptly (no ~50 s stall), read-back showed port `1162`, and the
+  read-modify-write re-supply left Address/User/Type/Version untouched. Reverted with
+  `-Port 162`; read-back confirmed full-state equality with the pre-run snapshot. This
+  rules out candidate cause (b): the earlier stall was tied to the unreachable
+  TEST-NET-1 *test-owned* target, not the modify path itself — against a real
+  reachable server the 2026-07-17 read-modify-write fix clears the timeout. The second
+  configured server (Id `1`) was never touched. `Set-DMSnmpTrapServer` is now
+  `Validated` alongside create/test/remove.
 - Surfaced by the first supervised SNMP-trap live run (see High Priority #1). On
   the lab array, `New-DMSnmpTrapServer` and `Remove-DMSnmpTrapServer` succeed,
   but `Set-DMSnmpTrapServer` (update) and `Test-DMSnmpTrapServer` (send test trap)
