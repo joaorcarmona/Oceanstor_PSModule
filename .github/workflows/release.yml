@@ -61,6 +61,10 @@ jobs:
         shell: pwsh
         run: Install-Module PSScriptAnalyzer -Force -Scope CurrentUser -SkipPublisherCheck
 
+      - name: Install ImportExcel
+        shell: pwsh
+        run: Install-Module ImportExcel -Force -Scope CurrentUser -SkipPublisherCheck
+
       - name: Run ScriptAnalyzer + full unit test suite (fails on any analyzer issue or test failure)
         shell: pwsh
         run: |

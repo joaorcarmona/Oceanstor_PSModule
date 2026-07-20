@@ -20,8 +20,12 @@ BeforeDiscovery {
             Where-Object { $_.Name -match 'Replication|HyperMetro|VStorePair|RemoteDevice|RemoteLun|QuorumServer' } |
             ForEach-Object { . $_.FullName }
 
+        # Test-ModuleRequirements.ps1 runs a top-level throw when ImportExcel is not
+        # installed; it is unrelated to DR mutators, so exclude it (like the stubbed
+        # Invoke-DeviceManager) rather than let it fail discovery on a runner without
+        # the optional ImportExcel module.
         Get-ChildItem -LiteralPath (Join-Path $moduleRoot 'Private') -Filter '*.ps1' |
-            Where-Object { $_.Name -notlike 'class-*' -and $_.Name -ne 'Invoke-DeviceManager.ps1' } |
+            Where-Object { $_.Name -notlike 'class-*' -and $_.Name -ne 'Invoke-DeviceManager.ps1' -and $_.Name -ne 'Test-ModuleRequirements.ps1' } |
             ForEach-Object { . $_.FullName }
 
         # Stub the transport. Only POST/PUT/DELETE are recorded as mutating; GET

@@ -65,6 +65,7 @@ jobs:
         run: |
           Set-PSRepository PSGallery -InstallationPolicy Trusted
           Install-Module -Name Pester -RequiredVersion 5.7.1 -Scope CurrentUser -Force -SkipPublisherCheck
+          Install-Module -Name ImportExcel -Scope CurrentUser -Force -SkipPublisherCheck
       - name: Run unit tests with code coverage
         shell: pwsh
         run: |
