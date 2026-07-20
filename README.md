@@ -17,21 +17,48 @@ configuration such as NTP, SNMP, syslog, local users, and roles.
 
 ## How to Install
 
+Requires **PowerShell 7+**. The module depends on **ImportExcel**.
+
+### From the PowerShell Gallery (recommended)
+
 ```powershell
-# Install
-    # Download the POSH-Oceanstor from github
-    # unzip the file
-    # Extract the POSH-Oceanstor folder to your user Modules Location in $HOME\Documents\PowerShell\Modules
-    # Or to System Wide Location C:\Program Files\WindowsPowerShell\Modules
+# Install for the current user (no admin rights required).
+Install-Module -Name POSH-Oceanstor -Scope CurrentUser
 
-# Import the POSH-Module
-    Import-Module -name posh-oceanstor
+# ...or system-wide (run from an elevated session).
+Install-Module -Name POSH-Oceanstor -Scope AllUsers
 
-# Get POSH-Oceanstor commands
-    Get-Command -Module posh-oceanstor
+# Update to the latest release later.
+Update-Module -Name POSH-Oceanstor
+```
 
-# Get help
-    Get-Help about_POSH-Oceanstor
+`Install-Module` pulls in the required **ImportExcel** dependency automatically.
+
+### Manual install
+
+```powershell
+# 1. Download the latest release from GitHub:
+#    https://github.com/joaorcarmona/Oceanstor_PSModule/releases
+# 2. Unzip it.
+# 3. Copy the POSH-Oceanstor folder into one of your module paths:
+#      Current user: $HOME\Documents\PowerShell\Modules\POSH-Oceanstor
+#      System wide : C:\Program Files\PowerShell\Modules\POSH-Oceanstor
+
+# The manual method does not resolve dependencies, so install ImportExcel yourself:
+Install-Module -Name ImportExcel -Scope CurrentUser
+```
+
+### Import and get started
+
+```powershell
+# Import the module.
+Import-Module -Name POSH-Oceanstor
+
+# List the module's commands.
+Get-Command -Module POSH-Oceanstor
+
+# Read the module help.
+Get-Help about_POSH-Oceanstor
 ```
 
 ## Feature modules
