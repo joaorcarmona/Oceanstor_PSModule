@@ -22,9 +22,10 @@ Status: Stable — tagged `1.0.0`, published to the PowerShell Gallery
   accepted limitation, not a defect — see Known Gaps below.
 - **Publish: enabled for the real PowerShell Gallery.** The `publish` job runs a
   dry-run against a disposable local `LocalDryRun` PSRepository first, then
-  publishes for real. The real-publish step is gated on the release being cut
-  from `master` (`github.event.release.target_commitish == 'master'`) and
-  `vars.PUBLISH_ENABLED == 'true'` plus a present `PSGALLERY_API_KEY` secret.
+  publishes for real. The real-publish job is gated on the GitHub Release being
+  a stable (non-prerelease) release (`github.event.release.prerelease == false`),
+  and the publish step additionally requires `vars.PUBLISH_ENABLED == 'true'`
+  plus a present `PSGALLERY_API_KEY` secret.
 
 ## Summary
 
