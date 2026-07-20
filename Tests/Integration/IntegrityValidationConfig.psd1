@@ -267,17 +267,17 @@
         # docs/network/safety-and-live-validation.md. All gates disabled by default.
         Supervised = @{
             # Master gate for the supervised network-stack workflows.
-            Enabled = $false
+            Enabled = $true
 
             # Bond + 4 VLANs (PortType 7) + 4 role-LIFs stack. Mirrors
             # Tests/Prompts/prompt-network-stack-supervised-test.md (live-validated
             # 2026-07-09). Uses the first four VlanTags below.
-            AllowNetworkStackLifecycle = $false
+            AllowNetworkStackLifecycle = $true
 
             # Failover group + 2 VLAN members (PortType 1) + service LIF stack.
             # Mirrors Tests/Prompts/prompt-network-failovergroup-supervised-test.md.
             # Uses the first two VlanTags below.
-            AllowFailoverGroupStackLifecycle = $false
+            AllowFailoverGroupStackLifecycle = $true
 
             # Two currently link-down front-end ports (their Location values),
             # reusable between runs, ideally one per controller so a failover group
