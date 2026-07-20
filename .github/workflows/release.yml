@@ -181,7 +181,7 @@ jobs:
   publish:
     name: Publish to PowerShell Gallery (gated)
     needs: sign
-    if: ${{ github.ref == 'refs/heads/master' }}
+    if: ${{ github.event.release.target_commitish == 'master' }}
     runs-on: windows-latest
     permissions:
       contents: read

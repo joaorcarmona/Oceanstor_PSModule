@@ -2,34 +2,29 @@
 
 ---
 
-# v1.0.0-beta
+# v1.0.0
 
-Date: 2026-07-07
-Branch: `beta-v1.0.0`
-Status: Prerelease — not yet tagged/published
+Date: 2026-07-20
+Branch: `master` (released from `beta-v1.0.0`)
+Status: Stable — tagged `1.0.0`, published to the PowerShell Gallery
 
 ## Release Mechanics (read before tagging)
 
-- **Tag convention: use `1.0.0` (matches `ModuleVersion` exactly), not `1.0.0-beta`.**
-  `ModuleVersion` in the manifest is `1.0.0`; prerelease status is conveyed only by
-  `PrivateData.PSData.Prerelease = 'beta'`, never by the git tag. The
-  `validate` job in `.github/workflows/release.yml` trims a leading `v`/`V`
-  from the tag and compares the result to `ModuleVersion` verbatim, so `1.0.0`
-  (or `v1.0.0`) passes but a tag of `1.0.0-beta` fails that guard
-  (`'1.0.0-beta' -ne '1.0.0'`). The guard is left as-is (no prerelease-suffix
-  normalization) for this beta; releasers must tag `1.0.0`.
-- **Signing: deferred, beta ships unsigned.** No signing certificate has been
+- **Tag convention: use `1.0.0` (matches `ModuleVersion` exactly).**
+  `ModuleVersion` in the manifest is `1.0.0` and the `Prerelease` field is now
+  commented out, so this is a stable (non-prerelease) release. The `validate`
+  job in `.github/workflows/release.yml` trims a leading `v`/`V` from the tag
+  and compares the result to `ModuleVersion` verbatim, so `1.0.0` (or `v1.0.0`)
+  passes; releasers must tag `1.0.0`.
+- **Signing: deferred, 1.0.0 ships unsigned.** No signing certificate has been
   sourced or approved. `vars.SIGNING_ENABLED` remains unset/off, so the `sign`
   job re-uploads the package unsigned and logs a `::notice::`. This is an
-  accepted beta limitation, not a defect — see Known Gaps below.
-- **Publish: dry-run only, verified.** The `publish` job's dry-run step
-  (`Publish-Module` against a disposable local `LocalDryRun` PSRepository,
-  registered and unregistered within the job) always runs and does not touch
-  the real PowerShell Gallery. The real-publish step is additionally gated on
-  `github.ref == 'refs/heads/master'` and `vars.PUBLISH_ENABLED == 'true'` plus
-  a present `PSGALLERY_API_KEY` secret; both remain unset/off for this beta,
-  so only the disposable local dry-run path is exercised. No real Gallery
-  publish has occurred.
+  accepted limitation, not a defect — see Known Gaps below.
+- **Publish: enabled for the real PowerShell Gallery.** The `publish` job runs a
+  dry-run against a disposable local `LocalDryRun` PSRepository first, then
+  publishes for real. The real-publish step is gated on the release being cut
+  from `master` (`github.event.release.target_commitish == 'master'`) and
+  `vars.PUBLISH_ENABLED == 'true'` plus a present `PSGALLERY_API_KEY` secret.
 
 ## Summary
 
