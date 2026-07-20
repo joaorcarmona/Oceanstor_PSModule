@@ -60,6 +60,17 @@ function Test-SupervisedPortInvariant {
     if ("$($Port.'Port Bond Id')".Trim()) {
         throw "Supervised guard-stop: port $loc is already bonded; refusing."
     }
+    # Cross-check bond membership via Get-DMPortBond: the ETH getter's own
+    # 'Port Bond Id' field can read blank even when the port is listed in a
+    # bond's Ethernet Ports (observed live on 10.10.10.24 with a leftover
+    # 'BondTest'). Without this the invariant passes a bonded port and the
+    # failure only surfaces later at New-DMvLan (API 1073743391).
+    $bondMember = @(Get-DMPortBond -WebSession $session | Where-Object {
+        "$($_.'Ethernet Ports')" -match [regex]::Escape([string]$Port.Id)
+    })
+    if ($bondMember.Count -gt 0) {
+        throw "Supervised guard-stop: port $loc is a member of bond '$($bondMember[0].Name)' (its 'Port Bond Id' reads blank but Get-DMPortBond lists it); refusing."
+    }
     if (@(Get-DMLif -WebSession $session -HomePortId $Port.Id).Count -gt 0) {
         throw "Supervised guard-stop: port $loc hosts one or more LIFs; refusing."
     }
@@ -201,20 +212,25 @@ function Invoke-SupervisedFailoverGroupStack {
         [Parameter(Mandatory)][pscustomobject[]]$Ports,
         [Parameter(Mandatory)]$Sup
     )
-    $tags = @($Sup.VlanTags | Select-Object -First 2)
+    # A failover group's member VLANs must share ONE tag id: the array rejects
+    # mixed tags with error 1073815814 ("VLAN ports with different IDs cannot be
+    # added to one failover group"). Use a single tag on both raw ports -- same
+    # tag, different ports -- mirroring the production NAS pair (CTE0.A/B.IOM0.P0.50).
+    # Live-validated 2026-07-20. (The bond network-stack workflow, by contrast,
+    # legitimately uses four distinct tags for four VLANs on one bond.)
+    $fgTag = @($Sup.VlanTags | Select-Object -First 1)[0]
     $mask = [string]$Sup.IpMask
     $fgName = New-TestName -Suffix 'fg'
     $lifName = New-TestName -Suffix 'lif'
     $created = [System.Collections.Generic.Stack[pscustomobject]]::new()
 
     try {
-        # ---- VLANs on the two raw ports (PortType 1 = VLAN on Ethernet) ----
+        # ---- one tagged VLAN per raw port, both sharing $fgTag (PortType 1) ----
         $vlanIds = [System.Collections.Generic.List[string]]::new()
-        for ($i = 0; $i -lt $tags.Count; $i++) {
-            $currentTag = $tags[$i]
+        for ($i = 0; $i -lt 2 -and $i -lt $Ports.Count; $i++) {
             $portId = [string]$Ports[$i].Id
             $vlan = @(Invoke-MutationStep -Name 'New-DMvLan:Supervised' -Category 'Supervised' -Action {
-                New-DMvLan -WebSession $session -Tag $currentTag -PortType 1 -PortId $portId -Confirm:$false
+                New-DMvLan -WebSession $session -Tag $fgTag -PortType 1 -PortId $portId -Confirm:$false
             })
             if ($vlan.Count -gt 0 -and $vlan[0].Id) {
                 $vid = [string]$vlan[0].Id
@@ -274,7 +290,7 @@ function Invoke-SupervisedFailoverGroupStack {
 
         # ---- service LIF homed on VLAN[0], bound to the group ----
         $homeVid = [string]$vlanIds[0]
-        $lifIp = ($Sup.IpAddressFormat -f $tags[0])
+        $lifIp = ($Sup.IpAddressFormat -f $fgTag)
         $role = [int]$Sup.LifRole
         $supportProtocol = [int]$Sup.LifSupportProtocol
         $canFailover = [bool]$Sup.LifCanFailover

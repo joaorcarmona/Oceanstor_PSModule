@@ -2,26 +2,60 @@
 
 ## Current Focus
 
-- First human-supervised, config-gated live run of the new **supervised
-  network-stack category** in the integrity harness (`-RunSupervisedTests` +
-  `Network.Enabled` + `Network.Supervised.Enabled` + a stack gate). Two stacks
-  are codified in `Tests/Integration/Private/Workflows/SupervisedNetwork.ps1`:
-  - `AllowNetworkStackLifecycle` — bond + 4 VLANs + 4 role-LIFs (mirrors the
-    already live-validated `prompt-network-stack-supervised-test.md`).
+- Both supervised network-stack workflows in the integrity harness
+  (`-RunSupervisedTests` + `Network.Enabled` + `Network.Supervised.Enabled` + a
+  per-stack gate) are now **live-validated**. Codified in
+  `Tests/Integration/Private/Workflows/SupervisedNetwork.ps1`:
+  - `AllowNetworkStackLifecycle` — bond + 4 VLANs + 4 role-LIFs (live-validated
+    2026-07-09; mirrors `prompt-network-stack-supervised-test.md`).
   - `AllowFailoverGroupStackLifecycle` — failover group + 2 VLAN members +
-    service LIF (mirrors the new `prompt-network-failovergroup-supervised-test.md`).
-    This one **awaits its first operator-supervised live run** before it is
-    trusted; the harness code and gates ship disabled by default.
+    service LIF. **Live-validated 2026-07-20 (operator-supervised, lab array
+    10.10.10.24, ports `CTE0.A.IOM0.P2` + `CTE0.B.IOM0.P2`).** Full pass: two
+    VLANs (same tag, one per port) → customized NAS failover group → both added
+    as members (getter reported **2**) → group description modify + read-back →
+    service LIF (`Role=Service`, `10.130.10.1/24`, home `CTE0.A.IOM0.P2.130`)
+    with its failover binding **surfacing on read-back** (`Failover Group Id=1`,
+    `Can Failover=True`) → discrete member remove (getter reported **1**) →
+    LIFO teardown by captured ID, **zero leftovers**, both ports back to
+    `link down`/unbonded. Nothing pre-existing was touched. Two firmware/
+    environment findings recorded below.
+
+### Findings from the 2026-07-20 FG live run
+
+- **FG member VLANs must share one tag id.** The array rejects members with
+  different VLAN tags: `1073815814` ("VLAN ports with different IDs cannot be
+  added to one failover group"). A failover group spans **the same tag across
+  different ports** (as the production NAS pair does: `CTE0.A/B.IOM0.P0.50`).
+  The harness `Invoke-SupervisedFailoverGroupStack` and the
+  `prompt-network-failovergroup-supervised-test.md` reference script used two
+  distinct tags (130 & 131) and were **fixed to a single shared tag** (first
+  `VlanTags` entry, 130) on both ports. (The bond network-stack workflow, by
+  contrast, correctly uses four distinct tags for four VLANs on one bond.)
+- **LIF↔failover-group binding reads back cleanly.** The earlier
+  `NeedsInvestigation` caveat (that `OceanStorLIF` might not surface
+  `Failover Group Id` / `Can Failover`) is **resolved**: both fields returned
+  correctly on read-back for a service LIF created with `-FailoverGroupId`
+  `-CanFailover`. No field-mapping gap on this path.
+- **Blocker cleared: orphaned `BondTest` stack removed.** `CTE0.A.IOM0.P2` was
+  trapped in a leftover test bond `BondTest` → VLAN `BondTest.123` → LIF
+  `testelif2` (`10.123.10.1`), debris from an earlier session. The invariant
+  precheck missed it (`Port Bond Id` reads blank), but the status helper
+  `Get-DMVlanParentPortStatus` reported it (`Reasons=[Port is a member of
+  bond(s): BondTest.]`). With operator authorization it was removed by captured
+  ID (LIFO: LIF → VLAN → bond), freeing the port; the guard then reported only
+  the expected `System-defined` membership.
 
 ## Medium Priority
 
-- Live member add/remove step — **now covered** by the supervised
-  failover-group stack, which creates two test-owned VLANs (REST
-  `ASSOCIATEOBJTYPE` 280) on the operator-designated ports and adds/removes them
-  as members. The old blocker (harness owned no eligible member object) is
-  resolved; the idle-port guard (`Get-DMVlanParentPortStatus`) runs as a
-  recorded dry-run in that workflow, not a gate. Remaining: run it live once and
-  record the LIF↔failover-group binding read-back behavior.
+- Live member add/remove step — **done (2026-07-20).** The supervised
+  failover-group stack creates two test-owned VLANs (REST `ASSOCIATEOBJTYPE`
+  280) on the operator-designated ports and adds/removes them as members. The
+  old blocker (harness owned no eligible member object) is resolved. Exercised
+  live: both members added (getter → 2), then one removed discretely (getter →
+  1), verified by read-back rather than the non-terminating call's silent
+  return. The LIF↔failover-group binding read-back is confirmed (see
+  Current Focus findings above). The idle-port guard
+  (`Get-DMVlanParentPortStatus`) ran as a recorded dry-run, not a gate.
 
 ## Deferred (with reason)
 

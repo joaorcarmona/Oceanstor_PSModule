@@ -37,7 +37,9 @@ add/remove — previously blocked because the harness owned no eligible member).
   Reuse the same ports between supervised runs. **Ideally one per controller** (e.g.
   `CTE0.A.IOM0.P2` and `CTE0.B.IOM0.P2`) so the failover group spans controllers; if only
   same-controller down ports are available the workflow still validates the full cmdlet path.
-- **VLAN tags 130 and 131** (from the reserved 130–140 range).
+- **VLAN tag 130** — a single tag shared by **both** member VLANs. A failover group requires
+  all member VLANs to share the same tag id (array error `1073815814` otherwise); the group
+  spans that one tag across the two ports (as the production NAS pair does with tag 50).
 - **IP scheme `10.<tag>.10.X/24`** ⇒ mask `255.255.255.0`; the service LIF takes host `.1`
   on its home VLAN's subnet (`10.130.10.1/24`).
 
@@ -54,9 +56,9 @@ anything):
    it can never green-light a port here. This step **confirms that calibration finding** and
    then proceeds anyway **because the ports are operator-designated** — the guard result is
    evidence, not a gate.
-2. Create VLAN `130` on the first designated port and VLAN `131` on the second, both with
+2. Create VLAN `130` on **both** designated ports (same tag, one per port), each with
    `New-DMvLan -PortType 1` (VLAN on an Ethernet parent port). Capture each VLAN's ID from a
-   read-back.
+   read-back. (Member VLANs must share one tag — see Inputs.)
 3. Create a customized **NAS** failover group with a run-unique name
    (`New-DMFailoverGroup -FailoverGroupServiceType 0`). Read it back, capture its ID (shaped
    like `289:<n>`), and register cleanup **before** the next step.
@@ -133,9 +135,12 @@ $runId = Get-Date -Format yyyyMMddHHmmss
 $mask = '255.255.255.0'
 $fgName  = "dm_integrity_${runId}_fg"
 $lifName = "dm_integrity_${runId}_lif"
+# A failover group requires all member VLANs to share the SAME tag id (array
+# error 1073815814 when tags differ). Same tag on different ports is valid and is
+# how the production NAS pair is built (CTE0.A/B.IOM0.P0.50). So: tag 130 on both.
 $vlanPlan = @(
     @{ Tag = 130; PortIndex = 0 },
-    @{ Tag = 131; PortIndex = 1 }
+    @{ Tag = 130; PortIndex = 1 }
 )
 # Service LIF homes on VLAN130's subnet, host .1.
 $lifIp = '10.130.10.1'
@@ -184,13 +189,13 @@ try {
     Write-Output "GUARD NOTE: 'InUse' here is expected (System-defined group owns all ports); proceeding on operator-designated ports."
 
     # ---- Phase B1: VLANs on the two designated ports (PortType 1 = VLAN on Ethernet) ----
-    $vlanByTag = @{}
+    $vlanByIndex = @{}   # keyed by PortIndex (0/1) since both share tag 130
     foreach ($v in $vlanPlan) {
         $portId = [string]$ports[$v.PortIndex].Id
         $vlan = New-DMvLan -WebSession $s -Tag $v.Tag -PortType 1 -PortId $portId -Confirm:$false
         if (-not $vlan -or -not $vlan.Id) { throw "CREATE-FAIL: VLAN $($v.Tag) returned no ID." }
         $created.Push([pscustomobject]@{ Kind = 'Vlan'; Id = [string]$vlan.Id; Name = $vlan.Name })
-        $vlanByTag[$v.Tag] = $vlan
+        $vlanByIndex[$v.PortIndex] = $vlan
         Write-Output ("CREATED VLAN{0} Id={1} Name={2} on {3}" -f $v.Tag, $vlan.Id, $vlan.Name, $ports[$v.PortIndex].Location)
     }
 
@@ -204,10 +209,10 @@ try {
 
     # ---- Phase B3: add both VLANs as members (ASSOCIATEOBJTYPE 280 = VLAN) ----
     foreach ($v in $vlanPlan) {
-        $vid = [string]$vlanByTag[$v.Tag].Id
+        $vid = [string]$vlanByIndex[$v.PortIndex].Id
         Add-DMFailoverGroupMember -WebSession $s -Id $fgId -AssociateObjectType 280 -AssociateObjectId $vid -Confirm:$false
-        $created.Push([pscustomobject]@{ Kind = 'FgMember'; FgId = $fgId; AssocType = 280; AssocId = $vid; Name = "VLAN$($v.Tag)" })
-        Write-Output ("ADDED MEMBER VLAN{0} (Id={1}) to FG {2}" -f $v.Tag, $vid, $fgId)
+        $created.Push([pscustomobject]@{ Kind = 'FgMember'; FgId = $fgId; AssocType = 280; AssocId = $vid; Name = "VLAN130@P$($v.PortIndex)" })
+        Write-Output ("ADDED MEMBER VLAN130@P{0} (Id={1}) to FG {2}" -f $v.PortIndex, $vid, $fgId)
     }
     $members = @(Get-DMFailoverGroupMember -WebSession $s -Id $fgId)
     Write-Output ("VALIDATE MEMBERS: count={0} (expected 2)" -f $members.Count)
@@ -220,7 +225,7 @@ try {
     if ($fgRb.Description -ne "Integrity supervised updated $runId") { throw "VALIDATE-FAIL: Set-DMFailoverGroup description did not apply." }
 
     # ---- Phase B5: service LIF homed on VLAN130, bound to the group ----
-    $vlan130Id = [string]$vlanByTag[130].Id
+    $vlan130Id = [string]$vlanByIndex[0].Id   # port-A tag-130 VLAN hosts the service LIF
     $lif = New-DMLif -WebSession $s -Name $lifName -AddressFamily 0 `
         -IPv4Address $lifIp -IPv4Mask $mask -Role 2 -SupportProtocol 3 `
         -HomePortType 8 -HomePortId $vlan130Id `
@@ -245,19 +250,19 @@ try {
 
     # ---- Phase B7: remove one member, re-verify getter now reports 1 ----
     Write-Output '--- MEMBER REMOVE (discrete step) ---'
-    $vlan131Id = [string]$vlanByTag[131].Id
-    Remove-DMFailoverGroupMember -WebSession $s -Id $fgId -AssociateObjectType 280 -AssociateObjectId $vlan131Id -Confirm:$false
+    $vlanBId = [string]$vlanByIndex[1].Id   # remove the port-B member (no LIF on it)
+    Remove-DMFailoverGroupMember -WebSession $s -Id $fgId -AssociateObjectType 280 -AssociateObjectId $vlanBId -Confirm:$false
     # Non-terminating on API failure: verify by read-back, do not trust the silent return.
     $membersAfter = @(Get-DMFailoverGroupMember -WebSession $s -Id $fgId)
     Write-Output ("VALIDATE MEMBER REMOVE: count={0} (expected 1)" -f $membersAfter.Count)
     if ($membersAfter.Count -eq 1) {
-        # VLAN131's association is gone; drop its teardown entry so cleanup doesn't double-remove.
+        # Port-B VLAN's association is gone; drop its teardown entry so cleanup doesn't double-remove.
         $remaining = [System.Collections.Generic.Stack[pscustomobject]]::new()
         foreach ($o in $created.ToArray()[($created.Count-1)..0]) {
-            if (-not ($o.Kind -eq 'FgMember' -and $o.AssocId -eq $vlan131Id)) { $remaining.Push($o) }
+            if (-not ($o.Kind -eq 'FgMember' -and $o.AssocId -eq $vlanBId)) { $remaining.Push($o) }
         }
         $created = $remaining
-        Write-Output "MEMBER REMOVE Passed (VLAN131 detached; teardown will remove VLAN130 member, FG, then both VLANs)."
+        Write-Output "MEMBER REMOVE Passed (port-B VLAN detached; teardown will remove port-A member, FG, then both VLANs)."
     }
     else {
         Write-Output "WARN: member count after remove is $($membersAfter.Count), not 1 — teardown will still attempt full cleanup by captured IDs."
