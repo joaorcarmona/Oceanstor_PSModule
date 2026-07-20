@@ -5,7 +5,7 @@
 Read-only inventory of the array's physical front-end and back-end ports and
 the interface modules that host them. **No cmdlet in this module mutates a
 physical port** — port enable/disable, MTU, speed, and IP changes on physical
-ports are deliberately not implemented (see [TODO.md](TODO.md)).
+ports are deliberately not implemented (see [CHANGELOG.md](../../CHANGELOG.md), "Standing safety reference").
 
 ## Cmdlets
 
@@ -62,7 +62,7 @@ Get-DMPortSAS -WebSession $storage
 - No cmdlet exposes port health/BER counters or per-port performance
   statistics.
 - No physical-port mutation cmdlets exist (intentional — see
-  [TODO.md](TODO.md) "Not Planned / Unsafe by Default").
+  [CHANGELOG.md](../../CHANGELOG.md) "Standing safety reference").
 
 ## Related Files
 

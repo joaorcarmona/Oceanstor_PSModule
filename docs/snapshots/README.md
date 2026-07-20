@@ -15,7 +15,7 @@ protection-group relationships, and HyperCDP schedules.
 | [protection-groups.md](protection-groups.md) | Protection-group relationship | Yes |
 | [snapshot-schedules.md](snapshot-schedules.md) | HyperCDP schedules | Yes, block HyperCDP |
 | [safety-and-live-validation.md](safety-and-live-validation.md) | Safety rules for live arrays | - |
-| [TODO.md](TODO.md) | Confirmed gaps and follow-up work | - |
+| [CHANGELOG.md](../../CHANGELOG.md) | Consolidated changelog — completed work, deferred items, safety reference | - |
 
 ## Connecting
 

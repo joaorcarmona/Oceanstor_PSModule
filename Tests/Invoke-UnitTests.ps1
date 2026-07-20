@@ -55,7 +55,7 @@ if (-not $SkipAnalyzer) {
             if ($FailOnAnalyzerIssue) {
                 # The release gate blocks only on Error-severity findings. Warning/Information
                 # results are printed above for visibility but are deferred cleanup, not
-                # release blockers (see todo/release-readiness-go-no-go.md section 3a).
+                # release blockers (see CHANGELOG.md, Release readiness).
                 $errorFindings = @($analyzerResults | Where-Object { "$($_.Severity)" -eq 'Error' })
                 if ($errorFindings.Count -gt 0) {
                     throw "PSScriptAnalyzer reported $($errorFindings.Count) Error-severity finding(s)."

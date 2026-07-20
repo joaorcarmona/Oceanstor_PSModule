@@ -2,7 +2,7 @@
 
 Paste this whole file as the task prompt in a new Claude Code session against this repo
 (`POSH-Oceanstor`) to re-run the same operator-supervised live validation performed on
-2026-07-09 (see `docs/network/TODO.md`, "Deferred" section, and commit `55ba8bd`).
+2026-07-09 (see `CHANGELOG.md`, "Deferred" section, and commit `55ba8bd`).
 
 ## Persona / ground rules (must hold for the whole session)
 
@@ -23,7 +23,7 @@ Paste this whole file as the task prompt in a new Claude Code session against th
 - Do not put the lab IP in any public doc; only the scratch script (not committed) may use it.
   Public doc examples must use `$storageIP = 'StorageIP'`.
 - Commit at the end with a clear message once evidence is written to
-  `docs/network/TODO.md`. Do not push.
+  `CHANGELOG.md`. Do not push.
 
 ## Task
 
@@ -55,7 +55,7 @@ On the lab array (`10.10.10.24`), using ports `CTE0.A.IOM0.P2` and `CTE0.A.IOM0.
    124 → 123, then the bond. Verify zero leftover test objects and unchanged port state
    afterward. Teardown must run unconditionally (e.g. from a `finally` block) even if the
    modify/validate steps above fail or abort.
-8. Record the outcome in `docs/network/TODO.md` and commit (no push).
+8. Record the outcome in `CHANGELOG.md` and commit (no push).
 
 ## Known pitfalls from the last run (avoid repeating them)
 
@@ -83,7 +83,7 @@ On the lab array (`10.10.10.24`), using ports `CTE0.A.IOM0.P2` and `CTE0.A.IOM0.
   already exists"), and because `Set-DMLif` swallows API errors as non-terminating
   (`catch { $PSCmdlet.WriteError($_) }`), the call does not throw — it just silently fails to
   apply. This was observed on both requested modifications in the 2026-07-09 repeat run (see
-  `docs/network/TODO.md`) and is logged as `NeedsInvestigation`, not yet fixed in
+  `CHANGELOG.md`) and is logged as `NeedsInvestigation`, not yet fixed in
   `Set-DMLif.ps1`. **Expect the two modify steps in this run to fail the same way** unless the
   module has since been patched; the read-back check in step 5 above exists specifically to
   catch this rather than trust the call's apparent success.
@@ -221,7 +221,7 @@ try {
     Write-Output ("VALIDATE MODIFY .124 gateway: expected=10.124.10.254 actual={0} ok={1}" -f $lif124rb.'IPv4 Gateway', $gatewayOk)
     Write-Output ("VALIDATE MODIFY .123 address: expected=10.123.10.100 actual={0} ok={1}" -f $lif123rb.'IPv4 Address', $ipOk)
     if (-not $gatewayOk -or -not $ipOk) {
-        throw "MODIFY-VALIDATE-FAIL: one or both Set-DMLif changes did not apply on the array (see docs/network/TODO.md Set-DMLif NeedsInvestigation finding)."
+        throw "MODIFY-VALIDATE-FAIL: one or both Set-DMLif changes did not apply on the array (see CHANGELOG.md Set-DMLif NeedsInvestigation finding)."
     }
     Write-Output 'RESULT: LIF modify+re-validate Passed'
 }
@@ -266,6 +266,6 @@ finally {
   actually applied on the array.
 - Teardown order and zero-leftover verification.
 - Any new/repeated field-mapping findings, logged as `NeedsInvestigation` in
-  `docs/network/TODO.md` (do not fix them as part of this validation task unless separately
+  `CHANGELOG.md` (do not fix them as part of this validation task unless separately
   asked).
 - Commit hash, with confirmation nothing was pushed and no pre-existing object was touched.

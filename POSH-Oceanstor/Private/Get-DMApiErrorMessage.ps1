@@ -30,14 +30,14 @@ function Get-DMApiErrorMessage {
     # 1077939726: session/token no longer valid. Already used as the "session expired" test
     # fixture in Get-Hosts.Tests.ps1 and Invoke-DMPagedRequest.Tests.ps1.
     #
-    # 1077948993: on Dorado 6.1.6, live-verified (docs/network/TODO.md) that PUT lif rejects
+    # 1077948993: on Dorado 6.1.6, live-verified that PUT lif rejects
     # this as a name collision whenever the mandatory NAME field is resent unchanged alongside
     # any other property change -- an array-side self-collision bug, not a caller mistake. A
     # bare rename (NAME changed, no other field) succeeds; combining NAME with another field
     # never does, whether NAME is omitted, unchanged, or a new value.
     $hints = @{
         1077939726 = 'Your OceanStor session may have expired or been invalidated -- call Connect-deviceManager again.'
-        1077948993 = 'This is a known Dorado 6.1.6 firmware limitation: the array rejects this object''s own current name as a duplicate whenever another property is modified in the same call. No client-side body variant avoids it; see docs/network/TODO.md for the live-verified reproduction.'
+        1077948993 = 'This is a known Dorado 6.1.6 firmware limitation: the array rejects this object''s own current name as a duplicate whenever another property is modified in the same call. No client-side body variant avoids it.'
     }
 
     $contextSuffix = if ($ResourceContext) { " for resource '$ResourceContext'" } else { '' }

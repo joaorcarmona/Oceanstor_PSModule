@@ -11,7 +11,7 @@
 #     ID is captured from the create call and torn down by that captured ID only.
 #   - the idle-port guard (Get-DMVlanParentPortStatus) is invoked and RECORDED as a
 #     dry-run, never used to gate: on lab arrays it reports InUse for all ports
-#     because the built-in System-defined failover group owns them (docs/network/TODO.md).
+#     because the built-in System-defined failover group owns them (CHANGELOG.md, Standing safety reference).
 #   - both stacks run sequentially, each with its own inline LIFO teardown in a
 #     finally block, so the shared ports are free again before the next stack runs.
 #   - pre-existing ports, VLANs, LIFs, bonds and failover groups are never touched.

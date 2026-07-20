@@ -168,6 +168,6 @@ cleanup by captured ID in `finally`, users removed before their role.
    config gates, everything default-off; first live run pending per the
    runbook above.
 
-Implementation validation notes were used to produce the system-management
-TODO (`docs/system-management/TODO.md`). The validation report itself is not
+Implementation validation notes were used to produce the consolidated
+changelog (`CHANGELOG.md`). The validation report itself is not
 part of the public documentation set.

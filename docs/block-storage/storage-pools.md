@@ -71,7 +71,7 @@ restores the original name if the run aborts mid-round-trip.
   V3/V6 behavior unconfirmed). Any future accepted `Set` scope stays limited to
   explicitly-documented fields, with `SupportsShouldProcess`,
   `ConfirmImpact='High'`, mock-only tests, and a reversible or `SkippedUnsafe`
-  live posture. Authoritative decision: `Oceanstor_PSModule_TODO.md` (Command
+  live posture. Authoritative decision: `CHANGELOG.md` (Command
   Coverage Decisions).
 - Capacity planning examples are intentionally limited to inventory and
   performance reads.

@@ -188,7 +188,7 @@ Describe 'System configuration mutation functions' {
         $script:method | Should -Be 'POST'
         $script:resource | Should -Be 'syslog_addip'
         # syslog_addip's mandatory field is CMO_ALARM_SYSLOG_SERVER_IP (REST reference
-        # 4.2.2.1.1); the field-name fix landed 2026-07-17 (see docs/system-management/TODO.md).
+        # 4.2.2.1.1); the field-name fix landed 2026-07-17 (see CHANGELOG.md).
         $script:body.CMO_ALARM_SYSLOG_SERVER_IP | Should -Be '192.0.2.20'
 
         $null = Remove-DMSyslogServer -WebSession $script:session -Address '192.0.2.20' -Confirm:$false

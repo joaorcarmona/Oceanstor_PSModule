@@ -5,7 +5,7 @@ Paste this whole file as the task prompt in a new Claude Code session against th
 **failover-group NAS front-end stack**: two test-owned VLANs on two designated down ports →
 a customized NAS failover group → both VLANs added/removed as members → one service LIF homed
 on a member VLAN and bound to the group. This closes the tracked gaps in
-`docs/network/TODO.md` "Current Focus" (FG lifecycle) and "Medium Priority" (member
+`CHANGELOG.md` "Current Focus" (FG lifecycle) and "Medium Priority" (member
 add/remove — previously blocked because the harness owned no eligible member).
 
 ## Persona / ground rules (must hold for the whole session)
@@ -29,7 +29,7 @@ add/remove — previously blocked because the harness owned no eligible member).
 - Do not put the lab IP in any public doc; only the scratch script (not committed) may use it.
   Public doc examples must use `$storageIP = 'StorageIP'`.
 - Commit at the end with a clear message once evidence is written to
-  `docs/network/TODO.md`. Do not push.
+  `CHANGELOG.md`. Do not push.
 
 ## Inputs the operator supplies at run time
 
@@ -52,7 +52,7 @@ anything):
 1. **Idle-port guard dry-run (record only, does NOT gate).** Invoke the read-only guard
    `Get-DMVlanParentPortStatus` against both designated ports and record its output. On this
    array the guard reports `InUse` for every port because the built-in `System-defined`
-   failover group contains all ports (see `docs/network/TODO.md` guard-calibration finding), so
+   failover group contains all ports (see `CHANGELOG.md` guard-calibration finding), so
    it can never green-light a port here. This step **confirms that calibration finding** and
    then proceeds anyway **because the ports are operator-designated** — the guard result is
    evidence, not a gate.
@@ -85,7 +85,7 @@ anything):
    LIF (by ID) → remaining failover-group member(s) → failover group (by ID) → VLAN 131 →
    VLAN 130 (each by captured ID). Verify zero leftover test objects and that both ports are
    back to link-down / unbonded / no child VLAN afterward.
-10. Record the outcome in `docs/network/TODO.md` (guard dry-run result, member add/remove
+10. Record the outcome in `CHANGELOG.md` (guard dry-run result, member add/remove
     behavior, LIF failover-binding read-back, any new field-mapping findings) and commit
     (no push).
 
@@ -315,6 +315,6 @@ finally {
 - Teardown order and zero-leftover verification (LIFs / FGs / VLANs = 0; both ports back to
   link-down / unbonded / no child VLAN).
 - Any new/repeated field-mapping findings, logged as `NeedsInvestigation` in
-  `docs/network/TODO.md` (do not fix them as part of this validation task unless separately
+  `CHANGELOG.md` (do not fix them as part of this validation task unless separately
   asked).
 - Commit hash, with confirmation nothing was pushed and no pre-existing object was touched.

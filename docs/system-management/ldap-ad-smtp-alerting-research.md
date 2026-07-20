@@ -10,8 +10,8 @@ re-research.
 ## Source
 
 - `OceanStor Dorado 6.1.6 REST Interface Reference.md` (local copy).
-- Cross-referenced with `docs/system-management/TODO.md` Medium-Priority /
-  Future-Feature-Branches entries.
+- Cross-referenced with `CHANGELOG.md` (Deferred by design / Future feature
+  branches) entries.
 
 ## Scope of this note
 

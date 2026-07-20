@@ -14,7 +14,7 @@ file systems.
 | [lun-qos.md](lun-qos.md) | LUN and LUN-group QoS usage | Yes |
 | [filesystem-qos.md](filesystem-qos.md) | File-system QoS attachment | Partial |
 | [safety-and-live-validation.md](safety-and-live-validation.md) | Safety rules for live arrays | - |
-| [TODO.md](TODO.md) | Confirmed gaps and follow-up work | - |
+| [CHANGELOG.md](../../CHANGELOG.md) | Consolidated changelog — completed work, deferred items, safety reference | - |
 
 ## Connecting
 
