@@ -41,7 +41,11 @@ class OceanStorPortBond{
             11 {$this.{Running Status} = "link down"}
         }
 
-        $this.{Ethernet Ports} = $portReceived.PORTIDLIST
+        # PORTIDLIST arrives as an OceanStor JSON-encoded string such as '["1211"]'
+        # (or '[""]' when the bond has no members yet). Decode it the same way the
+        # QoS-policy association lists are handled, so `Ethernet Ports` shows the
+        # member port IDs plainly instead of raw brackets or a phantom empty entry.
+        $this.{Ethernet Ports} = [OceanStorPortBond]::ParsePortIdList($portReceived.PORTIDLIST) -join ', '
         $this.{MTU} = $portReceived.MTU
 
         switch ($portReceived.USEDTYPE)
@@ -51,6 +55,19 @@ class OceanStorPortBond{
         }
         $this.{Device Name} = $portReceived.DEVICENAME
 
+    }
+
+    # OceanStor returns PORTIDLIST as a JSON-encoded string like '["1211","1212"]'
+    # or, for an empty bond, '[""]'. Decode into a real string array and drop empty
+    # entries so an empty bond yields @() instead of a phantom '' element. Values
+    # already delivered as an array (e.g. unit-test mocks) pass through unchanged.
+    static [string[]] ParsePortIdList([object]$Raw) {
+        if ($null -eq $Raw) { return @() }
+        $items = if ($Raw -is [string]) {
+            try { @($Raw | ConvertFrom-Json) } catch { @($Raw) }
+        }
+        else { @($Raw) }
+        return @($items | Where-Object { $null -ne $_ -and "$_".Trim() -ne '' })
     }
 
 }

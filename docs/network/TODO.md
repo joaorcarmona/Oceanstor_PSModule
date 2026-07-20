@@ -71,9 +71,18 @@
     (read back `link down`/`normal`), `New-DMvLan -PortType 7` created VLAN
     123 on that bond, and teardown ran in inverse order — VLAN removed by
     captured ID, then the bond — leaving zero test objects and both member
-    ports unchanged. Follow-up finding: the `Get-DMPortBond` read-back shows
-    an empty `Port List` property (same class field-mapping gap as the empty
-    `Get-DMvLan` `Tag`; NeedsInvestigation).
+    ports unchanged. Follow-up finding: the `Get-DMPortBond` read-back showed
+    an empty `Ethernet Ports` value. **RESOLVED 2026-07-20 (static fix).**
+    Root cause: OceanStor returns `PORTIDLIST` as a JSON-encoded string
+    (`'["1211","1212"]'`, or `'[""]'` for an empty bond), and `OceanStorPortBond`
+    stored it **raw and undecoded**, so it rendered as bracket-text or a phantom
+    empty entry — the same shape the QoS association lists already decode. Added
+    `[OceanStorPortBond]::ParsePortIdList()` (mirrors
+    `OceanstorQosPolicy::ParseAssociationList`) and `Ethernet Ports` is now the
+    decoded member IDs joined with `, ` (empty bond → empty string, no phantom).
+    `PORTIDLIST` is the correct field (confirmed by `New-DMPortBond`, which POSTs
+    to it) — no field-name guessing. Unit-covered in `Classes.Hardware.Tests.ps1`
+    (populated + empty cases).
   - **Full network stack validated live 2026-07-09 (operator-supervised):**
     bond on the two designated link-down front-end ports → VLANs
     123/124/125/126 on the bond (`New-DMvLan -PortType 7`) → four LIFs
@@ -86,15 +95,22 @@
     Dependency ordering was also negatively confirmed: the array refuses
     `Remove-DMvLan` while a LIF exists on the VLAN (`1073813505`) and
     `Remove-DMPortBond` while VLANs exist on the bond (`1073801985`).
-    New class field-mapping findings (NeedsInvestigation, same family as
-    the `Tag`/`Port List` gaps): `OceanStorLIF` exposes the name only as
-    `LIF Name` (no `Name` property, unlike sibling classes), and the LIF
-    `Role` decode table renders replication (code 4) as an empty string.
+    New class field-mapping findings (same family as the `Tag`/`Port List`
+    gaps): `OceanStorLIF` exposed the name only as `LIF Name` (no `Name`
+    property, unlike sibling classes), and the LIF `Role` decode table rendered
+    replication (code 4) as an empty string. **Both RESOLVED 2026-07-20 (static
+    fix):** `OceanStorLIF` now maps `NAME` to both `Name` (sibling-consistent)
+    and the historical `LIF Name` alias, and the `ROLE` switch decodes `4 →
+    Replication` with a `default` arm echoing any future unknown code. Unit-covered
+    in `Classes.Storage.Tests.ps1` (`Name`/`LIF Name` both asserted; role-4 case).
+    `Get-DMLif`'s display set, completer and `-Name` filter keep using the
+    preserved `LIF Name` alias, so nothing downstream changed.
   - **Repeat run 2026-07-09, operator-supervised, with two in-place
     `Set-DMLif` modifications requested before teardown:** same bond +
     VLAN(123-126) + LIF(mgmt/service/replication/mgmt+service) stack
-    recreated and validated identically to the baseline run above (same
-    replication role-decode gap observed again). The operator then
+    recreated and validated identically to the baseline run above (the
+    replication role-decode gap seen here is now fixed — see the 2026-07-20
+    resolution note above). The operator then
     requested two live modifications on already-validated LIFs, still
     before teardown: add `IPv4Gateway 10.124.10.254` to the LIF at
     `10.124.10.1`, and change the `IPv4Address` of the LIF at

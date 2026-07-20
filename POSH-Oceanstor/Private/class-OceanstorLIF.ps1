@@ -25,6 +25,7 @@ class OceanStorLIF
     [string]${IPv6 Mask}
     [string]${Is Private}
     [string]${Management Access}
+    [string]${Name}
     [string]${LIF Name}
     [string]${Operational Status}
     [string]${Role}
@@ -99,6 +100,9 @@ class OceanStorLIF
         }
 
         $this.{Management Access} = $lifReceived.MANAGEMENTACCESS
+        # Expose the LIF name as both `Name` (consistent with every sibling port/
+        # interface class) and the historical `LIF Name` alias for back-compat.
+        $this.{Name} = $lifReceived.NAME
         $this.{LIF Name} = $lifReceived.NAME
 
         switch ($lifReceived.OPERATIONALSTATUS)
@@ -112,6 +116,8 @@ class OceanStorLIF
             1 {$this.{Role} = "Management"}
             2 {$this.{Role} = "Service"}
             3 {$this.{Role} = "Management + Service"}
+            4 {$this.{Role} = "Replication"}
+            default {$this.{Role} = $lifReceived.ROLE}
         }
 
         switch ($lifReceived.RUNNINGSTATUS)

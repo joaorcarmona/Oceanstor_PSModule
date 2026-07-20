@@ -96,6 +96,22 @@ Describe 'Hardware model classes' {
         $result.'Port Type' | Should -Be 'Bond Port'
     }
 
+    It 'decodes a JSON-encoded PORTIDLIST into plain member port IDs' {
+        $source = [pscustomobject]@{ ID = 'bond-01'; NAME = 'bond0'; TYPE = 235; HEALTHSTATUS = 1; RUNNINGSTATUS = 10; PORTIDLIST = '["1211","1212"]' }
+
+        $result = New-Object -TypeName OceanStorPortBond -ArgumentList @($source, $script:session)
+
+        $result.'Ethernet Ports' | Should -Be '1211, 1212'
+    }
+
+    It 'renders an empty bond PORTIDLIST as an empty string, not a phantom entry' {
+        $source = [pscustomobject]@{ ID = 'bond-01'; NAME = 'bond0'; TYPE = 235; HEALTHSTATUS = 1; RUNNINGSTATUS = 10; PORTIDLIST = '[""]' }
+
+        $result = New-Object -TypeName OceanStorPortBond -ArgumentList @($source, $script:session)
+
+        $result.'Ethernet Ports' | Should -BeNullOrEmpty
+    }
+
     It 'maps an Ethernet port' {
         $source = [pscustomobject]@{ ID = 'eth-01'; NAME = 'eth0'; TYPE = 213; HEALTHSTATUS = 1; RUNNINGSTATUS = 10; LOGICTYPE = 0 }
 

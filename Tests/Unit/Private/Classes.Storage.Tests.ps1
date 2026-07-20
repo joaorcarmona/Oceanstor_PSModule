@@ -742,6 +742,17 @@ Describe 'Storage and share model classes' {
         $result.Id | Should -Be 'lif-01'
         $result.'Address Family' | Should -Be 'IPv4'
         $result.'Support Protocol' | Should -Be 'NFS+CIFS'
+        # Name is exposed both as `Name` (sibling-consistent) and the `LIF Name` alias.
+        $result.Name | Should -Be 'service'
+        $result.'LIF Name' | Should -Be 'service'
+    }
+
+    It 'decodes the replication LIF role (code 4)' {
+        $source = [pscustomobject]@{ ID = 'lif-02'; NAME = 'repl'; ADDRESSFAMILY = 0; ROLE = 4; RUNNINGSTATUS = 10; SUPPORTPROTOCOL = 0 }
+
+        $result = New-Object -TypeName OceanStorLIF -ArgumentList @($source, $script:session)
+
+        $result.Role | Should -Be 'Replication'
     }
 
     It 'deletes a version 6 LUN through Remove-DMLun' {
