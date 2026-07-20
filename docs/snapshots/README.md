@@ -36,6 +36,33 @@ Get-DMSnapshotConsistencyGroup -WebSession $storage
 Get-DMHyperCDPSchedule -WebSession $storage
 ```
 
+## Compact Inventory Views
+
+Read-only `Select-Object` projections for snapshot audits. Field names are the
+friendly properties surfaced on the typed objects (multi-word names are quoted);
+adjust the columns to the report you need. None of these mutate the array.
+
+```powershell
+# LUN-snapshot inventory
+Get-DMLunSnapshot -WebSession $storage |
+    Select-Object Name, Id, WWN, 'Source Lun Name', 'Health Status', 'Running Status', 'User Capacity'
+
+# File-system snapshot inventory (scoped to a parent file system)
+Get-DMFileSystemSnapshot -WebSession $storage -FileSystemName 'fs01' |
+    Select-Object Name, Id, 'Source File System Name', 'Snapshot Type', 'Health Status', Timestamp
+
+# Snapshot consistency-group inventory
+Get-DMSnapshotConsistencyGroup -WebSession $storage |
+    Select-Object Name, Id, 'Running Status', 'Protection Group Name', Timestamp
+
+# HyperCDP schedule inventory (spot enabled-but-idle schedules)
+Get-DMHyperCDPSchedule -WebSession $storage |
+    Select-Object Name, Id, Enabled, 'Running Status', 'Schedule Type', 'Last Execution Result'
+```
+
+Keep the stable `Id` column in any export you plan to feed back into an
+automation step — names are for readers, IDs are for machines.
+
 ## Coverage Overview
 
 LUN snapshots, file-system snapshots, snapshot consistency groups, snapshot

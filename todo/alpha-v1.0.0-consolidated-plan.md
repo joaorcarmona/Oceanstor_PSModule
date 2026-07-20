@@ -122,12 +122,13 @@ Remaining sessions, easiest-unblocked first:
   open-issues / remaining-open-todos planning set" with no stale filename.
 - Re-verify each domain's "Low Priority / Polish" section against actual doc content after commit
   `c79921a` (Phase 08 polish); strike items already done rather than redoing them.
-  **Verified 2026-07-20:** no listed polish item was silently completed, so nothing to strike. The
-  remaining items are genuinely open, low-priority **content-creation** (deliberately deferred): compact
-  inventory views for file-storage & snapshots (mirroring the QoS `Compact Policy Inventory Report`
-  pattern), relationship diagrams (the repo currently has no mermaid diagrams), and Excel-export polish
-  (a code task, see the `Export-DMStorageToExcel` inline `#TODO`s + the operator note in `.temp/`).
-  These stay listed in their domain TODOs, not struck.
+  **Verified 2026-07-20:** no listed polish item had been silently completed. **Then authored the two
+  cheapest ones this session:** compact inventory views for file-storage (`docs/file-storage/README.md`)
+  and snapshots (`docs/snapshots/README.md`), mirroring the QoS `Compact Policy Inventory Report` pattern
+  with verified friendly property names — both struck in their domain TODOs. **Still open (deliberately
+  deferred low-priority content):** relationship diagrams (the repo currently has no mermaid diagrams, so
+  this would introduce a new convention) and Excel-export polish (a **code** task — see the
+  `Export-DMStorageToExcel` inline `#TODO`s + the operator note in `.temp/`).
 - ~~Add the QoS SmartQoS glossary + compact policy-inventory reporting examples if still missing.~~
   **DONE — verified present 2026-07-20:** `docs/qos/smartqos.md` already carries a "Compact Policy
   Inventory Report" (two `Get-DMQosPolicy` examples) and an 11-term "Glossary". Nothing to add.

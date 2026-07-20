@@ -33,7 +33,7 @@
 
 ## Low Priority / Polish
 
-- Add compact snapshot inventory reports for admins.
+- ~~Add compact snapshot inventory reports for admins.~~ **DONE 2026-07-20** — "Compact Inventory Views" section added to `docs/snapshots/README.md` (verified friendly property names).
 - Add relationship diagrams for protection groups and consistency groups.
 
 ## Testing and Validation

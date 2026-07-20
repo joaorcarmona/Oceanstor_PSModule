@@ -20,7 +20,7 @@
 
 ## Low Priority / Polish
 
-- Add compact inventory views for file systems, shares, clients, and quotas.
+- ~~Add compact inventory views for file systems, shares, clients, and quotas.~~ **DONE 2026-07-20** — "Compact Inventory Views" section added to `docs/file-storage/README.md` (verified friendly property names).
 - Add diagrams for file system, dTree, share, client, and quota relationships.
 
 ## Testing and Validation

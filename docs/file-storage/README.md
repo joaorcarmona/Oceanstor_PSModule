@@ -46,6 +46,36 @@ Get-DMnfsFileClient -WebSession $storage
 Get-DMQuota -WebSession $storage -FileSystemName 'fs01'
 ```
 
+## Compact Inventory Views
+
+Read-only `Select-Object` projections for inventory exports. Field names are the
+friendly properties surfaced on the typed objects (multi-word names are quoted);
+adjust the columns to the report you need. None of these mutate the array.
+
+```powershell
+# File-system inventory
+Get-DMFileSystem -WebSession $storage |
+    Select-Object Name, Id, 'Health Status', 'Running Status', 'Capacity (GB)', 'Available Capacity'
+
+# Share inventory (shareType is mandatory — run once per type)
+Get-DMShare -WebSession $storage -ShareType NFS |
+    Select-Object Name, Id, 'Share Path', 'FileSystem ID', 'vStore Name'
+Get-DMShare -WebSession $storage -ShareType CIFS |
+    Select-Object Name, Id, 'Share Path', 'FileSystem ID', 'Enable ABE', 'vStore Name'
+
+# NFS client-permission inventory
+Get-DMnfsFileClient -WebSession $storage |
+    Select-Object Name, Id, 'NFS Share Name', 'Access Permission', 'Root Permission Constrain', 'vStore Id'
+
+# Quota inventory (scoped to a parent file system; add -DtreeName for a dTree)
+Get-DMQuota -WebSession $storage -FileSystemName 'fs01' |
+    Select-Object Id, 'Quota Type', 'Account Name', 'Space Hard Quota', 'Space Used', 'File Hard Quota', 'File Used'
+```
+
+Keep the stable `Id` column in any export you plan to feed back into an
+automation step — names are for readers, IDs are for machines. On a multi-tenant
+array, keep the `vStore Name` column where the object type exposes it.
+
 ## Second-Day Operations
 
 The repo implements second-day operations for core NAS objects:
