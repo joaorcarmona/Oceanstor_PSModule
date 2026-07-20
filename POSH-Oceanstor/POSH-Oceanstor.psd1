@@ -10,7 +10,7 @@
 @{
 
 # Script module or binary module file associated with this manifest.
-RootModule = "posh-oceanstor.psm1"
+RootModule = "POSH-Oceanstor.psm1"
 
 # Version number of this module.
 ModuleVersion = "1.0.0"
@@ -62,24 +62,24 @@ PowerShellVersion = "6.0"
 
 # Format files (.ps1xml) to be loaded when importing this module
 FormatsToProcess = @(
-    "Format\OceanstorLunSnapshot.format.ps1xml"
-    "Format\OceanstorFileSystemSnapshot.format.ps1xml"
-    "Format\OceanstorProtectionGroup.format.ps1xml"
-    "Format\OceanstorSnapshotConsistencyGroup.format.ps1xml"
-    "Format\OceanstorReplicationPair.format.ps1xml"
-    "Format\OceanstorReplicationConsistencyGroup.format.ps1xml"
-    "Format\OceanstorHyperMetroDomain.format.ps1xml"
-    "Format\OceanstorHyperMetroPair.format.ps1xml"
-    "Format\OceanstorHyperMetroConsistencyGroup.format.ps1xml"
-    "Format\OceanstorLun.format.ps1xml"
-    "Format\OceanstorHost.format.ps1xml"
-    "Format\OceanstorHostGroup.format.ps1xml"
-    "Format\OceanstorLunGroup.format.ps1xml"
-    "Format\OceanstorFileSystem.format.ps1xml"
-    "Format\OceanstorDtree.format.ps1xml"
-    "Format\OceanstorNFSShare.format.ps1xml"
-    "Format\OceanstorNFSclient.format.ps1xml"
-    "Format\OceanstorQuota.format.ps1xml"
+    "Format/OceanstorLunSnapshot.format.ps1xml"
+    "Format/OceanstorFileSystemSnapshot.format.ps1xml"
+    "Format/OceanstorProtectionGroup.format.ps1xml"
+    "Format/OceanstorSnapshotConsistencyGroup.format.ps1xml"
+    "Format/OceanstorReplicationPair.format.ps1xml"
+    "Format/OceanstorReplicationConsistencyGroup.format.ps1xml"
+    "Format/OceanstorHyperMetroDomain.format.ps1xml"
+    "Format/OceanstorHyperMetroPair.format.ps1xml"
+    "Format/OceanstorHyperMetroConsistencyGroup.format.ps1xml"
+    "Format/OceanstorLun.format.ps1xml"
+    "Format/OceanstorHost.format.ps1xml"
+    "Format/OceanstorHostGroup.format.ps1xml"
+    "Format/OceanstorLunGroup.format.ps1xml"
+    "Format/OceanstorFileSystem.format.ps1xml"
+    "Format/OceanstorDtree.format.ps1xml"
+    "Format/OceanstorNFSShare.format.ps1xml"
+    "Format/OceanstorNFSclient.format.ps1xml"
+    "Format/OceanstorQuota.format.ps1xml"
 )
 
 # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
