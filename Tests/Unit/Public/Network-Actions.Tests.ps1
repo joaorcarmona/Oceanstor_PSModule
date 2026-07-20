@@ -137,9 +137,11 @@ InModuleScope NetworkActionsTestModule {
         It 'modifies logical interfaces' {
             Set-DMLif -WebSession $script:session -Name 'lif01' -AddressFamily 1 -IPv6Address '2001:db8::1' -IPv6Mask '64' -Confirm:$false
 
+            # Name resolves to its ID (stub -> 'created-01') and the modify targets
+            # lif/{id}; identity is never echoed in the body.
             $script:lastRequest.Method | Should -Be 'PUT'
-            $script:lastRequest.Resource | Should -Be 'lif'
-            $script:lastRequest.BodyData.NAME | Should -Be 'lif01'
+            $script:lastRequest.Resource | Should -Be 'lif/created-01'
+            $script:lastRequest.BodyData.ContainsKey('NAME') | Should -BeFalse
             $script:lastRequest.BodyData.ADDRESSFAMILY | Should -Be 1
             $script:lastRequest.BodyData.IPV6ADDR | Should -Be '2001:db8::1'
             $script:lastRequest.BodyData.IPV6MASK | Should -Be '64'
@@ -208,25 +210,84 @@ InModuleScope NetworkActionsTestModule {
             $script:lastRequest = $null
         }
 
-        It 'modifies a logical interface by id alone, resolving the documented mandatory NAME first' {
+        It 'modifies a logical interface by id, addressing it through the lif/{id} URL path' {
+            # The array rejects an ID+NAME body (1077948993 "object name already exists"),
+            # so the ID is carried in the path and identity never enters the body.
             Set-DMLif -WebSession $script:session -Id 'lif-01' -IPv4Address '192.0.2.30' -Confirm:$false
 
-            # The stub answers the lif/<id> resolve GET with NAME 'created'; the
-            # mutation itself must still be the last request and carry both keys.
             $script:lastRequest.Method | Should -Be 'PUT'
-            $script:lastRequest.Resource | Should -Be 'lif'
-            $script:lastRequest.BodyData.ID | Should -Be 'lif-01'
-            $script:lastRequest.BodyData.NAME | Should -Be 'created'
+            $script:lastRequest.Resource | Should -Be 'lif/lif-01'
             $script:lastRequest.BodyData.IPV4ADDR | Should -Be '192.0.2.30'
+            $script:lastRequest.BodyData.ADDRESSFAMILY | Should -Be 0
+            $script:lastRequest.BodyData.ContainsKey('ID') | Should -BeFalse
+            $script:lastRequest.BodyData.ContainsKey('NAME') | Should -BeFalse
         }
 
-        It 'keeps the existing name-addressed behavior' {
+        It 'resolves a name-addressed target to its id and PUTs lif/{id}' {
+            # The stub answers the NAME-filter resolve GET with ID 'created-01'; the
+            # mutation must then target that ID in the path, with no identity in the body.
             Set-DMLif -WebSession $script:session -Name 'lif01' -IPv4Address '192.0.2.31' -Confirm:$false
 
             $script:lastRequest.Method | Should -Be 'PUT'
-            $script:lastRequest.Resource | Should -Be 'lif'
-            $script:lastRequest.BodyData.NAME | Should -Be 'lif01'
+            $script:lastRequest.Resource | Should -Be 'lif/created-01'
+            $script:lastRequest.BodyData.IPV4ADDR | Should -Be '192.0.2.31'
             $script:lastRequest.BodyData.ContainsKey('ID') | Should -BeFalse
+            $script:lastRequest.BodyData.ContainsKey('NAME') | Should -BeFalse
+        }
+
+        It 'renames an id-addressed target via -NewName, sending NAME in the body' {
+            Set-DMLif -WebSession $script:session -Id 'lif-01' -NewName 'newlif01' -Confirm:$false
+
+            $script:lastRequest.Method | Should -Be 'PUT'
+            $script:lastRequest.Resource | Should -Be 'lif/lif-01'
+            $script:lastRequest.BodyData.NAME | Should -Be 'newlif01'
+            $script:lastRequest.BodyData.ContainsKey('ID') | Should -BeFalse
+        }
+
+        It 'renames a name-addressed target after resolving its id' {
+            Set-DMLif -WebSession $script:session -Name 'testelif2' -NewName 'newtestlif2' -Confirm:$false
+
+            $script:lastRequest.Method | Should -Be 'PUT'
+            $script:lastRequest.Resource | Should -Be 'lif/created-01'
+            $script:lastRequest.BodyData.NAME | Should -Be 'newtestlif2'
+        }
+
+        It 'auto-injects the mandatory ADDRESSFAMILY=0 when changing an IPv4 address' {
+            # REST modify interface rejects an IPv4 edit that omits ADDRESSFAMILY;
+            # the cmdlet must derive it (0 = IPv4) from the address being changed.
+            Set-DMLif -WebSession $script:session -Name 'lif01' -IPv4Address '192.0.2.40' -Confirm:$false
+
+            $script:lastRequest.Method | Should -Be 'PUT'
+            $script:lastRequest.BodyData.IPV4ADDR | Should -Be '192.0.2.40'
+            $script:lastRequest.BodyData.ADDRESSFAMILY | Should -Be 0
+        }
+
+        It 'auto-injects the mandatory ADDRESSFAMILY=1 when changing an IPv6 address' {
+            Set-DMLif -WebSession $script:session -Name 'lif01' -IPv6Address '2001:db8::40' -Confirm:$false
+
+            $script:lastRequest.Method | Should -Be 'PUT'
+            $script:lastRequest.BodyData.IPV6ADDR | Should -Be '2001:db8::40'
+            $script:lastRequest.BodyData.ADDRESSFAMILY | Should -Be 1
+        }
+
+        It 'honours an explicit -AddressFamily over the address-derived default' {
+            # Caller intent wins: an explicit value is never overridden by inference.
+            Set-DMLif -WebSession $script:session -Name 'lif01' -IPv4Address '192.0.2.41' -AddressFamily 1 -Confirm:$false
+
+            $script:lastRequest.BodyData.ADDRESSFAMILY | Should -Be 1
+        }
+
+        It 'does not inject ADDRESSFAMILY when no IP address changes' {
+            Set-DMLif -WebSession $script:session -Name 'lif01' -OperationalStatus $true -Confirm:$false
+
+            $script:lastRequest.BodyData.ContainsKey('ADDRESSFAMILY') | Should -BeFalse
+        }
+
+        It 'rejects changing both IPv4 and IPv6 without an explicit -AddressFamily' {
+            { Set-DMLif -WebSession $script:session -Name 'lif01' -IPv4Address '192.0.2.42' -IPv6Address '2001:db8::42' -Confirm:$false -ErrorAction Stop } |
+                Should -Throw '*single-valued*'
+
+            $script:lastRequest | Should -BeNullOrEmpty
         }
 
         It 'rejects a call that supplies neither -Id nor -Name' {
@@ -241,9 +302,27 @@ InModuleScope NetworkActionsTestModule {
 
             $lif | Set-DMLif -WebSession $script:session -OperationalStatus $true -Confirm:$false
 
+            # Id wins for the path; neither identity value is echoed in the body.
             $script:lastRequest.Method | Should -Be 'PUT'
-            $script:lastRequest.BodyData.ID | Should -Be 'lif-01'
-            $script:lastRequest.BodyData.NAME | Should -Be 'lif01'
+            $script:lastRequest.Resource | Should -Be 'lif/lif-01'
+            $script:lastRequest.BodyData.OPERATIONALSTATUS | Should -Be $true
+            $script:lastRequest.BodyData.ContainsKey('ID') | Should -BeFalse
+            $script:lastRequest.BodyData.ContainsKey('NAME') | Should -BeFalse
+        }
+
+        It 'rejects more than one logical interface from the pipeline before sending any request' {
+            # A modify carries a single set of changes (e.g. one IP); fanning it out
+            # across several interfaces is almost always a mistake, so it is refused
+            # up front -- no modify is issued for any of the piped interfaces.
+            $lifs = @(
+                [pscustomobject]@{ Id = 'lif-01'; 'LIF Name' = 'lifA' }
+                [pscustomobject]@{ Id = 'lif-02'; 'LIF Name' = 'lifB' }
+            )
+
+            { $lifs | Set-DMLif -WebSession $script:session -OperationalStatus $true -Confirm:$false -ErrorAction Stop } |
+                Should -Throw '*from the pipeline*'
+
+            $script:lastRequest | Should -BeNullOrEmpty
         }
     }
 

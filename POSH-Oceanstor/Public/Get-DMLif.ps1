@@ -62,6 +62,7 @@ function Get-DMLif {
 
 	.LINK
 	#>
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
     [Cmdletbinding(DefaultParameterSetName = 'All')]
     [OutputType([System.Collections.ArrayList])]
     param(
@@ -74,6 +75,16 @@ function Get-DMLif {
 
         [Parameter(Position = 0, ParameterSetName = 'ByName')]
         [ValidateLength(1, 255)]
+        [ArgumentCompleter({
+                param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
+                    $fakeBoundParameters.WebSession
+                }
+                else {
+                    $script:CurrentOceanstorSession
+                }
+                (Get-DMLif -WebSession $session).'LIF Name' | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+            })]
         [string]$Name,
 
         [Parameter(ParameterSetName = 'ByName')]
