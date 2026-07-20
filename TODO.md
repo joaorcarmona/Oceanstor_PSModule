@@ -4,7 +4,7 @@ The open-work tracker for `POSH-Oceanstor`. Completed work, the release-readines
 the full live-validation history, and the **Standing safety reference** live in
 [CHANGELOG.md](CHANGELOG.md).
 
-> **Nothing here blocks the `v1.0.0-alpha1` release.** Every item is either *deferred by
+> **Nothing here blocks the `v1.0.0-beta` release.** Every item is either *deferred by
 > design* (blocked on an external prerequisite — a second lab array, an undocumented REST
 > endpoint, or a maintainer/ops decision) or scheduled for a *future feature cycle*.
 >

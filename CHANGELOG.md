@@ -5,15 +5,15 @@ All notable development work, design decisions, and live-validation evidence for
 [Keep a Changelog](https://keepachangelog.com/); this project uses a milestone-based
 prerelease scheme.
 
-> ## Status: `v1.0.0-alpha1` scope — **COMPLETE** ✅
+> ## Status: `v1.0.0-beta` scope — **COMPLETE** ✅
 >
-> As of **2026-07-20**, every planned item for the `alpha-v1.0.0` milestone is done and
+> As of **2026-07-20**, every planned item for the 1.0.0 milestone is done and
 > validated. The release hard-gate is **GO**: `./Tests/Invoke-UnitTests.ps1
 > -FailOnAnalyzerIssue` reports **0 Error-severity analyzer findings and 1232/1232 tests
 > passing**. All shipped mutators that can be validated against the single available lab
 > array have been live-confirmed.
 >
-> **What "complete" means here:** the alpha-v1.0.0 command surface, correctness fixes, CI,
+> **What "complete" means here:** the 1.0.0 command surface, correctness fixes, CI,
 > and documentation are finished. Open work — everything *deferred by design* and the
 > *future feature-branch* backlog — is tracked separately in **[TODO.md](TODO.md)**. Each
 > such item is blocked on an external prerequisite (a second lab array, an undocumented REST
@@ -26,11 +26,11 @@ prerelease scheme.
 
 ---
 
-## Release readiness — `v1.0.0-alpha1`
+## Release readiness — `v1.0.0-beta`
 
 **Hard gate: GO** (Phase 01, 2026-07-07; re-affirmed through 2026-07-20).
 
-- **Manifest / exports:** `ModuleVersion = 1.0.0`, `Prerelease = alpha1`; `Test-ModuleManifest`
+- **Manifest / exports:** `ModuleVersion = 1.0.0`, `Prerelease = beta`; `Test-ModuleManifest`
   OK; public-command count matches `Public/*.ps1` (no export drift).
 - **Unit + analyzer gate:** 1232/1232 tests pass; 0 Error-severity analyzer findings. The two
   historical `PSAvoidUsingUsernameAndPasswordParams` errors on the SNMPv3 USM cmdlets were
@@ -45,17 +45,17 @@ prerelease scheme.
   `ConfirmImpact = 'High'`; `New-*` creation commands are the accepted lower-blast-radius
   exception.
 
-**Remaining non-gating ops items (do not block the alpha tag):**
+**Remaining non-gating ops items (do not block the beta tag):**
 - Source/approve a code-signing certificate, then flip CI `SIGNING_ENABLED`; do a first
   supervised `PUBLISH_ENABLED` dry-run. Both default **off** — no real Gallery publish has
   been attempted.
-- When tagging, use `v1.0.0` (not `v1.0.0-alpha1`) — the release workflow's
+- When tagging, use `v1.0.0` (not `v1.0.0-beta`) — the release workflow's
   tag-vs-`ModuleVersion` guard compares against the bare `1.0.0`; the prerelease is carried
   by the manifest's `Prerelease` field.
 
 ---
 
-## [1.0.0-alpha1] — Completed & validated
+## [1.0.0-beta] — Completed & validated
 
 ### Architecture — native pipeline & per-item session
 
@@ -178,7 +178,7 @@ fully-reversible objects only, and cleanup by captured ID.
 
 Open items — everything *deferred by design* or scheduled for a *future feature cycle* — are
 tracked in **[TODO.md](TODO.md)**, kept separate so this file stays a record of completed work.
-Nothing there blocks the `v1.0.0-alpha1` release.
+Nothing there blocks the `v1.0.0-beta` release.
 
 ---
 

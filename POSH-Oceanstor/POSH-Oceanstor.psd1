@@ -476,7 +476,7 @@ PrivateData = @{
     PSData = @{
 
         # Prerelease string of this module
-         Prerelease = "alpha1"
+         Prerelease = "beta"
 
         # Tags applied to this module. These help with module discovery in online galleries.
          Tags = @("Huawei", "Oceanstor", "DeviceManager", "Dorado")
