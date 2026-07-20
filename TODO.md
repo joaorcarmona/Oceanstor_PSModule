@@ -50,6 +50,25 @@ trigger is met.
 
 ---
 
+## Test harness / CI
+
+- **Harden the 3 Linux/macOS-flaky class-method tests** — `Classes.Views.Tests.ps1`
+  (`OceanstorViewStorage` ctor → `Invoke-DMPagedRequest` not resolved),
+  `Get-Storage.Tests.ps1:155` (LUN-group getter → `$null`), and
+  `protection-and-consistency-groups.Tests.ps1:325` (`GetLunGroup()` → `$null`).
+  Root cause: these classes call module functions from inside constructors/methods,
+  where Pester mocks and function resolution are unreliable on the PowerShell Linux
+  runtime and depend on non-deterministic cross-file dot-source leak order (the same
+  anti-pattern already fixed once for the `OceanstorSession` ctor). They pass on
+  Windows and in a full local Linux Docker run, but intermittently fail on the
+  Ubuntu/macOS CI runners — so those legs are `continue-on-error` in
+  `.github/workflows/powershell.yml` while Windows stays the required gate. Fix by
+  making each test import the real module (single, consistent session state) or by
+  refactoring the classes so methods/ctors don't call functions unmockably; then
+  remove the `continue-on-error` so Ubuntu/macOS gate again.
+
+---
+
 ## Future feature branches
 
 Next-cycle work; each needs its own scoped branch. Not part of this release.
