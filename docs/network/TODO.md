@@ -177,9 +177,14 @@
     live value is therefore a firmware/response discrepancy — the lab array's
     `GET vlan` element apparently omitted or emptied `TAG` for those VLANs.
     Not statically fixable and not safe to guess an alternate field name for.
-    **Next step (Phase 2 VLAN live session):** capture the raw `GET vlan` JSON
-    on the lab array and diff it against the documented schema; only then decide
-    whether a tolerant fallback field name is warranted.
+    **RESOLVED 2026-07-20 (Phase 2 VLAN live session):** raw `GET vlan` and
+    `GET vlan/{id}` were captured on the lab array. `TAG` comes back **populated**
+    for both a freshly-created VLAN (`TAG='130'` → `Vlan Tag Id='130'`) and the
+    pre-existing `.50` pair (`CTE0.A/B.IOM0.P0.50`: `rawTAG='50'` →
+    `classVlanTagId='50'`). No other field carried the tag value. So the empty-Tag
+    from 2026-07-09 **does not reproduce** — a transient firmware/response
+    discrepancy, not a mapping bug. The class mapping is correct; **no code change
+    and no fallback field name is warranted.**
   Details in [safety-and-live-validation.md](safety-and-live-validation.md).
 - `Set-DMvLan` (`PUT vlan/{id}`, MTU change) rejected raw-PUT update experiments
   with OceanStor API error `50331651` whether `NAME` was omitted or set —
@@ -190,7 +195,12 @@
   omission pattern as the SNMP-trap `50331651` fix. `Set-DMvLan` now echoes
   `ID` in the body alongside `MTU`; unit test added
   (`Tests/Unit/Public/Set-DMvLan.Tests.ps1`) asserting the corrected body.
-  **Awaiting live re-confirm in the Phase 2 VLAN session.**
+  **Live-confirmed 2026-07-20 (Phase 2 VLAN session):** on a test-owned VLAN
+  (`CTE0.A.IOM0.P2.130`), `Set-DMvLan -Mtu 1400` (a valid child MTU ≤ the parent
+  port's 1500) was accepted with `error.code 0` — **no `50331651`** — and the
+  change read back (`MTU=1400`). A first attempt at `Mtu 1600` was correctly
+  rejected with `1073813506` ("MTU greater than its parent port"), which itself
+  proves the ID+MTU body is accepted and reaches semantic validation. Item closed.
 - `Set-DMFailoverGroup` (`PUT failovergroup/{id}`, NAME/DESCRIPTION change) omitted the
   Mandatory `ID` body field — **root-caused + fixed 2026-07-17 (static analysis).** The
   modify interface (§4.6.9.3.7) marks **`ID` Mandatory** in the body; NAME/DESCRIPTION/
