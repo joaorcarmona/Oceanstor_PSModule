@@ -34,7 +34,7 @@ $script:SupervisedNetworkStackCommands = @(
 # adds extra ':Supervised' execution rows for them.
 $script:SupervisedNetworkStackCoverage = @{
     Net = @('New-DMPortBond', 'Remove-DMPortBond', 'New-DMvLan', 'Remove-DMvLan', 'New-DMLif', 'Remove-DMLif')
-    Fg  = @('New-DMvLan', 'Remove-DMvLan', 'New-DMLif', 'Remove-DMLif')
+    Fg  = @('New-DMPortBond', 'Remove-DMPortBond', 'New-DMvLan', 'Remove-DMvLan', 'New-DMLif', 'Remove-DMLif')
 }
 
 function Resolve-SupervisedPort {
@@ -163,7 +163,12 @@ function Invoke-SupervisedNetworkStack {
         Register-TestOwnedResource -Kind Bond -Identity $bondId
         $created.Push([pscustomobject]@{ Kind = 'Bond'; Id = $bondId; Name = $bondName })
 
-        $vlanIdByTag = [ordered]@{}
+        # Plain hashtable, NOT [ordered]@{}: the VLAN tags are integers, and an
+        # OrderedDictionary treats an integer indexer as a POSITIONAL index, so
+        # `$dict[130] = ...` throws ArgumentOutOfRangeException on a near-empty dict.
+        # A regular hashtable treats the integer as a key. Order is irrelevant here
+        # because the LIF loop below iterates $tags (the ordered source), not this map.
+        $vlanIdByTag = @{}
         foreach ($tag in $tags) {
             $currentTag = $tag
             $vlan = @(Invoke-MutationStep -Name 'New-DMvLan:Supervised' -Category 'Supervised' -Action {
@@ -204,33 +209,72 @@ function Invoke-SupervisedNetworkStack {
     }
 }
 
-function Invoke-SupervisedFailoverGroupStack {
-    # 2 VLANs (PortType 1, one per raw port) -> NAS failover group -> add both as
-    # members (280) / verify 2 -> modify -> service LIF on VLAN[0] bound to the
-    # group -> validate -> inline LIFO teardown (LIF, members, group, VLANs).
+function New-SupervisedBond {
+    # Create one test-owned bond from a same-controller port pair: push it onto
+    # $Created and register it test-owned. Returns the new bond Id, or $null on
+    # failure. Mirrors the net stack's bond-create guard (refuse an existing name).
+    # NOTE: the bond-name parameter is $BondName, NOT $Name. Inside the
+    # Invoke-MutationStep -Action scriptblock below, an unqualified $Name would
+    # resolve (via dynamic scope) to Invoke-MutationStep's own -Name parameter
+    # (the step label 'New-DMPortBond:Supervised'), not this function's argument --
+    # which then fails New-DMPortBond's name-pattern validation. $BondName does not
+    # collide with any Invoke-MutationStep parameter, so it resolves correctly.
     param(
         [Parameter(Mandatory)][pscustomobject[]]$Ports,
+        [Parameter(Mandatory)][string]$BondName,
+        [Parameter(Mandatory)][System.Collections.Generic.Stack[pscustomobject]]$Created
+    )
+    $bond = @(Invoke-MutationStep -Name 'New-DMPortBond:Supervised' -Category 'Supervised' -Action {
+        if (@(Get-DMPortBond -WebSession $session | Where-Object { $_.Name -eq $BondName }).Count -gt 0) {
+            throw "A bond named '$BondName' already exists; refusing to claim it test-owned."
+        }
+        New-DMPortBond -WebSession $session -Name $BondName -PortIdList @($Ports.Id) -Confirm:$false
+    })
+    if ($bond.Count -eq 0 -or -not $bond[0].Id) { return $null }
+    $bondId = [string]$bond[0].Id
+    Register-TestOwnedResource -Kind Bond -Identity $bondId
+    $Created.Push([pscustomobject]@{ Kind = 'Bond'; Id = $bondId; Name = $BondName })
+    return $bondId
+}
+
+function Invoke-SupervisedFailoverGroupStack {
+    # bond A (pair A, controller A) + bond B (pair B, controller B) -> one shared-tag
+    # VLAN (PortType 7) on each bond -> NAS failover group -> add both bond-VLANs as
+    # members (280) / verify 2 -> modify -> service LIF on bond-A's VLAN bound to the
+    # group -> validate -> inline LIFO teardown (LIF, members, group, VLANs, bonds).
+    param(
+        [Parameter(Mandatory)][pscustomobject[]]$PortsA,
+        [Parameter(Mandatory)][pscustomobject[]]$PortsB,
         [Parameter(Mandatory)]$Sup
     )
-    # A failover group's member VLANs must share ONE tag id: the array rejects
-    # mixed tags with error 1073815814 ("VLAN ports with different IDs cannot be
-    # added to one failover group"). Use a single tag on both raw ports -- same
-    # tag, different ports -- mirroring the production NAS pair (CTE0.A/B.IOM0.P0.50).
-    # Live-validated 2026-07-20. (The bond network-stack workflow, by contrast,
-    # legitimately uses four distinct tags for four VLANs on one bond.)
+    # A failover group's member VLANs must share ONE tag id: the array rejects mixed
+    # tags with error 1073815814 ("VLAN ports with different IDs cannot be added to one
+    # failover group"). We put the SAME tag on a VLAN on each of two bonds -- one bond
+    # per controller -- so the failover group genuinely spans controllers, mirroring
+    # the production NAS pair (CTE0.A/B.IOM0.P0.50).
     $fgTag = @($Sup.VlanTags | Select-Object -First 1)[0]
     $mask = [string]$Sup.IpMask
-    $fgName = New-TestName -Suffix 'fg'
-    $lifName = New-TestName -Suffix 'lif'
+    # Bond names must be <= 31 chars (New-DMPortBond ValidateLength). The test
+    # prefix + run id already consume 28, so these suffixes stay <= 3 chars.
+    $bondNameA = New-TestName -Suffix 'fga'
+    $bondNameB = New-TestName -Suffix 'fgb'
+    $fgName = New-TestName -Suffix 'fgsup'
+    $lifName = New-TestName -Suffix 'lifsup'
     $created = [System.Collections.Generic.Stack[pscustomobject]]::new()
 
     try {
-        # ---- one tagged VLAN per raw port, both sharing $fgTag (PortType 1) ----
+        # ---- one bond per controller (pair A -> bond A, pair B -> bond B) ----
+        $bondAId = New-SupervisedBond -Ports $PortsA -BondName $bondNameA -Created $created
+        if (-not $bondAId) { return }
+        $bondBId = New-SupervisedBond -Ports $PortsB -BondName $bondNameB -Created $created
+        if (-not $bondBId) { return }
+
+        # ---- one shared-tag VLAN (PortType 7) on each bond ----
         $vlanIds = [System.Collections.Generic.List[string]]::new()
-        for ($i = 0; $i -lt 2 -and $i -lt $Ports.Count; $i++) {
-            $portId = [string]$Ports[$i].Id
+        foreach ($b in @([string]$bondAId, [string]$bondBId)) {
+            $bondId = $b
             $vlan = @(Invoke-MutationStep -Name 'New-DMvLan:Supervised' -Category 'Supervised' -Action {
-                New-DMvLan -WebSession $session -Tag $fgTag -PortType 1 -PortId $portId -Confirm:$false
+                New-DMvLan -WebSession $session -Tag $fgTag -PortType 7 -PortId $bondId -Confirm:$false
             })
             if ($vlan.Count -gt 0 -and $vlan[0].Id) {
                 $vid = [string]$vlan[0].Id
@@ -329,25 +373,32 @@ $script:SupervisedNetworkWorkflow = {
         return
     }
 
-    # Resolve + read-only invariant-check the operator-designated ports. Wrapped in
-    # a mutation step so a failed invariant records a Blocked result and skips the
-    # stacks instead of throwing out of the workflow.
+    # Resolve + read-only invariant-check the operator-designated port pairs. Pair A
+    # (controller A) drives the net stack and bond A of the FG stack; pair B (controller
+    # B) is bond B of the FG stack, resolved only when that stack runs. Wrapped in a
+    # mutation step so a failed invariant records a Blocked result and skips the stacks
+    # instead of throwing out of the workflow.
     $ports = @(Invoke-MutationStep -Name 'Resolve-SupervisedPorts' -Category 'Supervised' -Action {
-        $resolved = foreach ($loc in $sup.PortLocations) { Resolve-SupervisedPort -Location $loc }
+        $locs = @($sup.PortLocationsA)
+        if ($fgStackEnabled) { $locs += @($sup.PortLocationsB) }
+        $resolved = foreach ($loc in $locs) { Resolve-SupervisedPort -Location $loc }
         foreach ($p in $resolved) { Test-SupervisedPortInvariant -Port $p }
         $resolved
     })
 
-    if ($ports.Count -lt 2) {
+    $portsA = @($ports | Where-Object { $_.Location -in @($sup.PortLocationsA) })
+    $portsB = @($ports | Where-Object { $_.Location -in @($sup.PortLocationsB) })
+
+    if ($portsA.Count -lt 2 -or ($fgStackEnabled -and $portsB.Count -lt 2)) {
         Add-SkippedResult -Name $script:SupervisedNetworkStackCommands -Status 'Blocked' -Category 'Supervised' `
-            -Reason 'The operator-designated supervised ports could not be resolved or failed their read-only idle invariants; no supervised network object was created.'
+            -Reason 'The operator-designated supervised port pairs could not be resolved or failed their read-only idle invariants; no supervised network object was created.'
         return
     }
 
     if ($sup.RecordGuardDryRun) { Write-SupervisedGuardDryRun -Ports $ports }
 
-    if ($netStackEnabled) { Invoke-SupervisedNetworkStack -Ports $ports -Sup $sup }
-    if ($fgStackEnabled) { Invoke-SupervisedFailoverGroupStack -Ports $ports -Sup $sup }
+    if ($netStackEnabled) { Invoke-SupervisedNetworkStack -Ports $portsA -Sup $sup }
+    if ($fgStackEnabled) { Invoke-SupervisedFailoverGroupStack -PortsA $portsA -PortsB $portsB -Sup $sup }
 
     # NotConfigured only for Group X commands that no ENABLED stack represents, so a
     # command never shows both a NotConfigured row and an execution row.

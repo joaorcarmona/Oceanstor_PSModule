@@ -482,10 +482,19 @@ function Test-SupervisedConfiguration {
         # NotConfigured. Nothing else to validate.
         return
     }
-    if (@($sup.PortLocations).Count -lt 2) {
-        throw 'Network.Supervised.PortLocations must list at least two link-down front-end port Location values (ideally one per controller).'
+    # PortLocationsA (controller A) is required by both stacks -- the net stack's
+    # single bond, and bond A of the failover-group stack. PortLocationsB
+    # (controller B) is required only when the failover-group stack runs, which
+    # builds one bond per controller so the group spans controllers.
+    if (@($sup.PortLocationsA).Count -lt 2) {
+        throw 'Network.Supervised.PortLocationsA must list at least two same-controller link-down front-end port Location values (used for bond A / the net stack).'
     }
-    $requiredTags = if ($netStack) { 4 } else { 2 }
+    if ($fgStack -and @($sup.PortLocationsB).Count -lt 2) {
+        throw 'Network.Supervised.PortLocationsB must list at least two same-controller link-down front-end port Location values (used for bond B) when AllowFailoverGroupStackLifecycle is set.'
+    }
+    # Net stack: 4 tags (one VLAN per tag on bond A). FG stack: 1 shared tag
+    # (one VLAN with that tag on each of bond A and bond B).
+    $requiredTags = if ($netStack) { 4 } else { 1 }
     if (@($sup.VlanTags).Count -lt $requiredTags) {
         throw "Network.Supervised.VlanTags must provide at least $requiredTags tag(s) for the enabled supervised stack(s)."
     }

@@ -158,6 +158,20 @@ function Invoke-MutationValidation {
     if ($runMutation -or $runSupervised) {
         Enable-DMValidationRequestTrace -Sink $mutationRequests
 
+        # Validate the supervised config UP FRONT, before any test resource is
+        # created. Cleanup (Invoke-RegisteredCleanup) runs only after the workflows
+        # below, so a bad Network.Supervised block thrown mid-run would otherwise
+        # orphan everything the mutation phase already created. Fail fast instead --
+        # this mirrors Test-MutatingConfiguration, which already runs before creation.
+        if ($runSupervised) { Test-SupervisedConfiguration }
+
+        # Wrap resource creation + supervised workflows so cleanup ALWAYS runs, even
+        # if a workflow throws mid-run. Without this, an unexpected exception between
+        # creation and Invoke-RegisteredCleanup orphans every test-owned object (the
+        # per-step Invoke-MutationStep catches expected failures, but a genuine crash
+        # -- e.g. a bad index -- escapes it and would otherwise skip cleanup).
+        try {
+
         if ($runMutation) {
         Test-MutatingConfiguration
         $lunName = New-TestName -Suffix 'lun'
@@ -228,11 +242,15 @@ function Invoke-MutationValidation {
         }
 
         if ($runSupervised) {
-            Test-SupervisedConfiguration
             . $script:SupervisedNetworkWorkflow
         }
 
-        Invoke-RegisteredCleanup
+        }
+        finally {
+            # Runs whether the workflows completed or threw: remove every registered
+            # test-owned resource so a mid-run crash can never leave orphans behind.
+            Invoke-RegisteredCleanup
+        }
 
         Invoke-MutationStep -Name 'Disconnect-deviceManager' -Action {
             Disconnect-deviceManager -WebSession $session

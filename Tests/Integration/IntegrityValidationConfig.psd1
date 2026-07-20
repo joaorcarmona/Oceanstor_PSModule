@@ -279,13 +279,19 @@
             # Uses the first two VlanTags below.
             AllowFailoverGroupStackLifecycle = $true
 
-            # Two currently link-down front-end ports (their Location values),
-            # reusable between runs, ideally one per controller so a failover group
-            # spans controllers. Re-verified read-only before anything is created.
-            PortLocations = @('CTE0.A.IOM0.P2', 'CTE0.B.IOM0.P2')
+            # Two same-controller front-end port pairs (their Location values),
+            # reusable between runs. Pair A builds bond A on controller A; pair B
+            # builds bond B on controller B, so the failover-group stack spans
+            # controllers via one bond per controller. The net stack uses pair A
+            # only. All four ports must be front-end, link-down, unbonded, no LIF,
+            # no child VLAN -- re-verified read-only before anything is created.
+            PortLocationsA = @('CTE0.A.IOM0.P2', 'CTE0.A.IOM0.P3')
+            PortLocationsB = @('CTE0.B.IOM0.P2', 'CTE0.B.IOM0.P3')
 
-            # VLAN tags from the reserved 130-140 range. The failover-group stack
-            # uses the first two; the bond stack uses the first four.
+            # VLAN tags from the reserved 130-140 range. The net stack uses the
+            # first four (one VLAN per tag on bond A). The failover-group stack uses
+            # only the first tag, shared across both bonds' VLANs (a failover group
+            # requires its member VLANs to share one tag id).
             VlanTags = @(130, 131, 132, 133)
 
             # LIF IPv4 address format: {0} is substituted with the VLAN tag, e.g.
