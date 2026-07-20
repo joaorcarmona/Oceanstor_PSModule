@@ -92,11 +92,18 @@ Remaining sessions, easiest-unblocked first:
    trap server (Id `0`, `10.10.12.84`): update applied and reverted with no `1077949001`/`50331651`,
    mandatory-field re-supply left other fields intact. Rules out the last `NeedsInvestigation`
    candidate (unreachable TEST-NET-1 target). Outcome recorded in `docs/system-management/TODO.md` §4.
-2. **Network — VLAN live workflow (Phase 1.2).** Needs a human-reviewed lab dry run of
-   `Get-DMVlanParentPortStatus` (idle-port guard) against real hardware first, then the gated
-   create/delete to re-confirm the `Set-DMvLan` fix. **Also capture the raw `GET vlan` JSON** in this
-   session and diff it vs the documented schema to settle the empty-`Tag` firmware discrepancy. Currently
-   `SkippedUnsafe` by design (guard confirmed no harness-owned idle port exists).
+2. ~~**Network — VLAN live workflow (Phase 1.2).**~~ **DONE 2026-07-20** (commit `85ecad0`;
+   re-verified read-only 2026-07-20). Operator-supervised create/delete round-trip re-confirmed the
+   `Set-DMvLan` MTU fix (`-Mtu 1400` accepted with `error.code 0`, `1600` correctly rejected with
+   `1073813506`), and the raw `GET vlan`/`GET vlan/{id}` capture settled the empty-`Tag` discrepancy —
+   `TAG` comes back **populated** (`Get-DMvLan` read-back shows `Vlan Tag Id='50'` for both live VLANs;
+   a fresh VLAN read `TAG='130'`), so the 2026-07-09 empty value was a transient firmware/response
+   discrepancy, not a mapping bug — no code change warranted. Full record in `docs/network/TODO.md`.
+   **Residual (by-design, not a Phase 2 gate):** on this lab the `System-defined` failover group holds
+   all ports, so `Get-DMVlanParentPortStatus` can never green-light an idle port — the unattended
+   harness stays `SkippedUnsafe` and live VLAN runs remain operator-designated-port sessions. Optional
+   future enhancement (teach the guard to ignore `System-defined` + accept operator ports via config) is
+   tracked in `docs/network/TODO.md`, not here.
 3. **Replication/HyperMetro — lab-pair mutation workflow.** Blocked on lab resources: every
    `HyperReplica_Lun0x` remote LUN is already a secondary of a pre-existing pair and `HyperMetro_Lun01`
    is absent on the remote device. Needs operator-supplied `RemoteDeviceId`/`RemoteLunId`/`DomainId`
