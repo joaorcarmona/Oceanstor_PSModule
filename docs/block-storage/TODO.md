@@ -36,6 +36,12 @@
   failure), and the generated schedule name exceeded the array's 31-character
   cap (suffix shortened to `cdp`). The storage-pool rename round-trip also
   passed live with the original name verified restored.
+- Storage-pool rename re-validated 2026-07-20 on `10.10.10.24`
+  (`StoragePool001`, Id 0): both legs of `Rename-DMstoragePool` applied and
+  read-back-verified (original→temp→original), temp name confirmed gone, pool
+  restored. Closes the storage-pool roadmap item in
+  `Oceanstor_PSModule_TODO.md`. The `Set` half (description/threshold/container
+  fields) remains deferred-indefinitely — see the consolidated plan Phase 3.1.
 
 ## Documentation
 
