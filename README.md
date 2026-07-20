@@ -1,6 +1,8 @@
 # Huawei Oceanstor_PSModule
 
 [![PowerShell CI](https://github.com/joaorcarmona/Oceanstor_PSModule/actions/workflows/powershell.yml/badge.svg)](https://github.com/joaorcarmona/Oceanstor_PSModule/actions/workflows/powershell.yml)
+[![PowerShell Gallery](https://img.shields.io/powershellgallery/v/POSH-Oceanstor?logo=powershell&logoColor=white&label=PS%20Gallery)](https://www.powershellgallery.com/packages/POSH-Oceanstor)
+[![PS Gallery Downloads](https://img.shields.io/powershellgallery/dt/POSH-Oceanstor?logo=powershell&logoColor=white&label=downloads)](https://www.powershellgallery.com/packages/POSH-Oceanstor)
 [![License: GPL v3](https://img.shields.io/github/license/joaorcarmona/Oceanstor_PSModule)](https://github.com/joaorcarmona/Oceanstor_PSModule/blob/master/LICENSE)
 [![Latest Release](https://img.shields.io/github/v/release/joaorcarmona/Oceanstor_PSModule?include_prereleases&sort=semver)](https://github.com/joaorcarmona/Oceanstor_PSModule/releases)
 [![PowerShell 7+](https://img.shields.io/badge/PowerShell-7%2B-5391FE?logo=powershell&logoColor=white)](https://github.com/PowerShell/PowerShell)
