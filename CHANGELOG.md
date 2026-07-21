@@ -26,6 +26,47 @@ prerelease scheme.
 
 ---
 
+## [1.0.2] — 2026-07-21
+
+A correctness and usability release for Dorado 6.x. It corrects several v6 field/enum
+mappings that still carried V3-era artifacts (V3 dual-support is preserved), and enriches
+two getters with `-Name`/`-Id` selectors and tab-completion. All changes were verified
+against a live lab array (getter-integrity run: 0 failures).
+
+### Fixed — class → REST mappings (V3 dual-support kept)
+
+- **vStore capacities now populate.** The class read the misspelled `…Quata` fields; the
+  Dorado 6.1.6 interface exposes `nasCapacityQuota`/`nasFreeCapacityQuota`. Corrected to
+  `Quota` (SAN and total fields retained for V3 arrays).
+- **Host-group type label resolves.** The `TYPE` switch matched only `0`, but a v6 host
+  group is `TYPE=14`; the label now resolves. Member count now reads the v6 `hostNumber`
+  (legacy `hostNumbe` kept as a fallback).
+- **Disk "offline" running status.** A duplicated `16` case made `offline` unreachable; it
+  now maps `28 → offline` per the reference.
+- **System hot-spare capacity no longer overflows.** `HotSpareNumbers` (fed from the uint64
+  `HOTSPAREDISKSCAPACITY`) was widened from `[int]` to `[int64]`.
+
+### Added / Changed — getters
+
+- **`Get-DMstoragePool`** gains tab-completion + validation on `-Name` (alias
+  `-StoragePoolName`) and a new `-Id` selector (alias `-StoragePoolId`), mirroring
+  `Get-DMlun`. Wildcards (`Get-DMstoragePool *name*`) and the no-argument "return all"
+  behavior are unchanged.
+- **`Get-DMWorkLoadType`** now accepts `-Name` (wildcard + tab-completion) and `-Id`, in
+  addition to the retained `-Filter`/`-Value`, `-CompressionEnabled`, and `-DedupeEnabled`.
+
+### Removed (breaking)
+
+- **`Get-DMWorkLoadTypebyFilter`** (and its `Get-DMWorkLoadTypesbyFilter` alias) was removed;
+  its capabilities are merged into `Get-DMWorkLoadType`.
+
+### Validation
+
+- Unit tests green; full live getter-integrity run against the lab array passed with
+  **0 failures** (69 Passed / 13 NoData / 0 Failed).
+
+---
+
 ## [1.0.1] — 2026-07-21
 
 A small but real correctness release for LUN creation and storage-pool reporting on
