@@ -5,20 +5,28 @@ function Get-DMstoragePool {
 
 	.DESCRIPTION
 		Function to request Huawei Oceanstor Storage Pools Configured in the system. With no
-		arguments, returns every storage pool. When Name is supplied (positionally or named),
-		filters server-side: an exact match when Name has no wildcard, a fuzzy substring hint
-		when Name has a leading and/or trailing * (per OceanStor REST API reference: a single
-		colon in filter=field:value requests a fuzzy match, a double colon requests an exact
-		match). Any other wildcard shape falls back to fetching every pool and filtering
-		client-side. Either way the exact requested pattern is always re-verified client-side
-		(-Like) before returning, so an imprecise server-side result never produces a wrong
-		final answer.
+		arguments, returns every storage pool. Selection is done with one of two mutually
+		exclusive parameter sets:
+
+		- Name (positional, default): filters server-side by NAME. An exact match when Name has
+		  no wildcard, a fuzzy substring hint when Name has a leading and/or trailing * (per
+		  OceanStor REST API reference: a single colon in filter=field:value requests a fuzzy
+		  match, a double colon an exact match). Any other wildcard shape falls back to fetching
+		  every pool and filtering client-side. The exact requested pattern is always re-verified
+		  client-side (-Like) before returning, so an imprecise server-side result never produces
+		  a wrong final answer.
+		- Id: filters server-side by ID with an exact match (no wildcard), re-verified client-side.
+
+		Both Name and Id support tab completion of the connected array's existing pools.
 
 	.PARAMETER webSession
 		Optional parameter to define the session to be use on the REST call. If not defined, the module's cached $script:CurrentOceanstorSession session will be used
 
 	.PARAMETER Name
-		Optional storage pool name to search for, positional. If omitted, every storage pool is returned. Supports PowerShell wildcards (*, ?, [...]); without one, the comparison is an exact match.
+		Optional storage pool name to search for, positional. If omitted, every storage pool is returned. Supports PowerShell wildcards (*, ?, [...]); without one, the comparison is an exact match. Tab completion offers existing storage pool names. Also accepts the alias -StoragePoolName.
+
+	.PARAMETER Id
+		Optional storage pool ID to search for. Returns exactly one pool, exact match only, no wildcard support. Tab completion offers existing storage pool IDs. Also accepts the alias -StoragePoolId.
 
 	.INPUTS
 		System.Management.Automation.PSCustomObject
@@ -44,21 +52,54 @@ function Get-DMstoragePool {
 
 		OR
 
-		PS C:\> Get-DMstoragePool 'perf*'
+		PS C:\> Get-DMstoragePool '*perf*'
+
+	.EXAMPLE
+
+		PS C:\> Get-DMstoragePool -Id '0'
 
 	.NOTES
 		Filename: Get-DMstoragePool.ps1
 
 	.LINK
 	#>
-    [Cmdletbinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+
+    [Cmdletbinding(DefaultParameterSetName = 'ByName')]
     [OutputType([System.Collections.ArrayList])]
     param(
         [Parameter(ValueFromPipelineByPropertyName = $true, Mandatory = $false)]
         [pscustomobject]$WebSession,
 
-        [Parameter(Position = 0, Mandatory = $false)]
-        [string]$Name
+        [Parameter(ParameterSetName = 'ByName', Position = 0, Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('StoragePoolName')]
+        [ArgumentCompleter({
+                param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
+                    $fakeBoundParameters.WebSession
+                }
+                else {
+                    $script:CurrentOceanstorSession
+                }
+                (Get-DMstoragePool -WebSession $session).Name | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+            })]
+        [string]$Name,
+
+        [Parameter(ParameterSetName = 'ById', Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('StoragePoolId')]
+        [ArgumentCompleter({
+                param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+                $session = if ($fakeBoundParameters.ContainsKey('WebSession')) {
+                    $fakeBoundParameters.WebSession
+                }
+                else {
+                    $script:CurrentOceanstorSession
+                }
+                (Get-DMstoragePool -WebSession $session).Id | Sort-Object -Unique | Where-Object { $_ -like "$wordToComplete*" }
+            })]
+        [string]$Id
     )
 
     if ($WebSession) {
@@ -79,7 +120,11 @@ function Get-DMstoragePool {
 
     $resource = 'storagepool'
 
-    if ($Name) {
+    if ($PSCmdlet.ParameterSetName -eq 'ById') {
+        # Id: exact match server-side (double colon); no wildcard support.
+        $resource += "?filter=ID::$([uri]::EscapeDataString($Id))"
+    }
+    elseif ($Name) {
         $hasWildcard = $Name -match '[*?\[\]]'
         if (-not $hasWildcard) {
             # No wildcard: request an exact match server-side (double colon).
@@ -103,7 +148,11 @@ function Get-DMstoragePool {
         [void]$storagePools.Add($storagepool)
     }
 
-    if ($Name) {
+    if ($PSCmdlet.ParameterSetName -eq 'ById') {
+        # Re-verify the exact ID client-side, even after the server-side filter.
+        $storagePools = [System.Collections.ArrayList]@($storagePools | Where-Object Id -EQ $Id)
+    }
+    elseif ($Name) {
         # Always re-verify against the exact requested pattern client-side, even
         # after a server-side filter. -Like enforces the full wildcard pattern when
         # Name has one, and behaves as an exact match when it doesn't.

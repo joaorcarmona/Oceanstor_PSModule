@@ -760,6 +760,20 @@ Describe 'Public getter functions' {
             $script:poolResource | Should -Be 'storagepool?filter=NAME::performance'
         }
 
+        It 'gets a storage pool by Id using an exact server-side filter' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                $script:poolResource = $Resource
+                [pscustomobject]@{ data = @([pscustomobject]@{ ID = '3'; NAME = 'performance'; HEALTHSTATUS = 1; RUNNINGSTATUS = 27; DATASPACE = (512 * 1GB) }) }
+            }
+
+            $result = @(Get-DMstoragePool -WebSession $script:session -Id '3')
+
+            $result.Count | Should -Be 1
+            $result[0].id | Should -Be '3'
+            $script:poolResource | Should -Be 'storagepool?filter=ID::3'
+        }
+
         It 'gets storage pools by Name using a fuzzy server-side hint for a wildcard keyword' {
             Mock Invoke-DeviceManager {
                 param($WebSession, $Method, $Resource)
@@ -818,12 +832,30 @@ Describe 'Public getter functions' {
                 ) }
             }
 
-            $result = (Get-DMWorkLoadTypebyFilter -WebSession $script:session -Filter 'Compression Enabled' -Keyword enabled)[0]
+            $result = (Get-DMWorkLoadType -WebSession $script:session -Filter 'Compression Enabled' -Keyword enabled)[0]
 
             $result.Id | Should -Be 'workload-01'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
                 Should -Be @('Id', 'Name', 'Workload Type', 'Block Size', 'Compression Enabled')
             $result.'Compression Enabled' | Should -Be 'enabled'
+        }
+
+        It 'gets a workload type by Id (client-side, no server-side ID filter)' {
+            Mock Invoke-DeviceManager {
+                param($WebSession, $Method, $Resource)
+                $script:workloadResource = $Resource
+                [pscustomobject]@{ data = @(
+                    [pscustomobject]@{ ID = 'workload-01'; NAME = 'db'; CREATETYPE = 1 }
+                    [pscustomobject]@{ ID = 'workload-02'; NAME = 'archive'; CREATETYPE = 1 }
+                ) }
+            }
+
+            $result = @(Get-DMWorkLoadType -WebSession $script:session -Id 'workload-02')
+
+            $result.Count | Should -Be 1
+            $result[0].Id | Should -Be 'workload-02'
+            # ID is not a supported workload_type filter field, so no filter is sent.
+            $script:workloadResource | Should -Be 'workload_type?isDetailInfo=true'
         }
 
         It 'gets workload types by Name using a server-side filter hint' {
@@ -833,7 +865,7 @@ Describe 'Public getter functions' {
                 [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'workload-01'; NAME = 'db'; CREATETYPE = 1 }) }
             }
 
-            $result = (Get-DMWorkLoadTypebyFilter -WebSession $script:session -Name 'db')[0]
+            $result = (Get-DMWorkLoadType -WebSession $script:session -Name 'db')[0]
 
             $result.Id | Should -Be 'workload-01'
             $script:workloadResource | Should -BeLike 'workload_type?isDetailInfo=true&filter=NAME::db*'
@@ -849,7 +881,7 @@ Describe 'Public getter functions' {
                 ) }
             }
 
-            $result = @(Get-DMWorkLoadTypebyFilter -WebSession $script:session -CompressionEnabled $true)
+            $result = @(Get-DMWorkLoadType -WebSession $script:session -CompressionEnabled $true)
 
             $result.Count | Should -Be 1
             $result[0].Id | Should -Be 'workload-01'
@@ -866,7 +898,7 @@ Describe 'Public getter functions' {
                 ) }
             }
 
-            $result = @(Get-DMWorkLoadTypebyFilter -WebSession $script:session -DedupeEnabled $false)
+            $result = @(Get-DMWorkLoadType -WebSession $script:session -DedupeEnabled $false)
 
             $result.Count | Should -Be 1
             $result[0].Id | Should -Be 'workload-01'

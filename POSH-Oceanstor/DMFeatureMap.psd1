@@ -176,7 +176,6 @@
                 'Get-DMlunByName'
                 'Get-DMlunByWWN'
                 'Get-DMWorkLoadType'
-                'Get-DMWorkLoadTypebyFilter'
                 'New-DMLun'
                 'New-DMLunGroup'
                 'Remove-DMLun'

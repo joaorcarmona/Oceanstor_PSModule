@@ -222,7 +222,6 @@ FunctionsToExport = @(
     'Get-DMvStore'
     'Get-DMVStorePair'
     'Get-DMWorkLoadType'
-    'Get-DMWorkLoadTypebyFilter'
     'Invoke-DMPerformanceReportTask'
     'Join-DMFileHyperMetroDomain'
     'Lock-DMLocalUser'
@@ -456,7 +455,6 @@ AliasesToExport = @(
     'Get-DMstoragePools'
     'Get-DMvLans'
     'Get-DMWorkLoadTypes'
-    'Get-DMWorkLoadTypesbyFilter'
     'Enable-DMQosPolicy'
     'Disable-DMQosPolicy'
 )

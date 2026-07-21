@@ -326,8 +326,8 @@ function Invoke-ReadValidation {
 
     if ($samples.Workloads.Count -gt 0) {
         $workload = $samples.Workloads[0]
-        Add-ValidationResult -Name 'Get-DMWorkLoadTypebyFilter' -ExpectedType 'OceanStorWorkload' -Action {
-            Get-DMWorkLoadTypebyFilter -WebSession $session -Filter Name -Keyword $workload.Name
+        Add-ValidationResult -Name 'Get-DMWorkLoadType:ByFilter' -ExpectedType 'OceanStorWorkload' -Action {
+            Get-DMWorkLoadType -WebSession $session -Filter Name -Value $workload.Name
         } | Out-Null
     }
     if ($samples.LunGroups.Count -gt 0) {
