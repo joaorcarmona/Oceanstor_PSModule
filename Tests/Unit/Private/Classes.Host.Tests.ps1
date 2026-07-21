@@ -72,12 +72,14 @@ Describe 'Host model classes' {
     }
 
     It 'maps host group identity and mapping state' {
-        $source = [pscustomobject]@{ ID = 4; NAME = 'cluster'; TYPE = 0; ISADD2MAPPINGVIEW = 'true' }
+        $source = [pscustomobject]@{ ID = 4; NAME = 'cluster'; TYPE = 14; ISADD2MAPPINGVIEW = 'true'; hostNumber = 3 }
 
         $result = New-Object -TypeName OceanStorHostGroup -ArgumentList @($source, $script:session)
 
         $result.Id | Should -Be 4
         $result.Name | Should -Be 'cluster'
+        $result.'HostGroup Type' | Should -Be 'Host Group'
+        $result.'Host Member Number' | Should -Be 3
         $result.'Is Mapped' | Should -BeTrue
     }
 

@@ -9,7 +9,9 @@ class OceanStorSystem{
 	[string]$description
 	[string]${Health Status}
 	[string]${Running Status}
-	[int]$HotSpareNumbers
+	# Raw total capacity of all hot-spare disks (HOTSPAREDISKSCAPACITY, uint64).
+	# Widened from [int] to [int64] so real-array sector counts do not overflow.
+	[int64]$HotSpareNumbers
 
 	OceanStorSystem ([array]$systemArray, [pscustomobject]$WebSession)
 	{

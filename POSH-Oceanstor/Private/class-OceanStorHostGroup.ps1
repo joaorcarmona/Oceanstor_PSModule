@@ -27,7 +27,7 @@ class OceanStorHostGroup{
 
 		switch($HostGroupReceived.TYPE)
 		{
-			0 {$this.{HostGroup Type} = "Host Group"}
+			14 {$this.{HostGroup Type} = "Host Group"}
 		}
 
 		$this.{vStore ID} = $HostGroupReceived.vstoreid
@@ -40,7 +40,9 @@ class OceanStorHostGroup{
 			$this.{Is Mapped} = $true
 		}
 
-		$this.{Host Member Number} = $HostGroupReceived.hostNumbe #for v6
+		# Dorado 6.1.6 returns hostNumber; the legacy misspelled hostNumbe is kept
+		# as a fallback for older/V3 arrays that only return the old field name.
+		$this.{Host Member Number} = if ($null -ne $HostGroupReceived.hostNumber) { $HostGroupReceived.hostNumber } else { $HostGroupReceived.hostNumbe }
 		$this.{Mapped Luns Number} = $HostGroupReceived.mappingLunNumber #for v6
 		$this.{Total Capacity} = $HostGroupReceived.capacity / 1GB #for v6
 		$this.{Allocated Capacity} = $HostGroupReceived.allocatedCapacity / 1GB #for v6

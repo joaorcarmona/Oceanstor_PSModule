@@ -125,9 +125,9 @@ Describe 'Core model classes' {
 
     It 'maps vStore identity and running status' {
         $source = [pscustomobject]@{
-            ID = 7; NAME = 'tenant-a'; RUNNINGSTATUS = 1; sanCapacityQuata = 2097152
-            sanFreeCapacityQuata = -1; sanTotalCapacity = 2097152; nasCapacityQuata = 2097152
-            nasFreeCapacityQuata = -1; nasTotalCapacity = 2097152
+            ID = 7; NAME = 'tenant-a'; RUNNINGSTATUS = 1; sanCapacityQuota = 2097152
+            sanFreeCapacityQuota = -1; sanTotalCapacity = 2097152; nasCapacityQuota = 2097152
+            nasFreeCapacityQuota = -1; nasTotalCapacity = 2097152
         }
 
         $result = New-Object -TypeName OceanStorvStore -ArgumentList @($source, $script:session)

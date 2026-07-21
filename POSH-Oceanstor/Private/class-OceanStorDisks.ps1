@@ -122,7 +122,7 @@ class OceanStorDisks{
 			14 {$this.{Running Status} = "pre-copy"}
 			16 {$this.{Running Status} = "reconstruction"}
 			27 {$this.{Running Status} = "online"}
-			16 {$this.{Running Status} = "offline"}
+			28 {$this.{Running Status} = "offline"}
 			114 {$this.{Running Status} = "erasing"}
 			115 {$this.{Running Status} = "verifying"}
 		}

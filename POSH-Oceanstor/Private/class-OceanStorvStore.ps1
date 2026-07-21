@@ -27,23 +27,26 @@ class OceanStorvStore{
 		}
 
 		$this.Description = $vStoresReceived.DESCRIPTION
-		$this.{SAN Capacity Quota} = $vStoresReceived.sanCapacityQuata * 512 / 1GB
+		# Field names carry the Dorado 6.1.6 spelling "Quota" (the batch-vStore
+		# interface exposes nasCapacityQuota/nasFreeCapacityQuota in sectors). The
+		# SAN and *TotalCapacity fields are retained for V3-array compatibility.
+		$this.{SAN Capacity Quota} = $vStoresReceived.sanCapacityQuota * 512 / 1GB
 
-		if($vStoresReceived.sanFreeCapacityQuata -eq "-1" )
+		if($vStoresReceived.sanFreeCapacityQuota -eq "-1" )
 		{
 			$this.{SAN Free Capacity Quota} = -1
 		} else {
-			$this.{SAN Free Capacity Quota} = $vStoresReceived.sanFreeCapacityQuata * 512 / 1GB
+			$this.{SAN Free Capacity Quota} = $vStoresReceived.sanFreeCapacityQuota * 512 / 1GB
 		}
 
 		$this.{SAN Total Capacity} = $vStoresReceived.sanTotalCapacity * 512 / 1GB
-		$this.{NAS Capacity Quota} = $vStoresReceived.nasCapacityQuata * 512 / 1GB
+		$this.{NAS Capacity Quota} = $vStoresReceived.nasCapacityQuota * 512 / 1GB
 
-		if($vStoresReceived.nasFreeCapacityQuata -eq "-1" )
+		if($vStoresReceived.nasFreeCapacityQuota -eq "-1" )
 		{
 			$this.{NAS Free Capacity Quota} = -1
 		} else {
-			$this.{NAS Free Capacity Quota} = $vStoresReceived.nasFreeCapacityQuata * 512 / 1GB
+			$this.{NAS Free Capacity Quota} = $vStoresReceived.nasFreeCapacityQuota * 512 / 1GB
 		}
 
 		$this.{NAS Total Capacity} = $vStoresReceived.nasTotalCapacity * 512 / 1GB
