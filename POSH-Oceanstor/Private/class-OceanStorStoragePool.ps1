@@ -1,283 +1,225 @@
-class OceanStorStoragePool{
-	hidden [pscustomobject]${Session}
-	hidden [pscustomobject]${WebSession}
-	#TODO DEFINE Properties with friendly Name & complete information
-	#Define Properties
-	[string]$id
-	[string]$name
-	[string]$type
-	[string]${Health Status}
-	[string]${Running Status}
-	[string]${Parent Id}
-	[string]${Parent Name}
-	[string]$description
-	[string]$autodeactivesnapshotswitch
-	[int64]$dataspace
-	[string]$dstrunningstatus
-	[string]$dststatus
-	[string]$enablesmartcache
-	[string]$enablessdbuffer
-	[string]$extentsize
-	[string]$immediatemigration
-	[string]$immediatemigrationdurationtime
-	[string]$issmarttierenable
-	[int64]$lunconfigedcapacity
-	[string]$migrationestimatedtime
-	[string]$migrationmode
-	[string]$migrationscheduleid
-	[string]$monitorscheduleid
-	[int64]$moveddowndata
-	[int64]$movedowndata
-	[int64]$movedupdata
-	[int64]$moveupdata
-	[string]$pausemigrationswitch
-	[string]$repcapacitythreshold
-	[int64]$replicationcapacity
-	[int64]$reservedcapacity
-	[int64]$tier0capacity
-	[string]$tier0disktype
-	[string]$tier0raiddisknum
-	[string]$tier0raidlv
-	[int64]$tier0stripedepth
-	[int64]$tier1capacity
-	[string]$tier1disktype
-	[string]$tier1raiddisknum
-	[string]$tier1raidlv
-	[int64]$tier1stripedepth
-	[int64]$tier2capacity
-	[string]$tier2disktype
-	[string]$tier2raiddisknum
-	[string]$tier2raidlv
-	[int64]$tier2stripedepth
-	[int64]$totalfscapacity
-	[string]$usagetype
-	[int64]$userconsumedcapacity
-	[string]$userconsumedcapacitypercentage
-	[string]$userconsumedcapacitythreshold
-	[int64]$userfreecapacity
-	[int64]$usertotalcapacity
-	[string]$compressratio
-	[int64]$compressedcapacity
-	[string]$dedupcompressratio
-	[string]$dedupratio
-	[int64]$dedupedcapacity
-	[string]$reductioninvolvedcapacity
+class OceanStorStoragePool {
+    hidden [pscustomobject]${Session}
+    hidden [pscustomobject]${WebSession}
 
-	OceanStorStoragePool ([array]$spoolReceived, [pscustomobject]$WebSession)
-	{
-		$this.Session = $WebSession
-		$this.WebSession = $WebSession
-		#Define Constants for Space Operations
-		$sectorSize = 512
-		$unitUsed = 1GB
+    # Identity and status
+    [string]$id
+    [string]$name
+    [string]$type
+    ${Health Status}
+    ${Running Status}
+    ${Parent Id}
+    ${Parent Name}
+    ${Parent Type}
+    [string]$description
+    ${Usage Type}
+    ${Container Enabled}
+    ${Auto Delete}
 
-		$this.id = $spoolReceived.ID
-		$this.autodeactivesnapshotswitch = $spoolReceived.AUTODEACTIVESNAPSHOTSWITCH
+    # Tier composition (only tier 0 is populated on all-flash Dorado; tier 1/2 capacity
+    # return the uint64 "invalid" sentinel when unused, which is normalised to $null below)
+    ${Tier0 Disk Type}
+    ${Tier0 RAID Level}
+    ${Tier0 Capacity (GB)}
+    ${Tier1 Capacity (GB)}
+    ${Tier2 Capacity (GB)}
 
-		switch($spoolReceived.AUTODEACTIVESNAPSHOTSWITCH)
-		{
-			0 {$this.autodeactivesnapshotswitch = "on"}
-			1 {$this.autodeactivesnapshotswitch = "off"}
-		}
+    # Capacity (all raw values are in 512-byte sectors and converted to GB)
+    ${Total Capacity (GB)}
+    ${Free Capacity (GB)}
+    ${Used Capacity (GB)}
+    ${Used Capacity Percent}
+    ${Used Capacity Threshold Percent}
+    ${Used Capacity Without Meta (GB)}
+    ${Allocated Data Capacity (GB)}
+    ${Available For LUN (GB)}
+    ${LUN Configured Capacity (GB)}
+    ${LUN Mapped Capacity (GB)}
+    ${LUN Write Capacity (GB)}
+    ${Replication Capacity (GB)}
+    ${Subscribed Capacity (GB)}
+    ${Used Subscribed Capacity (GB)}
+    ${Total FS Capacity (GB)}
+    ${FS Subscribed Capacity (GB)}
+    ${FS Used Capacity (GB)}
+    ${FS Shared Capacity (GB)}
+    ${Protect Size (GB)}
 
-		$this.dataspace = $spoolReceived.DATASPACE / $sectorSize  / $unitUsed
-		$this.description = $spoolReceived.DESCRIPTION
+    # Data reduction (ratios are JSON {numerator,denominator,logic} converted to "X:1")
+    ${Compression Ratio}
+    ${Deduplication Ratio}
+    ${Space Reduction Ratio}
+    ${Save Capacity Ratio}
+    ${Thin Provision Save}
+    ${FS Compression Ratio}
+    ${FS Deduplication Ratio}
+    ${FS Space Reduction Ratio}
+    ${LUN Compression Ratio}
+    ${LUN Deduplication Ratio}
+    ${LUN Space Reduction Ratio}
+    ${Compressed Capacity (GB)}
+    ${Compress Involved Capacity (GB)}
+    ${Deduped Capacity (GB)}
+    ${Dedup Involved Capacity (GB)}
+    ${Reduction Involved Capacity (GB)}
 
-		switch($spoolReceived.DSTRUNNINGSTATUS)
-		{
-			1 {$this.dstrunningstatus = "ready"}
-			2 {$this.dstrunningstatus = "migrated"}
-			3 {$this.dstrunningstatus = "suspended"}
-		}
+    # Provisioning and thresholds
+    ${Provisioning Limit Switch}
+    ${Provisioning Limit Percent}
+    ${Ending Up Threshold Percent}
+    ${Pool Protect Low Threshold Percent}
+    ${Pool Protect High Threshold Percent}
 
-		switch($spoolReceived.dststatus)
-		{
-			1 {$this.dststatus = "active"}
-			2 {$this.dststatus = "inactive"}
-		}
+    # Convert a capacity expressed in 512-byte sectors to GB, returning $null for an empty
+    # value or the uint64 "invalid" sentinel (18446744073709551615) the array uses for
+    # unpopulated tier capacities.
+    hidden [object] ToGB([object]$sectors) {
+        if ($null -eq $sectors -or "$sectors" -eq '') { return $null }
+        [uint64]$v = 0
+        if (-not [uint64]::TryParse("$sectors", [ref]$v)) { return $null }
+        if ($v -eq [uint64]::MaxValue) { return $null }
+        return [math]::Round(($v * 512.0) / 1GB, 2)
+    }
 
-		switch($spoolReceived.ENABLESMARTCACHE)
-		{
-			false {$this.enablesmartcache = "disabled"}
-			true {$this.enablesmartcache = "enabled"}
-		}
+    # Convert a data-reduction ratio JSON object ({numerator,denominator,logic}) to a
+    # display string such as "1.1:1" or ">= 100:1". Returns $null when absent or unparsable.
+    hidden [object] Ratio([object]$json) {
+        if ($null -eq $json -or "$json" -eq '') { return $null }
+        try {
+            $r = "$json" | ConvertFrom-Json
+            [double]$num = 0
+            [double]$den = 0
+            if (-not [double]::TryParse("$($r.numerator)", [ref]$num)) { return $null }
+            if (-not [double]::TryParse("$($r.denominator)", [ref]$den)) { return $null }
+            if ($den -eq 0) { return $null }
+            # Format invariantly so a ratio always renders with a dot separator ("1.1:1"),
+            # independent of the host's culture (e.g. pt-PT would otherwise produce "1,1:1").
+            $value = [math]::Round($num / $den, 2).ToString([cultureinfo]::InvariantCulture)
+            $prefix = ''
+            if ($r.logic -and $r.logic -ne '=') { $prefix = "$($r.logic) " }
+            return ('{0}{1}:1' -f $prefix, $value)
+        }
+        catch { return $null }
+    }
 
-		switch($spoolReceived.ENABLESSDBUFFER)
-		{
-			false {$this.enablessdbuffer = "disabled"}
-			true {$this.enablessdbuffer = "enabled"}
-		}
+    OceanStorStoragePool ([array]$spoolReceived, [pscustomobject]$WebSession) {
+        $this.Session = $WebSession
+        $this.WebSession = $WebSession
+        $src = $spoolReceived[0]
 
-		switch($spoolReceived.ENABLESSDBUFFER)
-		{
-			false {$this.enablessdbuffer = "disabled"}
-			true {$this.enablessdbuffer = "enabled"}
-		}
+        # Identity and status
+        $this.id = $src.ID
+        $this.name = $src.NAME
+        $this.type = $src.TYPE
+        $this.description = $src.DESCRIPTION
+        $this.{Parent Id} = $src.PARENTID
+        $this.{Parent Name} = $src.PARENTNAME
 
-		$this.extentsize = $spoolReceived.EXTENTSIZE / $sectorSize  / $unitUsed
+        switch ([string]$src.HEALTHSTATUS) {
+            '1' { $this.{Health Status} = 'Normal' }
+            '2' { $this.{Health Status} = 'Faulty' }
+            '5' { $this.{Health Status} = 'Degraded' }
+            default { $this.{Health Status} = $src.HEALTHSTATUS }
+        }
 
-		switch($spoolReceived.HEALTHSTATUS)
-		{
-			1 {$this.{Health Status} = "Normal"}
-			2 {$this.{Health Status} = "Fault"}
-			3 {$this.{Health Status} = "Degraded"}
-		}
+        switch ([string]$src.RUNNINGSTATUS) {
+            '14' { $this.{Running Status} = 'Pre-copy' }
+            '16' { $this.{Running Status} = 'Rebuilt' }
+            '27' { $this.{Running Status} = 'Online' }
+            '28' { $this.{Running Status} = 'Offline' }
+            '32' { $this.{Running Status} = 'Balancing' }
+            '53' { $this.{Running Status} = 'Initializing' }
+            '106' { $this.{Running Status} = 'Deleting' }
+            default { $this.{Running Status} = $src.RUNNINGSTATUS }
+        }
 
-		switch($spoolReceived.IMMEDIATEMIGRATION)
-		{
-			false {$this.immediatemigration = "off"}
-			true {$this.immediatemigration = "on"}
-		}
+        switch ([string]$src.PARENTTYPE) {
+            '266' { $this.{Parent Type} = 'Disk Domain' }
+            default { $this.{Parent Type} = $src.PARENTTYPE }
+        }
 
-		if ($spoolReceived.IMMEDIATEMIGRATIONDURATIONTIME)
-		{
-			$this.immediatemigrationdurationtime = $(New-TimeSpan -Seconds $spoolReceived.IMMEDIATEMIGRATIONDURATIONTIME).ToString()
-		}
+        switch ([string]$src.NEWUSAGETYPE) {
+            '0' { $this.{Usage Type} = 'LUN and File System' }
+            '1' { $this.{Usage Type} = 'LUN' }
+            '2' { $this.{Usage Type} = 'File System' }
+            default { $this.{Usage Type} = $src.NEWUSAGETYPE }
+        }
 
-		switch($spoolReceived.ISSMARTTIERENABLE)
-		{
-			false {$this.issmarttierenable = "invalid"}
-			true {$this.issmarttierenable = "valid"}
-		}
+        $this.{Container Enabled} = if ("$($src.ISCONTAINERENABLE)" -eq 'true') { 'enabled' } else { 'disabled' }
 
-		$this.lunconfigedcapacity = $spoolReceived.LUNCONFIGEDCAPACITY / $sectorSize / $unitUsed
+        switch ([string]$src.autoDeleteSwitch) {
+            '0' { $this.{Auto Delete} = 'off' }
+            '1' { $this.{Auto Delete} = 'on' }
+            default { $this.{Auto Delete} = $src.autoDeleteSwitch }
+        }
 
-		if($spoolReceived.MIGRATIONESTIMATEDTIME)
-		{
-			$this.migrationestimatedtime = $(New-TimeSpan -Seconds $spoolReceived.MIGRATIONESTIMATEDTIME).ToString()
-		}
+        # Tier composition
+        switch ([string]$src.TIER0DISKTYPE) {
+            '0' { $this.{Tier0 Disk Type} = 'Not Available/Not Used' }
+            '3' { $this.{Tier0 Disk Type} = 'SSD' }
+            '10' { $this.{Tier0 Disk Type} = 'SSD SED' }
+            '14' { $this.{Tier0 Disk Type} = 'NVMe SSD' }
+            '16' { $this.{Tier0 Disk Type} = 'NVMe SSD SED' }
+            default { $this.{Tier0 Disk Type} = $src.TIER0DISKTYPE }
+        }
 
-		switch($spoolReceived.MIGRATIONMODE)
-		{
-			1 {$this.migrationmode = "dynamic"}
-			2 {$this.migrationmode = "manual"}
-		}
+        switch ([string]$src.TIER0RAIDLV) {
+            '0' { $this.{Tier0 RAID Level} = 'Not Available/Not Used' }
+            '2' { $this.{Tier0 RAID Level} = 'RAID 5' }
+            '5' { $this.{Tier0 RAID Level} = 'RAID 6' }
+            '11' { $this.{Tier0 RAID Level} = 'RAID-TP' }
+            default { $this.{Tier0 RAID Level} = $src.TIER0RAIDLV }
+        }
 
-		$this.migrationscheduleid = $spoolReceived.MIGRATIONSCHEDULEID
-		$this.monitorscheduleid = $spoolReceived.MONITORSCHEDULEID
-		$this.moveddowndata = $spoolReceived.MOVEDDOWNDATA / $sectorSize / $unitUsed
-		$this.movedowndata = $spoolReceived.MOVEDOWNDATA  / $sectorSize / $unitUsed
-		$this.movedupdata = $spoolReceived.MOVEDUPDATA / $sectorSize / $unitUsed
-		$this.moveupdata = $spoolReceived.MOVEUPDATA / $sectorSize / $unitUsed
-		$this.name = $spoolReceived.NAME
-		$this.{Parent Id} = $spoolReceived.PARENTID
-		$this.{Parent Name} = $spoolReceived.PARENTNAME
+        $this.{Tier0 Capacity (GB)} = $this.ToGB($src.TIER0CAPACITY)
+        $this.{Tier1 Capacity (GB)} = $this.ToGB($src.TIER1CAPACITY)
+        $this.{Tier2 Capacity (GB)} = $this.ToGB($src.TIER2CAPACITY)
 
-		switch($spoolReceived.PAUSEMIGRATIONSWITCH)
-		{
-			false {$this.pausemigrationswitch = "off"}
-			true {$this.pausemigrationswitch = "on"}
-		}
+        # Capacity
+        $this.{Total Capacity (GB)} = $this.ToGB($src.USERTOTALCAPACITY)
+        $this.{Free Capacity (GB)} = $this.ToGB($src.USERFREECAPACITY)
+        $this.{Used Capacity (GB)} = $this.ToGB($src.USERCONSUMEDCAPACITY)
+        $this.{Used Capacity Percent} = $src.USERCONSUMEDCAPACITYPERCENTAGE
+        $this.{Used Capacity Threshold Percent} = $src.USERCONSUMEDCAPACITYTHRESHOLD
+        $this.{Used Capacity Without Meta (GB)} = $this.ToGB($src.USERCONSUMEDCAPACITYWITHOUTMETA)
+        $this.{Allocated Data Capacity (GB)} = $this.ToGB($src.USERWRITEALLOCCAPACITY)
+        $this.{Available For LUN (GB)} = $this.ToGB($src.DATASPACE)
+        $this.{LUN Configured Capacity (GB)} = $this.ToGB($src.LUNCONFIGEDCAPACITY)
+        $this.{LUN Mapped Capacity (GB)} = $this.ToGB($src.LUNMAPPEDCAPACITY)
+        $this.{LUN Write Capacity (GB)} = $this.ToGB($src.TOTALLUNWRITECAPACITY)
+        $this.{Replication Capacity (GB)} = $this.ToGB($src.REPLICATIONCAPACITY)
+        $this.{Subscribed Capacity (GB)} = $this.ToGB($src.SUBSCRIBEDCAPACITY)
+        $this.{Used Subscribed Capacity (GB)} = $this.ToGB($src.USEDSUBSCRIBEDCAPACITY)
+        $this.{Total FS Capacity (GB)} = $this.ToGB($src.TOTALFSCAPACITY)
+        $this.{FS Subscribed Capacity (GB)} = $this.ToGB($src.FSSUBSCRIBEDCAPACITY)
+        $this.{FS Used Capacity (GB)} = $this.ToGB($src.FSUSEDCAPACITY)
+        $this.{FS Shared Capacity (GB)} = $this.ToGB($src.FSSHAREDCAPACITY)
+        $this.{Protect Size (GB)} = $this.ToGB($src.protectSize)
 
-		$this.repcapacitythreshold = $spoolReceived.REPCAPACITYTHRESHOLD
-		$this.replicationcapacity = $spoolReceived.REPLICATIONCAPACITY / $sectorSize / $unitUsed
-		$this.reservedcapacity = $spoolReceived.RESERVEDCAPACITY / $sectorSize / $unitUsed
+        # Data reduction
+        $this.{Compression Ratio} = $this.Ratio($src.COMPRESSIONRATE)
+        $this.{Deduplication Ratio} = $this.Ratio($src.DEDUPLICATIONRATE)
+        $this.{Space Reduction Ratio} = $this.Ratio($src.SPACEREDUCTIONRATE)
+        $this.{Save Capacity Ratio} = $this.Ratio($src.SAVECAPACITYRATE)
+        $this.{Thin Provision Save} = $this.Ratio($src.THINPROVISIONSAVEPERCENTAGE)
+        $this.{FS Compression Ratio} = $this.Ratio($src.fsCompressionRate)
+        $this.{FS Deduplication Ratio} = $this.Ratio($src.fsDeduplicationRate)
+        $this.{FS Space Reduction Ratio} = $this.Ratio($src.fsSpaceReductionRate)
+        $this.{LUN Compression Ratio} = $this.Ratio($src.lunCompressionRate)
+        $this.{LUN Deduplication Ratio} = $this.Ratio($src.lunDeduplicationRate)
+        $this.{LUN Space Reduction Ratio} = $this.Ratio($src.lunSpaceReductionRate)
+        $this.{Compressed Capacity (GB)} = $this.ToGB($src.COMPRESSEDCAPACITY)
+        $this.{Compress Involved Capacity (GB)} = $this.ToGB($src.COMPRESSINVOLVEDCAPACITY)
+        $this.{Deduped Capacity (GB)} = $this.ToGB($src.DEDUPEDCAPACITY)
+        $this.{Dedup Involved Capacity (GB)} = $this.ToGB($src.DEDUPINVOLVEDCAPACITY)
+        $this.{Reduction Involved Capacity (GB)} = $this.ToGB($src.REDUCTIONINVOLVEDCAPACITY)
 
-		switch($spoolReceived.RUNNINGSTATUS)
-		{
-			14 {$this.{Running Status} = "pre-copy"}
-			26 {$this.{Running Status} = "reconstruction"}
-			27 {$this.{Running Status} = "online"}
-			28 {$this.{Running Status} = "offline"}
-			32 {$this.{Running Status} = "balancing"}
-			53 {$this.{Running Status} = "initializing"}
-		}
-
-		$this.tier0capacity = $spoolReceived.TIER0CAPACITY / $sectorSize / $unitUsed
-
-		switch($spoolReceived.TIER0DISKTYPE)
-		{
-			0 {$this.tier0disktype = "Not Available/Not Used"}
-			3 {$this.tier0disktype = "SSD"}
-			10 {$this.tier0disktype = "SSD SED"}
-		}
-
-		$this.tier0raiddisknum = $spoolReceived.TIER0RAIDDISKNUM
-
-		switch($spoolReceived.TIER0RAIDLV)
-		{
-			0 {$this.tier0raidlv = "Not Available/Not Used"}
-			1 {$this.tier0raidlv = "RAID 10"}
-			2 {$this.tier0raidlv = "RAID 5"}
-			3 {$this.tier0raidlv = "RAID 0"}
-			4 {$this.tier0raidlv = "RAID 1"}
-			5 {$this.tier0raidlv = "RAID 6"}
-			6 {$this.tier0raidlv = "RAID 50"}
-			7 {$this.tier0raidlv = "RAID 3"}
-		}
-
-		$this.tier0stripedepth = $spoolReceived.TIER0STRIPEDEPTH / $sectorSize / $unitUsed
-		$this.tier1capacity = $spoolReceived.TIER1CAPACITY / $sectorSize / $unitUsed
-
-		switch($spoolReceived.TIER1DISKTYPE)
-		{
-			0 {$this.tier1disktype = "Not Available/Not Used"}
-			3 {$this.tier1disktype = "SAS"}
-			10 {$this.tier1disktype = "SAS SED"}
-		}
-
-		$this.tier1raiddisknum = $spoolReceived.TIER1RAIDDISKNUM
-
-		switch($spoolReceived.TIER1RAIDLV)
-		{
-			0 {$this.tier1raidlv = "Not Available/Not Used"}
-			1 {$this.tier1raidlv = "RAID 10"}
-			2 {$this.tier1raidlv = "RAID 5"}
-			3 {$this.tier1raidlv = "RAID 0"}
-			4 {$this.tier1raidlv = "RAID 1"}
-			5 {$this.tier1raidlv = "RAID 6"}
-			6 {$this.tier1raidlv = "RAID 50"}
-			7 {$this.tier1raidlv = "RAID 3"}
-		}
-
-		$this.tier1stripedepth = $spoolReceived.TIER1STRIPEDEPTH / $sectorSize / $unitUsed
-		$this.tier2capacity = $spoolReceived.TIER2CAPACITY / $sectorSize / $unitUsed
-
-		switch($spoolReceived.TIER2DISKTYPE)
-		{
-			0 {$this.tier2disktype = "Not Available/Not Used"}
-			2 {$this.tier2disktype = "SATA"}
-			4 {$this.tier2disktype = "NL-SAS"}
-			11 {$this.tier2disktype = "NL-SAS SED"}
-		}
-
-		$this.tier2raiddisknum = $spoolReceived.TIER2RAIDDISKNUM
-
-		switch($spoolReceived.TIER2RAIDLV)
-		{
-			0 {$this.tier2raidlv = "Not Available/Not Used"}
-			1 {$this.tier2raidlv = "RAID 10"}
-			2 {$this.tier2raidlv = "RAID 5"}
-			3 {$this.tier2raidlv = "RAID 0"}
-			4 {$this.tier2raidlv = "RAID 1"}
-			5 {$this.tier2raidlv = "RAID 6"}
-			6 {$this.tier2raidlv = "RAID 50"}
-			7 {$this.tier2raidlv = "RAID 3"}
-		}
-
-
-		$this.tier2stripedepth = $spoolReceived.TIER2STRIPEDEPTH / $sectorSize / $unitUsed
-		$this.totalfscapacity = $spoolReceived.TOTALFSCAPACITY / $sectorSize / $unitUsed
-		$this.type = $spoolReceived.TYPE
-
-		switch($spoolReceived.USAGETYPE)
-		{
-			1 {$this.usagetype = "LUN"}
-			2 {$this.usagetype = "File System"}
-		}
-
-		$this.userconsumedcapacity = $spoolReceived.USERCONSUMEDCAPACITY / $sectorSize / $unitUsed
-		$this.userconsumedcapacitypercentage = $spoolReceived.USERCONSUMEDCAPACITYPERCENTAGE
-		$this.userconsumedcapacitythreshold = $spoolReceived.USERCONSUMEDCAPACITYTHRESHOLD
-		$this.userfreecapacity = $spoolReceived.USERFREECAPACITY / $sectorSize / $unitUsed
-		$this.usertotalcapacity = $spoolReceived.USERTOTALCAPACITY / $sectorSize / $unitUsed
-		$this.compressratio = $spoolReceived.compressRatio
-		$this.compressedcapacity = $spoolReceived.compressedCapacity / $sectorSize / $unitUsed
-		$this.dedupcompressratio = $spoolReceived.dedupCompressRatio
-		$this.dedupratio = $spoolReceived.dedupRatio
-		$this.dedupedcapacity = $spoolReceived.dedupedCapacity / $sectorSize / $unitUsed
-		$this.reductioninvolvedcapacity = $spoolReceived.reductionInvolvedCapacity / $sectorSize / $unitUsed
-	}
+        # Provisioning and thresholds
+        $this.{Provisioning Limit Switch} = if ("$($src.PROVISIONINGLIMITSWITCH)" -eq 'true') { 'on' } else { 'off' }
+        # A limit of -1 is returned as "invalid" when the provisioning-limit switch is off.
+        $this.{Provisioning Limit Percent} = if ("$($src.PROVISIONINGLIMIT)" -eq '-1') { $null } else { $src.PROVISIONINGLIMIT }
+        $this.{Ending Up Threshold Percent} = $src.ENDINGUPTHRESHOLD
+        $this.{Pool Protect Low Threshold Percent} = $src.poolProtectLowThreshold
+        $this.{Pool Protect High Threshold Percent} = $src.poolProtectHighThreshold
+    }
 }
-
-

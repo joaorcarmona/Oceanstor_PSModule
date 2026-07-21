@@ -6,6 +6,10 @@ BeforeDiscovery {
             param([pscustomobject]$WebSession)
         }
 
+        function Get-DMWorkLoadType {
+            param([pscustomobject]$WebSession)
+        }
+
         function Invoke-DeviceManager {
             param(
                 [pscustomobject]$WebSession,
@@ -38,6 +42,12 @@ Describe 'New-DMLun' {
         Mock Get-DMstoragePool {
             @([pscustomobject]@{ Id = 'pool-01'; Name = 'performance' })
         }
+        Mock Get-DMWorkLoadType {
+            @(
+                [pscustomobject]@{ Id = '0'; Name = 'Default' }
+                [pscustomobject]@{ Id = '8'; Name = 'Vmware_VDI' }
+            )
+        }
         Mock Invoke-DeviceManager {
             $script:lunRequest = $BodyData
             $script:lunMethod = $Method
@@ -55,7 +65,7 @@ Describe 'New-DMLun' {
     }
 
     It 'creates a LUN in an existing storage pool' {
-        $result = New-DMLun -WebSession $script:session -LunName 'data-lun' -capacity 2097152 -StoragePoolID 'pool-01' -allocType Thin
+        $result = New-DMLun -WebSession $script:session -LunName 'data-lun' -capacity 2097152 -StoragePoolID 'pool-01'
 
         $result.Id | Should -Be 'lun-01'
         $result.Name | Should -Be 'data-lun'
@@ -63,8 +73,43 @@ Describe 'New-DMLun' {
         $script:lunMethod | Should -Be 'POST'
         $script:lunResource | Should -Be 'lun'
         $script:lunRequest.PARENTID | Should -Be 'pool-01'
-        $script:lunRequest.ALLOCTYPE | Should -Be 1
+        # ALLOCTYPE is deprecated/removed on Dorado v6 and must never be sent in the create body.
+        $script:lunRequest.ContainsKey('ALLOCTYPE') | Should -BeFalse
         $script:lunRequest.CAPACITY | Should -Be 2097152
+    }
+
+    It 'sends WRITEPOLICY (not the CACHETPOLICY typo) with the correct Dorado value' {
+        # Default WriteBack -> 1
+        New-DMLun -WebSession $script:session -LunName 'data-lun' -capacity 2097152 -StoragePoolID 'pool-01'
+        $script:lunRequest.ContainsKey('CACHETPOLICY') | Should -BeFalse
+        $script:lunRequest.WRITEPOLICY | Should -Be 1
+
+        # WriteThrough -> 2 (Dorado: 1 = write back, 2 = write through)
+        New-DMLun -WebSession $script:session -LunName 'data-lun' -capacity 2097152 -StoragePoolID 'pool-01' -writeCachePolicy WriteThrough
+        $script:lunRequest.WRITEPOLICY | Should -Be 2
+    }
+
+    It 'resolves -StoragePoolName to its Id in PARENTID' {
+        $result = New-DMLun -WebSession $script:session -LunName 'data-lun' -capacity 2097152 -StoragePoolName 'performance'
+
+        $result.Id | Should -Be 'lun-01'
+        $script:lunRequest.PARENTID | Should -Be 'pool-01'
+    }
+
+    It 'resolves -WorkloadTypeName to its Id in WORKLOADTYPEID' {
+        New-DMLun -WebSession $script:session -LunName 'data-lun' -capacity 2097152 -StoragePoolName 'performance' -WorkloadTypeName 'Vmware_VDI'
+
+        $script:lunRequest.WORKLOADTYPEID | Should -Be '8'
+    }
+
+    It 'rejects an invalid -StoragePoolName' {
+        { New-DMLun -WebSession $script:session -LunName 'data-lun' -capacity 2097152 -StoragePoolName 'does-not-exist' } |
+            Should -Throw '*Invalid StoragePoolName*'
+    }
+
+    It 'rejects supplying both -WorkloadTypeName and -workloadTypeId' {
+        { New-DMLun -WebSession $script:session -LunName 'data-lun' -capacity 2097152 -StoragePoolName 'performance' -WorkloadTypeName 'Vmware_VDI' -workloadTypeId '0' } |
+            Should -Throw '*not both*'
     }
 
     It 'converts <Capacity> to <ExpectedBlocks> 512-byte blocks' -ForEach @(

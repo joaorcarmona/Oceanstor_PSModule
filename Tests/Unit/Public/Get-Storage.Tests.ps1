@@ -735,14 +735,15 @@ Describe 'Public getter functions' {
         }
 
         It 'gets storage pools' {
-            Mock Invoke-DeviceManager { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'pool-01'; NAME = 'pool'; HEALTHSTATUS = 1; RUNNINGSTATUS = 27; DATASPACE = (512 * 1GB) }) } }
+            Mock Invoke-DeviceManager { [pscustomobject]@{ data = @([pscustomobject]@{ ID = 'pool-01'; NAME = 'pool'; HEALTHSTATUS = 1; RUNNINGSTATUS = 27; DATASPACE = 2097152; USERTOTALCAPACITY = 4194304 }) } }
 
             $result = (Get-DMstoragePool -WebSession $script:session)[0]
 
             $result.id | Should -Be 'pool-01'
             $result.PSStandardMembers.DefaultDisplayPropertySet.ReferencedPropertyNames |
-                Should -Be @('Id', 'Name', 'Health Status', 'Running Status', 'DataSpace')
-            $result.dataspace | Should -Be 1
+                Should -Be @('Id', 'Name', 'Health Status', 'Running Status', 'Total Capacity (GB)', 'Free Capacity (GB)')
+            # sectors * 512 / 1GB: 2097152 -> 1 GB
+            $result.'Available For LUN (GB)' | Should -Be 1
         }
 
         It 'gets a storage pool by positional Name using an exact server-side filter' {

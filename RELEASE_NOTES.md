@@ -2,6 +2,67 @@
 
 ---
 
+# v1.0.1
+
+Date: 2026-07-21
+Branch: `master`
+Status: Stable — tag `1.0.1`, published to the PowerShell Gallery
+
+## Summary
+
+A small but real correctness release focused on **LUN creation** and **storage-pool
+reporting** on Huawei OceanStor **Dorado 6.x**. Every fix was reproduced and verified
+against a live lab array using test-owned, ID-tracked resources with full cleanup. No
+command names change and existing scripts keep working.
+
+## Bug Fixes
+
+- **`New-DMLun` now works on Dorado 6.x.** The create body always sent `ALLOCTYPE`, which
+  Dorado 6.x rejects with `50331651 (parameter incorrect)`; with the default (`Thick`) that
+  meant *every* default `New-DMLun` failed. `ALLOCTYPE` and its now-purposeless `-allocType`
+  parameter were removed — the array applies its native thin default.
+- **Write-cache policy is now actually applied.** The body key was the typo `CACHETPOLICY`
+  (silently ignored by the array); it is now `WRITEPOLICY`, with the correct Dorado values
+  (`WriteBack = 1`, `WriteThrough = 2`).
+- **Prefetch policy is now correct.** The value mapping was wrong — the `Intelligent` default
+  actually sent "no prefetch". It now maps to the Dorado enum (`Intelligent = 3`,
+  `Fixed = 1`, `Disabled = 0`).
+- **`Get-DMstoragePool` capacities are correct.** The pool class divided by the sector size
+  instead of multiplying, so every capacity displayed as `0`. Real values are now reported
+  (e.g. a ~28 TB pool that previously showed `0`).
+
+## New Features
+
+- **`New-DMLun -StoragePoolName` and `-WorkloadTypeName`.** You can now create a LUN using the
+  pool and workload-type *names* (with tab-completion and validation) instead of looking up
+  IDs; the names are resolved to IDs before the request is sent. `-StoragePoolID` /
+  `-workloadTypeId` remain supported and mutually exclusive with their name counterparts.
+
+## Output Improvements
+
+- **`Get-DMstoragePool` now maps the full Dorado result set** with correct status/disk/RAID
+  enums (including NVMe SSD and RAID-TP), real subscribed/provisioning/FS capacities, and
+  data-reduction ratios rendered as `"X:1"`. ~30 legacy fields Dorado never returns (which
+  always showed blank) were removed and ~30 real fields were added. The default table view now
+  shows `Total Capacity (GB)` / `Free Capacity (GB)` instead of the old raw `DataSpace`.
+
+## Testing / Validation
+
+- Unit suite: **1403 passed, 0 failed** (added the first `OceanStorStoragePool` mapping test
+  plus `New-DMLun` name-resolution and `WRITEPOLICY` tests; two tests that had encoded the old
+  buggy behavior were corrected). PSScriptAnalyzer: **0 findings** on changed source.
+- Every fix was live-validated on the lab array (create → read-back → cleanup by captured ID),
+  leaving no test-owned resources behind.
+
+## Release Mechanics
+
+- Tag `1.0.1` (matches `ModuleVersion`); the `validate` job trims a leading `v`/`V` and compares
+  verbatim. Published to the PowerShell Gallery by `.github/workflows/release.yml` on the
+  published GitHub Release (`PUBLISH_ENABLED=true`, `PSGALLERY_API_KEY` secret). Ships unsigned,
+  consistent with 1.0.0.
+
+---
+
 # v1.0.0
 
 Date: 2026-07-20

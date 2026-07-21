@@ -13,8 +13,13 @@ function New-DMLun {
         Mandatory parameter. Name of the LUN to be created
 
     .PARAMETER StoragePoolID
-        Mandatory parameter. ID of the Storage Pool where the LUN will be created.
+        ID of the Storage Pool where the LUN will be created. Mutually exclusive with StoragePoolName.
         Valid values are dynamically generated from the output of Get-DMstoragePool and support tab-completion.
+
+    .PARAMETER StoragePoolName
+        Name of the Storage Pool where the LUN will be created. Mutually exclusive with StoragePoolID.
+        Validated against Get-DMstoragePool and supports tab-completion; the name is resolved to its ID before the create request is sent.
+
     .PARAMETER capacity
         Mandatory parameter. Capacity of the LUN to be created.
         Specify a size with an MB, GB, or TB suffix, for example 10MB, 10GB, 1.5TB, or 1,5TB.
@@ -27,9 +32,6 @@ function New-DMLun {
 
     .PARAMETER sectorSize
         Optional parameter. Sector size of the LUN (512 or 4096). Default is 512
-
-    .PARAMETER allocType
-        Optional parameter. Allocation type of the LUN. Valid values: "Thin", "Thick". Default is "Thick"
 
     .PARAMETER IoPriority
         Optional parameter. IO priority level. Valid values: "Low", "Medium", "High". Default is "Low"
@@ -44,7 +46,11 @@ function New-DMLun {
         Optional parameter. Enable SmartTier on the LUN. Default is $false
 
     .PARAMETER workloadTypeId
-        Optional parameter. Workload type ID for the LUN
+        Optional parameter. Workload type ID for the LUN. Mutually exclusive with WorkloadTypeName.
+
+    .PARAMETER WorkloadTypeName
+        Optional parameter. Workload type name for the LUN. Mutually exclusive with workloadTypeId.
+        Validated against Get-DMWorkLoadType and supports tab-completion; the name is resolved to its ID before the create request is sent.
 
     .PARAMETER EnableCache
         Optional parameter. Enable cache for the LUN. Default is $true
@@ -91,7 +97,7 @@ function New-DMLun {
 	#>
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
 
-    [CmdletBinding(SupportsShouldProcess = $true)]
+    [CmdletBinding(SupportsShouldProcess = $true, DefaultParameterSetName = 'ByPoolName')]
 
     param(
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Mandatory = $false)]
@@ -101,7 +107,7 @@ function New-DMLun {
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 1, Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [object]$capacity,
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 2, Mandatory = $true)]
+        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 2, Mandatory = $true, ParameterSetName = 'ByPoolId')]
         [ValidateScript({
                 # Validate that the StoragePoolID exists by checking against existing storage pools
                 if ($WebSession) {
@@ -134,14 +140,40 @@ function New-DMLun {
                 (Get-DMstoragePool -WebSession $session).Id | Where-Object { $_ -like "$wordToComplete*" }
             })]
         [string]$StoragePoolID,
+        [Parameter(ValueFromPipelineByPropertyName = $true, Mandatory = $true, ParameterSetName = 'ByPoolName')]
+        [ValidateScript({
+                if ($WebSession) {
+                    $session = $WebSession
+                }
+                else {
+                    $session = $script:CurrentOceanstorSession
+                }
+                $storagePools = Get-DMstoragePool -WebSession $session
+                if ($storagePools.Name -contains $_) {
+                    $true
+                }
+                else {
+                    throw "Invalid StoragePoolName. Valid values are: $($storagePools.Name -join ', ')"
+                }
+            })]
+        [ArgumentCompleter({
+                param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+                if ($WebSession) {
+                    $session = $WebSession
+                }
+                else {
+                    $session = $script:CurrentOceanstorSession
+                }
+                (Get-DMstoragePool -WebSession $session).Name |
+                    Where-Object { $_ -like "$wordToComplete*" } |
+                    ForEach-Object { if ($_ -match '^[A-Za-z0-9_.-]+$') { $_ } else { "'{0}'" -f ($_ -replace "'", "''") } }
+            })]
+        [string]$StoragePoolName,
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 3, Mandatory = $false)]
         [string]$description,
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 4, Mandatory = $false)]
         [ValidateSet(512, 4096)]
         [int]$sectorSize = 512,
-        [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 5, Mandatory = $false)]
-        [ValidateSet("Thin", "Thick")]
-        [string]$allocType = "Thick",
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 6, Mandatory = $false)]
         [ValidateSet("Low", "Medium", "High")]
         [string]$IoPriority = "Low",
@@ -153,6 +185,35 @@ function New-DMLun {
         [bool]$enableSmartTier = $false,
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 10, Mandatory = $false)]
         [string]$workloadTypeId,
+        [Parameter(ValueFromPipelineByPropertyName = $true, Mandatory = $false)]
+        [ValidateScript({
+                if ($WebSession) {
+                    $session = $WebSession
+                }
+                else {
+                    $session = $script:CurrentOceanstorSession
+                }
+                $workloadTypes = Get-DMWorkLoadType -WebSession $session
+                if ($workloadTypes.Name -contains $_) {
+                    $true
+                }
+                else {
+                    throw "Invalid WorkloadTypeName. Valid values are: $($workloadTypes.Name -join ', ')"
+                }
+            })]
+        [ArgumentCompleter({
+                param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+                if ($WebSession) {
+                    $session = $WebSession
+                }
+                else {
+                    $session = $script:CurrentOceanstorSession
+                }
+                (Get-DMWorkLoadType -WebSession $session).Name |
+                    Where-Object { $_ -like "$wordToComplete*" } |
+                    ForEach-Object { if ($_ -match '^[A-Za-z0-9_.-]+$') { $_ } else { "'{0}'" -f ($_ -replace "'", "''") } }
+            })]
+        [string]$WorkloadTypeName,
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 11, Mandatory = $false)]
         [bool]$EnableCache = $true,
         [Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $false, Position = 12, Mandatory = $false)]
@@ -176,22 +237,38 @@ function New-DMLun {
         $session = $script:CurrentOceanstorSession
     }
 
-    # ensure dynamic StoragePoolID is assigned to variable for later use
-    if ($PSBoundParameters.ContainsKey('StoragePoolID')) {
+    # Resolve StoragePoolName to its Id when the name-based parameter set is used;
+    # otherwise ensure the dynamic StoragePoolID is assigned for later use.
+    if ($PSCmdlet.ParameterSetName -eq 'ByPoolName') {
+        $resolvedPool = @(Get-DMstoragePool -WebSession $session | Where-Object { $_.Name -eq $StoragePoolName })
+        if ($resolvedPool.Count -eq 0) {
+            throw "Storage pool '$StoragePoolName' was not found."
+        }
+        if ($resolvedPool.Count -gt 1) {
+            throw "Storage pool name '$StoragePoolName' is ambiguous ($($resolvedPool.Count) matches). Use -StoragePoolID instead."
+        }
+        $StoragePoolID = $resolvedPool[0].Id
+    }
+    elseif ($PSBoundParameters.ContainsKey('StoragePoolID')) {
         $StoragePoolID = $PSBoundParameters['StoragePoolID']
     }
 
-    $capacityInBlocks = ConvertTo-DMCapacityBlock -Capacity $capacity -UnitlessUnit Blocks
-
-    # Convert allocation type to Huawei API value
-    switch ($allocType) {
-        "Thin" {
-            $allocationType = 1
+    # Resolve WorkloadTypeName to its Id (mutually exclusive with workloadTypeId).
+    if ($PSBoundParameters.ContainsKey('WorkloadTypeName')) {
+        if ($PSBoundParameters.ContainsKey('workloadTypeId')) {
+            throw "Specify either -WorkloadTypeName or -workloadTypeId, not both."
         }
-        "Thick" {
-            $allocationType = 0
+        $resolvedWorkload = @(Get-DMWorkLoadType -WebSession $session | Where-Object { $_.Name -eq $WorkloadTypeName })
+        if ($resolvedWorkload.Count -eq 0) {
+            throw "Workload type '$WorkloadTypeName' was not found."
         }
+        if ($resolvedWorkload.Count -gt 1) {
+            throw "Workload type name '$WorkloadTypeName' is ambiguous ($($resolvedWorkload.Count) matches). Use -workloadTypeId instead."
+        }
+        $workloadTypeId = $resolvedWorkload[0].Id
     }
+
+    $capacityInBlocks = ConvertTo-DMCapacityBlock -Capacity $capacity -UnitlessUnit Blocks
 
     # Convert IO Priority to Huawei API value
     switch ($IoPriority) {
@@ -206,13 +283,13 @@ function New-DMLun {
         }
     }
 
-    # Convert Write Cache Policy to Huawei API value
+    # Convert Write Policy to Huawei API value (WRITEPOLICY: 1 = write back, 2 = write through)
     switch ($writeCachePolicy) {
         "WriteBack" {
             $writeCachePolicyValue = 1
         }
         "WriteThrough" {
-            $writeCachePolicyValue = 0
+            $writeCachePolicyValue = 2
         }
     }
 
@@ -227,15 +304,16 @@ function New-DMLun {
     }
 
     # Convert Prefetch Policy to Huawei API value
+    # (PREFETCHPOLICY: 0 = no prefetch, 1 = constant prefetch, 2 = variable prefetch, 3 = intelligent prefetch)
     switch ($prefetchPolicy) {
         "Intelligent" {
-            $prefetchPolicyValue = 0
+            $prefetchPolicyValue = 3
         }
         "Fixed" {
             $prefetchPolicyValue = 1
         }
         "Disabled" {
-            $prefetchPolicyValue = 2
+            $prefetchPolicyValue = 0
         }
     }
 
@@ -255,12 +333,11 @@ function New-DMLun {
         PARENTID        = $StoragePoolID;
         CAPACITY        = $capacityInBlocks;
         SECTORSIZE      = $sectorSize;
-        ALLOCTYPE       = $allocationType;
         IOPRIORITY      = $ioPriorityValue;
         COMPRESSION     = [int]$enableCompression;
         DEDUPLICATION   = [int]$enableDeduplication;
         SMARTTIER       = [int]$enableSmartTier;
-        CACHETPOLICY    = $writeCachePolicyValue;
+        WRITEPOLICY     = $writeCachePolicyValue;
         READCACHEPOLICY = $readCachePolicyValue;
         PREFETCHPOLICY  = $prefetchPolicyValue;
         MIRRORMULTIPLEX = $mirrorPolicyValue;

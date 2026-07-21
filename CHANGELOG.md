@@ -26,6 +26,59 @@ prerelease scheme.
 
 ---
 
+## [1.0.1] — 2026-07-21
+
+A small but real correctness release for LUN creation and storage-pool reporting on
+Dorado 6.x, all verified against a live array. No breaking changes to command names.
+
+### Fixed — `New-DMLun` (LUN creation was broken on Dorado 6.x)
+
+- **`ALLOCTYPE` removed from the create body.** Dorado 6.x deprecated/removed this field, and
+  the array rejects it with `50331651 (parameter incorrect)`. Because the cmdlet always sent it
+  (default `Thick` → `ALLOCTYPE=0`), **every default `New-DMLun` call failed** on Dorado 6.x. The
+  field — and the now-purposeless `-allocType` parameter — were removed; the array applies its
+  native thin default. Confirmed via request-trace + field-bisection on the live array.
+- **Write-cache policy field renamed `CACHETPOLICY` → `WRITEPOLICY`.** The old key was a typo the
+  array silently ignored, so the write policy was never applied. Also corrected the value mapping
+  to the Dorado enum (`WriteBack = 1`, `WriteThrough = 2`; the old `WriteThrough = 0` was invalid).
+- **`PREFETCHPOLICY` value mapping corrected** to the Dorado enum (`0 = no prefetch`,
+  `1 = constant`, `2 = variable`, `3 = intelligent`). The previous mapping sent `Intelligent = 0`
+  — i.e. the default silently *disabled* prefetch — and `Disabled = 2` (variable).
+
+### Added — `New-DMLun` name-based parameters
+
+- **`-StoragePoolName`** and **`-WorkloadTypeName`**, each with tab-completion and validation
+  against `Get-DMstoragePool` / `Get-DMWorkLoadType`, resolved to their IDs before the request is
+  sent. `-StoragePoolName`/`-StoragePoolID` are mutually exclusive parameter sets;
+  `-WorkloadTypeName`/`-workloadTypeId` are mutually exclusive at runtime. `-StoragePoolID`
+  remains fully backward-compatible.
+
+### Fixed — `OceanStorStoragePool` class (`Get-DMstoragePool`)
+
+- **Capacity math was inverted** — the class *divided* raw sector values by the sector size
+  instead of multiplying, collapsing every capacity to ~0. `Get-DMstoragePool` now reports real
+  capacities (e.g. a ~28 TB pool that previously showed `0`).
+- **Corrected Dorado enums** the old class got wrong or missed: `HEALTHSTATUS 5 = Degraded`,
+  `RUNNINGSTATUS 16 = Rebuilt` / `106 = Deleting`, `TIER0DISKTYPE 14/16 = NVMe SSD(/SED)`,
+  `TIER0RAIDLV 11 = RAID-TP`.
+- **Correct data-reduction ratios** — the class read non-existent property names (`compressRatio`
+  etc.); now reads the real fields (`COMPRESSIONRATE`, `DEDUPLICATIONRATE`, …) and parses the
+  `{numerator,denominator,logic}` JSON into a culture-invariant `"X:1"` string.
+- **Mapped ~30 real Dorado fields that were dropped** (subscribed / provisioning / FS capacities,
+  data-reduction ratios, protect thresholds, `NEWUSAGETYPE`, `PARENTTYPE`, …) and **removed ~30
+  legacy V3/hybrid fields Dorado never returns** (which always displayed blank). Removed a
+  duplicate `ENABLESSDBUFFER` mapping. The `-1` provisioning-limit and uint64 "invalid" tier
+  sentinels now surface as blank instead of garbage.
+
+### Testing
+
+- Full unit suite **1403/1403 pass** (added the first-ever `OceanStorStoragePool` mapping test and
+  `New-DMLun` name-resolution / `WRITEPOLICY` tests; updated two tests that had encoded the old
+  buggy behavior). PSScriptAnalyzer: **0 findings** on changed source. Every fix live-validated on
+  the lab array with test-owned, ID-tracked resources and full cleanup.
+
+---
+
 ## Release readiness — `v1.0.0-beta`
 
 **Hard gate: GO** (Phase 01, 2026-07-07; re-affirmed through 2026-07-20).

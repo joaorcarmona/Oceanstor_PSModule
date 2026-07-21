@@ -100,15 +100,17 @@ Describe 'Core model classes' {
     It 'maps storage pool status and converts capacity to GB' {
         $source = [pscustomobject]@{
             ID = 'pool-01'; NAME = 'performance'; HEALTHSTATUS = 1; RUNNINGSTATUS = 27
-            DATASPACE = (512 * 1GB); USERTOTALCAPACITY = (512 * 2GB); USAGETYPE = 1
+            DATASPACE = 2097152; USERTOTALCAPACITY = 4194304; NEWUSAGETYPE = 1
         }
 
         $result = New-Object -TypeName OceanStorStoragePool -ArgumentList @($source, $script:session)
 
         $result.id | Should -Be 'pool-01'
         $result.'Health Status' | Should -Be 'Normal'
-        $result.dataspace | Should -Be 1
-        $result.usertotalcapacity | Should -Be 2
+        # sectors * 512 / 1GB: 2097152 -> 1 GB, 4194304 -> 2 GB
+        # (the previous class divided by the sector size, collapsing every capacity to ~0)
+        $result.'Available For LUN (GB)' | Should -Be 1
+        $result.'Total Capacity (GB)' | Should -Be 2
     }
 
     It 'maps system key-value data' {

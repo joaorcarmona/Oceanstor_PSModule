@@ -68,7 +68,7 @@ function Get-DMstoragePool {
         $session = $script:CurrentOceanstorSession
     }
 
-    $defaultDisplaySet = "Id", "Name", "Health Status", "Running Status", "DataSpace"
+    $defaultDisplaySet = "Id", "Name", "Health Status", "Running Status", "Total Capacity (GB)", "Free Capacity (GB)"
 
     $displayPropertySet = New-Object System.Management.Automation.PSPropertySet(
         'DefaultDisplayPropertySet',

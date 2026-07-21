@@ -13,7 +13,7 @@
 RootModule = "POSH-Oceanstor.psm1"
 
 # Version number of this module.
-ModuleVersion = "1.0.0"
+ModuleVersion = "1.0.1"
 
 # ID used to uniquely identify this module
 GUID = "67f4a145-d50d-4c26-bd26-b1303fd48aa1"

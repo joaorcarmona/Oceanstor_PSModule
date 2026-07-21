@@ -151,6 +151,7 @@ BeforeAll {
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorHostGroup.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorSession.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorLunGroup.ps1"
+    . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanStorStoragePool.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorPortGroup.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorLunv3.ps1"
     . "$PSScriptRoot\..\..\..\POSH-Oceanstor\Private\class-OceanstorLunv6.ps1"
@@ -221,6 +222,41 @@ Describe 'Storage and share model classes' {
         $result.Id | Should -Be 'cifs-01'
         $result.'Enable ABE' | Should -Be 'enabled'
         $result.'Offline File Mode' | Should -Be 'manual'
+        $result.Session | Should -Be $script:session
+    }
+
+    It 'maps a storage pool: capacity (sectors->GB), enums, and reduction ratios' {
+        $source = [pscustomobject]@{
+            ID = 'pool-0'; NAME = 'perf'; TYPE = 216; DESCRIPTION = 'prod'
+            HEALTHSTATUS = '1'; RUNNINGSTATUS = '27'; PARENTID = '0'; PARENTNAME = 'dd0'; PARENTTYPE = 266
+            NEWUSAGETYPE = '1'; ISCONTAINERENABLE = 'false'; autoDeleteSwitch = '0'
+            TIER0DISKTYPE = '14'; TIER0RAIDLV = '11'; TIER0CAPACITY = '2097152'
+            TIER1CAPACITY = '18446744073709551615'; TIER2CAPACITY = '18446744073709551615'
+            USERTOTALCAPACITY = '2097152'; USERFREECAPACITY = '1048576'
+            USERCONSUMEDCAPACITYPERCENTAGE = '50'
+            COMPRESSIONRATE = '{"numerator":"11","denominator":"10","logic":"="}'
+            SAVECAPACITYRATE = '{"numerator":"1000","denominator":"10","logic":">="}'
+            PROVISIONINGLIMITSWITCH = 'false'; PROVISIONINGLIMIT = '-1'
+        }
+
+        $result = New-Object -TypeName OceanStorStoragePool -ArgumentList @($source, $script:session)
+
+        $result.Id | Should -Be 'pool-0'
+        $result.Name | Should -Be 'perf'
+        # 2097152 sectors * 512 / 1GB = 1 GB (fixes the previous divide-by-sector bug that yielded 0)
+        $result.'Total Capacity (GB)' | Should -Be 1
+        $result.'Free Capacity (GB)' | Should -Be 0.5
+        # uint64 max is the "invalid" sentinel -> null, not a giant number
+        $result.'Tier1 Capacity (GB)' | Should -BeNullOrEmpty
+        # Dorado enums the old class got wrong / missed
+        $result.'Tier0 Disk Type' | Should -Be 'NVMe SSD'
+        $result.'Tier0 RAID Level' | Should -Be 'RAID-TP'
+        $result.'Usage Type' | Should -Be 'LUN'
+        # JSON ratio parsing
+        $result.'Compression Ratio' | Should -Be '1.1:1'
+        $result.'Save Capacity Ratio' | Should -Be '>= 100:1'
+        # -1 provisioning limit (switch off) surfaces as null, not -1
+        $result.'Provisioning Limit Percent' | Should -BeNullOrEmpty
         $result.Session | Should -Be $script:session
     }
 
