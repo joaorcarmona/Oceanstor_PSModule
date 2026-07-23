@@ -113,6 +113,53 @@ defaults are stored). The change does **not** affect the current session — you
 `Import-Module POSH-Oceanstor -Force`, or start a new session, for the export list to change.
 Set `$env:POSH_OCEANSTOR_CONFIG_PATH` to redirect the config file (used by labs and CI).
 
+## Access mode (ReadOnly / ReadWrite)
+
+Where feature modules gate commands *vertically* (whole feature groups on/off), **access mode**
+is a *horizontal* guardrail that cuts across every module. In **`ReadOnly`** mode only
+non-mutating commands are exported — those whose verb is `Get`, `Connect`, `Disconnect`, or
+`Export`, plus the local-config control cmdlets (`*-DMAccessMode`, `*-DMFeature`,
+`*-DMRequestTrace`) so the switch can never lock itself out. Every array-mutating command
+(`New`/`Set`/`Remove`/`Add`/`Rename`/`Start`/`Stop`/…) is simply not exported. **`ReadWrite`**
+(the default) exports the full surface, still subject to the per-feature gating above.
+
+Use it as a hard safety brake when connecting to a production array for inspection, inventory,
+or export only:
+
+```powershell
+# See the current mode, the allowed verbs, and the exempt control cmdlets.
+Get-DMAccessMode
+
+# Arm the brake. Every write is blocked immediately — no re-import needed.
+Set-DMAccessMode -Mode ReadOnly
+New-DMLun -Name test -CapacityGB 10        # -> throws: 'POSH-Oceanstor is in ReadOnly access mode…'
+
+# Re-import to also hide the mutation commands from tab-completion and Get-Command.
+Import-Module POSH-Oceanstor -Force
+Get-Command New-DMLun -Module POSH-Oceanstor    # -> not found
+
+# Re-open the full surface.
+Set-DMAccessMode -Mode ReadWrite
+Import-Module POSH-Oceanstor -Force
+```
+
+Access mode is enforced at **two layers**:
+
+- **Runtime (immediate).** Every array-mutating REST call funnels through one internal choke
+  point that consults the *live* config, so `Set-DMAccessMode -Mode ReadOnly` starts blocking
+  writes at once — a would-be write throws a clear error rather than reaching the array. This is
+  the hard brake; it needs no re-import. Reads, `Connect`/`Disconnect`, `Export`, and the
+  local-config controls are never blocked. The decision keys off the command's verb, not the HTTP
+  method, so a `Get-*` cmdlet that queries via `POST` is still treated as a read.
+- **Import (cosmetic).** Re-importing with `-Force` additionally hides the mutation commands from
+  `Get-Command` and tab-completion, so ReadOnly reads as a smaller, safer surface.
+
+Access mode is stored as a reserved `Mode` key in the same
+`%APPDATA%\POSH-Oceanstor\ModuleConfig.json` file (only the non-default `ReadOnly` value is
+persisted; `ReadWrite` removes the key). It coexists with feature overrides — a
+`{ "Mode": "ReadOnly", "HyperMetro": true }` config exports HyperMetro's `Get-*` commands while
+still hiding its mutation commands.
+
 ### Examples
 
 The module is a PowerShell module to interact with Huawei OceanStor devices through the REST API. All commands are designed to work without extra arguments unless you are filtering results. The WebSession parameter is optional on all commands. If you are querying multiple storage systems at the same time, pass the WebSession object returned by Connect-deviceManager.

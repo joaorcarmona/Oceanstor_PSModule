@@ -2,6 +2,57 @@
 
 ---
 
+# v1.1.0
+
+Date: 2026-07-24
+Branch: `guardrails`
+Status: Feature — transversal access-mode guardrail
+
+## Summary
+
+Adds **Access Mode**, a horizontal ReadOnly / ReadWrite guardrail that cuts across every
+module. Complements the existing per-feature (vertical) gating with a single, discoverable
+safety brake for connecting to production arrays where only inspection, inventory, and export
+are intended. Default behavior is unchanged (`ReadWrite` — full command surface).
+
+## New feature — Access Mode
+
+- **`Set-DMAccessMode -Mode ReadOnly|ReadWrite`** and **`Get-DMAccessMode`.** In `ReadOnly`,
+  only commands whose verb is `Get`/`Connect`/`Disconnect`/`Export` are exported, plus the
+  local-config control cmdlets (`*-DMAccessMode`, `*-DMFeature`, `*-DMRequestTrace`) so the
+  switch can never lock itself out. Every array-mutating command is hidden at import time.
+- **Enforced at runtime, live.** Every array-mutating REST call funnels through one internal
+  choke point (`Invoke-DeviceManager`) that consults the *live* config, so `Set-DMAccessMode
+  -Mode ReadOnly` blocks writes immediately — a would-be write throws a clear error instead of
+  reaching the array, with no re-import required to arm the brake. The decision keys off the
+  originating cmdlet's verb (resolved from the call stack), not the HTTP method, so a `Get-*`
+  cmdlet that queries via `POST` is still a read and `Disconnect`'s `DELETE` still succeeds.
+  Re-importing with `-Force` additionally hides the mutation commands from `Get-Command` and
+  tab-completion.
+- **Storage.** A reserved `Mode` key in the existing
+  `%APPDATA%\POSH-Oceanstor\ModuleConfig.json` (honors `$env:POSH_OCEANSTOR_CONFIG_PATH`).
+  Only the non-default `ReadOnly` value is persisted; `ReadWrite` removes the key. The reserved
+  key coexists with feature overrides and is preserved verbatim across feature toggles.
+- **Composes with feature gating.** `{ "Mode": "ReadOnly", "HyperMetro": true }` exports
+  HyperMetro's `Get-*` commands while still hiding its mutation commands.
+- **Fail-open.** A missing file, broken JSON, or unrecognized `Mode` value resolves to
+  `ReadWrite` (with a warning for the last two) — a bad config never breaks module import, and
+  the runtime guard silently no-ops if its helper is out of scope so the REST path can never
+  break because of the guardrail.
+
+## Validation
+
+- Full suite green: **1451 Pester tests pass, 0 failed.** Access Mode adds 41 tests across
+  `Tests/Unit/Private/AccessMode.Tests.ps1`, `Tests/Unit/Public/AccessMode-Commands.Tests.ps1`,
+  `Tests/Unit/ModuleImport.AccessMode.Tests.ps1`, and — for the runtime guard —
+  `Tests/Unit/Private/AccessModeGuard.Tests.ps1` (pure policy decisions) and
+  `Tests/Unit/Private/InvokeDeviceManager.Guard.Tests.ps1` (live enforcement through the real
+  choke point, including verb-vs-HTTP-method resolution and outermost-frame blocking).
+- Smoke test: `ReadWrite` exports 256 functions (`New-DMLun` present); `ReadOnly` exports 97
+  (mutation commands absent, inspection/session/export/exempt controls present, zero leaks).
+
+---
+
 # v1.0.2
 
 Date: 2026-07-21

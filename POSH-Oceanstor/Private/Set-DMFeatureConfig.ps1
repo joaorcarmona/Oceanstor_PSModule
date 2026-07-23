@@ -36,14 +36,24 @@ function Set-DMFeatureConfig {
 
     $features = (Import-PowerShellDataFile -LiteralPath $FeatureMapPath).Features
 
+    # Reserved keys are transversal settings owned by other resolvers (e.g. 'Mode' ->
+    # Set-DMAccessModeConfig) that share this JSON file. They are captured verbatim and carried
+    # forward unchanged so a feature toggle never clobbers them.
+    $reservedKeys = @('Mode')
+
     # Seed from whatever overrides already exist; a corrupt file is discarded, not fatal.
     $overrides = @{}
+    $reserved  = @{}
     if (Test-Path -LiteralPath $ConfigPath) {
         try {
             $raw = Get-Content -LiteralPath $ConfigPath -Raw -ErrorAction Stop
             if (-not [string]::IsNullOrWhiteSpace($raw)) {
                 $parsed = $raw | ConvertFrom-Json -ErrorAction Stop
                 foreach ($property in $parsed.PSObject.Properties) {
+                    if ($property.Name -in $reservedKeys) {
+                        $reserved[$property.Name] = $property.Value
+                        continue
+                    }
                     $overrides[$property.Name] = [bool]$property.Value
                 }
             }
@@ -51,6 +61,7 @@ function Set-DMFeatureConfig {
         catch {
             Write-Warning "POSH-Oceanstor feature config at '$ConfigPath' was unreadable ($($_.Exception.Message)); rewriting from defaults."
             $overrides = @{}
+            $reserved  = @{}
         }
     }
 
@@ -66,6 +77,11 @@ function Set-DMFeatureConfig {
         if ([bool]$overrides[$name] -ne [bool]$features[$name].DefaultEnabled) {
             $pruned[$name] = [bool]$overrides[$name]
         }
+    }
+
+    # Carry reserved transversal keys (e.g. 'Mode') forward unchanged.
+    foreach ($name in $reserved.Keys) {
+        $pruned[$name] = $reserved[$name]
     }
 
     $configDir = Split-Path -Path $ConfigPath -Parent

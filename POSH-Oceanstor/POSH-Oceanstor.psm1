@@ -43,6 +43,11 @@
 #on a missing/broken config, so a bad config can never stop the module from importing.
     $script:DMFeatureState = Get-DMFeatureState
 
+#Resolve the transversal access mode (ReadWrite/ReadOnly) for this import and cache it so
+#Get-DMAccessMode can report the session state. Get-DMAccessModeState never throws on a
+#missing/broken config, so it can never stop the module from importing.
+    $script:DMAccessMode = Get-DMAccessModeState
+
 #Filter exports by enabled features. A file whose BaseName is not mapped to any feature
 #fails open (stays exported); the FeatureMap Pester suite catches map gaps at CI time.
     $enabledFeatures = $script:DMFeatureState | Where-Object Enabled
@@ -56,6 +61,17 @@
     $disabledFeatureNames = ($script:DMFeatureState | Where-Object { -not $_.Enabled }).Name
     if ($disabledFeatureNames) {
         Write-Verbose "POSH-Oceanstor disabled feature(s): $($disabledFeatureNames -join ', '). Use Enable-DMFeature + Import-Module -Force to expose their commands."
+    }
+
+#Apply the transversal ReadOnly guardrail on top of feature filtering. In ReadOnly mode only
+#commands whose verb is inherently non-mutating (Get/Connect/Disconnect/Export) survive, plus the
+#local-config control cmdlets in the exempt list (so the switch can never lock itself out).
+    if ($script:DMAccessMode -eq 'ReadOnly') {
+        $policy = Get-DMAccessModePolicy
+        $exportedCommands = $exportedCommands | Where-Object {
+            (($_ -split '-', 2)[0] -in $policy.ReadOnlyVerbs) -or ($_ -in $policy.ExemptCommands)
+        }
+        Write-Verbose "POSH-Oceanstor access mode is ReadOnly: mutation commands are hidden. Use Set-DMAccessMode -Mode ReadWrite + Import-Module -Force to restore them."
     }
 
 #Only export aliases whose target command is itself being exported.

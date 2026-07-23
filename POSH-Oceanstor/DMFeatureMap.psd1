@@ -33,6 +33,8 @@
                 'Get-DMFeature'
                 'Enable-DMFeature'
                 'Disable-DMFeature'
+                'Get-DMAccessMode'
+                'Set-DMAccessMode'
             )
         }
 

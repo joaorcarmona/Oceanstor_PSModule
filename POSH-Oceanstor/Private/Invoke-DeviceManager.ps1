@@ -273,6 +273,28 @@ function Invoke-DeviceManager{
 		[switch]$ApiV2
 	)
 
+    # --- ReadOnly access-mode guardrail (runtime enforcement) --------------------------------------
+    # This is the single REST choke point every session-based array call flows through, so the
+    # transversal ReadOnly brake is enforced here once instead of in ~150 cmdlets. The policy is
+    # defined against the ORIGINATING public cmdlet's verb, so resolve it from the call stack: the
+    # outermost POSH-Oceanstor frame is the command the user actually invoked (a Get-* that queries
+    # via POST is still a read; a New/Set/Remove is a write regardless of HTTP method). Assert-
+    # DMWriteAllowed reads the LIVE config, so a ReadOnly switch takes effect without a re-import.
+    # Fail open when the helper is not in scope (an isolated dot-source in tests) -- the REST path
+    # must never break because of the guardrail.
+    if (Get-Command -Name Assert-DMWriteAllowed -ErrorAction SilentlyContinue) {
+        $dmPlumbing = @('Invoke-DeviceManager', 'Assert-DMWriteAllowed', 'Invoke-DMPagedRequest', 'Save-DMDeviceManagerFile')
+        $entryCommand = ''
+        foreach ($frame in Get-PSCallStack) {
+            $frameCommand = $frame.Command
+            if ($frameCommand -match '^[A-Za-z]+-(DM|deviceManager)' -and $frameCommand -notin $dmPlumbing) {
+                $entryCommand = $frameCommand
+            }
+        }
+        Assert-DMWriteAllowed -Method $Method -Command $entryCommand
+    }
+    # ------------------------------------------------------------------------------------------------
+
     if ($WebSession){
         $session = $WebSession
     } else {

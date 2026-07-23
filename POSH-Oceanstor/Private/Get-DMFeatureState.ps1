@@ -35,6 +35,11 @@ function Get-DMFeatureState {
 
     $features = (Import-PowerShellDataFile -LiteralPath $FeatureMapPath).Features
 
+    # Reserved config keys are transversal settings (not feature toggles) that share the same JSON
+    # file. They are owned by their own resolvers (e.g. 'Mode' -> Get-DMAccessModeState) and must be
+    # ignored here: never treated as a feature, never flagged as an unknown feature.
+    $reservedKeys = @('Mode')
+
     # Read the override file. Any read/parse problem degrades to "no overrides" so a broken
     # config can never stop the module from importing.
     $overrides = @{}
@@ -44,6 +49,7 @@ function Get-DMFeatureState {
             if (-not [string]::IsNullOrWhiteSpace($raw)) {
                 $parsed = $raw | ConvertFrom-Json -ErrorAction Stop
                 foreach ($property in $parsed.PSObject.Properties) {
+                    if ($property.Name -in $reservedKeys) { continue }
                     $overrides[$property.Name] = [bool]$property.Value
                 }
             }
